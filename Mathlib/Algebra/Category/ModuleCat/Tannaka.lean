@@ -29,10 +29,10 @@ A ring `R` is equivalent to
 the endomorphisms of the additive forgetful functor `Module R ⥤ AddCommGroup`.
 -/
 def ringEquivEndForget₂ (R : Type u) [Ring R] :
-    R ≃+* End (AdditiveFunctor.of (forget₂ (ModuleCat.{u} R) AddCommGroupCat.{u})) where
+    R ≃+* End (AdditiveFunctor.of (forget₂ (ModuleCat.{u} R) AddCommGrp.{u})) where
   toFun r :=
     { app := fun M =>
-        @AddCommGroupCat.ofHom M.carrier M.carrier _ _ (DistribMulAction.toAddMonoidHom M r)
+        @AddCommGrp.ofHom M.carrier M.carrier _ _ (DistribMulAction.toAddMonoidHom M r)
       naturality := fun M N f => by
         ext
         exact (f.map_smul _ _).symm }
@@ -40,7 +40,7 @@ def ringEquivEndForget₂ (R : Type u) [Ring R] :
   left_inv := by
     intro r
     dsimp
-    erw [AddCommGroupCat.ofHom_apply]
+    erw [AddCommGrp.ofHom_apply]
     simp only [DistribMulAction.toAddMonoidHom_apply, smul_eq_mul, mul_one]
   right_inv := by
     intro φ
@@ -55,7 +55,7 @@ def ringEquivEndForget₂ (R : Type u) [Ring R] :
     ext1
     dsimp
     ext
-    simp only [AddCommGroupCat.ofHom_apply, DistribMulAction.toAddMonoidHom_apply, add_smul]
+    simp only [AddCommGrp.ofHom_apply, DistribMulAction.toAddMonoidHom_apply, add_smul]
     rfl
   map_mul' := by
     intros
@@ -63,7 +63,7 @@ def ringEquivEndForget₂ (R : Type u) [Ring R] :
     ext1
     dsimp
     ext
-    simp only [AddCommGroupCat.ofHom_apply, DistribMulAction.toAddMonoidHom_apply, mul_smul]
+    simp only [AddCommGrp.ofHom_apply, DistribMulAction.toAddMonoidHom_apply, mul_smul]
     rfl
 
 #align ring_equiv_End_forget₂ ringEquivEndForget₂

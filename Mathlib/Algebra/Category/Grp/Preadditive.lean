@@ -8,7 +8,7 @@ Authors: Markus Himmel
 ! Please do not edit these lines, except to modify the commit id
 ! if you have ported upstream changes.
 -/
-import Mathlib.Algebra.Category.GroupCat.Basic
+import Mathlib.Algebra.Category.Grp.Basic
 import Mathlib.CategoryTheory.Preadditive.Basic
 
 /-!
@@ -19,27 +19,27 @@ open CategoryTheory
 
 universe u
 
-namespace AddCommGroupCat
+namespace AddCommGrp
 
 -- porting note: this instance was not necessary in mathlib
-instance (P Q : AddCommGroupCat) : AddCommGroup (P ⟶ Q) :=
+instance (P Q : AddCommGrp) : AddCommGroup (P ⟶ Q) :=
   (inferInstance : AddCommGroup (AddMonoidHom P Q))
 
 -- porting note: this lemma was not necessary in mathlib
 @[simp]
-lemma hom_add_apply {P Q : AddCommGroupCat} (f g : P ⟶ Q) (x : P) :
+lemma hom_add_apply {P Q : AddCommGrp} (f g : P ⟶ Q) (x : P) :
   (f + g) x = f x + g x := rfl
 
 section
 
 -- porting note: the simp attribute was locally deactivated here,
--- otherwise Lean would try to infer `Preadditive AddCommGroupCat`
+-- otherwise Lean would try to infer `Preadditive AddCommGrp`
 -- in order to prove the axioms `add_comp` and `comp_add` in the
 -- next instance declaration
 attribute [-simp] Preadditive.add_comp Preadditive.comp_add
 
-instance : Preadditive AddCommGroupCat where
+instance : Preadditive AddCommGrp where
 
 end
 
-end AddCommGroupCat
+end AddCommGrp
