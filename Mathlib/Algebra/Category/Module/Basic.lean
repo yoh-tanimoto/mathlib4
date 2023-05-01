@@ -70,24 +70,24 @@ variable (R : Type u) [Ring R]
 impose here that the `ℤ`-multiplication field from the module structure is defeq to the one coming
 from the `isAddCommGroup` structure (contrary to what we do for all module structures in
 mathlib), which creates some difficulties down the road. -/
-structure ModuleCat where
-  /-- the underlying type of an object in `ModuleCat R` -/
+structure Mod where
+  /-- the underlying type of an object in `Mod R` -/
   carrier : Type v
   [isAddCommGroup : AddCommGroup carrier]
   [isModule : Module R carrier]
 set_option linter.uppercaseLean3 false in
-#align Module ModuleCat
+#align Module Mod
 
-attribute [instance] ModuleCat.isAddCommGroup ModuleCat.isModule
+attribute [instance] Mod.isAddCommGroup Mod.isModule
 
-namespace ModuleCat
+namespace Mod
 
-instance : CoeSort (ModuleCat.{v} R) (Type v) :=
-  ⟨ModuleCat.carrier⟩
+instance : CoeSort (Mod.{v} R) (Type v) :=
+  ⟨Mod.carrier⟩
 
 attribute [-instance] Ring.toNonAssocRing
 
-instance moduleCategory : Category (ModuleCat.{v} R) where
+instance Modegory : Category (Mod.{v} R) where
   Hom M N := M →ₗ[R] N
   id _ := LinearMap.id -- porting note: was `1`
   comp f g := g.comp f
@@ -96,13 +96,13 @@ instance moduleCategory : Category (ModuleCat.{v} R) where
   assoc f g h := @LinearMap.comp_assoc _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
     RingHomCompTriple.ids RingHomCompTriple.ids RingHomCompTriple.ids f g h
 set_option linter.uppercaseLean3 false in
-#align Module.Module_category ModuleCat.moduleCategory
+#align Module.Module_category Mod.Modegory
 
 -- porting note: was not necessary in mathlib
-instance {M N : ModuleCat.{v} R} : FunLike (M ⟶ N) M (fun _ => N) :=
+instance {M N : Mod.{v} R} : FunLike (M ⟶ N) M (fun _ => N) :=
   ⟨fun f => f.toFun, fun _ _ h => LinearMap.ext (congr_fun h)⟩
 
-instance moduleConcreteCategory : ConcreteCategory.{v} (ModuleCat.{v} R) where
+instance moduleConcreteCategory : ConcreteCategory.{v} (Mod.{v} R) where
   Forget :=
     { obj := fun R => R
       map := fun f => f.toFun }
@@ -110,90 +110,90 @@ instance moduleConcreteCategory : ConcreteCategory.{v} (ModuleCat.{v} R) where
     dsimp at h
     rw [h])⟩
 set_option linter.uppercaseLean3 false in
-#align Module.Module_concrete_category ModuleCat.moduleConcreteCategory
+#align Module.Module_concrete_category Mod.moduleConcreteCategory
 
 -- porting note: added to ease automation
 @[ext]
-lemma hom_ext {M N : ModuleCat.{v} R} (f₁ f₂ : M ⟶ N) (h : ∀ (x : M), f₁ x = f₂ x) : f₁ = f₂ :=
+lemma hom_ext {M N : Mod.{v} R} (f₁ f₂ : M ⟶ N) (h : ∀ (x : M), f₁ x = f₂ x) : f₁ = f₂ :=
   FunLike.ext _ _ h
 
-instance hasForgetToAddCommGroup : HasForget₂ (ModuleCat R) AddCommGrp where
+instance hasForgetToAddCommGroup : HasForget₂ (Mod R) AddCommGrp where
   forget₂ :=
     { obj := fun M => AddCommGrp.of M
       map := fun f => LinearMap.toAddMonoidHom f }
 set_option linter.uppercaseLean3 false in
-#align Module.has_forget_to_AddCommGroup ModuleCat.hasForgetToAddCommGroup
+#align Module.has_forget_to_AddCommGroup Mod.hasForgetToAddCommGroup
 
-instance (M N : ModuleCat R) : LinearMapClass (M ⟶ N) R M N :=
+instance (M N : Mod R) : LinearMapClass (M ⟶ N) R M N :=
   { LinearMap.instSemilinearMapClassLinearMap with coe := fun f => f }
 
 /-- The object in the category of R-modules associated to an R-module -/
-def of (X : Type v) [AddCommGroup X] [Module R X] : ModuleCat R :=
+def of (X : Type v) [AddCommGroup X] [Module R X] : Mod R :=
   ⟨X⟩
 set_option linter.uppercaseLean3 false in
-#align Module.of ModuleCat.of
+#align Module.of Mod.of
 
 -- porting note: remove simp attribute because it makes the linter complain
-theorem forget₂_obj (X : ModuleCat R) :
-    (forget₂ (ModuleCat R) AddCommGrp).obj X = AddCommGrp.of X :=
+theorem forget₂_obj (X : Mod R) :
+    (forget₂ (Mod R) AddCommGrp).obj X = AddCommGrp.of X :=
   rfl
 set_option linter.uppercaseLean3 false in
-#align Module.forget₂_obj ModuleCat.forget₂_obj
+#align Module.forget₂_obj Mod.forget₂_obj
 
 @[simp 900]
-theorem forget₂_obj_moduleCat_of (X : Type v) [AddCommGroup X] [Module R X] :
-    (forget₂ (ModuleCat R) AddCommGrp).obj (of R X) = AddCommGrp.of X :=
+theorem forget₂_obj_Mod_of (X : Type v) [AddCommGroup X] [Module R X] :
+    (forget₂ (Mod R) AddCommGrp).obj (of R X) = AddCommGrp.of X :=
   rfl
 set_option linter.uppercaseLean3 false in
-#align Module.forget₂_obj_Module_of ModuleCat.forget₂_obj_moduleCat_of
+#align Module.forget₂_obj_Module_of Mod.forget₂_obj_Mod_of
 
 @[simp]
-theorem forget₂_map (X Y : ModuleCat R) (f : X ⟶ Y) :
-    (forget₂ (ModuleCat R) AddCommGrp).map f = LinearMap.toAddMonoidHom f :=
+theorem forget₂_map (X Y : Mod R) (f : X ⟶ Y) :
+    (forget₂ (Mod R) AddCommGrp).map f = LinearMap.toAddMonoidHom f :=
   rfl
 set_option linter.uppercaseLean3 false in
-#align Module.forget₂_map ModuleCat.forget₂_map
+#align Module.forget₂_map Mod.forget₂_map
 
 /-- Typecheck a `LinearMap` as a morphism in `Module R`. -/
 def ofHom {R : Type u} [Ring R] {X Y : Type v} [AddCommGroup X] [Module R X] [AddCommGroup Y]
     [Module R Y] (f : X →ₗ[R] Y) : of R X ⟶ of R Y :=
   f
 set_option linter.uppercaseLean3 false in
-#align Module.of_hom ModuleCat.ofHom
+#align Module.of_hom Mod.ofHom
 
 @[simp 1100]
 theorem ofHom_apply {R : Type u} [Ring R] {X Y : Type v} [AddCommGroup X] [Module R X]
     [AddCommGroup Y] [Module R Y] (f : X →ₗ[R] Y) (x : X) : ofHom f x = f x :=
   rfl
 set_option linter.uppercaseLean3 false in
-#align Module.of_hom_apply ModuleCat.ofHom_apply
+#align Module.of_hom_apply Mod.ofHom_apply
 
-instance : Inhabited (ModuleCat R) :=
+instance : Inhabited (Mod R) :=
   ⟨of R PUnit⟩
 
 instance ofUnique {X : Type v} [AddCommGroup X] [Module R X] [i : Unique X] : Unique (of R X) :=
   i
 set_option linter.uppercaseLean3 false in
-#align Module.of_unique ModuleCat.ofUnique
+#align Module.of_unique Mod.ofUnique
 
 -- porting note: remove simp attribute because it makes the linter complain
 theorem coe_of (X : Type v) [AddCommGroup X] [Module R X] : (of R X : Type v) = X :=
   rfl
 set_option linter.uppercaseLean3 false in
-#align Module.coe_of ModuleCat.coe_of
+#align Module.coe_of Mod.coe_of
 
 variable {R}
 
 /-- Forgetting to the underlying type and then building the bundled object returns the original
 module. -/
 @[simps]
-def ofSelfIso (M : ModuleCat R) : ModuleCat.of R M ≅ M where
+def ofSelfIso (M : Mod R) : Mod.of R M ≅ M where
   hom := 𝟙 M
   inv := 𝟙 M
 set_option linter.uppercaseLean3 false in
-#align Module.of_self_iso ModuleCat.ofSelfIso
+#align Module.of_self_iso Mod.ofSelfIso
 
-theorem isZero_of_subsingleton (M : ModuleCat R) [Subsingleton M] : IsZero M where
+theorem isZero_of_subsingleton (M : Mod R) [Subsingleton M] : IsZero M where
   unique_to X := ⟨⟨⟨(0 : M →ₗ[R] X)⟩, fun f => by
     ext x
     rw [Subsingleton.elim x (0 : M)]
@@ -203,65 +203,65 @@ theorem isZero_of_subsingleton (M : ModuleCat R) [Subsingleton M] : IsZero M whe
     ext x
     apply Subsingleton.elim⟩⟩
 set_option linter.uppercaseLean3 false in
-#align Module.is_zero_of_subsingleton ModuleCat.isZero_of_subsingleton
+#align Module.is_zero_of_subsingleton Mod.isZero_of_subsingleton
 
-instance : HasZeroObject (ModuleCat.{v} R) :=
+instance : HasZeroObject (Mod.{v} R) :=
   ⟨⟨of R PUnit, isZero_of_subsingleton _⟩⟩
 
-variable {M N U : ModuleCat.{v} R}
+variable {M N U : Mod.{v} R}
 
 @[simp]
 theorem id_apply (m : M) : (𝟙 M : M → M) m = m :=
   rfl
 set_option linter.uppercaseLean3 false in
-#align Module.id_apply ModuleCat.id_apply
+#align Module.id_apply Mod.id_apply
 
 @[simp]
 theorem coe_comp (f : M ⟶ N) (g : N ⟶ U) : (f ≫ g : M → U) = g ∘ f :=
   rfl
 set_option linter.uppercaseLean3 false in
-#align Module.coe_comp ModuleCat.coe_comp
+#align Module.coe_comp Mod.coe_comp
 
 theorem comp_def (f : M ⟶ N) (g : N ⟶ U) : f ≫ g = g.comp f :=
   rfl
 set_option linter.uppercaseLean3 false in
-#align Module.comp_def ModuleCat.comp_def
+#align Module.comp_def Mod.comp_def
 
-end ModuleCat
+end Mod
 
 variable {R}
 
 variable {X₁ X₂ : Type v}
 
 /-- Reinterpreting a linear map in the category of `R`-modules. -/
-def ModuleCat.asHom [AddCommGroup X₁] [Module R X₁] [AddCommGroup X₂] [Module R X₂] :
-    (X₁ →ₗ[R] X₂) → (ModuleCat.of R X₁ ⟶ ModuleCat.of R X₂) :=
+def Mod.asHom [AddCommGroup X₁] [Module R X₁] [AddCommGroup X₂] [Module R X₂] :
+    (X₁ →ₗ[R] X₂) → (Mod.of R X₁ ⟶ Mod.of R X₂) :=
   id
 set_option linter.uppercaseLean3 false in
-#align Module.as_hom ModuleCat.asHom
+#align Module.as_hom Mod.asHom
 
 /-- Reinterpreting a linear map in the category of `R`-modules -/
-scoped[ModuleCat] notation "↟" f:1024 => ModuleCat.asHom f
+scoped[Mod] notation "↟" f:1024 => Mod.asHom f
 
 /-- Reinterpreting a linear map in the category of `R`-modules. -/
-def ModuleCat.asHomRight [AddCommGroup X₁] [Module R X₁] {X₂ : ModuleCat.{v} R} :
-    (X₁ →ₗ[R] X₂) → (ModuleCat.of R X₁ ⟶ X₂) :=
+def Mod.asHomRight [AddCommGroup X₁] [Module R X₁] {X₂ : Mod.{v} R} :
+    (X₁ →ₗ[R] X₂) → (Mod.of R X₁ ⟶ X₂) :=
   id
 set_option linter.uppercaseLean3 false in
-#align Module.as_hom_right ModuleCat.asHomRight
+#align Module.as_hom_right Mod.asHomRight
 
 /-- Reinterpreting a linear map in the category of `R`-modules. -/
-scoped[ModuleCat] notation "↾" f:1024 => ModuleCat.asHomRight f
+scoped[Mod] notation "↾" f:1024 => Mod.asHomRight f
 
 /-- Reinterpreting a linear map in the category of `R`-modules. -/
-def ModuleCat.asHomLeft {X₁ : ModuleCat.{v} R} [AddCommGroup X₂] [Module R X₂] :
-    (X₁ →ₗ[R] X₂) → (X₁ ⟶ ModuleCat.of R X₂) :=
+def Mod.asHomLeft {X₁ : Mod.{v} R} [AddCommGroup X₂] [Module R X₂] :
+    (X₁ →ₗ[R] X₂) → (X₁ ⟶ Mod.of R X₂) :=
   id
 set_option linter.uppercaseLean3 false in
-#align Module.as_hom_left ModuleCat.asHomLeft
+#align Module.as_hom_left Mod.asHomLeft
 
 /-- Reinterpreting a linear map in the category of `R`-modules. -/
-scoped[ModuleCat] notation "↿" f:1024 => ModuleCat.asHomLeft f
+scoped[Mod] notation "↿" f:1024 => Mod.asHomLeft f
 
 section
 
@@ -270,7 +270,7 @@ attribute [-instance] Ring.toNonAssocRing
 /-- Build an isomorphism in the category `Module R` from a `LinearEquiv` between `Module`s. -/
 @[simps]
 def LinearEquiv.toModuleIso {g₁ : AddCommGroup X₁} {g₂ : AddCommGroup X₂} {m₁ : Module R X₁}
-    {m₂ : Module R X₂} (e : X₁ ≃ₗ[R] X₂) : ModuleCat.of R X₁ ≅ ModuleCat.of R X₂ where
+    {m₂ : Module R X₂} (e : X₁ ≃ₗ[R] X₂) : Mod.of R X₁ ≅ Mod.of R X₂ where
   hom := (e : X₁ →ₗ[R] X₂)
   inv := (e.symm : X₂ →ₗ[R] X₁)
   hom_inv_id := by ext; apply e.left_inv
@@ -282,21 +282,21 @@ set_option linter.uppercaseLean3 false in
 -- `Module.of R M` is defeq to `M` when `M : Module R`. Lean4 is, so that we no longer
 -- need different versions of `LinearEquiv.toModuleIso`.
 /-- Build an isomorphism in the category `Module R` from a `LinearEquiv` between `Module`s. -/
-abbrev LinearEquiv.toModuleIso' {M N : ModuleCat.{v} R} (i : M ≃ₗ[R] N) : M ≅ N :=
+abbrev LinearEquiv.toModuleIso' {M N : Mod.{v} R} (i : M ≃ₗ[R] N) : M ≅ N :=
   i.toModuleIso
 set_option linter.uppercaseLean3 false in
 #align linear_equiv.to_Module_iso' LinearEquiv.toModuleIso'
 
 /-- Build an isomorphism in the category `Module R` from a `linear_equiv` between `module`s. -/
-abbrev LinearEquiv.toModuleIso'Left {X₁ : ModuleCat.{v} R} [AddCommGroup X₂] [Module R X₂]
-    (e : X₁ ≃ₗ[R] X₂) : X₁ ≅ ModuleCat.of R X₂ :=
+abbrev LinearEquiv.toModuleIso'Left {X₁ : Mod.{v} R} [AddCommGroup X₂] [Module R X₂]
+    (e : X₁ ≃ₗ[R] X₂) : X₁ ≅ Mod.of R X₂ :=
   e.toModuleIso
 set_option linter.uppercaseLean3 false in
 #align linear_equiv.to_Module_iso'_left LinearEquiv.toModuleIso'Left
 
 /-- Build an isomorphism in the category `Module R` from a `linear_equiv` between `module`s. -/
-abbrev LinearEquiv.toModuleIso'Right [AddCommGroup X₁] [Module R X₁] {X₂ : ModuleCat.{v} R}
-    (e : X₁ ≃ₗ[R] X₂) : ModuleCat.of R X₁ ≅ X₂ :=
+abbrev LinearEquiv.toModuleIso'Right [AddCommGroup X₁] [Module R X₁] {X₂ : Mod.{v} R}
+    (e : X₁ ≃ₗ[R] X₂) : Mod.of R X₁ ≅ X₂ :=
   e.toModuleIso
 set_option linter.uppercaseLean3 false in
 #align linear_equiv.to_Module_iso'_right LinearEquiv.toModuleIso'Right
@@ -305,7 +305,7 @@ namespace CategoryTheory.Iso
 
 /-- Build a `linear_equiv` from an isomorphism in the category `Module R`. -/
 @[simps]
-def toLinearEquiv {X Y : ModuleCat R} (i : X ≅ Y) : X ≃ₗ[R] Y where
+def toLinearEquiv {X Y : Mod R} (i : X ≅ Y) : X ≃ₗ[R] Y where
   toFun := i.hom
   invFun := i.inv
   left_inv x := by
@@ -326,7 +326,7 @@ end CategoryTheory.Iso
 in `Module` -/
 @[simps]
 def linearEquivIsoModuleIso {X Y : Type u} [AddCommGroup X] [AddCommGroup Y] [Module R X]
-    [Module R Y] : (X ≃ₗ[R] Y) ≅ ModuleCat.of R X ≅ ModuleCat.of R Y where
+    [Module R Y] : (X ≃ₗ[R] Y) ≅ Mod.of R X ≅ Mod.of R Y where
   hom e := e.toModuleIso
   inv i := i.toLinearEquiv
 set_option linter.uppercaseLean3 false in
@@ -334,11 +334,11 @@ set_option linter.uppercaseLean3 false in
 
 end
 
-namespace ModuleCat
+namespace Mod
 
-instance {M N : ModuleCat.{v} R} : AddCommGroup (M ⟶ N) := LinearMap.addCommGroup
+instance {M N : Mod.{v} R} : AddCommGroup (M ⟶ N) := LinearMap.addCommGroup
 
-instance : Preadditive (ModuleCat.{v} R) where
+instance : Preadditive (Mod.{v} R) where
   add_comp P Q R f f' g := by
     ext
     dsimp
@@ -348,16 +348,16 @@ instance : Preadditive (ModuleCat.{v} R) where
     ext
     rfl
 
-instance forget₂_addCommGrp_additive : (forget₂ (ModuleCat.{v} R) AddCommGrp).Additive
+instance forget₂_addCommGrp_additive : (forget₂ (Mod.{v} R) AddCommGrp).Additive
     where
 set_option linter.uppercaseLean3 false in
-#align Module.forget₂_AddCommGroup_additive ModuleCat.forget₂_addCommGrp_additive
+#align Module.forget₂_AddCommGroup_additive Mod.forget₂_addCommGrp_additive
 
 section
 
 variable {S : Type u} [CommRing S]
 
-instance : Linear S (ModuleCat.{v} S) where
+instance : Linear S (Mod.{v} S) where
   homModule X Y := LinearMap.instModuleLinearMapAddCommMonoid
   smul_comp := by
     intros
@@ -370,23 +370,23 @@ instance : Linear S (ModuleCat.{v} S) where
     ext
     rfl
 
-variable {X Y X' Y' : ModuleCat.{v} S}
+variable {X Y X' Y' : Mod.{v} S}
 
 theorem Iso.homCongr_eq_arrowCongr (i : X ≅ X') (j : Y ≅ Y') (f : X ⟶ Y) :
     Iso.homCongr i j f = LinearEquiv.arrowCongr i.toLinearEquiv j.toLinearEquiv f :=
   rfl
 set_option linter.uppercaseLean3 false in
-#align Module.iso.hom_congr_eq_arrow_congr ModuleCat.Iso.homCongr_eq_arrowCongr
+#align Module.iso.hom_congr_eq_arrow_congr Mod.Iso.homCongr_eq_arrowCongr
 
 theorem Iso.conj_eq_conj (i : X ≅ X') (f : End X) :
     Iso.conj i f = LinearEquiv.conj i.toLinearEquiv f :=
   rfl
 set_option linter.uppercaseLean3 false in
-#align Module.iso.conj_eq_conj ModuleCat.Iso.conj_eq_conj
+#align Module.iso.conj_eq_conj Mod.Iso.conj_eq_conj
 
 end
 
-end ModuleCat
+end Mod
 
-instance (M : Type u) [AddCommGroup M] [Module R M] : CoeOut (Submodule R M) (ModuleCat R) :=
-  ⟨fun N => ModuleCat.of R N⟩
+instance (M : Type u) [AddCommGroup M] [Module R M] : CoeOut (Submodule R M) (Mod R) :=
+  ⟨fun N => Mod.of R N⟩

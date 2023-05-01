@@ -8,7 +8,7 @@ Authors: Scott Morrison
 ! Please do not edit these lines, except to modify the commit id
 ! if you have ported upstream changes.
 -/
-import Mathlib.Algebra.Category.ModuleCat.Basic
+import Mathlib.Algebra.Category.Mod.Basic
 import Mathlib.LinearAlgebra.Span
 
 /-!
@@ -29,14 +29,14 @@ A ring `R` is equivalent to
 the endomorphisms of the additive forgetful functor `Module R ⥤ AddCommGroup`.
 -/
 def ringEquivEndForget₂ (R : Type u) [Ring R] :
-    R ≃+* End (AdditiveFunctor.of (forget₂ (ModuleCat.{u} R) AddCommGrp.{u})) where
+    R ≃+* End (AdditiveFunctor.of (forget₂ (Mod.{u} R) AddCommGrp.{u})) where
   toFun r :=
     { app := fun M =>
         @AddCommGrp.ofHom M.carrier M.carrier _ _ (DistribMulAction.toAddMonoidHom M r)
       naturality := fun M N f => by
         ext
         exact (f.map_smul _ _).symm }
-  invFun φ := φ.app (ModuleCat.of R R) (1 : R)
+  invFun φ := φ.app (Mod.of R R) (1 : R)
   left_inv := by
     intro r
     dsimp
@@ -47,7 +47,7 @@ def ringEquivEndForget₂ (R : Type u) [Ring R] :
     apply NatTrans.ext
     ext M (x : M)
     have w := congr_fun ((forget _).congr_map
-      (φ.naturality (ModuleCat.asHomRight (LinearMap.toSpanSingleton R M x)))) (1 : R)
+      (φ.naturality (Mod.asHomRight (LinearMap.toSpanSingleton R M x)))) (1 : R)
     exact w.symm.trans (congr_arg (φ.app M) (one_smul R x))
   map_add' := by
     intros

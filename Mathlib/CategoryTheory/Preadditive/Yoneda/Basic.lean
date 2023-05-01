@@ -10,7 +10,7 @@ Authors: Markus Himmel
 -/
 import Mathlib.CategoryTheory.Limits.Yoneda
 import Mathlib.CategoryTheory.Preadditive.Opposite
-import Mathlib.Algebra.Category.ModuleCat.Basic
+import Mathlib.Algebra.Category.Mod.Basic
 import Mathlib.Algebra.Category.Grp.Preadditive
 
 /-!
@@ -43,9 +43,9 @@ variable {C : Type u} [Category.{v} C] [Preadditive C]
 object `X` to the `End Y`-module of morphisms `X ⟶ Y`.
 -/
 @[simps]
-def preadditiveYonedaObj (Y : C) : Cᵒᵖ ⥤ ModuleCat.{v} (End Y) where
-  obj X := ModuleCat.of _ (X.unop ⟶ Y)
-  map f := ModuleCat.ofHom
+def preadditiveYonedaObj (Y : C) : Cᵒᵖ ⥤ Mod.{v} (End Y) where
+  obj X := Mod.of _ (X.unop ⟶ Y)
+  map f := Mod.ofHom
     { toFun := fun g => f.unop ≫ g
       map_add' := fun g g' => comp_add _ _ _ _ _ _
       map_smul' := fun r g => Eq.symm <| Category.assoc _ _ _ }
@@ -72,9 +72,9 @@ def preadditiveYoneda : C ⥤ Cᵒᵖ ⥤ AddCommGrp.{v} where
 object `Y` to the `End X`-module of morphisms `X ⟶ Y`.
 -/
 @[simps]
-def preadditiveCoyonedaObj (X : Cᵒᵖ) : C ⥤ ModuleCat.{v} (End X) where
-  obj Y := ModuleCat.of _ (unop X ⟶ Y)
-  map f := ModuleCat.ofHom
+def preadditiveCoyonedaObj (X : Cᵒᵖ) : C ⥤ Mod.{v} (End X) where
+  obj Y := Mod.of _ (unop X ⟶ Y)
+  map f := Mod.ofHom
     { toFun := fun g => g ≫ f
       map_add' := fun g g' => add_comp _ _ _ _ _ _
       map_smul' := fun r g => Category.assoc _ _ _ }

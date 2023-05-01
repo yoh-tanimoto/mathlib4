@@ -33,10 +33,10 @@ import Mathlib.Algebra.Category.Grp.Basic
 import Mathlib.Algebra.Category.Grp.Preadditive
 import Mathlib.Algebra.Category.Grp.ZModuleEquivalence
 import Mathlib.Algebra.Category.Grp.Zero
-import Mathlib.Algebra.Category.ModuleCat.Basic
-import Mathlib.Algebra.Category.ModuleCat.EpiMono
-import Mathlib.Algebra.Category.ModuleCat.Products
-import Mathlib.Algebra.Category.ModuleCat.Tannaka
+import Mathlib.Algebra.Category.Mod.Basic
+import Mathlib.Algebra.Category.Mod.EpiMono
+import Mathlib.Algebra.Category.Mod.Products
+import Mathlib.Algebra.Category.Mod.Tannaka
 import Mathlib.Algebra.Category.MonCat.Basic
 import Mathlib.Algebra.CharP.Algebra
 import Mathlib.Algebra.CharP.Basic

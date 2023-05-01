@@ -8,7 +8,7 @@ Authors: Scott Morrison
 ! Please do not edit these lines, except to modify the commit id
 ! if you have ported upstream changes.
 -/
-import Mathlib.Algebra.Category.ModuleCat.Basic
+import Mathlib.Algebra.Category.Mod.Basic
 
 /-!
 The forgetful functor from ℤ-modules to additive commutative groups is
@@ -26,10 +26,10 @@ open CategoryTheory.Equivalence
 
 universe u
 
-namespace ModuleCat
+namespace Mod
 
 /-- The forgetful functor from `ℤ` modules to `AddCommGroup` is full. -/
-instance forget₂AddCommGroupFull : Full (forget₂ (ModuleCat ℤ) AddCommGroupCat.{u}) where
+instance forget₂AddCommGroupFull : Full (forget₂ (Mod ℤ) AddCommGroupCat.{u}) where
   preimage {A B}
     -- `AddMonoidHom.toIntLinearMap` doesn't work here because `A` and `B` are not
     -- definitionally equal to the canonical `AddCommGroup.intModule` module
@@ -41,21 +41,21 @@ instance forget₂AddCommGroupFull : Full (forget₂ (ModuleCat ℤ) AddCommGrou
           convert AddMonoidHom.map_zsmul (show A.carrier →+ B.carrier from f) x n <;>
             ext <;> apply int_smul_eq_zsmul)
 set_option linter.uppercaseLean3 false in
-#align Module.forget₂_AddCommGroup_full ModuleCat.forget₂AddCommGroupFull
+#align Module.forget₂_AddCommGroup_full Mod.forget₂AddCommGroupFull
 
 /-- The forgetful functor from `ℤ` modules to `AddCommGroup` is essentially surjective. -/
-instance forget₂_addCommGroupCat_essSurj : EssSurj (forget₂ (ModuleCat ℤ) AddCommGroupCat.{u})
+instance forget₂_addCommGroupCat_essSurj : EssSurj (forget₂ (Mod ℤ) AddCommGroupCat.{u})
     where mem_essImage A :=
-    ⟨ModuleCat.of ℤ A,
+    ⟨Mod.of ℤ A,
       ⟨{  hom := 𝟙 A
           inv := 𝟙 A }⟩⟩
 set_option linter.uppercaseLean3 false in
-#align Module.forget₂_AddCommGroup_ess_surj ModuleCat.forget₂_addCommGroupCat_essSurj
+#align Module.forget₂_AddCommGroup_ess_surj Mod.forget₂_addCommGroupCat_essSurj
 
 noncomputable instance forget₂AddCommGroupIsEquivalence :
-    IsEquivalence (forget₂ (ModuleCat ℤ) AddCommGroupCat.{u}) :=
-  Equivalence.ofFullyFaithfullyEssSurj (forget₂ (ModuleCat ℤ) AddCommGroupCat)
+    IsEquivalence (forget₂ (Mod ℤ) AddCommGroupCat.{u}) :=
+  Equivalence.ofFullyFaithfullyEssSurj (forget₂ (Mod ℤ) AddCommGroupCat)
 set_option linter.uppercaseLean3 false in
-#align Module.forget₂_AddCommGroup_is_equivalence ModuleCat.forget₂AddCommGroupIsEquivalence
+#align Module.forget₂_AddCommGroup_is_equivalence Mod.forget₂AddCommGroupIsEquivalence
 
-end ModuleCat
+end Mod
