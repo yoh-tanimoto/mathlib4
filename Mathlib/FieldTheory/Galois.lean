@@ -494,3 +494,26 @@ instance (priority := 100) IsAlgClosure.isGalois (k K : Type _) [Field k] [Field
 #align is_alg_closure.is_galois IsAlgClosure.isGalois
 
 end IsAlgClosure
+
+instance compositum_normal {F E : Type _} [Field F] [Field E] [Algebra F E]
+    (K L : IntermediateField F E) [Normal F K] [Normal F L] :
+    Normal F (K ⊔ L : IntermediateField F E) := by
+  let ϕ : Bool → IntermediateField F E := Bool.rec L K
+  have : ∀ i, Normal F (↥(ϕ i : IntermediateField F E)) :=
+    fun i => match i with
+    | true => inferInstance
+    | false => inferInstance
+  have h := IntermediateField.normal_iSup F E ϕ
+  rwa [iSup_bool_eq] at h
+
+instance compositum_galois {F E : Type _} [Field F] [Field E] [Algebra F E]
+    (K L : IntermediateField F E) [IsGalois F K] [IsGalois F L] :
+    IsGalois F (K ⊔ L : IntermediateField F E) := by
+  sorry
+
+open FiniteDimensional
+
+lemma degree_compositum_normal {F E : Type _} [Field F] [Field E] [Algebra F E]
+    (K L : IntermediateField F E) [IsGalois F K] [IsGalois F L] :
+    finrank F (K ⊔ L : IntermediateField F E) ∣ finrank F K * finrank F L := by
+  sorry
