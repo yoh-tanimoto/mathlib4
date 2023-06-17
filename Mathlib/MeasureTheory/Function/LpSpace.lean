@@ -240,10 +240,10 @@ theorem coeFn_sub (f g : Lp E p μ) : ⇑(f - g) =ᵐ[μ] f - g :=
   AEEqFun.coeFn_sub _ _
 #align measure_theory.Lp.coe_fn_sub MeasureTheory.Lp.coeFn_sub
 
-theorem mem_lp_const (α) {_ : MeasurableSpace α} (μ : Measure α) (c : E) [IsFiniteMeasure μ] :
+theorem const_mem_Lp (α) {_ : MeasurableSpace α} (μ : Measure α) (c : E) [IsFiniteMeasure μ] :
     @AEEqFun.const α _ _ μ _ c ∈ Lp E p μ :=
   (memℒp_const c).snorm_mk_lt_top
-#align measure_theory.Lp.mem_Lp_const MeasureTheory.Lp.mem_lp_const
+#align measure_theory.Lp.mem_Lp_const MeasureTheory.Lp.const_mem_Lp
 
 instance instNorm : Norm (Lp E p μ) where norm f := ENNReal.toReal (snorm f p μ)
 #align measure_theory.Lp.has_norm MeasureTheory.Lp.instNorm
@@ -467,19 +467,19 @@ variable [NormedRing 𝕜] [NormedRing 𝕜'] [Module 𝕜 E] [Module 𝕜' E]
 
 variable [BoundedSMul 𝕜 E] [BoundedSMul 𝕜' E]
 
-theorem mem_Lp_const_smul (c : 𝕜) (f : Lp E p μ) : c • (f : α →ₘ[μ] E) ∈ Lp E p μ := by
+theorem const_smul_mem_Lp (c : 𝕜) (f : Lp E p μ) : c • (f : α →ₘ[μ] E) ∈ Lp E p μ := by
   rw [mem_Lp_iff_snorm_lt_top, snorm_congr_ae (AEEqFun.coeFn_smul _ _)]
   refine' (snorm_const_smul_le _ _).trans_lt _
   rw [ENNReal.smul_def, smul_eq_mul, ENNReal.mul_lt_top_iff]
   exact Or.inl ⟨ENNReal.coe_lt_top, f.prop⟩
-#align measure_theory.Lp.mem_Lp_const_smul MeasureTheory.Lp.mem_Lp_const_smul
+#align measure_theory.Lp.mem_Lp_const_smul MeasureTheory.Lp.const_smul_mem_Lp
 
 variable (E p μ 𝕜)
 
 /-- The `𝕜`-submodule of elements of `α →ₘ[μ] E` whose `Lp` norm is finite.  This is `Lp E p μ`,
 with extra structure. -/
 def LpSubmodule : Submodule 𝕜 (α →ₘ[μ] E) :=
-  { Lp E p μ with smul_mem' := fun c f hf => by simpa using mem_Lp_const_smul c ⟨f, hf⟩ }
+  { Lp E p μ with smul_mem' := fun c f hf => by simpa using const_smul_mem_Lp c ⟨f, hf⟩ }
 #align measure_theory.Lp.Lp_submodule MeasureTheory.Lp.LpSubmodule
 
 variable {E p μ 𝕜}
@@ -787,21 +787,54 @@ theorem memℒp_add_of_disjoint {f g : α → E} (h : Disjoint (support f) (supp
 
 /-- The indicator of a disjoint union of two sets is the sum of the indicators of the sets. -/
 theorem indicatorConstLp_disjoint_union {s t : Set α} (hs : MeasurableSet s) (ht : MeasurableSet t)
+    (hμs : μ s ≠ ∞) (hμt : μ t ≠ ∞) (hst : Disjoint s t) (c : E) :
+    indicatorConstLp p (hs.union ht)
+        (ne_top_of_le_ne_top (ENNReal.add_ne_top.mpr ⟨hμs, hμt⟩) (measure_union_le s t)) c =
+      indicatorConstLp p hs hμs c + indicatorConstLp p ht hμt c := by
+  simp only [indicatorConstLp, Set.indicator_union_of_disjoint hst, ← Memℒp.toLp_add]
+  rfl
+
+/-- The indicator of a disjoint union of two sets is the sum of the indicators of the sets. -/
+@[deprecated indicatorConstLp_disjoint_union]
+theorem indicatorConstLp_disjoint_union' {s t : Set α} (hs : MeasurableSet s) (ht : MeasurableSet t)
     (hμs : μ s ≠ ∞) (hμt : μ t ≠ ∞) (hst : s ∩ t = ∅) (c : E) :
     indicatorConstLp p (hs.union ht)
-        ((measure_union_le s t).trans_lt
-            (lt_top_iff_ne_top.mpr (ENNReal.add_ne_top.mpr ⟨hμs, hμt⟩))).ne
-        c =
-      indicatorConstLp p hs hμs c + indicatorConstLp p ht hμt c := by
-  ext1
-  refine' indicatorConstLp_coeFn.trans (EventuallyEq.trans _ (Lp.coeFn_add _ _).symm)
-  refine'
-    EventuallyEq.trans _
-      (EventuallyEq.add indicatorConstLp_coeFn.symm indicatorConstLp_coeFn.symm)
-  rw [Set.indicator_union_of_disjoint (Set.disjoint_iff_inter_eq_empty.mpr hst) _]
-#align measure_theory.indicator_const_Lp_disjoint_union MeasureTheory.indicatorConstLp_disjoint_union
+        (ne_top_of_le_ne_top (ENNReal.add_ne_top.mpr ⟨hμs, hμt⟩) (measure_union_le s t)) c =
+      indicatorConstLp p hs hμs c + indicatorConstLp p ht hμt c :=
+  indicatorConstLp_disjoint_union hs ht hμs hμt (Set.disjoint_iff_inter_eq_empty.mpr hst) c
+#align measure_theory.indicator_const_Lp_disjoint_union MeasureTheory.indicatorConstLp_disjoint_union'
 
 end IndicatorConstLp
+
+section const
+
+variable (μ p)
+variable [IsFiniteMeasure μ] (c : E)
+
+/-- Constant function as an element of `MeasureTheory.Lp` for a finite measure. -/
+protected def Lp.const : Lp E p μ := ⟨AEEqFun.const α c, const_mem_Lp α μ c⟩
+
+lemma Lp.coeFn_const : Lp.const p μ c =ᵐ[μ] Function.const α c :=
+  AEEqFun.coeFn_const α c
+
+@[simp]
+lemma Lp.val_const : (Lp.const p μ c).1 = AEEqFun.const α c := rfl
+
+variable {μ p c}
+
+@[simp]
+lemma Memℒp.toLp_const (hc : Memℒp (Function.const α c) p μ := memℒp_const c) :
+  hc.toLp = Lp.const p μ c := rfl
+
+variable (μ p c)
+
+-- todo (after port): make it `simp`
+lemma indicatorConstLp_univ :
+    indicatorConstLp p .univ (measure_ne_top μ _) c = Lp.const p μ c := by
+  rw [← Memℒp.toLp_const, indicatorConstLp]
+  simp only [Set.indicator_univ, Function.const]
+
+end const
 
 theorem Memℒp.norm_rpow_div {f : α → E} (hf : Memℒp f p μ) (q : ℝ≥0∞) :
     Memℒp (fun x : α => ‖f x‖ ^ q.toReal) (p / q) μ := by
@@ -839,9 +872,57 @@ theorem Memℒp.norm_rpow {f : α → E} (hf : Memℒp f p μ) (hp_ne_zero : p �
   rw [div_eq_mul_inv, ENNReal.mul_inv_cancel hp_ne_zero hp_ne_top]
 #align measure_theory.mem_ℒp.norm_rpow MeasureTheory.Memℒp.norm_rpow
 
-end MeasureTheory
+theorem AEEqFun.compMeasurePreserving_mem_Lp {β : Type _} [MeasurableSpace β]
+    {μb : MeasureTheory.Measure β} {g : β →ₘ[μb] E} (hg : g ∈ Lp E p μb) {f : α → β}
+    (hf : MeasurePreserving f μ μb) :
+    g.compMeasurePreserving f hf ∈ Lp E p μ := by
+  rw [Lp.mem_Lp_iff_snorm_lt_top] at hg ⊢
+  rwa [snorm_compMeasurePreserving]
 
-open MeasureTheory
+namespace Lp
+
+/-! ### Composition with a measure preserving function -/
+
+variable {β : Type _} [MeasurableSpace β] {μb : MeasureTheory.Measure β} {f : α → β}
+
+/-- Composition of an `L^p` function with a measure preserving function is an `L^p` function. -/
+def compMeasurePreserving (f : α → β) (hf : MeasurePreserving f μ μb) :
+    Lp E p μb →+ Lp E p μ where
+  toFun g := ⟨g.1.compMeasurePreserving f hf, g.1.compMeasurePreserving_mem_Lp g.2 hf⟩
+  map_zero' := rfl
+  map_add' := by rintro ⟨⟨_⟩, _⟩ ⟨⟨_⟩, _⟩; rfl
+
+@[simp]
+theorem compMeasurePresving_val (g : Lp E p μb) (hf : MeasurePreserving f μ μb) :
+    (compMeasurePreserving f hf g).1 = g.1.compMeasurePreserving f hf :=
+  rfl
+
+theorem coeFn_compMeasurePreserving (g : Lp E p μb) (hf : MeasurePreserving f μ μb) :
+    compMeasurePreserving f hf g =ᵐ[μ] g ∘ f :=
+  g.1.coeFn_compMeasurePreserving hf
+
+@[simp]
+theorem norm_compMeasurePreserving (g : Lp E p μb) (hf : MeasurePreserving f μ μb) :
+    ‖compMeasurePreserving f hf g‖ = ‖g‖ :=
+  congr_arg ENNReal.toReal <| g.1.snorm_compMeasurePreserving hf
+
+variable (𝕜 : Type _) [NormedRing 𝕜] [Module 𝕜 E] [BoundedSMul 𝕜 E]
+
+@[simps]
+def compMeasurePreservingₗ (f : α → β) (hf : MeasurePreserving f μ μb) :
+    Lp E p μb →ₗ[𝕜] Lp E p μ where
+  __ := compMeasurePreserving f hf
+  map_smul' c g := by rcases g with ⟨⟨_⟩, _⟩; rfl
+
+@[simps!]
+def compMeasurePreservingₗᵢ [Fact (1 ≤ p)] (f : α → β) (hf : MeasurePreserving f μ μb) :
+    Lp E p μb →ₗᵢ[𝕜] Lp E p μ where
+  toLinearMap := compMeasurePreservingₗ 𝕜 f hf
+  norm_map' := (norm_compMeasurePreserving · hf)
+
+end Lp
+
+end MeasureTheory
 
 /-!
 ### Composition on `L^p`
@@ -851,6 +932,7 @@ this to the composition with continuous linear maps, and to the definition of th
 part of an `L^p` function.
 -/
 
+open MeasureTheory
 
 section Composition
 
