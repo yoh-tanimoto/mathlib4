@@ -2171,6 +2171,7 @@ import Mathlib.MeasureTheory.Group.GeometryOfNumbers
 import Mathlib.MeasureTheory.Group.Integration
 import Mathlib.MeasureTheory.Group.MeasurableEquiv
 import Mathlib.MeasureTheory.Group.Measure
+import Mathlib.MeasureTheory.Group.MinimalErgodic
 import Mathlib.MeasureTheory.Group.Pointwise
 import Mathlib.MeasureTheory.Group.Prod
 import Mathlib.MeasureTheory.Integral.Average
