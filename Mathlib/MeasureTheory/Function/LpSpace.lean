@@ -794,22 +794,19 @@ theorem memℒp_add_of_disjoint {f g : α → E} (h : Disjoint (support f) (supp
 
 /-- The indicator of a disjoint union of two sets is the sum of the indicators of the sets. -/
 theorem indicatorConstLp_disjoint_union {s t : Set α} (hs : MeasurableSet s) (ht : MeasurableSet t)
-    (hμs : μ s ≠ ∞) (hμt : μ t ≠ ∞) (hst : Disjoint s t) (c : E) :
-    indicatorConstLp p (hs.union ht)
-        (ne_top_of_le_ne_top (ENNReal.add_ne_top.mpr ⟨hμs, hμt⟩) (measure_union_le s t)) c =
-      indicatorConstLp p hs hμs c + indicatorConstLp p ht hμt c := by
-  simp only [indicatorConstLp, Set.indicator_union_of_disjoint hst, ← Memℒp.toLp_add]
-  rfl
-
-/-- The indicator of a disjoint union of two sets is the sum of the indicators of the sets. -/
-@[deprecated indicatorConstLp_disjoint_union]
-theorem indicatorConstLp_disjoint_union' {s t : Set α} (hs : MeasurableSet s) (ht : MeasurableSet t)
     (hμs : μ s ≠ ∞) (hμt : μ t ≠ ∞) (hst : s ∩ t = ∅) (c : E) :
     indicatorConstLp p (hs.union ht)
-        (ne_top_of_le_ne_top (ENNReal.add_ne_top.mpr ⟨hμs, hμt⟩) (measure_union_le s t)) c =
-      indicatorConstLp p hs hμs c + indicatorConstLp p ht hμt c :=
-  indicatorConstLp_disjoint_union hs ht hμs hμt (Set.disjoint_iff_inter_eq_empty.mpr hst) c
-#align measure_theory.indicator_const_Lp_disjoint_union MeasureTheory.indicatorConstLp_disjoint_union'
+        ((measure_union_le s t).trans_lt
+            (lt_top_iff_ne_top.mpr (ENNReal.add_ne_top.mpr ⟨hμs, hμt⟩))).ne
+        c =
+      indicatorConstLp p hs hμs c + indicatorConstLp p ht hμt c := by
+  ext1
+  refine' indicatorConstLp_coeFn.trans (EventuallyEq.trans _ (Lp.coeFn_add _ _).symm)
+  refine'
+    EventuallyEq.trans _
+      (EventuallyEq.add indicatorConstLp_coeFn.symm indicatorConstLp_coeFn.symm)
+  rw [Set.indicator_union_of_disjoint (Set.disjoint_iff_inter_eq_empty.mpr hst) _]
+#align measure_theory.indicator_const_Lp_disjoint_union MeasureTheory.indicatorConstLp_disjoint_union
 
 end IndicatorConstLp
 
