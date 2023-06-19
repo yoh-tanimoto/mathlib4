@@ -10,20 +10,18 @@ import Mathlib.MeasureTheory.Integral.Average
 /-!
 -/
 
-open Function Set Filter Topology MeasureTheory
+open Function Set Filter Topology
 
-@[to_additive]
-theorem Filter.EventuallyEq.of_mulIndicator_const {α β : Type _} [One β] {l : Filter α} {c : β}
-    (hc : c ≠ 1) {s t : Set α} (h : s.mulIndicator (fun _ ↦ c) =ᶠ[l] t.mulIndicator fun _ ↦ c) :
-    s =ᶠ[l] t := by
-  have : ∀ s : Set α, s.mulIndicator (fun _ ↦ c) ⁻¹' {c} = s := fun s ↦ by
-    rw [mulIndicator_preimage_of_not_mem, preimage_const_of_mem (mem_singleton _), univ_inter]
-    exact hc.symm
-  simpa only [this] using h.preimage {c}
+namespace MeasureTheory
 
-variable {G E : Type _}
+variable {G : Type _}
   [Group G] [TopologicalSpace G] [TopologicalGroup G] [CompactSpace G] [NormalSpace G]
   [MeasurableSpace G] [BorelSpace G]
   {μ : MeasureTheory.Measure G} [μ.WeaklyRegular] [μ.IsHaarMeasure]
-  [NormedAddCommGroup E] [NormedSpace ℝ E] [CompleteSpace E]
 
+/-- If a set in a compact topological group is a.e. invariant under left multiplications by a
+elements from a dense set, then it has either measure zero or full measure. -/
+theorem ae_eq_empty_or_univ_of_forall_dense_smul_ae_eq {s t : Set G} (hs : Dense s)
+    (htm : NullMeasurableSet t μ) (ht : ∀ a ∈ s, a • t =ᵐ[μ] t) :
+    t =ᵐ[μ] (∅ : Set G) ∨ t =ᵐ[μ] univ := by
+  

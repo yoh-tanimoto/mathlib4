@@ -11,6 +11,7 @@ Authors: Rémy Degenne, Sébastien Gouëzel
 import Mathlib.Analysis.Normed.Group.Hom
 import Mathlib.MeasureTheory.Function.LpSeminorm
 import Mathlib.Topology.ContinuousFunction.Compact
+import Mathlib.Order.Filter.IndicatorFunction
 
 /-!
 # Lp space
@@ -775,13 +776,22 @@ theorem norm_indicatorConstLp_le :
   exact ENNReal.rpow_ne_top_of_nonneg (by positivity) hμs
 
 @[simp]
-theorem indicatorConst_empty :
+theorem indicatorConstLp_empty :
     indicatorConstLp p MeasurableSet.empty (by simp : μ ∅ ≠ ∞) c = 0 := by
   rw [Lp.eq_zero_iff_ae_eq_zero]
   convert indicatorConstLp_coeFn (E := E)
   simp [Set.indicator_empty']
   rfl
-#align measure_theory.indicator_const_empty MeasureTheory.indicatorConst_empty
+#align measure_theory.indicator_const_empty MeasureTheory.indicatorConstLp_empty
+
+theorem indicatorConstLp_left_injective {s t : Set α} (hs : MeasurableSet s) (hsμ : μ s ≠ ∞)
+    (ht : MeasurableSet t) (htμ : μ t ≠ ∞) {c : E} (hc : c ≠ 0)
+    (h : indicatorConstLp p hs hsμ c = indicatorConstLp p ht htμ c) : s =ᵐ[μ] t :=
+  .of_indicator_const hc <|
+    calc
+      s.indicator (fun _ ↦ c) =ᵐ[μ] indicatorConstLp p hs hsμ c := indicatorConstLp_coeFn.symm
+      _ = indicatorConstLp p ht htμ c := by rw [h]
+      _ =ᵐ[μ] t.indicator (fun _ ↦ c) := indicatorConstLp_coeFn
 
 theorem memℒp_add_of_disjoint {f g : α → E} (h : Disjoint (support f) (support g))
     (hf : StronglyMeasurable f) (hg : StronglyMeasurable g) :
