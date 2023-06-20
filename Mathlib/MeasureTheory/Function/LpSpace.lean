@@ -119,6 +119,8 @@ def toLp (f : α → E) (h_mem_ℒp : Memℒp f p μ) : Lp E p μ :=
   ⟨AEEqFun.mk f h_mem_ℒp.1, h_mem_ℒp.snorm_mk_lt_top⟩
 #align measure_theory.mem_ℒp.to_Lp MeasureTheory.Memℒp.toLp
 
+theorem toLp_val {f : α → E} (h : Memℒp f p μ) : (toLp f h).1 = AEEqFun.mk f h.1 := rfl
+
 theorem coeFn_toLp {f : α → E} (hf : Memℒp f p μ) : hf.toLp f =ᵐ[μ] f :=
   AEEqFun.coeFn_mk _ _
 #align measure_theory.mem_ℒp.coe_fn_to_Lp MeasureTheory.Memℒp.coeFn_toLp
@@ -778,10 +780,7 @@ theorem norm_indicatorConstLp_le :
 @[simp]
 theorem indicatorConstLp_empty :
     indicatorConstLp p MeasurableSet.empty (by simp : μ ∅ ≠ ∞) c = 0 := by
-  rw [Lp.eq_zero_iff_ae_eq_zero]
-  convert indicatorConstLp_coeFn (E := E)
-  simp [Set.indicator_empty']
-  rfl
+  simp only [indicatorConstLp, Set.indicator_empty', Memℒp.toLp_zero]
 #align measure_theory.indicator_const_empty MeasureTheory.indicatorConstLp_empty
 
 theorem indicatorConstLp_left_injective {s t : Set α} (hs : MeasurableSet s) (hsμ : μ s ≠ ∞)
@@ -938,7 +937,7 @@ def compMeasurePreserving (f : α → β) (hf : MeasurePreserving f μ μb) :
   map_add' := by rintro ⟨⟨_⟩, _⟩ ⟨⟨_⟩, _⟩; rfl
 
 @[simp]
-theorem compMeasurePresving_val (g : Lp E p μb) (hf : MeasurePreserving f μ μb) :
+theorem compMeasurePreserving_val (g : Lp E p μb) (hf : MeasurePreserving f μ μb) :
     (compMeasurePreserving f hf g).1 = g.1.compMeasurePreserving f hf :=
   rfl
 
@@ -946,10 +945,35 @@ theorem coeFn_compMeasurePreserving (g : Lp E p μb) (hf : MeasurePreserving f �
     compMeasurePreserving f hf g =ᵐ[μ] g ∘ f :=
   g.1.coeFn_compMeasurePreserving hf
 
+theorem compMeasurePreserving_id_apply (f : Lp E p μ) :
+    compMeasurePreserving id measurePreserving_id f = f := by
+  rcases f with ⟨⟨_⟩, _⟩; rfl
+
+@[simp]
+theorem compMeasurePreserving_id :
+    compMeasurePreserving id measurePreserving_id = AddMonoidHom.id (Lp E p μ) :=
+  FunLike.ext _ _ compMeasurePreserving_id_apply
+
+@[simp]
+theorem compMeasurePreserving_compMeasurePreserving
+     {γ : Type _} [MeasurableSpace γ] {μc : MeasureTheory.Measure γ} {g : β → γ}
+     (hf : MeasurePreserving f μ μb) (hg : MeasurePreserving g μb μc) (h : Lp E p μc) :
+     compMeasurePreserving f hf (compMeasurePreserving g hg h) =
+       compMeasurePreserving (g ∘ f) (hg.comp hf) h := by
+  rcases h with ⟨⟨_⟩, _⟩; rfl
+
 @[simp]
 theorem norm_compMeasurePreserving (g : Lp E p μb) (hf : MeasurePreserving f μ μb) :
     ‖compMeasurePreserving f hf g‖ = ‖g‖ :=
   congr_arg ENNReal.toReal <| g.1.snorm_compMeasurePreserving hf
+
+theorem indicatorConstLp_compMeasurePreserving {s : Set β} (hs : MeasurableSet s) (hμ : μb s ≠ ∞)
+    (hf : MeasurePreserving f μ μb) (c : E) :
+    compMeasurePreserving f hf (indicatorConstLp p hs hμ c) =
+      indicatorConstLp p (hf.measurable hs) ((hf.measure_preimage hs).symm ▸ hμ) c := by
+  apply Subtype.eq
+  simp only [compMeasurePreserving_val, indicatorConstLp, Memℒp.toLp_val,
+    AEEqFun.compMeasurePreserving_mk, (· ∘ ·), ← Set.indicator_comp_right]
 
 variable (𝕜 : Type _) [NormedRing 𝕜] [Module 𝕜 E] [BoundedSMul 𝕜 E]
 
