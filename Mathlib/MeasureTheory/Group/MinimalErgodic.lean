@@ -7,6 +7,7 @@ import Mathlib.MeasureTheory.Group.Measure
 import Mathlib.MeasureTheory.Group.LpAction
 import Mathlib.MeasureTheory.Function.ContinuousMapDense
 import Mathlib.MeasureTheory.Integral.Average
+import Mathlib.MeasureTheory.Constructions.Prod.Integral
 import Mathlib.Order.Filter.EventuallyConst
 
 /-!
@@ -22,6 +23,7 @@ variable {G : Type _}
   [MeasurableSpace G] [BorelSpace G]
   {μ : MeasureTheory.Measure G} [μ.WeaklyRegular] [μ.IsHaarMeasure]
 
+#check integrable_prod_iff'
 attribute [local instance] CompactSpace.isFiniteMeasure in
 -- Do not use this lemma. It is generalized below
 theorem Lp_one.eq_const_of_forall_dense_smulRight_eq (f : G →₁[μ] ℝ) {s : Set G} (hd : Dense s)
@@ -33,11 +35,17 @@ theorem Lp_one.eq_const_of_forall_dense_smulRight_eq (f : G →₁[μ] ℝ) {s :
   replace hf : ∀ a : G, (f <| a • ·) =ᵐ[μ] f := fun a ↦
     (Lp.coeFn_smulRight (op a) _).symm.trans (by rw [hf])
   rw [← dist_le_zero, L1.dist_eq_integral_dist]
-  calc
-    ∫ a, dist (f a) (Lp.const 1 μ (⨍ x, f x ∂μ) a) ∂μ = ∫ a, ‖f a - ⨍ x, f x ∂μ‖ ∂μ :=
-      integral_congr_ae <| (Lp.coeFn_const 1 μ (⨍ x, f x ∂μ)).mono fun x hx ↦ by
-        simp only [hx, Function.const, dist_eq_norm]
-    _ ≤ _ := _
+  have hint : Integrable (fun p : G × G ↦ ‖f p.1 - f (p.1 * p.2)‖) (μ.prod ((μ univ)⁻¹ • μ))
+  · rw [integrable_prod_iff]
+    
+  -- calc
+  --   ∫ a, dist (f a) (Lp.const 1 μ (⨍ x, f x ∂μ) a) ∂μ = ∫ a, ‖f a - ⨍ x, f x ∂μ‖ ∂μ :=
+  --     integral_congr_ae <| (Lp.coeFn_const 1 μ (⨍ x, f x ∂μ)).mono fun x hx ↦ by
+  --       simp only [hx, Function.const, dist_eq_norm]
+  --   _ ≤ ∫ a, ⨍ x, ‖f a - f (a * x)‖ ∂μ ∂μ := by
+  --     refine integral_mono_of_nonneg (ae_of_all _ fun _ ↦ norm_nonneg _) ?_ ?_
+
+  --   _ ≤ _ := _
 
 open MulOpposite in
 /-- If a set in a compact topological group is a.e. invariant under left multiplications by a
