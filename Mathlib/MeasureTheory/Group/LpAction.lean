@@ -13,7 +13,7 @@ variable {X E : Type _}
   [NormedAddCommGroup E] [NormedSpace ℝ E] [CompleteSpace E]
   {p : ℝ≥0∞}
 
-section Monoid
+section MeasurableSMul
 
 variable {M : Type _}
   [Monoid M] [MeasurableSpace M] [MulAction M X] [MeasurableSMul M X] [SMulInvariantMeasure M X μ]
@@ -49,32 +49,31 @@ instance rightDistribMulAction : DistribMulAction Mᵐᵒᵖ (Lp E p μ) where
   smul_zero _ := map_zero (compMeasurePreserving _ _)
   smul_add _ := map_add (compMeasurePreserving _ _)
 
-end Monoid
+end MeasurableSMul
 
-section TopologicalGroup
+section ContinuousSMul
 
-variable {G : Type _}
-  [Group G] [TopologicalSpace G] [TopologicalGroup G] [MeasurableSpace G] [BorelSpace G]
-  [MulAction G X] [TopologicalSpace X] [NormalSpace X] [BorelSpace X] [ContinuousSMul G X]
-  [CompactSpace X] [SecondCountableTopologyEither X E] [SMulInvariantMeasure G X μ]
+variable {M : Type _}
+  [Monoid M] [TopologicalSpace M] [MeasurableSpace M] [BorelSpace M]
+  [MulAction M X] [TopologicalSpace X] [NormalSpace X] [BorelSpace X] [ContinuousSMul M X]
+  [CompactSpace X] [SecondCountableTopologyEither X E] [SMulInvariantMeasure M X μ]
+  [IsFiniteMeasure μ] [μ.WeaklyRegular] [Fact (1 ≤ p)] [hp : Fact (p ≠ ∞)]
 
-instance [IsFiniteMeasure μ] [μ.WeaklyRegular] [Fact (1 ≤ p)] [hp : Fact (p ≠ ∞)] :
-    ContinuousSMul Gᵐᵒᵖ (Lp E p μ) where
+instance : ContinuousSMul Mᵐᵒᵖ (Lp E p μ) where
   continuous_smul := by
     refine ((Homeomorph.prodComm _ _).trans <|
       opHomeomorph.prodCongr (Homeomorph.refl _)).comp_continuous_iff'.1 ?_
     apply continuous_prod_of_dense_continuous_lipschitzWith _ 1
       (ContinuousMap.toLp_denseRange E μ hp.out ℝ)
     · rintro _ ⟨f, rfl⟩
-      suffices : Continuous (fun c : G ↦ f.comp ⟨(c • · : X → X), continuous_const_smul c⟩)
-      · exact (ContinuousMap.toLp (E := E) p μ ℝ).continuous.comp this
-      refine f.continuous_comp.comp ?_
-      exact (ContinuousMap.mk _ continuous_smul).curry.continuous
+      have : Continuous (fun c : M ↦ f.comp ⟨(c • · : X → X), continuous_const_smul c⟩) :=
+        f.continuous_comp.comp (ContinuousMap.mk _ continuous_smul).curry.continuous
+      exact (ContinuousMap.toLp p μ ℝ).continuous.comp this
     · intro c
       dsimp
       exact (isometry_smul _ (op c)).lipschitz
 
-end TopologicalGroup
+end ContinuousSMul
 
 end Lp    
 
