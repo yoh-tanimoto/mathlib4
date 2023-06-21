@@ -28,6 +28,10 @@ theorem smulRight_def (c : Mᵐᵒᵖ) (f : Lp E p μ) :
   rfl
 
 @[to_additive]
+theorem coeFn_smulRight (c : Mᵐᵒᵖ) (f : Lp E p μ) : c • f =ᵐ[μ] (f <| c.unop • ·) :=
+  Lp.coeFn_compMeasurePreserving _ _
+
+@[to_additive]
 instance rightMulAction : MulAction Mᵐᵒᵖ (Lp E p μ) where
   one_smul f := by
     simp_rw [smulRight_def, unop_one, one_smul]

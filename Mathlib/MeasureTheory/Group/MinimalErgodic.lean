@@ -13,7 +13,7 @@ import Mathlib.Order.Filter.EventuallyConst
 -/
 
 open Function Set Filter Topology MulOpposite
-open scoped Pointwise
+open scoped Pointwise ENNReal
 
 namespace MeasureTheory
 
@@ -25,8 +25,19 @@ variable {G : Type _}
 attribute [local instance] CompactSpace.isFiniteMeasure in
 -- Do not use this lemma. It is generalized below
 theorem Lp_one.eq_const_of_forall_dense_smulRight_eq (f : G →₁[μ] ℝ) {s : Set G} (hd : Dense s)
-    (hf : ∀ a ∈ s, op a • f = f) : ∃ c, f = Lp.const 1 μ c := by
-  
+    (hf : ∀ a ∈ s, op a • f = f) : f = Lp.const 1 μ (⨍ x, f x ∂μ) := by
+  haveI := Fact.mk ENNReal.one_ne_top
+  -- have : ContinuousSMul Gᵐᵒᵖ (G →₁[μ] ℝ) := inferInstance
+  replace hf : ∀ a : G, op a • f = f := fun a ↦
+    closure_minimal hf (isClosed_eq (continuous_op.smul continuous_const) continuous_const) (hd a)
+  replace hf : ∀ a : G, (f <| a • ·) =ᵐ[μ] f := fun a ↦
+    (Lp.coeFn_smulRight (op a) _).symm.trans (by rw [hf])
+  rw [← dist_le_zero, L1.dist_eq_integral_dist]
+  calc
+    ∫ a, dist (f a) (Lp.const 1 μ (⨍ x, f x ∂μ) a) ∂μ = ∫ a, ‖f a - ⨍ x, f x ∂μ‖ ∂μ :=
+      integral_congr_ae <| (Lp.coeFn_const 1 μ (⨍ x, f x ∂μ)).mono fun x hx ↦ by
+        simp only [hx, Function.const, dist_eq_norm]
+    _ ≤ _ := _
 
 open MulOpposite in
 /-- If a set in a compact topological group is a.e. invariant under left multiplications by a
