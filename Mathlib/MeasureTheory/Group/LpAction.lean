@@ -1,5 +1,5 @@
 import Mathlib.MeasureTheory.Group.Action
-import Mathlib.MeasureTheory.Function.LpSpace
+import Mathlib.MeasureTheory.Function.ContinuousMapDense
 
 open MulOpposite
 open scoped ENNReal Pointwise Topology
@@ -8,12 +8,15 @@ namespace MeasureTheory
 
 namespace Lp
 
-variable {M G X E : Type _}
+variable {X E : Type _}
   [MeasurableSpace X] {μ : MeasureTheory.Measure X}
-  [Monoid M] [MeasurableSpace M] [MulAction M X] [MeasurableSMul M X] [SMulInvariantMeasure M X μ]
-  [Group G] [MeasurableSpace G] [MulAction G X] [MeasurableSMul G X] [SMulInvariantMeasure G X μ]
   [NormedAddCommGroup E] [NormedSpace ℝ E] [CompleteSpace E]
   {p : ℝ≥0∞}
+
+section Monoid
+
+variable {M : Type _}
+  [Monoid M] [MeasurableSpace M] [MulAction M X] [MeasurableSMul M X] [SMulInvariantMeasure M X μ]
 
 @[to_additive]
 instance smulRight : SMul Mᵐᵒᵖ (Lp E p μ) where
@@ -32,22 +35,46 @@ instance rightMulAction : MulAction Mᵐᵒᵖ (Lp E p μ) where
   mul_smul c₁ c₂ f := by
     simp only [smulRight_def, compMeasurePreserving_compMeasurePreserving, (· ∘ ·), smul_smul, unop_mul]
 
-instance [TopologicalSpace G] [TopologicalGroup G] [BorelSpace G] [Fact (1 ≤ p)] :
-    ContinuousSMul Gᵐᵒᵖ (Lp E p μ) where
-  continuous_smul := by
-    refine (opHomeomorph.prodCongr (Homeomorph.refl _)).comp_continuous_iff'.1 ?_
-    -- rintro ⟨⟨g⟩, f⟩
-    -- simp only [smulRight_def, ContinuousAt, unop]
-    
+@[to_additive]
+instance isometric_smulRight [Fact (1 ≤ p)] : IsometricSMul Mᵐᵒᵖ (Lp E p μ) :=
+  ⟨fun _ ↦ Lp.compMeasurePreserving_isometry _⟩
+
+-- TODO: why `inferInstance` fails?
+@[to_additive]
+instance [Fact (1 ≤ p)] : ContinuousConstSMul Mᵐᵒᵖ (Lp E p μ) :=
+  IsometricSMul.to_continuousConstSMul _ _
 
 -- TODO: What should be the additive version? Not yet defined `AddDistribAddAction`?
 instance rightDistribMulAction : DistribMulAction Mᵐᵒᵖ (Lp E p μ) where
   smul_zero _ := map_zero (compMeasurePreserving _ _)
   smul_add _ := map_add (compMeasurePreserving _ _)
 
--- theorem smulRight_indicatorConstLp_smul {s : Set X} (hs : MeasurableSet s) (hsμ : μ s ≠ ∞) (c : E) (g : G) :
---     MulOpposite.op g • indicatorConstLp p hs hsμ c =
---       indicatorConstLp p (s := g⁻¹ • s) _ (by rwa [measure_smul]) c  := _
+end Monoid
+
+section TopologicalGroup
+
+variable {G : Type _}
+  [Group G] [TopologicalSpace G] [TopologicalGroup G] [MeasurableSpace G] [BorelSpace G]
+  [MulAction G X] [TopologicalSpace X] [NormalSpace X] [BorelSpace X] [ContinuousSMul G X]
+  [CompactSpace X] [SecondCountableTopologyEither X E] [SMulInvariantMeasure G X μ]
+
+instance [IsFiniteMeasure μ] [μ.WeaklyRegular] [Fact (1 ≤ p)] [hp : Fact (p ≠ ∞)] :
+    ContinuousSMul Gᵐᵒᵖ (Lp E p μ) where
+  continuous_smul := by
+    refine ((Homeomorph.prodComm _ _).trans <|
+      opHomeomorph.prodCongr (Homeomorph.refl _)).comp_continuous_iff'.1 ?_
+    apply continuous_prod_of_dense_continuous_lipschitzWith _ 1
+      (ContinuousMap.toLp_denseRange E μ hp.out ℝ)
+    · rintro _ ⟨f, rfl⟩
+      suffices : Continuous (fun c : G ↦ f.comp ⟨(c • · : X → X), continuous_const_smul c⟩)
+      · exact (ContinuousMap.toLp (E := E) p μ ℝ).continuous.comp this
+      refine f.continuous_comp.comp ?_
+      exact (ContinuousMap.mk _ continuous_smul).curry.continuous
+    · intro c
+      dsimp
+      exact (isometry_smul _ (op c)).lipschitz
+
+end TopologicalGroup
 
 end Lp    
 
