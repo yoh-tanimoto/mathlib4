@@ -91,10 +91,11 @@ class PreservesLimitsOfSize (F : C ⥤ D) where
 #align category_theory.limits.preserves_limits_of_size CategoryTheory.Limits.PreservesLimitsOfSize
 #align category_theory.limits.preserves_limits_of_size.preserves_limits_of_shape CategoryTheory.Limits.PreservesLimitsOfSize.preservesLimitsOfShape
 
+-- This should be used with explicit universe variable `w`.
 /-- We say that `F` preserves (small) limits if it sends small
 limit cones over any diagram to limit cones. -/
 abbrev PreservesLimits (F : C ⥤ D) :=
-  PreservesLimitsOfSize.{v₂, v₂} F
+  PreservesLimitsOfSize.{w, w} F
 #align category_theory.limits.preserves_limits CategoryTheory.Limits.PreservesLimits
 
 -- This should be used with explicit universe variables.

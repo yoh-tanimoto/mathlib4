@@ -42,8 +42,13 @@ and `A` live in the same universe.
   additionally assumes filtered colimits.
 -/
 
-
-universe w v₁ v₂ u₁ u₂
+universe u₁v₁w -- same level as w
+universe w v₁
+universe u₁v₁v₂ -- a generic universe, to be thought of as
+-- `v₂`, but assumed bigger than `u₁` and `v₁`.
+-- I would like `Category.{max u₁ v₁ u₁v₁v₂} A`
+-- to unify with `Category.{u₁v₁v₂} A` for example
+universe v₂ u₁ u₂
 
 noncomputable section
 
@@ -218,7 +223,7 @@ variable {J}
   If `P`s a sheaf, `S` is a cover of `X`, and `x` is a collection of morphisms from `E`
   to `P` evaluated at terms in the cover which are compatible, then we can amalgamate
   the `x`s to obtain a single morphism `E ⟶ P.obj (op X)`. -/
-def IsSheaf.amalgamate {A : Type u₂} [Category.{max v₁ u₁} A] {E : A} {X : C} {P : Cᵒᵖ ⥤ A}
+def IsSheaf.amalgamate {A : Type u₂} [Category.{v₂} A] {E : A} {X : C} {P : Cᵒᵖ ⥤ A}
     (hP : Presheaf.IsSheaf J P) (S : J.Cover X) (x : ∀ I : S.Arrow, E ⟶ P.obj (op I.Y))
     (hx : ∀ I : S.Relation, x I.fst ≫ P.map I.g₁.op = x I.snd ≫ P.map I.g₂.op) : E ⟶ P.obj (op X) :=
   (hP _ _ S.condition).amalgamate (fun Y f hf => x ⟨Y, f, hf⟩) fun Y₁ Y₂ Z g₁ g₂ f₁ f₂ h₁ h₂ w =>
@@ -226,7 +231,7 @@ def IsSheaf.amalgamate {A : Type u₂} [Category.{max v₁ u₁} A] {E : A} {X :
 #align category_theory.presheaf.is_sheaf.amalgamate CategoryTheory.Presheaf.IsSheaf.amalgamate
 
 @[reassoc (attr := simp)]
-theorem IsSheaf.amalgamate_map {A : Type u₂} [Category.{max v₁ u₁} A] {E : A} {X : C} {P : Cᵒᵖ ⥤ A}
+theorem IsSheaf.amalgamate_map {A : Type u₂} [Category.{v₂} A] {E : A} {X : C} {P : Cᵒᵖ ⥤ A}
     (hP : Presheaf.IsSheaf J P) (S : J.Cover X) (x : ∀ I : S.Arrow, E ⟶ P.obj (op I.Y))
     (hx : ∀ I : S.Relation, x I.fst ≫ P.map I.g₁.op = x I.snd ≫ P.map I.g₂.op) (I : S.Arrow) :
     hP.amalgamate S x hx ≫ P.map I.f.op = x _ := by
@@ -236,7 +241,7 @@ theorem IsSheaf.amalgamate_map {A : Type u₂} [Category.{max v₁ u₁} A] {E :
       (fun Y₁ Y₂ Z g₁ g₂ f₁ f₂ h₁ h₂ w => hx ⟨Y₁, Y₂, Z, g₁, g₂, f₁, f₂, h₁, h₂, w⟩) f hf
 #align category_theory.presheaf.is_sheaf.amalgamate_map CategoryTheory.Presheaf.IsSheaf.amalgamate_map
 
-theorem IsSheaf.hom_ext {A : Type u₂} [Category.{max v₁ u₁} A] {E : A} {X : C} {P : Cᵒᵖ ⥤ A}
+theorem IsSheaf.hom_ext {A : Type u₂} [Category.{v₂} A] {E : A} {X : C} {P : Cᵒᵖ ⥤ A}
     (hP : Presheaf.IsSheaf J P) (S : J.Cover X) (e₁ e₂ : E ⟶ P.obj (op X))
     (h : ∀ I : S.Arrow, e₁ ≫ P.map I.f.op = e₂ ≫ P.map I.f.op) : e₁ = e₂ :=
   (hP _ _ S.condition).isSeparatedFor.ext fun Y f hf => h ⟨Y, f, hf⟩
@@ -457,7 +462,7 @@ namespace Presheaf
 -- between 00VQ and 00VR.
 variable {C : Type u₁} [Category.{v₁} C]
 
-variable {A : Type u₂} [Category.{max v₁ u₁} A]
+variable {A : Type u₂} [Category.{v₂} A]
 
 variable (J : GrothendieckTopology C)
 
@@ -529,7 +534,7 @@ end MultiequalizerConditions
 
 section
 
-variable [HasProducts.{max u₁ v₁} A]
+variable [HasProducts A]
 
 /--
 The middle object of the fork diagram given in Equation (3) of [MM92], as well as the fork diagram
@@ -584,8 +589,8 @@ def IsSheaf' (P : Cᵒᵖ ⥤ A) : Prop :=
 #align category_theory.presheaf.is_sheaf' CategoryTheory.Presheaf.IsSheaf'
 
 /-- (Implementation). An auxiliary lemma to convert between sheaf conditions. -/
-def isSheafForIsSheafFor' (P : Cᵒᵖ ⥤ A) (s : A ⥤ Type max v₁ u₁)
-    [∀ J, PreservesLimitsOfShape (Discrete.{max v₁ u₁} J) s] (U : C) (R : Presieve U) :
+def isSheafForIsSheafFor' (P : Cᵒᵖ ⥤ A) (s : A ⥤ TypeMax.{max u₁ v₁, w})
+    [∀ J, PreservesLimitsOfShape (Discrete J) s] (U : C) (R : Presieve U) :
     IsLimit (s.mapCone (Fork.ofι _ (w R P))) ≃
       IsLimit (Fork.ofι _ (Equalizer.Presieve.w (P ⋙ s) R)) := by
   apply Equiv.trans (isLimitMapConeForkEquiv _ _) _
@@ -611,8 +616,10 @@ def isSheafForIsSheafFor' (P : Cᵒᵖ ⥤ A) (s : A ⥤ Type max v₁ u₁)
     simp [Fork.ι]
 #align category_theory.presheaf.is_sheaf_for_is_sheaf_for' CategoryTheory.Presheaf.isSheafForIsSheafFor'
 
+
 /-- The equalizer definition of a sheaf given by `isSheaf'` is equivalent to `isSheaf`. -/
-theorem isSheaf_iff_isSheaf' : IsSheaf J P ↔ IsSheaf' J P := by
+theorem isSheaf_iff_isSheaf' (A : Type u₂) [Category.{max u₁ v₁ u₁v₁v₂} A] [HasProducts A]
+  (P : Cᵒᵖ ⥤ A) : IsSheaf J P ↔ IsSheaf' J P := by
   constructor
   · intro h U R hR
     refine' ⟨_⟩
@@ -620,14 +627,17 @@ theorem isSheaf_iff_isSheaf' : IsSheaf J P ↔ IsSheaf' J P := by
     intro X
     have q : Presieve.IsSheafFor (P ⋙ coyoneda.obj X) _ := h X.unop _ hR
     rw [← Presieve.isSheafFor_iff_generate] at q
-    rw [Equalizer.Presieve.sheaf_condition] at q
+    rw [Equalizer.Presieve.sheaf_condition.{u₁v₁v₂}] at q
     replace q := Classical.choice q
+    letI :
+      (J₀ : Type (max u₁ v₁)) →
+      PreservesLimitsOfShape (Discrete J₀) (coyoneda.obj X) := fun J ↦
+        PreservesLimitsOfSize.preservesLimitsOfShape
     apply (isSheafForIsSheafFor' _ _ _ _).symm q
   · intro h U X S hS
-    rw [Equalizer.Presieve.sheaf_condition]
+    rw [Equalizer.Presieve.sheaf_condition.{u₁v₁v₂}]
     refine' ⟨_⟩
     refine' isSheafForIsSheafFor' _ _ _ _ _
-    letI := preservesSmallestLimitsOfPreservesLimits (coyoneda.obj (op U))
     apply isLimitOfPreserves
     apply Classical.choice (h _ S.arrows _)
     simpa
@@ -639,6 +649,9 @@ section Concrete
 
 variable [HasPullbacks C]
 
+universe x
+
+set_option pp.universes true in
 /--
 For a concrete category `(A, s)` where the forgetful functor `s : A ⥤ Type v` preserves limits and
 reflects isomorphisms, and `A` has limits, an `A`-valued presheaf `P : Cᵒᵖ ⥤ A` is a sheaf iff its
@@ -648,10 +661,21 @@ Note this lemma applies for "algebraic" categories, eg groups, abelian groups an
 for the category of topological spaces, topological rings, etc since reflecting isomorphisms doesn't
 hold.
 -/
-theorem isSheaf_iff_isSheaf_forget (s : A ⥤ Type max v₁ u₁) [HasLimits A] [PreservesLimits s]
-    [ReflectsIsomorphisms s] : IsSheaf J P ↔ IsSheaf J (P ⋙ s) := by
-  rw [isSheaf_iff_isSheaf', isSheaf_iff_isSheaf']
+theorem isSheaf_iff_isSheaf_forget (A' : Type max (u₁ + 1) (v₁ + 1) (u₁v₁v₂ + 1))
+    [LargeCategory A'] (s : A' ⥤ TypeMax.{max u₁ v₁, u₁v₁w}) [HasLimits.{x} A'] [PreservesLimits s]
+    [ReflectsIsomorphisms s] [HasProducts.{max u₁ v₁, max u₁ v₁ u₁v₁v₂, max (u₁ + 1) (u₁v₁v₂ + 1) (v₁ + 1)} A']
+      (P : Cᵒᵖ ⥤ A') : IsSheaf J P ↔ IsSheaf J (P ⋙ s) := by
+  rw [isSheaf_iff_isSheaf'.{v₁,u₁v₁v₂,u₁,max (u₁ + 1) (u₁v₁v₂ + 1) (v₁ + 1)}]
+  rw [isSheaf_iff_isSheaf'.{v₁,u₁v₁w,u₁,max (u₁ + 1) (u₁v₁w + 1) (v₁ + 1)}]
   refine' forall_congr' (fun U => ball_congr (fun R _ => _))
+  /-
+  failed to synthesize instance
+    HasLimitsOfSize.{max (max u₁ u₁v₁w) v₁, max (max u₁ u₁v₁w) v₁, max (max u₁ u₁v₁v₂) v₁,
+        max (max (u₁ + 1) (u₁v₁v₂ + 1)) (v₁ + 1)}
+      A'
+
+  inst✝³: HasLimits.{max (max u₁ u₁v₁v₂) v₁, max (max (u₁ + 1) (u₁v₁v₂ + 1)) (v₁ + 1)} A'
+  -/
   letI : ReflectsLimits s := reflectsLimitsOfReflectsIsomorphisms
   have : IsLimit (s.mapCone (Fork.ofι _ (w R P))) ≃ IsLimit (Fork.ofι _ (w R (P ⋙ s))) :=
     isSheafForIsSheafFor' P s U R

@@ -73,7 +73,7 @@ We also provide equivalent conditions to satisfy alternate definitions given in 
 
 ## Implementation
 
-The sheaf condition is given as a proposition, rather than a subsingleton in `Type (max u₁ v)`.
+The sheaf condition is given as a proposition, rather than a subsingleton in some `Type w`.
 This doesn't seem to make a big difference, other than making a couple of definitions noncomputable,
 but it means that equivalent conditions can be given as `↔` statements rather than `≃` statements,
 which can be convenient.
@@ -787,7 +787,7 @@ end Presieve
 
 namespace Equalizer
 
-variable {C : Type u₁} [Category.{v₁} C] (P : Cᵒᵖ ⥤ Type max v₁ u₁) {X : C} (R : Presieve X)
+variable {C : Type u₁} [Category.{v₁} C] (P : Cᵒᵖ ⥤ TypeMax.{max u₁ v₁, w}) {X : C} (R : Presieve X)
   (S : Sieve X)
 
 noncomputable section
@@ -796,7 +796,7 @@ noncomputable section
 The middle object of the fork diagram given in Equation (3) of [MM92], as well as the fork diagram
 of <https://stacks.math.columbia.edu/tag/00VM>.
 -/
-def FirstObj : Type max v₁ u₁ :=
+def FirstObj : Type max u₁ v₁ w :=
   ∏ fun f : ΣY, { f : Y ⟶ X // R f } => P.obj (op f.1)
 #align category_theory.equalizer.first_obj CategoryTheory.Equalizer.FirstObj
 
@@ -807,7 +807,7 @@ variable {P R}
 lemma FirstObj.ext (z₁ z₂ : FirstObj P R) (h : ∀ (Y : C) (f : Y ⟶ X)
     (hf : R f), (Pi.π _ ⟨Y, f, hf⟩ : FirstObj P R ⟶  _) z₁ =
       (Pi.π _ ⟨Y, f, hf⟩ : FirstObj P R ⟶  _) z₂) : z₁ = z₂ := by
-  apply Limits.Types.limit_ext.{max u₁ v₁, u₁}
+  apply Limits.Types.limit_ext.{_,w}
   rintro ⟨⟨Y, f, hf⟩⟩
   exact h Y f hf
 
@@ -826,7 +826,7 @@ instance : Inhabited (FirstObj P (⊥ : Presieve X)) :=
 -- porting note: was not needed in mathlib
 instance : Inhabited (FirstObj P ((⊥ : Sieve X) : Presieve X)) :=
   (inferInstance : Inhabited (FirstObj P (⊥ : Presieve X)))
-
+set_option pp.universes true in
 /--
 The left morphism of the fork diagram given in Equation (3) of [MM92], as well as the fork diagram
 of <https://stacks.math.columbia.edu/tag/00VM>.
@@ -846,7 +846,7 @@ namespace Sieve
 /-- The rightmost object of the fork diagram of Equation (3) [MM92], which contains the data used
 to check a family is compatible.
 -/
-def SecondObj : Type max v₁ u₁ :=
+def SecondObj : Type (max u₁ v₁ w) :=
   ∏ fun f : Σ(Y Z : _) (_ : Z ⟶ Y), { f' : Y ⟶ X // S f' } => P.obj (op f.2.1)
 #align category_theory.equalizer.sieve.second_obj CategoryTheory.Equalizer.Sieve.SecondObj
 
@@ -857,7 +857,7 @@ variable {P S}
 lemma SecondObj.ext (z₁ z₂ : SecondObj P S) (h : ∀ (Y Z : C) (g : Z ⟶ Y) (f : Y ⟶ X)
     (hf : S.arrows f), (Pi.π _ ⟨Y, Z, g, f, hf⟩ : SecondObj P S ⟶  _) z₁ =
       (Pi.π _ ⟨Y, Z, g, f, hf⟩ : SecondObj P S ⟶  _) z₂) : z₁ = z₂ := by
-  apply Limits.Types.limit_ext.{max u₁ v₁, u₁}
+  apply Limits.Types.limit_ext.{_, w}
   rintro ⟨⟨Y, Z, g, f, hf⟩⟩
   apply h
 
@@ -882,6 +882,7 @@ theorem w : forkMap P (S : Presieve X) ≫ firstMap P S = forkMap P S ≫ second
   simp [firstMap, secondMap, forkMap]
 #align category_theory.equalizer.sieve.w CategoryTheory.Equalizer.Sieve.w
 
+set_option pp.universes true in
 /--
 The family of elements given by `x : FirstObj P S` is compatible iff `firstMap` and `secondMap`
 map it to the same point.
@@ -895,7 +896,14 @@ theorem compatible_iff (x : FirstObj P S) :
     intros Y Z g f hf
     simpa [firstMap, secondMap] using t _ g hf
   . intro t Y Z f g hf
-    rw [Types.limit_ext_iff'] at t
+    -- porting note: on next line Lean gets stuck if you
+    -- don't supply the universe explicitly.
+    -- **TODO** : link to a github issue I think?
+    /-
+    stuck at solving universe constraint
+  max (max (u₁+1) (v₁+1)) (?u.150263+1) =?= max (max (u₁+1) (v₁+1)) (w+1)
+    -/
+    rw [Types.limit_ext_iff.{_, w}] at t
     simpa [firstMap, secondMap] using t ⟨⟨Y, Z, g, f, hf⟩⟩
 #align category_theory.equalizer.sieve.compatible_iff CategoryTheory.Equalizer.Sieve.compatible_iff
 
@@ -936,7 +944,7 @@ variable [HasPullbacks C]
 /-- The rightmost object of the fork diagram of https://stacks.math.columbia.edu/tag/00VM, which
 contains the data used to check a family of elements for a presieve is compatible.
 -/
-@[simp] def SecondObj : Type max v₁ u₁ :=
+@[simp] def SecondObj : Type _ :=
   ∏ fun fg : (ΣY, { f : Y ⟶ X // R f }) × ΣZ, { g : Z ⟶ X // R g } =>
     P.obj (op (pullback fg.1.2.1 fg.2.2.1))
 #align category_theory.equalizer.presieve.second_obj CategoryTheory.Equalizer.Presieve.SecondObj
@@ -954,6 +962,7 @@ def secondMap : FirstObj P R ⟶ SecondObj P R :=
   Pi.lift fun _ => Pi.π _ _ ≫ P.map pullback.snd.op
 #align category_theory.equalizer.presieve.second_map CategoryTheory.Equalizer.Presieve.secondMap
 
+set_option pp.universes true in
 theorem w : forkMap P R ≫ firstMap P R = forkMap P R ≫ secondMap P R := by
   dsimp
   ext
@@ -972,11 +981,13 @@ theorem compatible_iff (x : FirstObj P R) :
   rw [Presieve.pullbackCompatible_iff]
   constructor
   . intro t
-    apply Limits.Types.limit_ext.{max u₁ v₁, u₁}
+    -- porting note: lean failing to solve max(a,b)=max(a,?)
+    apply Limits.Types.limit_ext.{_, w}
     rintro ⟨⟨Y, f, hf⟩, Z, g, hg⟩
     simpa [firstMap, secondMap] using t hf hg
   · intro t Y Z f g hf hg
-    rw [Types.limit_ext_iff'] at t
+    -- porting note: lean failing to solve max(a,b)=max(a,?)
+    rw [Types.limit_ext_iff.{_, w}] at t
     simpa [firstMap, secondMap] using t ⟨⟨⟨Y, f, hf⟩, Z, g, hg⟩⟩
 #align category_theory.equalizer.presieve.compatible_iff CategoryTheory.Equalizer.Presieve.compatible_iff
 
@@ -1010,6 +1021,9 @@ end Equalizer
 variable {C : Type u₁} [Category.{v₁} C]
 
 variable (J : GrothendieckTopology C)
+
+-- If you don't explcitly state the universe level, you get
+-- the slightly messier `(max (max u₁ v₁) (w + 1))` instead
 
 /-- The category of sheaves on a grothendieck topology. -/
 structure SheafOfTypes (J : GrothendieckTopology C) : Type max u₁ v₁ (w + 1) where

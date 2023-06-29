@@ -28,7 +28,7 @@ namespace CategoryTheory
 
 namespace Coyoneda
 
-variable {C : Type v} [SmallCategory C]
+variable {C : Type u} [Category.{v} C]
 
 /-- The colimit cocone over `coyoneda.obj X`, with cocone point `PUnit`.
 -/
@@ -75,6 +75,7 @@ variable {C : Type u} [Category.{v} C]
 
 open Limits
 
+--set_option pp.universes true in
 /--n The yoneda embedding `yoneda.obj X : Cᵒᵖ ⥤ Type v` for `X : C` preserves limits. -/
 instance yonedaPreservesLimits (X : C) : PreservesLimits (yoneda.obj X)
     where preservesLimitsOfShape {J} 𝒥 :=
@@ -88,7 +89,8 @@ instance yonedaPreservesLimits (X : C) : PreservesLimits (yoneda.obj X)
                   refine' Quiver.Hom.op_inj (t.uniq ⟨op X, _, _⟩ _ fun j => _)
                   · intro X _ _ _ _ _ s _ _ _ α  -- Porting note: refine' gave a crazy goal
                     dsimp
-                    simp [← s.w α]
+                    rw [← s.w α]
+                    simp
                   -- See library note [dsimp, simp]
                   · exact Quiver.Hom.unop_inj (congrFun (w j) x) } } }
 #align category_theory.yoneda_preserves_limits CategoryTheory.yonedaPreservesLimits
@@ -102,7 +104,8 @@ instance coyonedaPreservesLimits (X : Cᵒᵖ) : PreservesLimits (coyoneda.obj X
                 t.lift
                   ⟨unop X, fun j => s.π.app j x, fun j₁ j₂ α => by
                     dsimp
-                    simp [← s.w α]⟩
+                    rw [← s.w α]
+                    simp⟩
               -- See library note [dsimp, simp]
               fac := fun s j => funext fun x => t.fac _ _
               uniq := fun s m w =>

@@ -65,7 +65,7 @@ open CategoryTheory CategoryTheory.Category CategoryTheory.Functor Opposite
 namespace CategoryTheory.Limits
 
 -- morphism levels before object levels. See note [CategoryTheory universes].
-universe v₁ u₁ v₂ u₂ v₃ u₃ v v' v'' u u' u''
+universe w v₁ u₁ v₂ u₂ v₃ u₃ v v' v'' u u' u''
 
 variable {J : Type u₁} [Category.{v₁} J] {K : Type u₂} [Category.{v₂} K]
 
@@ -104,27 +104,28 @@ variable (J C)
 
 /-- `C` has limits of shape `J` if there exists a limit for every functor `F : J ⥤ C`. -/
 class HasLimitsOfShape : Prop where
-  /-- All functors `F : J ⥤  C` from `J` have limits -/
+  /-- All functors `F : J ⥤ C` from `J` have limits -/
   has_limit : ∀ F : J ⥤ C, HasLimit F := by infer_instance
 #align category_theory.limits.has_limits_of_shape CategoryTheory.Limits.HasLimitsOfShape
 
 /-- `C` has all limits of size `v₁ u₁` (`HasLimitsOfSize.{v₁ u₁} C`)
 if it has limits of every shape `J : Type u₁` with `[Category.{v₁} J]`.
+Should ideally be used with two explicit universes, specifying size of `J`.
 -/
 class HasLimitsOfSize (C : Type u) [Category.{v} C] : Prop where
-  /-- All functors `F : J ⥤ C` from all small `J` have limits -/
+  /-- All functors `F : J ⥤ C` from all `J` have limits -/
   has_limits_of_shape : ∀ (J : Type u₁) [Category.{v₁} J], HasLimitsOfShape J C := by
     infer_instance
 #align category_theory.limits.has_limits_of_size CategoryTheory.Limits.HasLimitsOfSize
 
-/-- `C` has all (small) limits if it has limits of every shape that is as big as its hom-sets. -/
+/-- `C` has all (small) limits if it has limits of every small shape. -/
 abbrev HasLimits (C : Type u) [Category.{v} C] : Prop :=
-  HasLimitsOfSize.{v, v} C
+  HasLimitsOfSize.{w, w} C
 #align category_theory.limits.has_limits CategoryTheory.Limits.HasLimits
 
-theorem HasLimits.has_limits_of_shape {C : Type u} [Category.{v} C] [HasLimits C] (J : Type v)
-    [Category.{v} J] : HasLimitsOfShape J C :=
-  HasLimitsOfSize.has_limits_of_shape J
+theorem HasLimits.has_limits_of_shape {C : Type u} [Category.{v} C] [HasLimits.{w} C] (J : Type w)
+    [Category.{w} J] : HasLimitsOfShape J C := by
+  exact HasLimitsOfSize.has_limits_of_shape J
 #align category_theory.limits.has_limits.has_limits_of_shape CategoryTheory.Limits.HasLimits.has_limits_of_shape
 
 variable {J C}

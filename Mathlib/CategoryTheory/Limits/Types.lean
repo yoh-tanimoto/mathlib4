@@ -200,10 +200,10 @@ theorem limit_ext_iff (F : J ⥤ TypeMax.{v, u}) (x y : limit F) :
   ⟨fun t _ => t ▸ rfl, limit_ext.{v, u} _ _ _⟩
 #align category_theory.limits.types.limit_ext_iff CategoryTheory.Limits.Types.limit_ext_iff
 
-theorem limit_ext_iff' (F : J ⥤ Type v) (x y : limit F) :
-    x = y ↔ ∀ j, limit.π F j x = limit.π F j y :=
-  ⟨fun t _ => t ▸ rfl, limit_ext'.{v} _ _ _⟩
-#align category_theory.limits.types.limit_ext_iff' CategoryTheory.Limits.Types.limit_ext_iff'
+-- **kmb TODO** check never used in mathlib3
+--theorem limit_ext_iff' (F : J ⥤ Type v) (x y : limit F) :
+--    x = y ↔ ∀ j, limit.π F j x = limit.π F j y := limit_ext_iff.{v,v} F x y
+--#align category_theory.limits.types.limit_ext_iff' CategoryTheory.Limits.Types.limit_ext_iff'
 
 -- TODO: are there other limits lemmas that should have `_apply` versions?
 -- Can we generate these like with `@[reassoc]`?
