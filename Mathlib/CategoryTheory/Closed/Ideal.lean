@@ -199,7 +199,7 @@ noncomputable def bijection (A B : C) (X : D) :
       ((exp.adjunction _).homEquiv _ _).symm
     _ ≃ (i.obj ((leftAdjoint i).obj A ⨯ (leftAdjoint i).obj B) ⟶ i.obj X) :=
       haveI : PreservesLimits i := (Adjunction.ofRightAdjoint i).rightAdjointPreservesLimits
-      haveI := preservesSmallestLimitsOfPreservesLimits i
+      haveI := preservesSmallestLimitsOfPreservesLimits.{_,_,0,_,_,0} i
       Iso.homCongr (PreservesLimitPair.iso _ _ _).symm (Iso.refl (i.obj X))
     _ ≃ ((leftAdjoint i).obj A ⨯ (leftAdjoint i).obj B ⟶ X) := (equivOfFullyFaithful _).symm
 #align category_theory.bijection CategoryTheory.bijection
@@ -207,8 +207,7 @@ noncomputable def bijection (A B : C) (X : D) :
 theorem bijection_symm_apply_id (A B : C) :
     (bijection i A B _).symm (𝟙 _) = prodComparison _ _ _ := by
   -- Porting note: added
-  have : PreservesLimits i := (Adjunction.ofRightAdjoint i).rightAdjointPreservesLimits
-  have := preservesSmallestLimitsOfPreservesLimits i
+  have : PreservesLimits.{0} i := (Adjunction.ofRightAdjoint i).rightAdjointPreservesLimits
   dsimp [bijection]
   -- Porting note: added
   erw [homEquiv_symm_apply_eq, homEquiv_symm_apply_eq, homEquiv_apply_eq, homEquiv_apply_eq]
