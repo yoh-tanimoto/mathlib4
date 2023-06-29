@@ -678,9 +678,8 @@ abbrev HasColimits (C : Type u) [Category.{v} C] : Prop :=
   HasColimitsOfSize.{w, w} C
 #align category_theory.limits.has_colimits CategoryTheory.Limits.HasColimits
 
-set_option pp.universes true
-theorem HasColimits.hasColimitsOfShape {C : Type u} [Category.{v} C] [HasColimits.{w} C] (J : Type w)
-    [Category.{w} J] : HasColimitsOfShape J C :=
+theorem HasColimits.hasColimitsOfShape {C : Type u} [Category.{v} C] [HasColimits.{w} C]
+    (J : Type w) [Category.{w} J] : HasColimitsOfShape J C :=
   HasColimitsOfSize.has_colimits_of_shape.{w,w} J
 #align category_theory.limits.has_colimits.has_colimits_of_shape CategoryTheory.Limits.HasColimits.hasColimitsOfShape
 

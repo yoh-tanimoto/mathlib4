@@ -75,7 +75,6 @@ noncomputable instance (priority := 120) PreservesLimitsOfSize0.preservesFiniteL
   PreservesLimitsOfSize.preservesFiniteLimits F
 #align preserves_limits_of_size.zero.preserves_finite_limits CategoryTheory.Limits.PreservesLimitsOfSize0.preservesFiniteLimits
 
-set_option pp.universes true in
 -- An alternative specialization of the dangerous instance for small limits.
 noncomputable instance (priority := 120) PreservesLimits.preservesFiniteLimits (F : C ⥤ D)
     [PreservesLimits.{0} F] : PreservesFiniteLimits F :=

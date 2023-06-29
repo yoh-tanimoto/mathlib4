@@ -271,7 +271,6 @@ instance hasLimits_op_of_hasColimits [HasColimits C] : HasLimits Cᵒᵖ :=
   ⟨fun _ => inferInstance⟩
 #align category_theory.limits.has_limits_op_of_has_colimits CategoryTheory.Limits.hasLimits_op_of_hasColimits
 
-set_option pp.universes true
 theorem hasLimits_of_hasColimits_op [HasColimits.{w} Cᵒᵖ] : HasLimits.{w} C :=
   { has_limits_of_shape := fun _ _ => hasLimitsOfShape_of_hasColimitsOfShape_op }
 #align category_theory.limits.has_limits_of_has_colimits_op CategoryTheory.Limits.hasLimits_of_hasColimits_op
