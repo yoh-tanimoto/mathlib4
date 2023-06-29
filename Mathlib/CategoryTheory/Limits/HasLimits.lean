@@ -672,15 +672,16 @@ class HasColimitsOfSize (C : Type u) [Category.{v} C] : Prop where
     infer_instance
 #align category_theory.limits.has_colimits_of_size CategoryTheory.Limits.HasColimitsOfSize
 
-/-- `C` has all (small) colimits if it has colimits of every shape that is as big as its hom-sets.
+/-- `C` has all (small) colimits if it has colimits for all small categories.
 -/
 abbrev HasColimits (C : Type u) [Category.{v} C] : Prop :=
-  HasColimitsOfSize.{v, v} C
+  HasColimitsOfSize.{w, w} C
 #align category_theory.limits.has_colimits CategoryTheory.Limits.HasColimits
 
-theorem HasColimits.hasColimitsOfShape {C : Type u} [Category.{v} C] [HasColimits C] (J : Type v)
-    [Category.{v} J] : HasColimitsOfShape J C :=
-  HasColimitsOfSize.has_colimits_of_shape J
+set_option pp.universes true
+theorem HasColimits.hasColimitsOfShape {C : Type u} [Category.{v} C] [HasColimits.{w} C] (J : Type w)
+    [Category.{w} J] : HasColimitsOfShape J C :=
+  HasColimitsOfSize.has_colimits_of_shape.{w,w} J
 #align category_theory.limits.has_colimits.has_colimits_of_shape CategoryTheory.Limits.HasColimits.hasColimitsOfShape
 
 variable {J C}
