@@ -662,7 +662,9 @@ for the category of topological spaces, topological rings, etc since reflecting 
 hold.
 -/
 theorem isSheaf_iff_isSheaf_forget (A' : Type max (u₁ + 1) (v₁ + 1) (u₁v₁v₂ + 1))
-    [LargeCategory A'] (s : A' ⥤ TypeMax.{max u₁ v₁, u₁v₁w}) [HasLimits.{x} A'] [PreservesLimits s]
+    [LargeCategory A'] (s : A' ⥤ TypeMax.{max u₁ v₁, u₁v₁w}) [HasLimits.{max (max u₁ u₁v₁w) v₁} A']
+    [HasLimits.{max (max u₁ u₁v₁v₂) v₁} A'] [PreservesLimits.{max (max u₁ u₁v₁w) v₁} s]
+      [PreservesLimits.{max u₁ v₁} s]
     [ReflectsIsomorphisms s] [HasProducts.{max u₁ v₁, max u₁ v₁ u₁v₁v₂, max (u₁ + 1) (u₁v₁v₂ + 1) (v₁ + 1)} A']
       (P : Cᵒᵖ ⥤ A') : IsSheaf J P ↔ IsSheaf J (P ⋙ s) := by
   rw [isSheaf_iff_isSheaf'.{v₁,u₁v₁v₂,u₁,max (u₁ + 1) (u₁v₁v₂ + 1) (v₁ + 1)}]
