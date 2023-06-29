@@ -826,7 +826,6 @@ instance : Inhabited (FirstObj P (⊥ : Presieve X)) :=
 -- porting note: was not needed in mathlib
 instance : Inhabited (FirstObj P ((⊥ : Sieve X) : Presieve X)) :=
   (inferInstance : Inhabited (FirstObj P (⊥ : Presieve X)))
-set_option pp.universes true in
 /--
 The left morphism of the fork diagram given in Equation (3) of [MM92], as well as the fork diagram
 of <https://stacks.math.columbia.edu/tag/00VM>.
@@ -882,7 +881,6 @@ theorem w : forkMap P (S : Presieve X) ≫ firstMap P S = forkMap P S ≫ second
   simp [firstMap, secondMap, forkMap]
 #align category_theory.equalizer.sieve.w CategoryTheory.Equalizer.Sieve.w
 
-set_option pp.universes true in
 /--
 The family of elements given by `x : FirstObj P S` is compatible iff `firstMap` and `secondMap`
 map it to the same point.
@@ -962,7 +960,6 @@ def secondMap : FirstObj P R ⟶ SecondObj P R :=
   Pi.lift fun _ => Pi.π _ _ ≫ P.map pullback.snd.op
 #align category_theory.equalizer.presieve.second_map CategoryTheory.Equalizer.Presieve.secondMap
 
-set_option pp.universes true in
 theorem w : forkMap P R ≫ firstMap P R = forkMap P R ≫ secondMap P R := by
   dsimp
   ext
