@@ -172,10 +172,10 @@ theorem integral_boundary_rect_of_hasFDerivAt_real_off_countable (f : ℂ → E)
     (Hd : ∀ x ∈ Ioo (min z.re w.re) (max z.re w.re) ×ℂ Ioo (min z.im w.im) (max z.im w.im) \ s,
       HasFDerivAt f (f' x) x)
     (Hi : IntegrableOn (fun z => I • f' z 1 - f' z I) ([[z.re, w.re]] ×ℂ [[z.im, w.im]])) :
-    (∫ x : ℝ in z.re..w.re, f (x + z.im * I)) - (∫ x : ℝ in z.re..w.re, f (x + w.im * I)) +
-      I • (∫ y : ℝ in z.im..w.im, f (re w + y * I)) -
-      I • ∫ y : ℝ in z.im..w.im, f (re z + y * I) =
-      ∫ x : ℝ in z.re..w.re, ∫ y : ℝ in z.im..w.im, I • f' (x + y * I) 1 - f' (x + y * I) I := by
+    (∫ x : ℝ in [z.re:w.re], f (x + z.im * I)) - (∫ x : ℝ in [z.re:w.re], f (x + w.im * I)) +
+      I • (∫ y : ℝ in [z.im:w.im], f (re w + y * I)) -
+      I • ∫ y : ℝ in [z.im:w.im], f (re z + y * I) =
+      ∫ x : ℝ in [z.re:w.re], ∫ y : ℝ in [z.im:w.im], I • f' (x + y * I) 1 - f' (x + y * I) I := by
   set e : (ℝ × ℝ) ≃L[ℝ] ℂ := equivRealProdClm.symm
   have he : ∀ x y : ℝ, ↑x + ↑y * I = e (x, y) := fun x y => (mk_eq_add_mul_I x y).symm
   have he₁ : e (1, 0) = 1 := rfl; have he₂ : e (0, 1) = I := rfl
@@ -217,10 +217,10 @@ theorem integral_boundary_rect_of_continuousOn_of_hasFDerivAt_real (f : ℂ → 
     (Hd : ∀ x ∈ Ioo (min z.re w.re) (max z.re w.re) ×ℂ Ioo (min z.im w.im) (max z.im w.im),
       HasFDerivAt f (f' x) x)
     (Hi : IntegrableOn (fun z => I • f' z 1 - f' z I) ([[z.re, w.re]] ×ℂ [[z.im, w.im]])) :
-    (∫ x : ℝ in z.re..w.re, f (x + z.im * I)) - (∫ x : ℝ in z.re..w.re, f (x + w.im * I)) +
-      I • (∫ y : ℝ in z.im..w.im, f (re w + y * I)) -
-      I • (∫ y : ℝ in z.im..w.im, f (re z + y * I)) =
-      ∫ x : ℝ in z.re..w.re, ∫ y : ℝ in z.im..w.im, I • f' (x + y * I) 1 - f' (x + y * I) I :=
+    (∫ x : ℝ in [z.re:w.re], f (x + z.im * I)) - (∫ x : ℝ in [z.re:w.re], f (x + w.im * I)) +
+      I • (∫ y : ℝ in [z.im:w.im], f (re w + y * I)) -
+      I • (∫ y : ℝ in [z.im:w.im], f (re z + y * I)) =
+      ∫ x : ℝ in [z.re:w.re], ∫ y : ℝ in [z.im:w.im], I • f' (x + y * I) 1 - f' (x + y * I) I :=
   integral_boundary_rect_of_hasFDerivAt_real_off_countable f f' z w ∅ countable_empty Hc
     (fun x hx => Hd x hx.1) Hi
 #align complex.integral_boundary_rect_of_continuous_on_of_has_fderiv_at_real Complex.integral_boundary_rect_of_continuousOn_of_hasFDerivAt_real
@@ -234,10 +234,10 @@ theorem integral_boundary_rect_of_differentiableOn_real (f : ℂ → E) (z w : �
     (Hd : DifferentiableOn ℝ f ([[z.re, w.re]] ×ℂ [[z.im, w.im]]))
     (Hi : IntegrableOn (fun z => I • fderiv ℝ f z 1 - fderiv ℝ f z I)
       ([[z.re, w.re]] ×ℂ [[z.im, w.im]])) :
-    (∫ x : ℝ in z.re..w.re, f (x + z.im * I)) - (∫ x : ℝ in z.re..w.re, f (x + w.im * I)) +
-      I • (∫ y : ℝ in z.im..w.im, f (re w + y * I)) -
-      I • (∫ y : ℝ in z.im..w.im, f (re z + y * I)) =
-      ∫ x : ℝ in z.re..w.re, ∫ y : ℝ in z.im..w.im,
+    (∫ x : ℝ in [z.re:w.re], f (x + z.im * I)) - (∫ x : ℝ in [z.re:w.re], f (x + w.im * I)) +
+      I • (∫ y : ℝ in [z.im:w.im], f (re w + y * I)) -
+      I • (∫ y : ℝ in [z.im:w.im], f (re z + y * I)) =
+      ∫ x : ℝ in [z.re:w.re], ∫ y : ℝ in [z.im:w.im],
         I • fderiv ℝ f (x + y * I) 1 - fderiv ℝ f (x + y * I) I :=
   integral_boundary_rect_of_hasFDerivAt_real_off_countable f (fderiv ℝ f) z w ∅ countable_empty
     Hd.continuousOn
@@ -254,9 +254,9 @@ theorem integral_boundary_rect_eq_zero_of_differentiable_on_off_countable (f : �
     (s : Set ℂ) (hs : s.Countable) (Hc : ContinuousOn f ([[z.re, w.re]] ×ℂ [[z.im, w.im]]))
     (Hd : ∀ x ∈ Ioo (min z.re w.re) (max z.re w.re) ×ℂ Ioo (min z.im w.im) (max z.im w.im) \ s,
       DifferentiableAt ℂ f x) :
-    (∫ x : ℝ in z.re..w.re, f (x + z.im * I)) - (∫ x : ℝ in z.re..w.re, f (x + w.im * I)) +
-      I • (∫ y : ℝ in z.im..w.im, f (re w + y * I)) -
-      I • (∫ y : ℝ in z.im..w.im, f (re z + y * I)) = 0 := by
+    (∫ x : ℝ in [z.re:w.re], f (x + z.im * I)) - (∫ x : ℝ in [z.re:w.re], f (x + w.im * I)) +
+      I • (∫ y : ℝ in [z.im:w.im], f (re w + y * I)) -
+      I • (∫ y : ℝ in [z.im:w.im], f (re z + y * I)) = 0 := by
   -- porting note: `simp` fails to use `ContinuousLinearMap.coe_restrictScalars'`
   have : ∀ z, I • (fderiv ℂ f z).restrictScalars ℝ 1 = (fderiv ℂ f z).restrictScalars ℝ I := fun z ↦
     by rw [(fderiv ℂ f _).coe_restrictScalars', ← (fderiv ℂ f _).map_smul, smul_eq_mul, mul_one]
@@ -273,9 +273,9 @@ theorem integral_boundary_rect_eq_zero_of_continuousOn_of_differentiableOn (f : 
     (Hc : ContinuousOn f ([[z.re, w.re]] ×ℂ [[z.im, w.im]]))
     (Hd : DifferentiableOn ℂ f
       (Ioo (min z.re w.re) (max z.re w.re) ×ℂ Ioo (min z.im w.im) (max z.im w.im))) :
-    (∫ x : ℝ in z.re..w.re, f (x + z.im * I)) - (∫ x : ℝ in z.re..w.re, f (x + w.im * I)) +
-      I • (∫ y : ℝ in z.im..w.im, f (re w + y * I)) -
-      I • (∫ y : ℝ in z.im..w.im, f (re z + y * I)) = 0 :=
+    (∫ x : ℝ in [z.re:w.re], f (x + z.im * I)) - (∫ x : ℝ in [z.re:w.re], f (x + w.im * I)) +
+      I • (∫ y : ℝ in [z.im:w.im], f (re w + y * I)) -
+      I • (∫ y : ℝ in [z.im:w.im], f (re z + y * I)) = 0 :=
   integral_boundary_rect_eq_zero_of_differentiable_on_off_countable f z w ∅ countable_empty Hc
     fun _x hx => Hd.differentiableAt <| (isOpen_Ioo.reProdIm isOpen_Ioo).mem_nhds hx.1
 #align complex.integral_boundary_rect_eq_zero_of_continuous_on_of_differentiable_on Complex.integral_boundary_rect_eq_zero_of_continuousOn_of_differentiableOn
@@ -285,9 +285,9 @@ over the boundary of a rectangle equals zero. More precisely, if `f` is complex 
 closed rectangle, then its integral over the boundary of the rectangle equals zero. -/
 theorem integral_boundary_rect_eq_zero_of_differentiableOn (f : ℂ → E) (z w : ℂ)
     (H : DifferentiableOn ℂ f ([[z.re, w.re]] ×ℂ [[z.im, w.im]])) :
-    (∫ x : ℝ in z.re..w.re, f (x + z.im * I)) - (∫ x : ℝ in z.re..w.re, f (x + w.im * I)) +
-      I • (∫ y : ℝ in z.im..w.im, f (re w + y * I)) -
-      I • (∫ y : ℝ in z.im..w.im, f (re z + y * I)) = 0 :=
+    (∫ x : ℝ in [z.re:w.re], f (x + z.im * I)) - (∫ x : ℝ in [z.re:w.re], f (x + w.im * I)) +
+      I • (∫ y : ℝ in [z.im:w.im], f (re w + y * I)) -
+      I • (∫ y : ℝ in [z.im:w.im], f (re z + y * I)) = 0 :=
   integral_boundary_rect_eq_zero_of_continuousOn_of_differentiableOn f z w H.continuousOn <|
     H.mono <|
       inter_subset_inter (preimage_mono Ioo_subset_Icc_self) (preimage_mono Ioo_subset_Icc_self)
@@ -310,8 +310,8 @@ theorem circleIntegral_sub_center_inv_smul_eq_of_differentiable_on_annulus_off_c
   rw [Real.exp_le_exp] at hle
   -- Unfold definition of `circleIntegral` and cancel some terms.
   suffices
-    (∫ θ in (0)..2 * π, I • f (circleMap c (Real.exp b) θ)) =
-      ∫ θ in (0)..2 * π, I • f (circleMap c (Real.exp a) θ) by
+    (∫ θ in [0:2 * π], I • f (circleMap c (Real.exp b) θ)) =
+      ∫ θ in [0:2 * π], I • f (circleMap c (Real.exp a) θ) by
     simpa only [circleIntegral, add_sub_cancel', ofReal_exp, ← exp_add, smul_smul, ←
       div_eq_mul_inv, mul_div_cancel_left _ (circleMap_ne_center (Real.exp_pos _).ne'),
       circleMap_sub_center, deriv_circleMap]

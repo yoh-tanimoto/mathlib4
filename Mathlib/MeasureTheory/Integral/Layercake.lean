@@ -83,7 +83,7 @@ cake formula. -/
 theorem lintegral_comp_eq_lintegral_meas_le_mul_of_measurable (μ : Measure α) [SigmaFinite μ]
     (f_nn : 0 ≤ f) (f_mble : Measurable f) (g_intble : ∀ t > 0, IntervalIntegrable g volume 0 t)
     (g_mble : Measurable g) (g_nn : ∀ t > 0, 0 ≤ g t) :
-    (∫⁻ ω, ENNReal.ofReal (∫ t in (0)..f ω, g t) ∂μ) =
+    (∫⁻ ω, ENNReal.ofReal (∫ t in [0:f ω], g t) ∂μ) =
       ∫⁻ t in Ioi 0, μ {a : α | t ≤ f a} * ENNReal.ofReal (g t) := by
   have g_intble' : ∀ t : ℝ, 0 ≤ t → IntervalIntegrable g volume 0 t := by
     intro t ht
@@ -91,7 +91,7 @@ theorem lintegral_comp_eq_lintegral_meas_le_mul_of_measurable (μ : Measure α) 
     · simp [← h]
     · exact g_intble t h
   have integrand_eq :
-    ∀ ω, ENNReal.ofReal (∫ t in (0)..f ω, g t) = ∫⁻ t in Ioc 0 (f ω), ENNReal.ofReal (g t) := by
+    ∀ ω, ENNReal.ofReal (∫ t in [0:f ω], g t) = ∫⁻ t in Ioc 0 (f ω), ENNReal.ofReal (g t) := by
     intro ω
     have g_ae_nn : 0 ≤ᵐ[volume.restrict (Ioc 0 (f ω))] g := by
       filter_upwards [self_mem_ae_restrict (measurableSet_Ioc : MeasurableSet (Ioc 0 (f ω)))] with x
@@ -170,14 +170,14 @@ with derivative `G' = g`. Then the integral of the composition `G ∘ f` can be 
 the integral over the positive real line of the "tail measures" `μ {ω | f(ω) ≥ t}` of `f`
 weighted by `g`.
 
-Roughly speaking, the statement is: `∫⁻ (G ∘ f) ∂μ = ∫⁻ t in (0).. ∞, g(t) * μ {ω | f(ω) ≥ t}`.
+Roughly speaking, the statement is: `∫⁻ (G ∘ f) ∂μ = ∫⁻ t in [0: ∞], g(t) * μ {ω | f(ω) ≥ t}`.
 
 See `lintegral_comp_eq_lintegral_meas_lt_mul` for a version with sets of the form `{ω | f(ω) > t}`
 instead. -/
 theorem lintegral_comp_eq_lintegral_meas_le_mul (μ : Measure α) [SigmaFinite μ] (f_nn : 0 ≤ f)
     (f_mble : Measurable f) (g_intble : ∀ t > 0, IntervalIntegrable g volume 0 t)
     (g_nn : ∀ᵐ t ∂volume.restrict (Ioi 0), 0 ≤ g t) :
-    (∫⁻ ω, ENNReal.ofReal (∫ t in (0)..f ω, g t) ∂μ) =
+    (∫⁻ ω, ENNReal.ofReal (∫ t in [0:f ω], g t) ∂μ) =
       ∫⁻ t in Ioi 0, μ {a : α | t ≤ f a} * ENNReal.ofReal (g t) := by
   have ex_G : ∃ G : ℝ → ℝ, Measurable G ∧ 0 ≤ G ∧ g =ᵐ[volume.restrict (Ioi 0)] G := by
     refine' AEMeasurable.exists_measurable_nonneg _ g_nn
@@ -195,7 +195,7 @@ theorem lintegral_comp_eq_lintegral_meas_le_mul (μ : Measure α) [SigmaFinite �
     apply lintegral_congr_ae
     filter_upwards [g_eq_G] with a ha
     rw [ha]
-  have eq₂ : ∀ ω, (∫ t in (0)..f ω, g t) = ∫ t in (0)..f ω, G t := by
+  have eq₂ : ∀ ω, (∫ t in [0:f ω], g t) = ∫ t in [0:f ω], G t := by
     refine' fun ω => intervalIntegral.integral_congr_ae _
     have fω_nn : 0 ≤ f ω := f_nn ω
     rw [uIoc_of_le fω_nn, ←
@@ -210,7 +210,7 @@ theorem lintegral_comp_eq_lintegral_meas_le_mul (μ : Measure α) [SigmaFinite �
 /-- The standard case of the layer cake formula / Cavalieri's principle / tail probability formula:
 
 For a nonnegative function `f` on a sigma-finite measure space, the Lebesgue integral of `f` can
-be written (roughly speaking) as: `∫⁻ f ∂μ = ∫⁻ t in (0).. ∞, μ {ω | f(ω) ≥ t}`.
+be written (roughly speaking) as: `∫⁻ f ∂μ = ∫⁻ t in [0: ∞], μ {ω | f(ω) ≥ t}`.
 
 See `lintegral_eq_lintegral_meas_lt` for a version with sets of the form `{ω | f(ω) > t}`
 instead. -/
@@ -232,7 +232,7 @@ theorem lintegral_eq_lintegral_meas_le (μ : Measure α) [SigmaFinite μ] (f_nn 
 /-- An application of the layer cake formula / Cavalieri's principle / tail probability formula:
 
 For a nonnegative function `f` on a sigma-finite measure space, the Lebesgue integral of `f` can
-be written (roughly speaking) as: `∫⁻ f^p ∂μ = p * ∫⁻ t in (0).. ∞, t^(p-1) * μ {ω | f(ω) ≥ t}`.
+be written (roughly speaking) as: `∫⁻ f^p ∂μ = p * ∫⁻ t in [0: ∞], t^(p-1) * μ {ω | f(ω) ≥ t}`.
 
 See `lintegral_rpow_eq_lintegral_meas_lt_mul` for a version with sets of the form `{ω | f(ω) > t}`
 instead. -/
@@ -241,7 +241,7 @@ theorem lintegral_rpow_eq_lintegral_meas_le_mul (μ : Measure α) [SigmaFinite �
     (∫⁻ ω, ENNReal.ofReal (f ω ^ p) ∂μ) =
       ENNReal.ofReal p * ∫⁻ t in Ioi 0, μ {a : α | t ≤ f a} * ENNReal.ofReal (t ^ (p - 1)) := by
   have one_lt_p : -1 < p - 1 := by linarith
-  have obs : ∀ x : ℝ, (∫ t : ℝ in (0)..x, t ^ (p - 1)) = x ^ p / p := by
+  have obs : ∀ x : ℝ, (∫ t : ℝ in [0:x], t ^ (p - 1)) = x ^ p / p := by
     intro x
     rw [integral_rpow (Or.inl one_lt_p)]
     simp [Real.zero_rpow p_pos.ne.symm]
@@ -320,14 +320,14 @@ with derivative `G' = g`. Then the integral of the composition `G ∘ f` can be 
 the integral over the positive real line of the "tail measures" `μ {ω | f(ω) > t}` of `f`
 weighted by `g`.
 
-Roughly speaking, the statement is: `∫⁻ (G ∘ f) ∂μ = ∫⁻ t in (0).. ∞, g(t) * μ {ω | f(ω) > t}`.
+Roughly speaking, the statement is: `∫⁻ (G ∘ f) ∂μ = ∫⁻ t in [0: ∞], g(t) * μ {ω | f(ω) > t}`.
 
 See `lintegral_comp_eq_lintegral_meas_le_mul` for a version with sets of the form `{ω | f(ω) ≥ t}`
 instead. -/
 theorem lintegral_comp_eq_lintegral_meas_lt_mul (μ : Measure α) [SigmaFinite μ] (f_nn : 0 ≤ f)
     (f_mble : Measurable f) (g_intble : ∀ t > 0, IntervalIntegrable g volume 0 t)
     (g_nn : ∀ᵐ t ∂volume.restrict (Ioi 0), 0 ≤ g t) :
-    (∫⁻ ω, ENNReal.ofReal (∫ t in (0)..f ω, g t) ∂μ) =
+    (∫⁻ ω, ENNReal.ofReal (∫ t in [0:f ω], g t) ∂μ) =
       ∫⁻ t in Ioi 0, μ {a : α | t < f a} * ENNReal.ofReal (g t) := by
   rw [lintegral_comp_eq_lintegral_meas_le_mul μ f_nn f_mble g_intble g_nn]
   apply lintegral_congr_ae
@@ -338,7 +338,7 @@ theorem lintegral_comp_eq_lintegral_meas_lt_mul (μ : Measure α) [SigmaFinite �
 /-- The standard case of the layer cake formula / Cavalieri's principle / tail probability formula:
 
 For a nonnegative function `f` on a sigma-finite measure space, the Lebesgue integral of `f` can
-be written (roughly speaking) as: `∫⁻ f ∂μ = ∫⁻ t in (0).. ∞, μ {ω | f(ω) > t}`.
+be written (roughly speaking) as: `∫⁻ f ∂μ = ∫⁻ t in [0: ∞], μ {ω | f(ω) > t}`.
 
 See `lintegral_eq_lintegral_meas_le` for a version with sets of the form `{ω | f(ω) ≥ t}`
 instead. -/
@@ -354,7 +354,7 @@ theorem lintegral_eq_lintegral_meas_lt (μ : Measure α) [SigmaFinite μ] (f_nn 
 /-- An application of the layer cake formula / Cavalieri's principle / tail probability formula:
 
 For a nonnegative function `f` on a sigma-finite measure space, the Lebesgue integral of `f` can
-be written (roughly speaking) as: `∫⁻ f^p ∂μ = p * ∫⁻ t in (0).. ∞, t^(p-1) * μ {ω | f(ω) > t}`.
+be written (roughly speaking) as: `∫⁻ f^p ∂μ = p * ∫⁻ t in [0: ∞], t^(p-1) * μ {ω | f(ω) > t}`.
 
 See `lintegral_rpow_eq_lintegral_meas_le_mul` for a version with sets of the form `{ω | f(ω) ≥ t}`
 instead. -/

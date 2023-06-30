@@ -1596,10 +1596,10 @@ variable [NormedSpace ℝ E] [NormedSpace ℝ E'] [NormedSpace ℝ F] [CompleteS
 
 /-- The forward convolution of two functions `f` and `g` on `ℝ`, with respect to a continuous
 bilinear map `L` and measure `ν`. It is defined to be the function mapping `x` to
-`∫ t in 0..x, L (f t) (g (x - t)) ∂ν` if `0 < x`, and 0 otherwise. -/
+`∫ t in [0:x], L (f t) (g (x - t)) ∂ν` if `0 < x`, and 0 otherwise. -/
 noncomputable def posConvolution (f : ℝ → E) (g : ℝ → E') (L : E →L[ℝ] E' →L[ℝ] F)
     (ν : MeasureTheory.Measure ℝ := by volume_tac) : ℝ → F :=
-  indicator (Ioi (0 : ℝ)) fun x => ∫ t in (0)..x, L (f t) (g (x - t)) ∂ν
+  indicator (Ioi (0 : ℝ)) fun x => ∫ t in [0:x], L (f t) (g (x - t)) ∂ν
 #align pos_convolution posConvolution
 
 theorem posConvolution_eq_convolution_indicator (f : ℝ → E) (g : ℝ → E') (L : E →L[ℝ] E' →L[ℝ] F)
@@ -1666,7 +1666,7 @@ theorem integral_posConvolution [CompleteSpace E] [CompleteSpace E']
     {μ ν : MeasureTheory.Measure ℝ}
     [SigmaFinite μ] [SigmaFinite ν] [IsAddRightInvariant μ] [NoAtoms ν] {f : ℝ → E} {g : ℝ → E'}
     (hf : IntegrableOn f (Ioi 0) ν) (hg : IntegrableOn g (Ioi 0) μ) (L : E →L[ℝ] E' →L[ℝ] F) :
-    ∫ x : ℝ in Ioi 0, ∫ t : ℝ in (0)..x, L (f t) (g (x - t)) ∂ν ∂μ =
+    ∫ x : ℝ in Ioi 0, ∫ t : ℝ in [0:x], L (f t) (g (x - t)) ∂ν ∂μ =
       L (∫ x : ℝ in Ioi 0, f x ∂ν) (∫ x : ℝ in Ioi 0, g x ∂μ) := by
   rw [← integrable_indicator_iff measurableSet_Ioi] at hf hg
   simp_rw [← integral_indicator measurableSet_Ioi]

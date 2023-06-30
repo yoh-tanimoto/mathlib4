@@ -28,7 +28,7 @@ variable {𝕜 : Type _} [IsROrC 𝕜] {μ : Measure ℝ} {E : Type _} [NormedAd
 
 namespace intervalIntegral
 
-/-- Differentiation under integral of `x ↦ ∫ t in a..b, F x t` at a given point `x₀`, assuming
+/-- Differentiation under integral of `x ↦ ∫ t in [a:b], F x t` at a given point `x₀`, assuming
 `F x₀` is integrable, `x ↦ F x a` is locally Lipschitz on a ball around `x₀` for ae `a`
 (with a ball radius independent of `a`) with integrable Lipschitz bound, and `F x` is ae-measurable
 for `x` in a possibly smaller neighborhood of `x₀`. -/
@@ -42,7 +42,7 @@ nonrec theorem hasFDerivAt_integral_of_dominated_loc_of_lip
     (bound_integrable : IntervalIntegrable bound μ a b)
     (h_diff : ∀ᵐ t ∂μ, t ∈ Ι a b → HasFDerivAt (fun x => F x t) (F' t) x₀) :
     IntervalIntegrable F' μ a b ∧
-      HasFDerivAt (fun x => ∫ t in a..b, F x t ∂μ) (∫ t in a..b, F' t ∂μ) x₀ := by
+      HasFDerivAt (fun x => ∫ t in [a:b], F x t ∂μ) (∫ t in [a:b], F' t ∂μ) x₀ := by
   rw [← ae_restrict_iff' measurableSet_uIoc] at h_lip h_diff
   simp only [intervalIntegrable_iff] at hF_int bound_integrable ⊢
   simp only [intervalIntegral_eq_integral_uIoc]
@@ -63,7 +63,7 @@ nonrec theorem hasFDerivAt_integral_of_dominated_of_fderiv_le
     (h_bound : ∀ᵐ t ∂μ, t ∈ Ι a b → ∀ x ∈ ball x₀ ε, ‖F' x t‖ ≤ bound t)
     (bound_integrable : IntervalIntegrable bound μ a b)
     (h_diff : ∀ᵐ t ∂μ, t ∈ Ι a b → ∀ x ∈ ball x₀ ε, HasFDerivAt (fun x => F x t) (F' x t) x) :
-    HasFDerivAt (fun x => ∫ t in a..b, F x t ∂μ) (∫ t in a..b, F' x₀ t ∂μ) x₀ := by
+    HasFDerivAt (fun x => ∫ t in [a:b], F x t ∂μ) (∫ t in [a:b], F' x₀ t ∂μ) x₀ := by
   rw [← ae_restrict_iff' measurableSet_uIoc] at h_bound h_diff
   simp only [intervalIntegrable_iff] at hF_int bound_integrable
   simp only [intervalIntegral_eq_integral_uIoc]
@@ -84,7 +84,7 @@ nonrec theorem hasDerivAt_integral_of_dominated_loc_of_lip {F : 𝕜 → ℝ →
     (bound_integrable : IntervalIntegrable (bound : ℝ → ℝ) μ a b)
     (h_diff : ∀ᵐ t ∂μ, t ∈ Ι a b → HasDerivAt (fun x => F x t) (F' t) x₀) :
     IntervalIntegrable F' μ a b ∧
-      HasDerivAt (fun x => ∫ t in a..b, F x t ∂μ) (∫ t in a..b, F' t ∂μ) x₀ := by
+      HasDerivAt (fun x => ∫ t in [a:b], F x t ∂μ) (∫ t in [a:b], F' t ∂μ) x₀ := by
   rw [← ae_restrict_iff' measurableSet_uIoc] at h_lipsch h_diff
   simp only [intervalIntegrable_iff] at hF_int bound_integrable ⊢
   simp only [intervalIntegral_eq_integral_uIoc]
@@ -106,7 +106,7 @@ nonrec theorem hasDerivAt_integral_of_dominated_loc_of_deriv_le
     (bound_integrable : IntervalIntegrable bound μ a b)
     (h_diff : ∀ᵐ t ∂μ, t ∈ Ι a b → ∀ x ∈ ball x₀ ε, HasDerivAt (fun x => F x t) (F' x t) x) :
     IntervalIntegrable (F' x₀) μ a b ∧
-      HasDerivAt (fun x => ∫ t in a..b, F x t ∂μ) (∫ t in a..b, F' x₀ t ∂μ) x₀ := by
+      HasDerivAt (fun x => ∫ t in [a:b], F x t ∂μ) (∫ t in [a:b], F' x₀ t ∂μ) x₀ := by
   rw [← ae_restrict_iff' measurableSet_uIoc] at h_bound h_diff
   simp only [intervalIntegrable_iff] at hF_int bound_integrable ⊢
   simp only [intervalIntegral_eq_integral_uIoc]

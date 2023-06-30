@@ -519,7 +519,7 @@ variable {ι E : Type _} {μ : Measure ℝ} {l : Filter ι} [Filter.NeBot l] [Is
 
 theorem integrable_of_intervalIntegral_norm_bounded (I : ℝ)
     (hfi : ∀ i, IntegrableOn f (Ioc (a i) (b i)) μ) (ha : Tendsto a l atBot)
-    (hb : Tendsto b l atTop) (h : ∀ᶠ i in l, (∫ x in a i..b i, ‖f x‖ ∂μ) ≤ I) : Integrable f μ := by
+    (hb : Tendsto b l atTop) (h : ∀ᶠ i in l, (∫ x in [a i:b i], ‖f x‖ ∂μ) ≤ I) : Integrable f μ := by
   have hφ : AECover μ l _ := aecover_Ioc ha hb
   refine' hφ.integrable_of_integral_norm_bounded I hfi (h.mp _)
   filter_upwards [ha.eventually (eventually_le_atBot 0),
@@ -529,11 +529,11 @@ theorem integrable_of_intervalIntegral_norm_bounded (I : ℝ)
 
 /-- If `f` is integrable on intervals `Ioc (a i) (b i)`,
 where `a i` tends to -∞ and `b i` tends to ∞, and
-`∫ x in a i .. b i, ‖f x‖ ∂μ` converges to `I : ℝ` along a filter `l`,
+`∫ x in [a i : b i], ‖f x‖ ∂μ` converges to `I : ℝ` along a filter `l`,
 then `f` is integrable on the interval (-∞, ∞) -/
 theorem integrable_of_intervalIntegral_norm_tendsto (I : ℝ)
     (hfi : ∀ i, IntegrableOn f (Ioc (a i) (b i)) μ) (ha : Tendsto a l atBot)
-    (hb : Tendsto b l atTop) (h : Tendsto (fun i => ∫ x in a i..b i, ‖f x‖ ∂μ) l (𝓝 I)) :
+    (hb : Tendsto b l atTop) (h : Tendsto (fun i => ∫ x in [a i:b i], ‖f x‖ ∂μ) l (𝓝 I)) :
     Integrable f μ :=
   let ⟨I', hI'⟩ := h.isBoundedUnder_le
   integrable_of_intervalIntegral_norm_bounded I' hfi ha hb hI'
@@ -541,7 +541,7 @@ theorem integrable_of_intervalIntegral_norm_tendsto (I : ℝ)
 
 theorem integrableOn_Iic_of_intervalIntegral_norm_bounded (I b : ℝ)
     (hfi : ∀ i, IntegrableOn f (Ioc (a i) b) μ) (ha : Tendsto a l atBot)
-    (h : ∀ᶠ i in l, (∫ x in a i..b, ‖f x‖ ∂μ) ≤ I) : IntegrableOn f (Iic b) μ := by
+    (h : ∀ᶠ i in l, (∫ x in [a i:b], ‖f x‖ ∂μ) ≤ I) : IntegrableOn f (Iic b) μ := by
   have hφ : AECover (μ.restrict <| Iic b) l _ := aecover_Ioi ha
   have hfi : ∀ i, IntegrableOn f (Ioi (a i)) (μ.restrict <| Iic b) := by
     intro i
@@ -555,18 +555,18 @@ theorem integrableOn_Iic_of_intervalIntegral_norm_bounded (I b : ℝ)
 
 /-- If `f` is integrable on intervals `Ioc (a i) b`,
 where `a i` tends to -∞, and
-`∫ x in a i .. b, ‖f x‖ ∂μ` converges to `I : ℝ` along a filter `l`,
+`∫ x in [a i : b], ‖f x‖ ∂μ` converges to `I : ℝ` along a filter `l`,
 then `f` is integrable on the interval (-∞, b) -/
 theorem integrableOn_Iic_of_intervalIntegral_norm_tendsto (I b : ℝ)
     (hfi : ∀ i, IntegrableOn f (Ioc (a i) b) μ) (ha : Tendsto a l atBot)
-    (h : Tendsto (fun i => ∫ x in a i..b, ‖f x‖ ∂μ) l (𝓝 I)) : IntegrableOn f (Iic b) μ :=
+    (h : Tendsto (fun i => ∫ x in [a i:b], ‖f x‖ ∂μ) l (𝓝 I)) : IntegrableOn f (Iic b) μ :=
   let ⟨I', hI'⟩ := h.isBoundedUnder_le
   integrableOn_Iic_of_intervalIntegral_norm_bounded I' b hfi ha hI'
 #align measure_theory.integrable_on_Iic_of_interval_integral_norm_tendsto MeasureTheory.integrableOn_Iic_of_intervalIntegral_norm_tendsto
 
 theorem integrableOn_Ioi_of_intervalIntegral_norm_bounded (I a : ℝ)
     (hfi : ∀ i, IntegrableOn f (Ioc a (b i)) μ) (hb : Tendsto b l atTop)
-    (h : ∀ᶠ i in l, (∫ x in a..b i, ‖f x‖ ∂μ) ≤ I) : IntegrableOn f (Ioi a) μ := by
+    (h : ∀ᶠ i in l, (∫ x in [a:b i], ‖f x‖ ∂μ) ≤ I) : IntegrableOn f (Ioi a) μ := by
   have hφ : AECover (μ.restrict <| Ioi a) l _ := aecover_Iic hb
   have hfi : ∀ i, IntegrableOn f (Iic (b i)) (μ.restrict <| Ioi a) := by
     intro i
@@ -581,11 +581,11 @@ theorem integrableOn_Ioi_of_intervalIntegral_norm_bounded (I a : ℝ)
 
 /-- If `f` is integrable on intervals `Ioc a (b i)`,
 where `b i` tends to ∞, and
-`∫ x in a .. b i, ‖f x‖ ∂μ` converges to `I : ℝ` along a filter `l`,
+`∫ x in [a : b i], ‖f x‖ ∂μ` converges to `I : ℝ` along a filter `l`,
 then `f` is integrable on the interval (a, ∞) -/
 theorem integrableOn_Ioi_of_intervalIntegral_norm_tendsto (I a : ℝ)
     (hfi : ∀ i, IntegrableOn f (Ioc a (b i)) μ) (hb : Tendsto b l atTop)
-    (h : Tendsto (fun i => ∫ x in a..b i, ‖f x‖ ∂μ) l (𝓝 <| I)) : IntegrableOn f (Ioi a) μ :=
+    (h : Tendsto (fun i => ∫ x in [a:b i], ‖f x‖ ∂μ) l (𝓝 <| I)) : IntegrableOn f (Ioi a) μ :=
   let ⟨I', hI'⟩ := h.isBoundedUnder_le
   integrableOn_Ioi_of_intervalIntegral_norm_bounded I' a hfi hb hI'
 #align measure_theory.integrable_on_Ioi_of_interval_integral_norm_tendsto MeasureTheory.integrableOn_Ioi_of_intervalIntegral_norm_tendsto
@@ -622,7 +622,7 @@ variable {ι E : Type _} {μ : Measure ℝ} {l : Filter ι} [IsCountablyGenerate
   [NormedAddCommGroup E] [NormedSpace ℝ E] [CompleteSpace E] {a b : ι → ℝ} {f : ℝ → E}
 
 theorem intervalIntegral_tendsto_integral (hfi : Integrable f μ) (ha : Tendsto a l atBot)
-    (hb : Tendsto b l atTop) : Tendsto (fun i => ∫ x in a i..b i, f x ∂μ) l (𝓝 <| ∫ x, f x ∂μ) := by
+    (hb : Tendsto b l atTop) : Tendsto (fun i => ∫ x in [a i:b i], f x ∂μ) l (𝓝 <| ∫ x, f x ∂μ) := by
   let φ i := Ioc (a i) (b i)
   have hφ : AECover μ l φ := aecover_Ioc ha hb
   refine' (hφ.integral_tendsto_of_countably_generated hfi).congr' _
@@ -633,7 +633,7 @@ theorem intervalIntegral_tendsto_integral (hfi : Integrable f μ) (ha : Tendsto 
 
 theorem intervalIntegral_tendsto_integral_Iic (b : ℝ) (hfi : IntegrableOn f (Iic b) μ)
     (ha : Tendsto a l atBot) :
-    Tendsto (fun i => ∫ x in a i..b, f x ∂μ) l (𝓝 <| ∫ x in Iic b, f x ∂μ) := by
+    Tendsto (fun i => ∫ x in [a i:b], f x ∂μ) l (𝓝 <| ∫ x in Iic b, f x ∂μ) := by
   let φ i := Ioi (a i)
   have hφ : AECover (μ.restrict <| Iic b) l φ := aecover_Ioi ha
   refine' (hφ.integral_tendsto_of_countably_generated hfi).congr' _
@@ -644,7 +644,7 @@ theorem intervalIntegral_tendsto_integral_Iic (b : ℝ) (hfi : IntegrableOn f (I
 
 theorem intervalIntegral_tendsto_integral_Ioi (a : ℝ) (hfi : IntegrableOn f (Ioi a) μ)
     (hb : Tendsto b l atTop) :
-    Tendsto (fun i => ∫ x in a..b i, f x ∂μ) l (𝓝 <| ∫ x in Ioi a, f x ∂μ) := by
+    Tendsto (fun i => ∫ x in [a:b i], f x ∂μ) l (𝓝 <| ∫ x in Ioi a, f x ∂μ) := by
   let φ i := Iic (b i)
   have hφ : AECover (μ.restrict <| Ioi a) l φ := aecover_Iic hb
   refine' (hφ.integral_tendsto_of_countably_generated hfi).congr' _
@@ -709,14 +709,14 @@ theorem integrableOn_Ioi_deriv_of_nonneg (hcont : ContinuousOn g (Ici a))
   filter_upwards [Ioi_mem_atTop a] with x hx
   have h'x : a ≤ id x := le_of_lt hx
   calc
-    g x - g a = ∫ y in a..id x, g' y := by
+    g x - g a = ∫ y in [a:id x], g' y := by
       symm
       apply intervalIntegral.integral_eq_sub_of_hasDerivAt_of_le h'x
         (hcont.mono Icc_subset_Ici_self) fun y hy => hderiv y hy.1
       rw [intervalIntegrable_iff_integrable_Ioc_of_le h'x]
       exact intervalIntegral.integrableOn_deriv_of_nonneg (hcont.mono Icc_subset_Ici_self)
         (fun y hy => hderiv y hy.1) fun y hy => g'pos y hy.1
-    _ = ∫ y in a..id x, ‖g' y‖ := by
+    _ = ∫ y in [a:id x], ‖g' y‖ := by
       simp_rw [intervalIntegral.integral_of_le h'x]
       refine' set_integral_congr measurableSet_Ioc fun y hy => _
       dsimp
@@ -811,7 +811,7 @@ theorem integral_comp_smul_deriv_Ioi {f f' : ℝ → ℝ} {g : ℝ → E} {a : �
     (hg_cont : ContinuousOn g <| f '' Ioi a) (hg1 : IntegrableOn g <| f '' Ici a)
     (hg2 : IntegrableOn (fun x => f' x • (g ∘ f) x) (Ici a)) :
     (∫ x in Ioi a, f' x • (g ∘ f) x) = ∫ u in Ioi (f a), g u := by
-  have eq : ∀ b : ℝ, a < b → (∫ x in a..b, f' x • (g ∘ f) x) = ∫ u in f a..f b, g u := fun b hb ↦ by
+  have eq : ∀ b : ℝ, a < b → (∫ x in [a:b], f' x • (g ∘ f) x) = ∫ u in [f a:f b], g u := fun b hb ↦ by
     have i1 : Ioo (min a b) (max a b) ⊆ Ioi a := by
       rw [min_eq_left hb.le]
       exact Ioo_subset_Ioi_self

@@ -269,7 +269,7 @@ that the fixed point of this map is the solution of the corresponding ODE.
 
 More precisely, some iteration of this map is a contracting map. -/
 def next (f : FunSpace v) : FunSpace v where
-  toFun t := v.x₀ + ∫ τ : ℝ in v.t₀..t, f.vComp τ
+  toFun t := v.x₀ + ∫ τ : ℝ in [v.t₀:t], f.vComp τ
   map_t₀' := by simp only [integral_same, add_zero]
   lipschitz' := LipschitzWith.of_dist_le_mul fun t₁ t₂ => by
     rw [dist_add_left, dist_eq_norm,
@@ -277,7 +277,7 @@ def next (f : FunSpace v) : FunSpace v where
     exact norm_integral_le_of_norm_le_const fun t _ => f.norm_vComp_le _
 #align picard_lindelof.fun_space.next PicardLindelof.FunSpace.next
 
-theorem next_apply (t : Icc v.tMin v.tMax) : f.next t = v.x₀ + ∫ τ : ℝ in v.t₀..t, f.vComp τ :=
+theorem next_apply (t : Icc v.tMin v.tMax) : f.next t = v.x₀ + ∫ τ : ℝ in [v.t₀:t], f.vComp τ :=
   rfl
 #align picard_lindelof.fun_space.next_apply PicardLindelof.FunSpace.next_apply
 
@@ -286,7 +286,7 @@ theorem hasDerivWithinAt_next (t : Icc v.tMin v.tMax) :
   haveI : Fact ((t : ℝ) ∈ Icc v.tMin v.tMax) := ⟨t.2⟩
   simp only [(· ∘ ·), next_apply]
   refine' HasDerivWithinAt.const_add _ _
-  have : HasDerivWithinAt (∫ τ in v.t₀..·, f.vComp τ) (f.vComp t) (Icc v.tMin v.tMax) t :=
+  have : HasDerivWithinAt (∫ τ in [v.t₀:·], f.vComp τ) (f.vComp t) (Icc v.tMin v.tMax) t :=
     integral_hasDerivWithinAt_right (f.intervalIntegrable_vComp _ _)
       (f.continuous_vComp.stronglyMeasurableAtFilter _ _)
       f.continuous_vComp.continuousWithinAt

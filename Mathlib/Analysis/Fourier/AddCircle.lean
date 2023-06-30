@@ -357,7 +357,7 @@ def fourierCoeff (f : AddCircle T → E) (n : ℤ) : E :=
 /-- The Fourier coefficients of a function on `AddCircle T` can be computed as an integral
 over `[a, a + T]`, for any real `a`. -/
 theorem fourierCoeff_eq_intervalIntegral (f : AddCircle T → E) (n : ℤ) (a : ℝ) :
-    fourierCoeff f n = (1 / T) • ∫ x in a..a + T, @fourier T (-n) x • f x := by
+    fourierCoeff f n = (1 / T) • ∫ x in [a:a + T], @fourier T (-n) x • f x := by
   have : ∀ x : ℝ, @fourier T (-n) x • f x = (fun z : AddCircle T => @fourier T (-n) z • f z) x := by
     intro x; rfl
   simp_rw [this]
@@ -386,7 +386,7 @@ def fourierCoeffOn {a b : ℝ} (hab : a < b) (f : ℝ → E) (n : ℤ) : E :=
 
 theorem fourierCoeffOn_eq_integral {a b : ℝ} (f : ℝ → E) (n : ℤ) (hab : a < b) :
     fourierCoeffOn hab f n =
-      (1 / (b - a)) • ∫ x in a..b, fourier (-n) (x : AddCircle (b - a)) • f x := by
+      (1 / (b - a)) • ∫ x in [a:b], fourier (-n) (x : AddCircle (b - a)) • f x := by
   haveI := Fact.mk (by linarith : 0 < b - a)
   rw [fourierCoeffOn, fourierCoeff_eq_intervalIntegral _ _ a, add_sub, add_sub_cancel']
   congr 1

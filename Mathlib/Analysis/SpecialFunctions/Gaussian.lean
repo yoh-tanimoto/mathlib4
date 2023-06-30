@@ -296,8 +296,8 @@ theorem integral_gaussian_complex_Ioi {b : ℂ} (hb : 0 < re b) :
   suffices ∫ x : ℝ in Iic 0, cexp (-b * (x : ℂ) ^ 2) = ∫ x : ℝ in Ioi 0, cexp (-b * (x : ℂ) ^ 2) by
     rw [this, ← mul_two] at full_integral
     rwa [eq_div_iff]; exact two_ne_zero
-  have : ∀ c : ℝ, ∫ x in (0 : ℝ)..c, cexp (-b * (x : ℂ) ^ 2) =
-      ∫ x in -c..0, cexp (-b * (x : ℂ) ^ 2) := by
+  have : ∀ c : ℝ, ∫ x in [0:c], cexp (-b * (x : ℂ) ^ 2) =
+      ∫ x in [-c:0], cexp (-b * (x : ℂ) ^ 2) := by
     intro c
     have :=
       @intervalIntegral.integral_comp_sub_left _ _ _ _ 0 c (fun x => cexp (-b * (x : ℂ) ^ 2)) 0
@@ -305,7 +305,7 @@ theorem integral_gaussian_complex_Ioi {b : ℂ} (hb : 0 < re b) :
   have t1 :=
     intervalIntegral_tendsto_integral_Ioi 0 (integrable_cexp_neg_mul_sq hb).integrableOn tendsto_id
   have t2 :
-    Tendsto (fun c : ℝ => ∫ x : ℝ in (0 : ℝ)..c, cexp (-b * (x : ℂ) ^ 2)) atTop
+    Tendsto (fun c : ℝ => ∫ x : ℝ in [0:c], cexp (-b * (x : ℂ) ^ 2)) atTop
       (𝓝 (∫ x : ℝ in Iic 0, cexp (-b * (x : ℂ) ^ 2))) := by
     simp_rw [this]
     refine' intervalIntegral_tendsto_integral_Iic _ _ tendsto_neg_atTop_atBot
@@ -370,7 +370,7 @@ variable {b : ℂ}
 /-- The integral of the Gaussian function over the vertical edges of a rectangle
 with vertices at `(±T, 0)` and `(±T, c)`.  -/
 def verticalIntegral (b : ℂ) (c T : ℝ) : ℂ :=
-  ∫ y : ℝ in (0 : ℝ)..c, I * (cexp (-b * (T + y * I) ^ 2) - cexp (-b * (T - y * I) ^ 2))
+  ∫ y : ℝ in [0:c], I * (cexp (-b * (T + y * I) ^ 2) - cexp (-b * (T - y * I) ^ 2))
 #align gaussian_fourier.vertical_integral GaussianFourier.verticalIntegral
 
 /-- Explicit formula for the norm of the Gaussian function along the vertical
@@ -480,10 +480,10 @@ theorem integral_cexp_neg_mul_sq_add_real_mul_I (hb : 0 < b.re) (c : ℝ) :
       (intervalIntegral_tendsto_integral (integrable_cexp_neg_mul_sq_add_real_mul_I hb c)
         tendsto_neg_atTop_atBot tendsto_id)
       _
-  set I₁ := fun T => ∫ x : ℝ in -T..T, cexp (-b * (x + c * I) ^ 2) with HI₁
-  let I₂ := fun T : ℝ => ∫ x : ℝ in -T..T, cexp (-b * (x : ℂ) ^ 2)
-  let I₄ := fun T : ℝ => ∫ y : ℝ in (0 : ℝ)..c, cexp (-b * (T + y * I) ^ 2)
-  let I₅ := fun T : ℝ => ∫ y : ℝ in (0 : ℝ)..c, cexp (-b * (-T + y * I) ^ 2)
+  set I₁ := fun T => ∫ x : ℝ in [-T:T], cexp (-b * (x + c * I) ^ 2) with HI₁
+  let I₂ := fun T : ℝ => ∫ x : ℝ in [-T:T], cexp (-b * (x : ℂ) ^ 2)
+  let I₄ := fun T : ℝ => ∫ y : ℝ in [0:c], cexp (-b * (T + y * I) ^ 2)
+  let I₅ := fun T : ℝ => ∫ y : ℝ in [0:c], cexp (-b * (-T + y * I) ^ 2)
   have C : ∀ T : ℝ, I₂ T - I₁ T + I * I₄ T - I * I₅ T = 0 := by
     intro T
     have :=

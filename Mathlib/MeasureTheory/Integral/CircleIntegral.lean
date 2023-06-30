@@ -344,7 +344,7 @@ variable [NormedSpace ℂ E] [CompleteSpace E]
 
 /-- Definition for $\oint_{|z-c|=R} f(z)\,dz$. -/
 def circleIntegral (f : ℂ → E) (c : ℂ) (R : ℝ) : E :=
-  ∫ θ : ℝ in (0)..2 * π, deriv (circleMap c R) θ • f (circleMap c R θ)
+  ∫ θ : ℝ in [0:2 * π], deriv (circleMap c R) θ • f (circleMap c R θ)
 #align circle_integral circleIntegral
 
 notation3 "∮ "(...)" in ""C("c", "R")"", "r:(scoped f => circleIntegral f c R) => r
@@ -427,9 +427,9 @@ theorem norm_integral_lt_of_norm_le_const_of_lt {f : ℂ → E} {c : ℂ} {R C :
   rw [← _root_.abs_of_pos hR, ← image_circleMap_Ioc] at hlt
   rcases hlt with ⟨_, ⟨θ₀, hmem, rfl⟩, hlt⟩
   calc
-    ‖∮ z in C(c, R), f z‖ ≤ ∫ θ in (0)..2 * π, ‖deriv (circleMap c R) θ • f (circleMap c R θ)‖ :=
+    ‖∮ z in C(c, R), f z‖ ≤ ∫ θ in [0:2 * π], ‖deriv (circleMap c R) θ • f (circleMap c R θ)‖ :=
       intervalIntegral.norm_integral_le_integral_norm Real.two_pi_pos.le
-    _ < ∫ _ in (0)..2 * π, R * C := by
+    _ < ∫ _ in [0:2 * π], R * C := by
       simp only [norm_smul, deriv_circleMap, norm_eq_abs, map_mul, abs_I, mul_one,
         abs_circleMap_zero, abs_of_pos hR]
       refine' intervalIntegral.integral_lt_integral_of_continuousOn_of_le_of_exists_lt
@@ -540,19 +540,19 @@ theorem cauchyPowerSeries_apply (f : ℂ → E) (c : ℂ) (R : ℝ) (n : ℕ) (w
 
 theorem norm_cauchyPowerSeries_le (f : ℂ → E) (c : ℂ) (R : ℝ) (n : ℕ) :
     ‖cauchyPowerSeries f c R n‖ ≤
-      ((2 * π)⁻¹ * ∫ θ : ℝ in (0)..2 * π, ‖f (circleMap c R θ)‖) * (|R|)⁻¹ ^ n :=
+      ((2 * π)⁻¹ * ∫ θ : ℝ in [0:2 * π], ‖f (circleMap c R θ)‖) * (|R|)⁻¹ ^ n :=
   calc
     ‖cauchyPowerSeries f c R n‖ = (2 * π)⁻¹ * ‖∮ z in C(c, R), (z - c)⁻¹ ^ n • (z - c)⁻¹ • f z‖ :=
       by simp [cauchyPowerSeries, norm_smul, Real.pi_pos.le]
-    _ ≤ (2 * π)⁻¹ * ∫ θ in (0)..2 * π, ‖deriv (circleMap c R) θ •
+    _ ≤ (2 * π)⁻¹ * ∫ θ in [0:2 * π], ‖deriv (circleMap c R) θ •
         (circleMap c R θ - c)⁻¹ ^ n • (circleMap c R θ - c)⁻¹ • f (circleMap c R θ)‖ :=
       (mul_le_mul_of_nonneg_left
         (intervalIntegral.norm_integral_le_integral_norm Real.two_pi_pos.le)
         (by simp [Real.pi_pos.le]))
     _ = (2 * π)⁻¹ *
-        ((|R|)⁻¹ ^ n * (|R| * ((|R|)⁻¹ * ∫ x : ℝ in (0)..2 * π, ‖f (circleMap c R x)‖))) := by
+        ((|R|)⁻¹ ^ n * (|R| * ((|R|)⁻¹ * ∫ x : ℝ in [0:2 * π], ‖f (circleMap c R x)‖))) := by
       simp [norm_smul, mul_left_comm (|R|)]
-    _ ≤ ((2 * π)⁻¹ * ∫ θ : ℝ in (0)..2 * π, ‖f (circleMap c R θ)‖) * (|R|)⁻¹ ^ n := by
+    _ ≤ ((2 * π)⁻¹ * ∫ θ : ℝ in [0:2 * π], ‖f (circleMap c R θ)‖) * (|R|)⁻¹ ^ n := by
       rcases eq_or_ne R 0 with (rfl | hR)
       · cases n <;> simp [-mul_inv_rev]
         rw [← mul_assoc, inv_mul_cancel (Real.two_pi_pos.ne.symm), one_mul]
@@ -565,7 +565,7 @@ theorem le_radius_cauchyPowerSeries (f : ℂ → E) (c : ℂ) (R : ℝ≥0) :
     ↑R ≤ (cauchyPowerSeries f c R).radius := by
   refine'
     (cauchyPowerSeries f c R).le_radius_of_bound
-      ((2 * π)⁻¹ * ∫ θ : ℝ in (0)..2 * π, ‖f (circleMap c R θ)‖) fun n => _
+      ((2 * π)⁻¹ * ∫ θ : ℝ in [0:2 * π], ‖f (circleMap c R θ)‖) fun n => _
   refine' (mul_le_mul_of_nonneg_right (norm_cauchyPowerSeries_le _ _ _ _)
     (pow_nonneg R.coe_nonneg _)).trans _
   rw [_root_.abs_of_nonneg R.coe_nonneg]

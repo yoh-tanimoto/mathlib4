@@ -139,7 +139,7 @@ theorem _root_.MeasureTheory.AEStronglyMeasurable.integrable_truncation [IsFinit
 #align measure_theory.ae_strongly_measurable.integrable_truncation MeasureTheory.AEStronglyMeasurable.integrable_truncation
 
 theorem moment_truncation_eq_intervalIntegral (hf : AEStronglyMeasurable f μ) {A : ℝ} (hA : 0 ≤ A)
-    {n : ℕ} (hn : n ≠ 0) : ∫ x, truncation f A x ^ n ∂μ = ∫ y in -A..A, y ^ n ∂Measure.map f μ := by
+    {n : ℕ} (hn : n ≠ 0) : ∫ x, truncation f A x ^ n ∂μ = ∫ y in [-A:A], y ^ n ∂Measure.map f μ := by
   have M : MeasurableSet (Set.Ioc (-A) A) := measurableSet_Ioc
   change ∫ x, (fun z => indicator (Set.Ioc (-A) A) id z ^ n) (f x) ∂μ = _
   rw [← integral_map (f := fun z => _ ^ n) hf.aemeasurable, intervalIntegral.integral_of_le,
@@ -151,7 +151,7 @@ theorem moment_truncation_eq_intervalIntegral (hf : AEStronglyMeasurable f μ) {
 
 theorem moment_truncation_eq_intervalIntegral_of_nonneg (hf : AEStronglyMeasurable f μ) {A : ℝ}
     {n : ℕ} (hn : n ≠ 0) (h'f : 0 ≤ f) :
-    ∫ x, truncation f A x ^ n ∂μ = ∫ y in (0)..A, y ^ n ∂Measure.map f μ := by
+    ∫ x, truncation f A x ^ n ∂μ = ∫ y in [0:A], y ^ n ∂Measure.map f μ := by
   have M : MeasurableSet (Set.Ioc 0 A) := measurableSet_Ioc
   have M' : MeasurableSet (Set.Ioc A 0) := measurableSet_Ioc
   rw [truncation_eq_of_nonneg h'f]
@@ -177,12 +177,12 @@ theorem moment_truncation_eq_intervalIntegral_of_nonneg (hf : AEStronglyMeasurab
 #align probability_theory.moment_truncation_eq_interval_integral_of_nonneg ProbabilityTheory.moment_truncation_eq_intervalIntegral_of_nonneg
 
 theorem integral_truncation_eq_intervalIntegral (hf : AEStronglyMeasurable f μ) {A : ℝ}
-    (hA : 0 ≤ A) : ∫ x, truncation f A x ∂μ = ∫ y in -A..A, y ∂Measure.map f μ := by
+    (hA : 0 ≤ A) : ∫ x, truncation f A x ∂μ = ∫ y in [-A:A], y ∂Measure.map f μ := by
   simpa using moment_truncation_eq_intervalIntegral hf hA one_ne_zero
 #align probability_theory.integral_truncation_eq_interval_integral ProbabilityTheory.integral_truncation_eq_intervalIntegral
 
 theorem integral_truncation_eq_intervalIntegral_of_nonneg (hf : AEStronglyMeasurable f μ) {A : ℝ}
-    (h'f : 0 ≤ f) : ∫ x, truncation f A x ∂μ = ∫ y in (0)..A, y ∂Measure.map f μ := by
+    (h'f : 0 ≤ f) : ∫ x, truncation f A x ∂μ = ∫ y in [0:A], y ∂Measure.map f μ := by
   simpa using moment_truncation_eq_intervalIntegral_of_nonneg hf one_ne_zero h'f
 #align probability_theory.integral_truncation_eq_interval_integral_of_nonneg ProbabilityTheory.integral_truncation_eq_intervalIntegral_of_nonneg
 
@@ -232,15 +232,15 @@ theorem sum_prob_mem_Ioc_le {X : Ω → ℝ} (hint : Integrable X) (hnonneg : 0 
     (hKN : K ≤ N): ∑ j in range K, ℙ {ω | X ω ∈ Set.Ioc (j : ℝ) N} ≤ ENNReal.ofReal (𝔼[X] + 1) := by
   let ρ : Measure ℝ := Measure.map X ℙ
   haveI : IsProbabilityMeasure ρ := isProbabilityMeasure_map hint.aemeasurable
-  have A : ∑ j in range K, ∫ _ in j..N, (1 : ℝ) ∂ρ ≤ 𝔼[X] + 1 :=
+  have A : ∑ j in range K, ∫ _ in [(j : ℝ):N], (1 : ℝ) ∂ρ ≤ 𝔼[X] + 1 :=
     calc
-      ∑ j in range K, ∫ _ in j..N, (1 : ℝ) ∂ρ =
-          ∑ j in range K, ∑ i in Ico j N, ∫ _ in i..(i + 1 : ℕ), (1 : ℝ) ∂ρ := by
+      ∑ j in range K, ∫ _ in [(j : ℝ):N], (1 : ℝ) ∂ρ =
+          ∑ j in range K, ∑ i in Ico j N, ∫ _ in [(i : ℝ):(i + 1 : ℕ)], (1 : ℝ) ∂ρ := by
         apply sum_congr rfl fun j hj => ?_
         rw [intervalIntegral.sum_integral_adjacent_intervals_Ico ((mem_range.1 hj).le.trans hKN)]
         intro k _
         exact continuous_const.intervalIntegrable _ _
-      _ = ∑ i in range N, ∑ j in range (min (i + 1) K), ∫ _ in i..(i + 1 : ℕ), (1 : ℝ) ∂ρ := by
+      _ = ∑ i in range N, ∑ j in range (min (i + 1) K), ∫ _ in [(i : ℝ):(i + 1 : ℕ)], (1 : ℝ) ∂ρ := by
         simp_rw [sum_sigma']
         refine' sum_bij' (fun (p : Σ _ : ℕ, ℕ) _ => (⟨p.2, p.1⟩ : Σ _ : ℕ, ℕ)) _ (fun a _ => rfl)
           (fun (p : Σ _ : ℕ, ℕ) _ => (⟨p.2, p.1⟩ : Σ _ : ℕ, ℕ)) _ _ _
@@ -252,14 +252,14 @@ theorem sum_prob_mem_Ioc_le {X : Ω → ℝ} (hint : Integrable X) (hnonneg : 0 
           simp only [hij, Nat.lt_succ_iff.1 hij.2.1, mem_sigma, mem_range, mem_Ico, and_self_iff]
         · rintro ⟨i, j⟩ hij; rfl
         · rintro ⟨i, j⟩ hij; rfl
-      _ ≤ ∑ i in range N, (i + 1) * ∫ _ in i..(i + 1 : ℕ), (1 : ℝ) ∂ρ := by
+      _ ≤ ∑ i in range N, (i + 1) * ∫ _ in [(i : ℝ):(i + 1 : ℕ)], (1 : ℝ) ∂ρ := by
         apply sum_le_sum fun i _ => ?_
         simp only [Nat.cast_add, Nat.cast_one, sum_const, card_range, nsmul_eq_mul, Nat.cast_min]
         refine' mul_le_mul_of_nonneg_right (min_le_left _ _) _
         apply intervalIntegral.integral_nonneg
         · simp only [le_add_iff_nonneg_right, zero_le_one]
         · simp only [zero_le_one, imp_true_iff]
-      _ ≤ ∑ i in range N, ∫ x in i..(i + 1 : ℕ), x + 1 ∂ρ := by
+      _ ≤ ∑ i in range N, ∫ x in [(i : ℝ):(i + 1 : ℕ)], x + 1 ∂ρ := by
         apply sum_le_sum fun i _ => ?_
         have I : (i : ℝ) ≤ (i + 1 : ℕ) := by
           simp only [Nat.cast_add, Nat.cast_one, le_add_iff_nonneg_right, zero_le_one]
@@ -271,17 +271,17 @@ theorem sum_prob_mem_Ioc_le {X : Ω → ℝ} (hint : Integrable X) (hnonneg : 0 
         · intro x hx
           simp only [Nat.cast_add, Nat.cast_one, Set.mem_Ioc] at hx
           simp [hx.1.le]
-      _ = ∫ x in (0)..N, x + 1 ∂ρ := by
+      _ = ∫ x in [(0 : ℝ):N], x + 1 ∂ρ := by
         rw [intervalIntegral.sum_integral_adjacent_intervals fun k _ => ?_]
         · norm_cast
         · exact (continuous_id.add continuous_const).intervalIntegrable _ _
-      _ = ∫ x in (0)..N, x ∂ρ + ∫ x in (0)..N, 1 ∂ρ := by
+      _ = ∫ x in [(0 : ℝ):N], x ∂ρ + ∫ x in [(0 : ℝ):N], 1 ∂ρ := by
         rw [intervalIntegral.integral_add]
         · exact continuous_id.intervalIntegrable _ _
         · exact continuous_const.intervalIntegrable _ _
-      _ = 𝔼[truncation X N] + ∫ x in (0)..N, 1 ∂ρ := by
+      _ = 𝔼[truncation X N] + ∫ x in [(0 : ℝ):N], 1 ∂ρ := by
         rw [integral_truncation_eq_intervalIntegral_of_nonneg hint.1 hnonneg]
-      _ ≤ 𝔼[X] + ∫ x in (0)..N, 1 ∂ρ :=
+      _ ≤ 𝔼[X] + ∫ x in [(0 : ℝ):N], 1 ∂ρ :=
         (add_le_add_right (integral_truncation_le_integral_of_nonneg hint hnonneg) _)
       _ ≤ 𝔼[X] + 1 := by
         refine' add_le_add le_rfl _
@@ -302,7 +302,7 @@ theorem sum_prob_mem_Ioc_le {X : Ω → ℝ} (hint : Integrable X) (hnonneg : 0 
       rw [ENNReal.ofReal_sum_of_nonneg]
       simp only [integral_const, Algebra.id.smul_eq_mul, mul_one, ENNReal.toReal_nonneg,
         imp_true_iff]
-    _ = ENNReal.ofReal (∑ j in range K, ∫ _ in (j : ℝ)..N, (1 : ℝ) ∂ρ) := by
+    _ = ENNReal.ofReal (∑ j in range K, ∫ _ in [(0 : ℝ):N], (1 : ℝ) ∂ρ) := by
       congr 1
       refine' sum_congr rfl fun j hj => _
       rw [intervalIntegral.integral_of_le (Nat.cast_le.2 ((mem_range.1 hj).le.trans hKN))]
@@ -338,21 +338,21 @@ theorem sum_variance_truncation_le {X : Ω → ℝ} (hint : Integrable X) (hnonn
     ∑ j in range K, ((j : ℝ) ^ 2)⁻¹ * 𝔼[truncation X j ^ 2] ≤ 2 * 𝔼[X] := by
   set Y := fun n : ℕ => truncation X n
   let ρ : Measure ℝ := Measure.map X ℙ
-  have Y2 : ∀ n, 𝔼[Y n ^ 2] = ∫ x in (0)..n, x ^ 2 ∂ρ := by
+  have Y2 : ∀ n, 𝔼[Y n ^ 2] = ∫ x in [0:n], x ^ 2 ∂ρ := by
     intro n
     change 𝔼[fun x => Y n x ^ 2] = _
     rw [moment_truncation_eq_intervalIntegral_of_nonneg hint.1 two_ne_zero hnonneg]
   calc
     ∑ j in range K, ((j : ℝ) ^ 2)⁻¹ * 𝔼[Y j ^ 2] =
-        ∑ j in range K, ((j : ℝ) ^ 2)⁻¹ * ∫ x in (0)..j, x ^ 2 ∂ρ := by simp_rw [Y2]
-    _ = ∑ j in range K, ((j : ℝ) ^ 2)⁻¹ * ∑ k in range j, ∫ x in k..(k + 1 : ℕ), x ^ 2 ∂ρ := by
+        ∑ j in range K, ((j : ℝ) ^ 2)⁻¹ * ∫ x in [0:j], x ^ 2 ∂ρ := by simp_rw [Y2]
+    _ = ∑ j in range K, ((j : ℝ) ^ 2)⁻¹ * ∑ k in range j, ∫ x in [k:(k + 1 : ℕ)], x ^ 2 ∂ρ := by
       congr 1 with j
       congr 1
       rw [intervalIntegral.sum_integral_adjacent_intervals]
       · norm_cast
       intro k _
       exact (continuous_id.pow _).intervalIntegrable _ _
-    _ = ∑ k in range K, (∑ j in Ioo k K, ((j : ℝ) ^ 2)⁻¹) * ∫ x in k..(k + 1 : ℕ), x ^ 2 ∂ρ := by
+    _ = ∑ k in range K, (∑ j in Ioo k K, ((j : ℝ) ^ 2)⁻¹) * ∫ x in [k:(k + 1 : ℕ)], x ^ 2 ∂ρ := by
       simp_rw [mul_sum, sum_mul, sum_sigma']
       refine' sum_bij' (fun (p : Σ _ : ℕ, ℕ) _ => (⟨p.2, p.1⟩ : Σ _ : ℕ, ℕ)) _ (fun a _ => rfl)
         (fun (p : Σ _ : ℕ, ℕ) _ => (⟨p.2, p.1⟩ : Σ _ : ℕ, ℕ)) _ _ _
@@ -364,12 +364,12 @@ theorem sum_variance_truncation_le {X : Ω → ℝ} (hint : Integrable X) (hnonn
         simp only [hij, mem_sigma, mem_range, and_self_iff]
       · rintro ⟨i, j⟩ hij; rfl
       · rintro ⟨i, j⟩ hij; rfl
-    _ ≤ ∑ k in range K, ↑2 / (k + ↑1) * ∫ x in k..(k + 1 : ℕ), x ^ 2 ∂ρ := by
+    _ ≤ ∑ k in range K, ↑2 / (k + ↑1) * ∫ x in [k:(k + 1 : ℕ)], x ^ 2 ∂ρ := by
       apply sum_le_sum fun k _ => ?_
       refine' mul_le_mul_of_nonneg_right (sum_Ioo_inv_sq_le _ _) _
       refine' intervalIntegral.integral_nonneg_of_forall _ fun u => sq_nonneg _
       simp only [Nat.cast_add, Nat.cast_one, le_add_iff_nonneg_right, zero_le_one]
-    _ ≤ ∑ k in range K, ∫ x in k..(k + 1 : ℕ), 2 * x ∂ρ := by
+    _ ≤ ∑ k in range K, ∫ x in [k:(k + 1 : ℕ)], 2 * x ∂ρ := by
       apply sum_le_sum fun k _ => ?_
       have Ik : (k : ℝ) ≤ (k + 1 : ℕ) := by simp
       rw [← intervalIntegral.integral_const_mul, intervalIntegral.integral_of_le Ik,
@@ -388,7 +388,7 @@ theorem sum_variance_truncation_le {X : Ω → ℝ} (hint : Integrable X) (hnonn
               linarith only [show (0 : ℝ) ≤ k from Nat.cast_nonneg k])
               (mul_nonneg zero_le_two ((Nat.cast_nonneg k).trans hx.1.le)))
           _ = 2 * x := by rw [one_mul]
-    _ = 2 * ∫ x in (0 : ℝ)..K, x ∂ρ := by
+    _ = 2 * ∫ x in [0:K], x ∂ρ := by
       rw [intervalIntegral.sum_integral_adjacent_intervals fun k _ => ?_]
       swap; · exact (continuous_const.mul continuous_id').intervalIntegrable _ _
       rw [intervalIntegral.integral_const_mul]
