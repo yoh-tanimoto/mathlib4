@@ -218,7 +218,7 @@ open MeasureTheory.Measure (QuasiMeasurePreserving)
 
 /-- Composition of an almost everywhere equal function and a quasi measure preserving function.
 
-Many lemmas about this definition assume that `f` is a measure preserving map. -/
+See also `AEEqFun.compMeasurePreserving`. -/
 def compQuasiMeasurePreserving (g : β →ₘ[ν] γ) (f : α → β) (hf : QuasiMeasurePreserving f μ ν) :
     α →ₘ[μ] γ :=
   Quotient.liftOn' g (fun g ↦ mk (g ∘ f) <| g.2.comp_quasiMeasurePreserving hf) <| fun _ _ h ↦
@@ -246,8 +246,10 @@ section compMeasurePreserving
 
 variable [MeasurableSpace β] {ν : MeasureTheory.Measure β}
 
-/-- An important special case of `AEEqFun.compQuasiMeasurePreserving`. We use a separate definition
-so that lemmas that need `f` to be measure preserving can be `@[simp]` lemmas.  -/
+/-- Composition of an almost everywhere equal function and a quasi measure preserving function.
+
+This is an important special case of `AEEqFun.compQuasiMeasurePreserving`. We use a separate
+definition so that lemmas that need `f` to be measure preserving can be `@[simp]` lemmas.  -/
 def compMeasurePreserving (g : β →ₘ[ν] γ) (f : α → β) (hf : MeasurePreserving f μ ν) : α →ₘ[μ] γ :=
   g.compQuasiMeasurePreserving f hf.quasiMeasurePreserving
 
@@ -932,7 +934,7 @@ theorem lintegral_mk (f : α → ℝ≥0∞) (hf) : (mk f hf : α →ₘ[μ] ℝ
   rfl
 #align measure_theory.ae_eq_fun.lintegral_mk MeasureTheory.AEEqFun.lintegral_mk
 
-theorem lintegral_coeFn (f : α →ₘ[μ] ℝ≥0∞) : (∫⁻ a, f a ∂μ) = f.lintegral := by
+theorem lintegral_coeFn (f : α →ₘ[μ] ℝ≥0∞) : ∫⁻ a, f a ∂μ = f.lintegral := by
   rw [← lintegral_mk, mk_coeFn]
 #align measure_theory.ae_eq_fun.lintegral_coe_fn MeasureTheory.AEEqFun.lintegral_coeFn
 
@@ -957,7 +959,7 @@ theorem lintegral_mono {f g : α →ₘ[μ] ℝ≥0∞} : f ≤ g → lintegral 
 section Abs
 
 theorem coeFn_abs {β} [TopologicalSpace β] [Lattice β] [TopologicalLattice β] [AddGroup β]
-    [TopologicalAddGroup β] (f : α →ₘ[μ] β) : ⇑(|f|) =ᵐ[μ] fun x => |f x| := by
+    [TopologicalAddGroup β] (f : α →ₘ[μ] β) : ⇑|f| =ᵐ[μ] fun x => |f x| := by
   simp_rw [abs_eq_sup_neg]
   filter_upwards [AEEqFun.coeFn_sup f (-f), AEEqFun.coeFn_neg f] with x hx_sup hx_neg
   rw [hx_sup, hx_neg, Pi.neg_apply]
