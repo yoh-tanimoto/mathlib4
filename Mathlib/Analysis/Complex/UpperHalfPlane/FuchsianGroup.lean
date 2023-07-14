@@ -4,9 +4,11 @@ open MatrixGroups Matrix SpecialLinearGroup UpperHalfPlane
 
 noncomputable section
 
--- IsometricSMul FIle
+-- IsometryEquiv.isometry File
+  -- @[simp]
 
-#check mul_smul
+
+-- IsometricSMul FIle
 
 def IsometricSMul.toMulHom (G X : Type _)
     [Group G] [MetricSpace X] [MulAction G X] [IsometricSMul G X] :
@@ -38,6 +40,7 @@ lemma IsometricSMul.toMulHom_apply (G X : Type _)
   IsometricSMul.toMulHom G X g x = g • x := by
     rfl
 
+
 -- SpecialLinearGroup FIle
 
 lemma mem_center_SpecialLinearGroup_two_iff {A : SL(2,ℝ)} :
@@ -56,7 +59,7 @@ lemma mem_center_SpecialLinearGroup_two_iff {A : SL(2,ℝ)} :
     rw [Subtype.ext_iff] at h₁ h₂
     simp only at h₁ h₂ ⊢
     rw [← Matrix.ext_iff] at h₁ h₂ 
-    simp? only [Fin.forall_fin_two] at h₁ h₂
+    simp only [Fin.forall_fin_two] at h₁ h₂ 
     simp only [coe_mul, cons_mul, vecMul_cons, head_cons, one_smul, tail_cons, empty_vecMul, add_zero, add_cons,
       empty_add_empty, zero_smul, zero_add, empty_mul, Equiv.symm_apply_apply, of_apply, cons_val', cons_val_zero,
       empty_val', cons_val_fin_one, smul_cons, smul_eq_mul, mul_one, smul_empty, mul_zero, add_right_eq_self,
@@ -86,9 +89,11 @@ instance (n R : Type _) [Fintype n] [DecidableEq n] [CommRing R] [TopologicalSpa
     -- exact (fun A ↦ (fun i ↦ (fun j ↦ A i j)))
   · infer_instance
 
--- stays here
+
+-- stays here-----------------
 
 variable (n R : Type _) [Fintype n] [DecidableEq n] [CommRing R] [TopologicalSpace R]
+
 
 def ProjectiveLinearGroup := (SpecialLinearGroup n R)⧸Subgroup.center (SpecialLinearGroup n R)
 
@@ -103,14 +108,10 @@ instance : TopologicalSpace (ProjectiveLinearGroup n R) := by
   apply TopologicalSpace.coinduced (QuotientGroup.mk (s := Subgroup.center (SpecialLinearGroup n R) ))
   infer_instance
 
-variable (G : Subgroup (ProjectiveLinearGroup n ℝ)) [DiscreteTopology G]
 
 structure FuchsianGroup extends Subgroup PSL(2,ℝ) where
   discreteTop : DiscreteTopology carrier
 
-#check QuotientGroup.lift
-
-#check IsometricSMul.toMulHom
 
 def Action : PSL(2, ℝ) →* (ℍ ≃ᵢ ℍ) := by
   apply QuotientGroup.lift (Subgroup.center SL(2,ℝ)) (IsometricSMul.toMulHom SL(2,ℝ) ℍ )
@@ -136,5 +137,15 @@ def Action : PSL(2, ℝ) →* (ℍ ≃ᵢ ℍ) := by
     rw [ha, hb, hc, hd]
     simp only [Complex.ofReal_neg, Complex.ofReal_one, neg_mul, one_mul, Complex.ofReal_zero, add_zero, zero_mul,
       zero_add, div_neg, div_one, neg_neg]
+
+instance : SMul PSL(2, ℝ) ℍ where
+  smul := fun A x ↦ Action A x
+
+instance :IsometricSMul PSL(2, ℝ) ℍ where
+  isometry_smul := by
+    intro A
+    change Isometry (Action A)
+    apply IsometryEquiv.isometry
+    --simp
 
     
