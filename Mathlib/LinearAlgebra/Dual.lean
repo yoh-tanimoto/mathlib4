@@ -121,8 +121,14 @@ namespace Dual
 
 instance : Inhabited (Dual R M) := ⟨0⟩
 
-instance : FunLike (Dual R M) M fun _ => R :=
-  inferInstanceAs (FunLike (M →ₗ[R] R) M fun _ => R)
+-- note: now `Dual` is reducible, the instance below can be synthesized
+-- from `LinearMap.instFunLikeLinearMap`. Furthermore, creating it
+-- is breaking other code: see
+-- https://leanprover.zulipchat.com/#narrow/stream/287929-mathlib4/topic/notation.20capturing.20type.20information/near/376217349
+-- or https://leanprover.zulipchat.com/#narrow/stream/287929-mathlib4/topic/instance.20breaking.20FunLike/near/377016781
+
+--instance : FunLike (Dual R M) M fun _ => R :=
+--  inferInstanceAs (FunLike (M →ₗ[R] R) M fun _ => R)
 
 /-- Maps a module M to the dual of the dual of M. See `Module.erange_coe` and
 `Module.evalEquiv`. -/
