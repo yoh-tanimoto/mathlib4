@@ -204,7 +204,6 @@ theorem KaehlerDifferential.DLinearMap_apply (s : S) :
 set_option linter.uppercaseLean3 false in
 #align kaehler_differential.D_linear_map_apply KaehlerDifferential.DLinearMap_apply
 
-set_option maxHeartbeats 300000 in -- Porting note: Added to prevent timeout
 /-- The universal derivation into `Ω[S⁄R]`. -/
 def KaehlerDifferential.D : Derivation R S (Ω[S⁄R]) :=
   { KaehlerDifferential.DLinearMap R S with
@@ -215,8 +214,12 @@ def KaehlerDifferential.D : Derivation R S (Ω[S⁄R]) :=
     leibniz' := fun a b => by
       have : LinearMap.CompatibleSMul { x // x ∈ ideal R S } (Ω[S⁄R]) S (S ⊗[R] S) := inferInstance
       dsimp [KaehlerDifferential.DLinearMap_apply, - Ideal.toCotangent_apply]
-      rw [← LinearMap.map_smul_of_tower (M₂ := Ω[S⁄R]),
-        ← LinearMap.map_smul_of_tower (M₂ := Ω[S⁄R]), ← map_add, Ideal.toCotangent_eq, pow_two]
+/-
+                  [Meta.synthInstance] [0.212955s] ✅ AddCommMonoid { x // x ∈ KaehlerDifferential.ideal R S } ▶
+-/
+      set_option trace.profiler true in
+      rw [← LinearMap.map_smul_of_tower (M₂ := Ω[S⁄R])]
+      sorry } #exit
       convert Submodule.mul_mem_mul (KaehlerDifferential.one_smul_sub_smul_one_mem_ideal R a : _)
         (KaehlerDifferential.one_smul_sub_smul_one_mem_ideal R b : _) using 1
       simp only [AddSubgroupClass.coe_sub, Submodule.coe_add, Submodule.coe_mk,
@@ -225,6 +228,8 @@ def KaehlerDifferential.D : Derivation R S (Ω[S⁄R]) :=
       ring_nf }
 set_option linter.uppercaseLean3 false in
 #align kaehler_differential.D KaehlerDifferential.D
+
+#exit
 
 theorem KaehlerDifferential.D_apply (s : S) :
     KaehlerDifferential.D R S s =
