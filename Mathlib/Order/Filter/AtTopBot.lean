@@ -7,6 +7,7 @@ import Mathlib.Algebra.Order.Field.Basic
 import Mathlib.Data.Finset.Preimage
 import Mathlib.Data.Set.Intervals.Disjoint
 import Mathlib.Data.Set.Intervals.OrderIso
+import Mathlib.Data.Set.Intervals.Monotone
 import Mathlib.Order.Filter.Bases
 import Mathlib.Order.ConditionallyCompleteLattice.Basic
 import Mathlib.Algebra.Order.Group.MinMax
@@ -49,7 +50,7 @@ def atBot [Preorder α] : Filter α :=
 #align filter.at_bot Filter.atBot
 
 theorem mem_atTop [Preorder α] (a : α) : { b : α | a ≤ b } ∈ @atTop α _ :=
-  mem_iInf_of_mem a <| Subset.refl _
+  mem_iInf_of_mem a Subset.rfl
 #align filter.mem_at_top Filter.mem_atTop
 
 theorem Ici_mem_atTop [Preorder α] (a : α) : Ici a ∈ (atTop : Filter α) :=
@@ -62,7 +63,7 @@ theorem Ioi_mem_atTop [Preorder α] [NoMaxOrder α] (x : α) : Ioi x ∈ (atTop 
 #align filter.Ioi_mem_at_top Filter.Ioi_mem_atTop
 
 theorem mem_atBot [Preorder α] (a : α) : { b : α | b ≤ a } ∈ @atBot α _ :=
-  mem_iInf_of_mem a <| Subset.refl _
+  mem_iInf_of_mem a Subset.rfl
 #align filter.mem_at_bot Filter.mem_atBot
 
 theorem Iic_mem_atBot [Preorder α] (a : α) : Iic a ∈ (atBot : Filter α) :=
@@ -126,55 +127,58 @@ theorem disjoint_atTop_atBot [PartialOrder α] [Nontrivial α] : Disjoint (atTop
   disjoint_atBot_atTop.symm
 #align filter.disjoint_at_top_at_bot Filter.disjoint_atTop_atBot
 
-theorem atTop_basis [Nonempty α] [SemilatticeSup α] : (@atTop α _).HasBasis (fun _ => True) Ici :=
-  hasBasis_iInf_principal (directed_of_sup fun _ _ => Ici_subset_Ici.2)
+theorem atTop_basis [Nonempty α] [Preorder α] [IsDirected α (· ≤ ·)] :
+    (@atTop α _).HasBasis (fun _ => True) Ici :=
+  hasBasis_iInf_principal antitone_Ici.directed_ge
 #align filter.at_top_basis Filter.atTop_basis
 
-theorem atTop_basis' [SemilatticeSup α] (a : α) : (@atTop α _).HasBasis (fun x => a ≤ x) Ici :=
-  ⟨fun _ =>
-    (@atTop_basis α ⟨a⟩ _).mem_iff.trans
-      ⟨fun ⟨x, _, hx⟩ => ⟨x ⊔ a, le_sup_right, fun _y hy => hx (le_trans le_sup_left hy)⟩,
-        fun ⟨x, _, hx⟩ => ⟨x, trivial, hx⟩⟩⟩
+theorem atTop_basis' [Preorder α] [IsDirected α (· ≤ ·)] (a : α) :
+    atTop.HasBasis (a ≤ ·) Ici :=
+  have : Nonempty α := ⟨a⟩
+  atTop_basis.to_hasBasis
+    (fun x _ ↦ (exists_ge_ge a x).imp fun _ h ↦ ⟨h.1, Ici_subset_Ici.2 h.2⟩)
+    fun x _ ↦ ⟨x, trivial, le_rfl⟩
 #align filter.at_top_basis' Filter.atTop_basis'
 
-theorem atBot_basis [Nonempty α] [SemilatticeInf α] : (@atBot α _).HasBasis (fun _ => True) Iic :=
-  @atTop_basis αᵒᵈ _ _
+theorem atBot_basis [Nonempty α] [Preorder α] [IsDirected α (· ≥ ·)] :
+    (@atBot α _).HasBasis (fun _ => True) Iic :=
+  atTop_basis (α := αᵒᵈ)
 #align filter.at_bot_basis Filter.atBot_basis
 
-theorem atBot_basis' [SemilatticeInf α] (a : α) : (@atBot α _).HasBasis (fun x => x ≤ a) Iic :=
-  @atTop_basis' αᵒᵈ _ _
+theorem atBot_basis' [Preorder α] [IsDirected α (· ≥ ·)] (a : α) : atBot.HasBasis (· ≤ a) Iic :=
+  atTop_basis' (α := αᵒᵈ) a
 #align filter.at_bot_basis' Filter.atBot_basis'
 
 @[instance]
-theorem atTop_neBot [Nonempty α] [SemilatticeSup α] : NeBot (atTop : Filter α) :=
+theorem atTop_neBot [Nonempty α] [Preorder α] [IsDirected α (· ≤ ·)] : NeBot (atTop : Filter α) :=
   atTop_basis.neBot_iff.2 fun _ => nonempty_Ici
 #align filter.at_top_ne_bot Filter.atTop_neBot
 
 @[instance]
-theorem atBot_neBot [Nonempty α] [SemilatticeInf α] : NeBot (atBot : Filter α) :=
-  @atTop_neBot αᵒᵈ _ _
+theorem atBot_neBot [Nonempty α] [Preorder α] [IsDirected α (· ≥ ·)] : NeBot (atBot : Filter α) :=
+  atTop_neBot (α := αᵒᵈ)
 #align filter.at_bot_ne_bot Filter.atBot_neBot
 
 @[simp]
-theorem mem_atTop_sets [Nonempty α] [SemilatticeSup α] {s : Set α} :
+theorem mem_atTop_sets [Nonempty α] [Preorder α] [IsDirected α (· ≤ ·)] {s : Set α} :
     s ∈ (atTop : Filter α) ↔ ∃ a : α, ∀ b ≥ a, b ∈ s :=
   atTop_basis.mem_iff.trans <| exists_congr fun _ => true_and_iff _
 #align filter.mem_at_top_sets Filter.mem_atTop_sets
 
 @[simp]
-theorem mem_atBot_sets [Nonempty α] [SemilatticeInf α] {s : Set α} :
+theorem mem_atBot_sets [Nonempty α] [Preorder α] [IsDirected α (· ≥ ·)] {s : Set α} :
     s ∈ (atBot : Filter α) ↔ ∃ a : α, ∀ b ≤ a, b ∈ s :=
-  @mem_atTop_sets αᵒᵈ _ _ _
+  mem_atTop_sets (α := αᵒᵈ)
 #align filter.mem_at_bot_sets Filter.mem_atBot_sets
 
 @[simp]
-theorem eventually_atTop [SemilatticeSup α] [Nonempty α] {p : α → Prop} :
+theorem eventually_atTop [Nonempty α] [Preorder α] [IsDirected α (· ≤ ·)] {p : α → Prop} :
     (∀ᶠ x in atTop, p x) ↔ ∃ a, ∀ b ≥ a, p b :=
   mem_atTop_sets
 #align filter.eventually_at_top Filter.eventually_atTop
 
 @[simp]
-theorem eventually_atBot [SemilatticeInf α] [Nonempty α] {p : α → Prop} :
+theorem eventually_atBot [Nonempty α] [Preorder α] [IsDirected α (· ≥ ·)] {p : α → Prop} :
     (∀ᶠ x in atBot, p x) ↔ ∃ a, ∀ b ≤ a, p b :=
   mem_atBot_sets
 #align filter.eventually_at_bot Filter.eventually_atBot
@@ -260,18 +264,18 @@ theorem Tendsto.eventually_forall_le_atBot {α β : Type _} [Preorder β] {l : F
     ∀ᶠ x in l, ∀ y, y ≤ f x → p y := by
   rw [←Filter.eventually_forall_le_atBot] at h_evtl; exact (h_evtl.comap f).filter_mono hf.le_comap
 
-theorem atTop_basis_Ioi [Nonempty α] [SemilatticeSup α] [NoMaxOrder α] :
+theorem atTop_basis_Ioi [Nonempty α] [Preorder α] [IsDirected α (· ≤ ·)] [NoMaxOrder α] :
     (@atTop α _).HasBasis (fun _ => True) Ioi :=
   atTop_basis.to_hasBasis (fun a ha => ⟨a, ha, Ioi_subset_Ici_self⟩) fun a ha =>
     (exists_gt a).imp fun _b hb => ⟨ha, Ici_subset_Ioi.2 hb⟩
 #align filter.at_top_basis_Ioi Filter.atTop_basis_Ioi
 
-theorem atTop_countable_basis [Nonempty α] [SemilatticeSup α] [Countable α] :
+theorem atTop_countable_basis [Nonempty α] [Preorder α] [IsDirected α (· ≤ ·)] [Countable α] :
     HasCountableBasis (atTop : Filter α) (fun _ => True) Ici :=
   { atTop_basis with countable := to_countable _ }
 #align filter.at_top_countable_basis Filter.atTop_countable_basis
 
-theorem atBot_countable_basis [Nonempty α] [SemilatticeInf α] [Countable α] :
+theorem atBot_countable_basis [Nonempty α] [Preorder α] [IsDirected α (· ≥ ·)] [Countable α] :
     HasCountableBasis (atBot : Filter α) (fun _ => True) Iic :=
   { atBot_basis with countable := to_countable _ }
 #align filter.at_bot_countable_basis Filter.atBot_countable_basis
@@ -317,54 +321,54 @@ theorem tendsto_atBot_pure [PartialOrder α] [OrderBot α] (f : α → β) :
   @tendsto_atTop_pure αᵒᵈ _ _ _ _
 #align filter.tendsto_at_bot_pure Filter.tendsto_atBot_pure
 
-theorem Eventually.exists_forall_of_atTop [SemilatticeSup α] [Nonempty α] {p : α → Prop}
-    (h : ∀ᶠ x in atTop, p x) : ∃ a, ∀ b ≥ a, p b :=
+theorem Eventually.exists_forall_of_atTop [Nonempty α] [Preorder α] [IsDirected α (· ≤ ·)]
+    {p : α → Prop} (h : ∀ᶠ x in atTop, p x) : ∃ a, ∀ b ≥ a, p b :=
   eventually_atTop.mp h
 #align filter.eventually.exists_forall_of_at_top Filter.Eventually.exists_forall_of_atTop
 
-theorem Eventually.exists_forall_of_atBot [SemilatticeInf α] [Nonempty α] {p : α → Prop}
-    (h : ∀ᶠ x in atBot, p x) : ∃ a, ∀ b ≤ a, p b :=
+theorem Eventually.exists_forall_of_atBot [Nonempty α] [Preorder α] [IsDirected α (· ≥ ·)]
+    {p : α → Prop} (h : ∀ᶠ x in atBot, p x) : ∃ a, ∀ b ≤ a, p b :=
   eventually_atBot.mp h
 #align filter.eventually.exists_forall_of_at_bot Filter.Eventually.exists_forall_of_atBot
 
-theorem frequently_atTop [SemilatticeSup α] [Nonempty α] {p : α → Prop} :
+theorem frequently_atTop [Nonempty α] [Preorder α] [IsDirected α (· ≤ ·)] {p : α → Prop} :
     (∃ᶠ x in atTop, p x) ↔ ∀ a, ∃ b ≥ a, p b :=
   atTop_basis.frequently_iff.trans <| by simp
 #align filter.frequently_at_top Filter.frequently_atTop
 
-theorem frequently_atBot [SemilatticeInf α] [Nonempty α] {p : α → Prop} :
+theorem frequently_atBot [Nonempty α] [Preorder α] [IsDirected α (· ≥ ·)] {p : α → Prop} :
     (∃ᶠ x in atBot, p x) ↔ ∀ a, ∃ b ≤ a, p b :=
-  @frequently_atTop αᵒᵈ _ _ _
+  frequently_atTop (α := αᵒᵈ)
 #align filter.frequently_at_bot Filter.frequently_atBot
 
-theorem frequently_atTop' [SemilatticeSup α] [Nonempty α] [NoMaxOrder α] {p : α → Prop} :
-    (∃ᶠ x in atTop, p x) ↔ ∀ a, ∃ b > a, p b :=
+theorem frequently_atTop' [Nonempty α] [Preorder α] [IsDirected α (· ≤ ·)] [NoMaxOrder α]
+    {p : α → Prop} : (∃ᶠ x in atTop, p x) ↔ ∀ a, ∃ b > a, p b :=
   atTop_basis_Ioi.frequently_iff.trans <| by simp
 #align filter.frequently_at_top' Filter.frequently_atTop'
 
-theorem frequently_atBot' [SemilatticeInf α] [Nonempty α] [NoMinOrder α] {p : α → Prop} :
-    (∃ᶠ x in atBot, p x) ↔ ∀ a, ∃ b < a, p b :=
-  @frequently_atTop' αᵒᵈ _ _ _ _
+theorem frequently_atBot' [Nonempty α] [Preorder α] [IsDirected α (· ≥ ·)] [NoMinOrder α]
+    {p : α → Prop} : (∃ᶠ x in atBot, p x) ↔ ∀ a, ∃ b < a, p b :=
+  frequently_atTop' (α := αᵒᵈ)
 #align filter.frequently_at_bot' Filter.frequently_atBot'
 
-theorem Frequently.forall_exists_of_atTop [SemilatticeSup α] [Nonempty α] {p : α → Prop}
-    (h : ∃ᶠ x in atTop, p x) : ∀ a, ∃ b ≥ a, p b :=
+theorem Frequently.forall_exists_of_atTop [Nonempty α] [Preorder α] [IsDirected α (· ≤ ·)]
+    {p : α → Prop} (h : ∃ᶠ x in atTop, p x) : ∀ a, ∃ b ≥ a, p b :=
   frequently_atTop.mp h
 #align filter.frequently.forall_exists_of_at_top Filter.Frequently.forall_exists_of_atTop
 
-theorem Frequently.forall_exists_of_atBot [SemilatticeInf α] [Nonempty α] {p : α → Prop}
-    (h : ∃ᶠ x in atBot, p x) : ∀ a, ∃ b ≤ a, p b :=
+theorem Frequently.forall_exists_of_atBot [Nonempty α] [Preorder α] [IsDirected α (· ≥ ·)]
+    {p : α → Prop} (h : ∃ᶠ x in atBot, p x) : ∀ a, ∃ b ≤ a, p b :=
   frequently_atBot.mp h
 #align filter.frequently.forall_exists_of_at_bot Filter.Frequently.forall_exists_of_atBot
 
-theorem map_atTop_eq [Nonempty α] [SemilatticeSup α] {f : α → β} :
+theorem map_atTop_eq [Nonempty α] [Preorder α] [IsDirected α (· ≤ ·)] {f : α → β} :
     atTop.map f = ⨅ a, 𝓟 (f '' { a' | a ≤ a' }) :=
   (atTop_basis.map f).eq_iInf
 #align filter.map_at_top_eq Filter.map_atTop_eq
 
-theorem map_atBot_eq [Nonempty α] [SemilatticeInf α] {f : α → β} :
+theorem map_atBot_eq [Nonempty α] [Preorder α] [IsDirected α (· ≥ ·)] {f : α → β} :
     atBot.map f = ⨅ a, 𝓟 (f '' { a' | a' ≤ a }) :=
-  @map_atTop_eq αᵒᵈ _ _ _ _
+  map_atTop_eq (α := αᵒᵈ)
 #align filter.map_at_bot_eq Filter.map_atBot_eq
 
 theorem tendsto_atTop [Preorder β] {m : α → β} {f : Filter α} :
@@ -453,14 +457,14 @@ namespace Filter
 ### Sequences
 -/
 
-theorem inf_map_atTop_neBot_iff [SemilatticeSup α] [Nonempty α] {F : Filter β} {u : α → β} :
-    NeBot (F ⊓ map u atTop) ↔ ∀ U ∈ F, ∀ N, ∃ n ≥ N, u n ∈ U := by
+theorem inf_map_atTop_neBot_iff [Nonempty α] [Preorder α] [IsDirected α (· ≤ ·)] {F : Filter β}
+    {u : α → β} : NeBot (F ⊓ map u atTop) ↔ ∀ U ∈ F, ∀ N, ∃ n ≥ N, u n ∈ U := by
   simp_rw [inf_neBot_iff_frequently_left, frequently_map, frequently_atTop]; rfl
 #align filter.inf_map_at_top_ne_bot_iff Filter.inf_map_atTop_neBot_iff
 
-theorem inf_map_atBot_neBot_iff [SemilatticeInf α] [Nonempty α] {F : Filter β} {u : α → β} :
-    NeBot (F ⊓ map u atBot) ↔ ∀ U ∈ F, ∀ N, ∃ n ≤ N, u n ∈ U :=
-  @inf_map_atTop_neBot_iff αᵒᵈ _ _ _ _ _
+theorem inf_map_atBot_neBot_iff [Nonempty α] [Preorder α] [IsDirected α (· ≥ ·)] {F : Filter β}
+    {u : α → β} : NeBot (F ⊓ map u atBot) ↔ ∀ U ∈ F, ∀ N, ∃ n ≤ N, u n ∈ U :=
+  inf_map_atTop_neBot_iff (α := αᵒᵈ)
 #align filter.inf_map_at_bot_ne_bot_iff Filter.inf_map_atBot_neBot_iff
 
 theorem extraction_of_frequently_atTop' {P : ℕ → Prop} (h : ∀ N, ∃ n > N, P n) :
@@ -1004,7 +1008,6 @@ variable [LinearOrderedSemifield α] {l : Filter β} {f : β → α} {r c : α} 
 ### Multiplication by constant: iff lemmas
 -/
 
-
 /-- If `r` is a positive constant, then `λ x, r * f x` tends to infinity along a filter if and only
 if `f` tends to infinity along the same filter. -/
 theorem tendsto_const_mul_atTop_of_pos (hr : 0 < r) :
@@ -1257,14 +1260,14 @@ end LinearOrderedField
 
 open Filter
 
-theorem tendsto_atTop' [Nonempty α] [SemilatticeSup α] {f : α → β} {l : Filter β} :
+theorem tendsto_atTop' [Nonempty α] [Preorder α] [IsDirected α (· ≤ ·)] {f : α → β} {l : Filter β} :
     Tendsto f atTop l ↔ ∀ s ∈ l, ∃ a, ∀ b ≥ a, f b ∈ s := by
   simp only [tendsto_def, mem_atTop_sets]; rfl
 #align filter.tendsto_at_top' Filter.tendsto_atTop'
 
-theorem tendsto_atBot' [Nonempty α] [SemilatticeInf α] {f : α → β} {l : Filter β} :
+theorem tendsto_atBot' [Nonempty α] [Preorder α] [IsDirected α (· ≥ ·)] {f : α → β} {l : Filter β} :
     Tendsto f atBot l ↔ ∀ s ∈ l, ∃ a, ∀ b ≤ a, f b ∈ s :=
-  @tendsto_atTop' αᵒᵈ _ _ _ _ _
+  tendsto_atTop' (α := αᵒᵈ)
 #align filter.tendsto_at_bot' Filter.tendsto_atBot'
 
 theorem tendsto_atTop_principal [Nonempty β] [SemilatticeSup β] {f : β → α} {s : Set α} :
@@ -1278,22 +1281,22 @@ theorem tendsto_atBot_principal [Nonempty β] [SemilatticeInf β] {f : β → α
 #align filter.tendsto_at_bot_principal Filter.tendsto_atBot_principal
 
 /-- A function `f` grows to `+∞` independent of an order-preserving embedding `e`. -/
-theorem tendsto_atTop_atTop [Nonempty α] [SemilatticeSup α] [Preorder β] {f : α → β} :
-    Tendsto f atTop atTop ↔ ∀ b : β, ∃ i : α, ∀ a : α, i ≤ a → b ≤ f a :=
+theorem tendsto_atTop_atTop [Nonempty α] [Preorder α] [IsDirected α (· ≤ ·)] [Preorder β]
+    {f : α → β} : Tendsto f atTop atTop ↔ ∀ b : β, ∃ i : α, ∀ a : α, i ≤ a → b ≤ f a :=
   Iff.trans tendsto_iInf <| forall_congr' fun _ => tendsto_atTop_principal
 #align filter.tendsto_at_top_at_top Filter.tendsto_atTop_atTop
 
-theorem tendsto_atTop_atBot [Nonempty α] [SemilatticeSup α] [Preorder β] {f : α → β} :
+theorem tendsto_atTop_atBot [Nonempty α] [Preorder α] [IsDirected α (· ≤ ·)] [Preorder β] {f : α → β} :
     Tendsto f atTop atBot ↔ ∀ b : β, ∃ i : α, ∀ a : α, i ≤ a → f a ≤ b :=
   @tendsto_atTop_atTop α βᵒᵈ _ _ _ f
 #align filter.tendsto_at_top_at_bot Filter.tendsto_atTop_atBot
 
-theorem tendsto_atBot_atTop [Nonempty α] [SemilatticeInf α] [Preorder β] {f : α → β} :
+theorem tendsto_atBot_atTop [Nonempty α] [Preorder α] [IsDirected α (· ≥ ·)] [Preorder β] {f : α → β} :
     Tendsto f atBot atTop ↔ ∀ b : β, ∃ i : α, ∀ a : α, a ≤ i → b ≤ f a :=
   @tendsto_atTop_atTop αᵒᵈ β _ _ _ f
 #align filter.tendsto_at_bot_at_top Filter.tendsto_atBot_atTop
 
-theorem tendsto_atBot_atBot [Nonempty α] [SemilatticeInf α] [Preorder β] {f : α → β} :
+theorem tendsto_atBot_atBot [Nonempty α] [Preorder α] [IsDirected α (· ≥ ·)] [Preorder β] {f : α → β} :
     Tendsto f atBot atBot ↔ ∀ b : β, ∃ i : α, ∀ a : α, a ≤ i → f a ≤ b :=
   @tendsto_atTop_atTop αᵒᵈ βᵒᵈ _ _ _ f
 #align filter.tendsto_at_bot_at_bot Filter.tendsto_atBot_atBot
@@ -1312,13 +1315,13 @@ theorem tendsto_atBot_atBot_of_monotone [Preorder α] [Preorder β] {f : α → 
     let ⟨a, ha⟩ := h b; mem_of_superset (mem_atBot a) fun _a' ha' => le_trans (hf ha') ha
 #align filter.tendsto_at_bot_at_bot_of_monotone Filter.tendsto_atBot_atBot_of_monotone
 
-theorem tendsto_atTop_atTop_iff_of_monotone [Nonempty α] [SemilatticeSup α] [Preorder β] {f : α → β}
+theorem tendsto_atTop_atTop_iff_of_monotone [Nonempty α] [Preorder α] [IsDirected α (· ≤ ·)] [Preorder β] {f : α → β}
     (hf : Monotone f) : Tendsto f atTop atTop ↔ ∀ b : β, ∃ a : α, b ≤ f a :=
   tendsto_atTop_atTop.trans <| forall_congr' fun _ => exists_congr fun a =>
     ⟨fun h => h a (le_refl a), fun h _a' ha' => le_trans h <| hf ha'⟩
 #align filter.tendsto_at_top_at_top_iff_of_monotone Filter.tendsto_atTop_atTop_iff_of_monotone
 
-theorem tendsto_atBot_atBot_iff_of_monotone [Nonempty α] [SemilatticeInf α] [Preorder β] {f : α → β}
+theorem tendsto_atBot_atBot_iff_of_monotone [Nonempty α] [Preorder α] [IsDirected α (· ≥ ·)] [Preorder β] {f : α → β}
     (hf : Monotone f) : Tendsto f atBot atBot ↔ ∀ b : β, ∃ a : α, f a ≤ b :=
   tendsto_atBot_atBot.trans <| forall_congr' fun _ => exists_congr fun a =>
     ⟨fun h => h a (le_refl a), fun h _a' ha' => le_trans (hf ha') h⟩
@@ -1472,22 +1475,22 @@ theorem Tendsto.prod_atTop [SemilatticeSup α] [SemilatticeSup γ] {f g : α →
   exact hf.prod_map_prod_atTop hg
 #align filter.tendsto.prod_at_top Filter.Tendsto.prod_atTop
 
-theorem eventually_atBot_prod_self [SemilatticeInf α] [Nonempty α] {p : α × α → Prop} :
+theorem eventually_atBot_prod_self [Nonempty α] [Preorder α] [IsDirected α (· ≥ ·)] {p : α × α → Prop} :
     (∀ᶠ x in atBot, p x) ↔ ∃ a, ∀ k l, k ≤ a → l ≤ a → p (k, l) := by
   simp [← prod_atBot_atBot_eq, (@atBot_basis α _ _).prod_self.eventually_iff]
 #align filter.eventually_at_bot_prod_self Filter.eventually_atBot_prod_self
 
-theorem eventually_atTop_prod_self [SemilatticeSup α] [Nonempty α] {p : α × α → Prop} :
+theorem eventually_atTop_prod_self [Nonempty α] [Preorder α] [IsDirected α (· ≤ ·)] {p : α × α → Prop} :
     (∀ᶠ x in atTop, p x) ↔ ∃ a, ∀ k l, a ≤ k → a ≤ l → p (k, l) :=
   eventually_atBot_prod_self (α := αᵒᵈ)
 #align filter.eventually_at_top_prod_self Filter.eventually_atTop_prod_self
 
-theorem eventually_atBot_prod_self' [SemilatticeInf α] [Nonempty α] {p : α × α → Prop} :
+theorem eventually_atBot_prod_self' [Nonempty α] [Preorder α] [IsDirected α (· ≥ ·)] {p : α × α → Prop} :
     (∀ᶠ x in atBot, p x) ↔ ∃ a, ∀ k ≤ a, ∀ l ≤ a, p (k, l) := by
   simp only [eventually_atBot_prod_self, ball_cond_comm]
 #align filter.eventually_at_bot_prod_self' Filter.eventually_atBot_prod_self'
 
-theorem eventually_atTop_prod_self' [SemilatticeSup α] [Nonempty α] {p : α × α → Prop} :
+theorem eventually_atTop_prod_self' [Nonempty α] [Preorder α] [IsDirected α (· ≤ ·)] {p : α × α → Prop} :
     (∀ᶠ x in atTop, p x) ↔ ∃ a, ∀ k ≥ a, ∀ l ≥ a, p (k, l) := by
   simp only [eventually_atTop_prod_self, ball_cond_comm]
 #align filter.eventually_at_top_prod_self' Filter.eventually_atTop_prod_self'
@@ -1695,7 +1698,7 @@ theorem tendsto_atBot_atBot_of_monotone' [Preorder ι] [LinearOrder α] {u : ι 
   @tendsto_atTop_atTop_of_monotone' ιᵒᵈ αᵒᵈ _ _ _ h.dual H
 #align filter.tendsto_at_bot_at_bot_of_monotone' Filter.tendsto_atBot_atBot_of_monotone'
 
-theorem unbounded_of_tendsto_atTop [Nonempty α] [SemilatticeSup α] [Preorder β] [NoMaxOrder β]
+theorem unbounded_of_tendsto_atTop [Nonempty α] [Preorder α] [IsDirected α (· ≤ ·)] [Preorder β] [NoMaxOrder β]
     {f : α → β} (h : Tendsto f atTop atTop) : ¬BddAbove (range f) := by
   rintro ⟨M, hM⟩
   cases' mem_atTop_sets.mp (h <| Ioi_mem_atTop M) with a ha
@@ -1705,17 +1708,17 @@ theorem unbounded_of_tendsto_atTop [Nonempty α] [SemilatticeSup α] [Preorder �
     _ ≤ M := hM (Set.mem_range_self a)
 #align filter.unbounded_of_tendsto_at_top Filter.unbounded_of_tendsto_atTop
 
-theorem unbounded_of_tendsto_atBot [Nonempty α] [SemilatticeSup α] [Preorder β] [NoMinOrder β]
+theorem unbounded_of_tendsto_atBot [Nonempty α] [Preorder α] [IsDirected α (· ≤ ·)] [Preorder β] [NoMinOrder β]
     {f : α → β} (h : Tendsto f atTop atBot) : ¬BddBelow (range f) :=
   @unbounded_of_tendsto_atTop _ βᵒᵈ _ _ _ _ _ h
 #align filter.unbounded_of_tendsto_at_bot Filter.unbounded_of_tendsto_atBot
 
-theorem unbounded_of_tendsto_atTop' [Nonempty α] [SemilatticeInf α] [Preorder β] [NoMaxOrder β]
+theorem unbounded_of_tendsto_atTop' [Nonempty α] [Preorder α] [IsDirected α (· ≥ ·)] [Preorder β] [NoMaxOrder β]
     {f : α → β} (h : Tendsto f atBot atTop) : ¬BddAbove (range f) :=
   @unbounded_of_tendsto_atTop αᵒᵈ _ _ _ _ _ _ h
 #align filter.unbounded_of_tendsto_at_top' Filter.unbounded_of_tendsto_atTop'
 
-theorem unbounded_of_tendsto_atBot' [Nonempty α] [SemilatticeInf α] [Preorder β] [NoMinOrder β]
+theorem unbounded_of_tendsto_atBot' [Nonempty α] [Preorder α] [IsDirected α (· ≥ ·)] [Preorder β] [NoMinOrder β]
     {f : α → β} (h : Tendsto f atBot atBot) : ¬BddBelow (range f) :=
   @unbounded_of_tendsto_atTop αᵒᵈ βᵒᵈ _ _ _ _ _ h
 #align filter.unbounded_of_tendsto_at_bot' Filter.unbounded_of_tendsto_atBot'
