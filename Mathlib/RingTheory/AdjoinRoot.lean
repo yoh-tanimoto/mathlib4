@@ -350,18 +350,18 @@ theorem liftHom_of {x : R} : liftHom f a hfx (of f x) = algebraMap _ _ x :=
 section AdjoinInv
 
 @[simp]
-theorem root_is_inv (r : R) : of _ r * root (C r * X - 1) = 1 := by
+theorem root_isInv (r : R) : of _ r * root (C r * X - 1) = 1 := by
   convert sub_eq_zero.1 ((eval₂_sub _).symm.trans <| eval₂_root <| C r * X - 1) <;>
     simp only [eval₂_mul, eval₂_C, eval₂_X, eval₂_one]
-#align adjoin_root.root_is_inv AdjoinRoot.root_is_inv
+#align adjoin_root.root_is_inv AdjoinRoot.root_isInv
 
 theorem algHom_subsingleton {S : Type _} [CommRing S] [Algebra R S] {r : R} :
     Subsingleton (AdjoinRoot (C r * X - 1) →ₐ[R] S) :=
   ⟨fun f g =>
     algHom_ext
       (@inv_unique _ _ (algebraMap R S r) _ _
-        (by rw [← f.commutes, ← f.map_mul, algebraMap_eq, root_is_inv, map_one])
-        (by rw [← g.commutes, ← g.map_mul, algebraMap_eq, root_is_inv, map_one]))⟩
+        (by rw [← f.commutes, ← f.map_mul, algebraMap_eq, root_isInv, map_one])
+        (by rw [← g.commutes, ← g.map_mul, algebraMap_eq, root_isInv, map_one]))⟩
 #align adjoin_root.alg_hom_subsingleton AdjoinRoot.algHom_subsingleton
 
 end AdjoinInv
@@ -402,8 +402,8 @@ noncomputable instance field [Fact (Irreducible f)] : Field (AdjoinRoot f) :=
       -- porting note: was
       -- `rw [Rat.cast_mk' (K := ℚ), _root_.map_mul, _root_.map_intCast, map_inv₀, map_natCast]`
       convert_to ((Rat.mk' a b h1 h2 : K) : AdjoinRoot f) = ((↑a * (↑b)⁻¹ : K) : AdjoinRoot f)
-      . simp only [_root_.map_mul, map_intCast, map_inv₀, map_natCast]
-      . simp only [Rat.cast_mk', _root_.map_mul, map_intCast, map_inv₀, map_natCast]
+      · simp only [_root_.map_mul, map_intCast, map_inv₀, map_natCast]
+      · simp only [Rat.cast_mk', _root_.map_mul, map_intCast, map_inv₀, map_natCast]
     qsmul := (· • ·)
     qsmul_eq_mul' := fun a x =>
       -- porting note: I gave the explicit motive and changed `rw` to `simp`.

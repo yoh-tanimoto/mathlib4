@@ -26,7 +26,7 @@ open Filter Set Metric
 
 theorem setOf_liouville_eq_iInter_iUnion :
     { x | Liouville x } =
-      ⋂ n : ℕ, ⋃ (a : ℤ) (b : ℤ) (_hb : 1 < b),
+      ⋂ n : ℕ, ⋃ (a : ℤ) (b : ℤ) (_ : 1 < b),
       ball ((a : ℝ) / b) (1 / (b : ℝ) ^ n) \ {(a : ℝ) / b} := by
   ext x
   simp only [mem_iInter, mem_iUnion, Liouville, mem_setOf_eq, exists_prop, mem_diff,
@@ -65,7 +65,7 @@ theorem eventually_residual_liouville : ∀ᶠ x in residual ℝ, Liouville x :=
   · rintro _ ⟨r, rfl⟩
     simp only [mem_iInter, mem_iUnion]
     refine fun n => ⟨r.num * 2, r.den * 2, ?_, ?_⟩
-    · have := Int.ofNat_le.2 r.pos; rw [Int.ofNat_one] at this ; linarith
+    · have := Int.ofNat_le.2 r.pos; rw [Int.ofNat_one] at this; linarith
     · convert @mem_ball_self ℝ _ (r : ℝ) _ _
       · push_cast; norm_cast; simp [Rat.divInt_mul_right (two_ne_zero), Rat.mkRat_self]
       · refine' one_div_pos.2 (pow_pos (Int.cast_pos.2 _) _)
