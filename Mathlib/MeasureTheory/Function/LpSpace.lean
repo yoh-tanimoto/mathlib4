@@ -2,16 +2,14 @@
 Copyright (c) 2020 Rémy Degenne. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne, Sébastien Gouëzel
-
-! This file was ported from Lean 3 source module measure_theory.function.lp_space
-! leanprover-community/mathlib commit c4015acc0a223449d44061e27ddac1835a3852b9
-! Please do not edit these lines, except to modify the commit id
-! if you have ported upstream changes.
 -/
 import Mathlib.Analysis.Normed.Group.Hom
 import Mathlib.MeasureTheory.Function.LpSeminorm
+import Mathlib.MeasureTheory.Measure.OpenPos
 import Mathlib.Topology.ContinuousFunction.Compact
 import Mathlib.Order.Filter.IndicatorFunction
+
+#align_import measure_theory.function.lp_space from "leanprover-community/mathlib"@"c4015acc0a223449d44061e27ddac1835a3852b9"
 
 /-!
 # Lp space
@@ -296,6 +294,10 @@ theorem edist_def (f g : Lp E p μ) : edist f g = snorm (⇑f - ⇑g) p μ :=
   rfl
 #align measure_theory.Lp.edist_def MeasureTheory.Lp.edist_def
 
+protected theorem edist_dist (f g : Lp E p μ) : edist f g = .ofReal (dist f g) := by
+  rw [edist_def, dist_def, ← snorm_congr_ae (coeFn_sub _ _),
+    ENNReal.ofReal_toReal (snorm_ne_top (f - g))]
+
 @[simp]
 theorem edist_toLp_toLp (f g : α → E) (hf : Memℒp f p μ) (hg : Memℒp g p μ) :
     edist (hf.toLp f) (hg.toLp g) = snorm (f - g) p μ := by
@@ -445,12 +447,9 @@ instance instNormedAddCommGroup [hp : Fact (1 ≤ p)] : NormedAddCommGroup (Lp E
           rw [snorm_congr_ae (coeFn_add _ _)]
           exact snorm_add_le (Lp.aestronglyMeasurable f) (Lp.aestronglyMeasurable g) hp.1
         eq_zero_of_map_eq_zero' := fun f =>
-          (norm_eq_zero_iff <|
-              zero_lt_one.trans_le hp.1).1 } with
+          (norm_eq_zero_iff <| zero_lt_one.trans_le hp.1).1 } with
     edist := edist
-    edist_dist := fun f g => by
-      rw [edist_def, dist_def, ← snorm_congr_ae (coeFn_sub _ _),
-        ENNReal.ofReal_toReal (snorm_ne_top (f - g))] }
+    edist_dist := Lp.edist_dist }
 #align measure_theory.Lp.normed_add_comm_group MeasureTheory.Lp.instNormedAddCommGroup
 
 -- check no diamond is created
@@ -838,14 +837,15 @@ lemma Lp.coeFn_const : Lp.const p μ c =ᵐ[μ] Function.const α c :=
 @[simp]
 lemma Memℒp.toLp_const : Memℒp.toLp _ (memℒp_const c) = Lp.const p μ c := rfl
 
--- todo (after port): make it `simp`
+@[simp]
 lemma indicatorConstLp_univ :
     indicatorConstLp p .univ (measure_ne_top μ _) c = Lp.const p μ c := by
   rw [← Memℒp.toLp_const, indicatorConstLp]
   simp only [Set.indicator_univ, Function.const]
 
-theorem Lp.norm_const (hp_zero : p ≠ 0) (hmeas : μ ≠ 0) :
+theorem Lp.norm_const [NeZero μ] (hp_zero : p ≠ 0) :
     ‖Lp.const p μ c‖ = ‖c‖ * (μ Set.univ).toReal ^ (1 / p.toReal) := by
+  have := NeZero.ne μ
   rw [← Memℒp.toLp_const, Lp.norm_toLp, snorm_const] <;> try assumption
   rw [ENNReal.toReal_mul, ENNReal.coe_toReal, ← ENNReal.toReal_rpow, coe_nnnorm]
 
@@ -865,18 +865,16 @@ theorem Lp.norm_const_le : ‖Lp.const p μ c‖ ≤ ‖c‖ * (μ Set.univ).toR
   map_add' := map_add _
   map_smul' _ _ := rfl
 
-variable (𝕜 : Type _) [NormedField 𝕜] [NormedSpace 𝕜 E]
-
 @[simps! apply]
-protected def Lp.constL [Fact (1 ≤ p)] : E →L[𝕜] Lp E p μ :=
+protected def Lp.constL (𝕜 : Type _) [NormedField 𝕜] [NormedSpace 𝕜 E] [Fact (1 ≤ p)] :
+    E →L[𝕜] Lp E p μ :=
   (Lp.constₗ p μ 𝕜).mkContinuous ((μ Set.univ).toReal ^ (1 / p.toReal)) <| fun _ ↦
     (Lp.norm_const_le _ _ _).trans_eq (mul_comm _ _)
 
-/- TODO: next theorem fails to generate a `Norm` instance
-theorem Lp.norm_constL_le [Fact (1 ≤ p)] :
+theorem Lp.norm_constL_le (𝕜 : Type _) [NontriviallyNormedField 𝕜] [NormedSpace 𝕜 E]
+    [Fact (1 ≤ p)] :
     ‖(Lp.constL p μ 𝕜 : E →L[𝕜] Lp E p μ)‖ ≤ (μ Set.univ).toReal ^ (1 / p.toReal) :=
-  LinearMap.mkContinuous_norm_le _
--/
+  LinearMap.mkContinuous_norm_le _ (by positivity) _
 
 end const
 
@@ -952,12 +950,14 @@ theorem norm_compMeasurePreserving (g : Lp E p μb) (hf : MeasurePreserving f μ
 
 variable (𝕜 : Type _) [NormedRing 𝕜] [Module 𝕜 E] [BoundedSMul 𝕜 E]
 
+/-- `MeasureTheory.Lp.compMeasurePreserving` as a linear map. -/
 @[simps]
 def compMeasurePreservingₗ (f : α → β) (hf : MeasurePreserving f μ μb) :
     Lp E p μb →ₗ[𝕜] Lp E p μ where
   __ := compMeasurePreserving f hf
   map_smul' c g := by rcases g with ⟨⟨_⟩, _⟩; rfl
 
+/-- `MeasureTheory.Lp.compMeasurePreserving` as a linear isometry. -/
 @[simps!]
 def compMeasurePreservingₗᵢ [Fact (1 ≤ p)] (f : α → β) (hf : MeasurePreserving f μ μb) :
     Lp E p μb →ₗᵢ[𝕜] Lp E p μ where
