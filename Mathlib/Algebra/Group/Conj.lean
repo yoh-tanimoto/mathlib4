@@ -7,7 +7,6 @@ import Mathlib.Algebra.Group.Semiconj
 import Mathlib.Algebra.GroupWithZero.Basic
 import Mathlib.Algebra.Hom.Aut
 import Mathlib.Algebra.Hom.Group
-import Mathlib.SetTheory.Cardinal.Finite
 
 #align_import algebra.group.conj from "leanprover-community/mathlib"@"0743cc5d9d86bcd1bba10f480e948a257d65056f"
 
@@ -214,22 +213,6 @@ theorem map_surjective {f : α →* β} (hf : Function.Surjective f) :
   obtain ⟨a, rfl⟩ := hf b
   exact ⟨ConjClasses.mk a, rfl⟩
 #align conj_classes.map_surjective ConjClasses.map_surjective
-
-theorem card_comm_eq_card_conjClasses_mul_card (G : Type _) [Group G] :
-    Nat.card { p : G × G // Commute p.1 p.2 } = Nat.card (ConjClasses G) * Nat.card G := by
-  rcases fintypeOrInfinite G; swap
-  · rw [Nat.card_eq_zero_of_infinite, @Nat.card_eq_zero_of_infinite G, mul_zero]
-  simp only [Nat.card_eq_fintype_card]
-  -- Porting note: Changed `calc` proof into a `rw` proof.
-  rw [card_congr (Equiv.subtypeProdEquivSigmaSubtype fun g h : G ↦ Commute g h), card_sigma,
-    sum_equiv ConjAct.toConjAct.toEquiv (fun a ↦ card { b // Commute a b })
-      (fun g ↦ card (MulAction.fixedBy (ConjAct G) G g))
-      fun g ↦ card_congr' <| congr_arg _ <| funext fun h ↦ mul_inv_eq_iff_eq_mul.symm.to_eq,
-    MulAction.sum_card_fixedBy_eq_card_orbits_mul_card_group, ConjAct.card,
-    (Setoid.ext fun g h ↦ (Setoid.comm' _).trans isConj_iff.symm :
-      MulAction.orbitRel (ConjAct G) G = IsConj.setoid G),
-    @card_congr' (Quotient (IsConj.setoid G)) (ConjClasses G) _ _ rfl]
-#align card_comm_eq_card_conj_classes_mul_card card_comm_eq_card_conjClasses_mul_card
 
 -- Porting note: This has not been adapted to mathlib4, is it still accurate?
 library_note "slow-failing instance priority"/--

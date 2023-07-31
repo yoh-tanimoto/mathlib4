@@ -60,9 +60,6 @@ theorem commProb_function [Fintype α] [Mul β] :
     commProb (α → β) = (commProb β) ^ Fintype.card α := by
   rw [commProb_pi, Finset.prod_const, Finset.card_univ]
 
-instance instInfiniteProdSubtypeCommute [Infinite M] : Infinite { p : M × M // Commute p.1 p.2 } :=
-  Infinite.of_injective (fun m => ⟨⟨m, m⟩, rfl⟩) (by intro; simp)
-
 @[simp]
 theorem commProb_eq_zero_of_infinite [Infinite M] : commProb M = 0 :=
   div_eq_zero_iff.2 (Or.inl (Nat.cast_eq_zero.2 Nat.card_eq_zero_of_infinite))
