@@ -237,7 +237,7 @@ lemma card_conjClasses_dihedralGroup_odd {n : ℕ} (hn : Odd n) :
     Nat.card (ConjClasses (DihedralGroup n)) = (n + 3) / 2 := by
   have hn' : NeZero n := ⟨hn.pos.ne'⟩
   have h := card_comm_eq_card_conjClasses_mul_card (DihedralGroup n)
-  rw [mul_comm, Nat.card_congr (myEquiv hn), Nat.card_sum, Nat.card_sum, Nat.card_sum,
+  rw [mul_comm, Nat.card_congr (OddCommuteEquiv hn), Nat.card_sum, Nat.card_sum, Nat.card_sum,
       Nat.card_prod, Nat.card_zmod, Nat.card_eq_fintype_card] at h
   rw [←Nat.div_eq_of_eq_mul_right (Fintype.card_pos) h, DihedralGroup.card,
       ←Nat.mul_div_mul_right (n + 3) 2 (Nat.pos_of_ne_zero hn'.1)]
