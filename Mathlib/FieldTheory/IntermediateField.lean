@@ -487,7 +487,7 @@ noncomputable def frangeRestrict : L →ₐ[K] f.fieldRange :=
   f.rangeRestrict
 
 @[simp]
-lemma frangeRestrict_apply (x : L) : f.toFieldRange x = f x :=
+lemma frangeRestrict_apply (x : L) : f.frangeRestrict x = f x :=
   rfl
 
 end AlgHom
