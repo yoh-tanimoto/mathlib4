@@ -95,22 +95,6 @@ theorem commProb_eq_one_iff [h : Nonempty M] :
 
 variable (G : Type _) [Group G]
 
-theorem card_comm_eq_card_conjClasses_mul_card :
-    Nat.card { p : G × G // Commute p.1 p.2 } = Nat.card (ConjClasses G) * Nat.card G := by
-  rcases fintypeOrInfinite G; swap
-  · rw [Nat.card_eq_zero_of_infinite, @Nat.card_eq_zero_of_infinite G, mul_zero]
-  simp only [Nat.card_eq_fintype_card]
-  -- Porting note: Changed `calc` proof into a `rw` proof.
-  rw [card_congr (Equiv.subtypeProdEquivSigmaSubtype fun g h : G ↦ Commute g h), card_sigma,
-    sum_equiv ConjAct.toConjAct.toEquiv (fun a ↦ card { b // Commute a b })
-      (fun g ↦ card (MulAction.fixedBy (ConjAct G) G g))
-      fun g ↦ card_congr' <| congr_arg _ <| funext fun h ↦ mul_inv_eq_iff_eq_mul.symm.to_eq,
-    MulAction.sum_card_fixedBy_eq_card_orbits_mul_card_group, ConjAct.card,
-    (Setoid.ext fun g h ↦ (Setoid.comm' _).trans isConj_iff.symm :
-      MulAction.orbitRel (ConjAct G) G = IsConj.setoid G),
-    @card_congr' (Quotient (IsConj.setoid G)) (ConjClasses G) _ _ rfl]
-#align card_comm_eq_card_conj_classes_mul_card card_comm_eq_card_conjClasses_mul_card
-
 theorem commProb_def' : commProb G = Nat.card (ConjClasses G) / Nat.card G := by
   rw [commProb, card_comm_eq_card_conjClasses_mul_card, Nat.cast_mul, sq]
   by_cases h : (Nat.card G : ℚ) = 0
