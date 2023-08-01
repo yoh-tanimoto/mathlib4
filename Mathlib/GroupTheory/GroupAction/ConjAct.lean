@@ -6,7 +6,6 @@ Authors: Chris Hughes
 import Mathlib.GroupTheory.GroupAction.Basic
 import Mathlib.GroupTheory.Subgroup.ZPowers
 import Mathlib.Algebra.GroupRingAction.Basic
-import Mathlib.SetTheory.Cardinal.Finite
 
 #align_import group_theory.group_action.conj_act from "leanprover-community/mathlib"@"4be589053caf347b899a494da75410deb55fb3ef"
 
