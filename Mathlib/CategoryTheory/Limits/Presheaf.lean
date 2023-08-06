@@ -6,6 +6,8 @@ Authors: Bhavik Mehta
 import Mathlib.CategoryTheory.Adjunction.Limits
 import Mathlib.CategoryTheory.Adjunction.Opposites
 import Mathlib.CategoryTheory.Elements
+import Mathlib.CategoryTheory.Limits.ConeCategory
+import Mathlib.CategoryTheory.Limits.Final
 import Mathlib.CategoryTheory.Limits.FunctorCategory
 import Mathlib.CategoryTheory.Limits.KanExtension
 import Mathlib.CategoryTheory.Limits.Shapes.Terminal
@@ -477,6 +479,21 @@ def isColimitTautologicalCocone : IsColimit (tautologicalCocone P) where
     rw [Equiv.symm_apply_apply, ← yonedaEquiv_comp']
     exact congr_arg _ (h (CostructuredArrow.mk t))
 
+lemma a : 0 = 0 := rfl
+
+variable {I : Type v₁} [SmallCategory I] (α : I ⥤ C)
+
+open Functor
+
+theorem final_toCostructuredArrow {c : Cocone (α ⋙ yoneda)} (hc : IsColimit c) :
+    Functor.Final (c.toCostructuredArrow) := by
+  let s := ShrinkHoms.equivalence.{v₁} (CostructuredArrow (α ⋙ yoneda) c.pt)
+  rw [final_iff_comp_final_full_faithful _ s.functor]
+  apply Functor.cofinal_of_colimit_comp_coyoneda_iso_pUnit
+
+  sorry
+
 end ArbitraryUniverses
+
 
 end CategoryTheory

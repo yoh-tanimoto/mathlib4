@@ -812,6 +812,17 @@ theorem initial_iff_initial_comp [Initial F] : Initial G ↔ Initial (F ⋙ G) :
 
 end
 
+section
+
+variable {C : Type u₁} [Category.{v₁} C] {D : Type u₂} [Category.{v₂} D] (F : C ⥤ D)
+
+theorem better_cofinal_of_colimit_comp_coyoneda_iso_pUnit_attempt_two [LocallySmall.{v₁} D]
+    (I : ∀ d, colimit (F ⋙ coyoneda.obj (op d)) ≅ PUnit) : Final F := by
+
+  sorry
+
+end
+
 end Functor
 
 section Filtered
