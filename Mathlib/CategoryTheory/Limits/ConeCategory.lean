@@ -5,8 +5,8 @@ Authors: Andrew Yang
 -/
 import Mathlib.CategoryTheory.Adjunction.Comma
 import Mathlib.CategoryTheory.Limits.Preserves.Shapes.Terminal
-import Mathlib.CategoryTheory.StructuredArrow
 import Mathlib.CategoryTheory.Limits.Shapes.Equivalence
+import Mathlib.CategoryTheory.Over
 
 #align_import category_theory.limits.cone_category from "leanprover-community/mathlib"@"18302a460eb6a071cf0bfe11a4df025c8f8af244"
 
@@ -34,6 +34,38 @@ universe v₁ v₂ v₃ v₄ u₁ u₂ u₃ u₄
 variable {J : Type u₁} [Category.{v₁} J] {K : Type u₂} [Category.{v₂} K]
 
 variable {C : Type u₃} [Category.{v₃} C] {D : Type u₄} [Category.{v₄} D]
+
+/-- Given a cone `c` over `F`, we can interpret the legs of `c` as structured arrows
+    `c.pt ⟶ F.obj -`. -/
+@[simps]
+def Cone.toStructuredArrow {F : J ⥤ C} (c : Cone F) : J ⥤ StructuredArrow c.pt F where
+  obj j := StructuredArrow.mk (c.π.app j)
+  map f := StructuredArrow.homMk f
+
+/-- Interpreting the legs of a cone as a structured arrow and then forgetting the arrow again does
+    nothing. -/
+@[simps!]
+def Cone.toStructuredArrowCompProj {F : J ⥤ C} (c : Cone F) :
+    c.toStructuredArrow ⋙ StructuredArrow.proj _ _ ≅ 𝟭 J :=
+  Iso.refl _
+
+@[simp]
+lemma Cone.toStructuredArrow_comp_proj {F : J ⥤ C} (c : Cone F) :
+    c.toStructuredArrow ⋙ StructuredArrow.proj _ _ = 𝟭 J :=
+  rfl
+
+/-- Interpreting the legs of a cone as a structured arrow, interpreting this arrow as an arrow over
+    the cone point, and finally forgetting the arrow is the same as just applying the functor the
+    cone was over. -/
+@[simps!]
+def Cone.toStructuredArrowCompToUnderCompForget {F : J ⥤ C} (c : Cone F) :
+    c.toStructuredArrow ⋙ StructuredArrow.toUnder _ _ ⋙ Under.forget _ ≅ F :=
+  Iso.refl _
+
+@[simp]
+lemma Cone.toStructuredArrow_comp_toUnder_comp_forget {F : J ⥤ C} (c : Cone F) :
+    c.toStructuredArrow ⋙ StructuredArrow.toUnder _ _ ⋙ Under.forget _ = F :=
+  rfl
 
 /-- Construct an object of the category `(Δ ↓ F)` from a cone on `F`. This is part of an
     equivalence, see `Cone.equivCostructuredArrow`. -/
@@ -123,6 +155,38 @@ def IsLimit.ofReflectsConeTerminal {F : J ⥤ C} {F' : K ⥤ D} (G : Cone F ⥤ 
     [ReflectsLimit (Functor.empty.{0} _) G] {c : Cone F} (hc : IsLimit (G.obj c)) : IsLimit c :=
   (Cone.isLimitEquivIsTerminal _).symm <| (Cone.isLimitEquivIsTerminal _ hc).isTerminalOfObj _ _
 #align category_theory.limits.is_limit.of_reflects_cone_terminal CategoryTheory.Limits.IsLimit.ofReflectsConeTerminal
+
+/-- Given a cocone `c` over `F`, we can interpret the legs of `c` as costructured arrows
+    `F.obj - ⟶ c.pt`. -/
+@[simps]
+def Cocone.toCostructuredArrow {F : J ⥤ C} (c : Cocone F) : J ⥤ CostructuredArrow F c.pt where
+  obj j := CostructuredArrow.mk (c.ι.app j)
+  map f := CostructuredArrow.homMk f
+
+/-- Interpreting the legs of a cocone as a costructured arrow and then forgetting the arrow again
+    does nothing. -/
+@[simps!]
+def Cocone.toCostructuredArrowCompProj {F : J ⥤ C} (c : Cocone F) :
+    c.toCostructuredArrow ⋙ CostructuredArrow.proj _ _ ≅ 𝟭 J :=
+  Iso.refl _
+
+@[simp]
+lemma Cocone.toCostructuredArrow_comp_proj {F : J ⥤ C} (c : Cocone F) :
+    c.toCostructuredArrow ⋙ CostructuredArrow.proj _ _ = 𝟭 J :=
+  rfl
+
+/-- Interpreting the legs of a cocone as a costructured arrow, interpreting this arrow as an arrow
+    over the cocone point, and finally forgetting the arrow is the same as just applying the
+    functor the cocone was over. -/
+@[simps!]
+def Cocone.toCostructuredArrowCompToOverCompForget {F : J ⥤ C} (c : Cocone F) :
+    c.toCostructuredArrow ⋙ CostructuredArrow.toOver _ _ ⋙ Over.forget _ ≅ F :=
+  Iso.refl _
+
+@[simp]
+lemma Cocone.toCostructuredArrow_comp_toOver_comp_forget {F : J ⥤ C} (c : Cocone F) :
+    c.toCostructuredArrow ⋙ CostructuredArrow.toOver _ _ ⋙ Over.forget _ = F :=
+  rfl
 
 /-- Construct an object of the category `(F ↓ Δ)` from a cocone on `F`. This is part of an
     equivalence, see `Cocone.equivStructuredArrow`. -/
