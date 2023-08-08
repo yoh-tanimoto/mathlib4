@@ -80,13 +80,14 @@ end Semiconj
 instance : Monoid (α → α) where
   mul := fun f g => f ∘ g
   one := id
-  mul_assoc := sorry
-  mul_one := sorry
-  one_mul := sorry
+  mul_assoc := comp.assoc
+  mul_one := comp.right_id
+  one_mul := comp.left_id
 
 /-- Reinterpret `Function.Semiconj f g g` as `Function.Commute f g`. These two predicates are
 definitionally equal but have different dot-notation lemmas. -/
-theorem Semiconj.commute {f g : α → α} (h : Semiconj f g g) : Commute f g := sorry -- was h
+theorem Semiconj.commute {f g : α → α} (h : Semiconj f g g) : Commute f g :=
+  funext h
 #align function.semiconj.commute Function.Semiconj.commute
 
 namespace Commute
@@ -95,7 +96,8 @@ variable {f f' g g' : α → α}
 
 /-- Reinterpret `Function.Commute f g` as `Function.Semiconj f g g`. These two predicates are
 definitionally equal but have different dot-notation lemmas. -/
-theorem semiconj (h : Commute f g) : Semiconj f g g := sorry -- was h
+theorem semiconj (h : Commute f g) : Semiconj f g g :=
+  congrFun h
 
 @[refl]
 theorem refl (f : α → α) : Commute f f :=
