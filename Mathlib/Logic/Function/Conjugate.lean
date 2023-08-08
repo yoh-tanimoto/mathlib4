@@ -3,6 +3,7 @@ Copyright (c) 2020 Yury Kudryashov. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Yury Kudryashov
 -/
+import Mathlib.Algebra.Group.Commute
 import Mathlib.Logic.Function.Basic
 import Mathlib.Tactic.Relation.Rfl
 
@@ -76,18 +77,16 @@ theorem option_map {f : α → β} {ga : α → α} {gb : β → β} (h : Semico
 
 end Semiconj
 
-/--
-Two maps `f g : α → α` commute if `f (g x) = g (f x)` for all `x : α`.
-Given `h : Function.commute f g` and `a : α`, we have `h a : f (g a) = g (f a)` and
-`h.comp_eq : f ∘ g = g ∘ f`.
--/
-def Commute (f g : α → α) : Prop :=
-  Semiconj f g g
-#align function.commute Function.Commute
+instance : Monoid (α → α) where
+  mul := fun f g => f ∘ g
+  one := id
+  mul_assoc := sorry
+  mul_one := sorry
+  one_mul := sorry
 
 /-- Reinterpret `Function.Semiconj f g g` as `Function.Commute f g`. These two predicates are
 definitionally equal but have different dot-notation lemmas. -/
-theorem Semiconj.commute {f g : α → α} (h : Semiconj f g g) : Commute f g := h
+theorem Semiconj.commute {f g : α → α} (h : Semiconj f g g) : Commute f g := sorry -- was h
 #align function.semiconj.commute Function.Semiconj.commute
 
 namespace Commute
@@ -96,36 +95,37 @@ variable {f f' g g' : α → α}
 
 /-- Reinterpret `Function.Commute f g` as `Function.Semiconj f g g`. These two predicates are
 definitionally equal but have different dot-notation lemmas. -/
-theorem semiconj (h : Commute f g) : Semiconj f g g := h
+theorem semiconj (h : Commute f g) : Semiconj f g g := sorry -- was h
 
 @[refl]
 theorem refl (f : α → α) : Commute f f :=
-  fun _ ↦ Eq.refl _
+  _root_.Commute.refl f
 #align function.commute.refl Function.Commute.refl
 
 @[symm]
 theorem symm (h : Commute f g) : Commute g f :=
-  fun x ↦ (h x).symm
+  h.symm
 #align function.commute.symm Function.Commute.symm
 
 theorem comp_right (h : Commute f g) (h' : Commute f g') : Commute f (g ∘ g') :=
-  Semiconj.comp_right h h'
+  h.mul_right h'
+
 #align function.commute.comp_right Function.Commute.comp_right
 
 theorem comp_left (h : Commute f g) (h' : Commute f' g) : Commute (f ∘ f') g :=
-  (h.symm.comp_right h'.symm).symm
+  h.mul_left h'
 #align function.commute.comp_left Function.Commute.comp_left
 
 theorem id_right : Commute f id :=
-  Semiconj.id_right
+  Commute.one_right f
 #align function.commute.id_right Function.Commute.id_right
 
 theorem id_left : Commute id f :=
-  Semiconj.id_left
+  Commute.one_left f
 #align function.commute.id_left Function.Commute.id_left
 
 theorem option_map {f g : α → α} : Commute f g → Commute (Option.map f) (Option.map g) :=
-  Semiconj.option_map
+  Semiconj.commute ∘ Semiconj.option_map ∘ semiconj
 #align function.commute.option_map Function.Commute.option_map
 
 end Commute
