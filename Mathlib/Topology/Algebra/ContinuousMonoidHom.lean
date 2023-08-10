@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Thomas Browning
 -/
 import Mathlib.Analysis.Complex.Circle
+import Mathlib.Topology.Algebra.Group.Compact
 import Mathlib.Topology.ContinuousFunction.Algebra
 
 #align_import topology.algebra.continuous_monoid_hom from "leanprover-community/mathlib"@"6ca1a09bc9aa75824bf97388c9e3b441fc4ccf3f"
@@ -404,6 +405,39 @@ def compRight {B : Type _} [CommGroup B] [TopologicalSpace B] [TopologicalGroup 
 #align continuous_monoid_hom.comp_right ContinuousMonoidHom.compRight
 #align continuous_add_monoid_hom.comp_right ContinuousAddMonoidHom.compRight
 
+variable (E)
+
+lemma mylem {α β : Type*} [TopologicalSpace α] [TopologicalSpace β] (S : Set α) (T : Set β) (b : β) (h : b ∈ T) :
+    ContinuousMap.const α b ∈ ContinuousMap.CompactOpen.gen S T := by
+  rintro - ⟨-, -, rfl⟩
+  exact h
+
+instance [T2Space E] : LocallyCompactSpace (ContinuousMonoidHom A E) := by
+  apply TopologicalSpace.PositiveCompacts.locallyCompactSpace_of_group
+  let U : Set A := sorry -- U is open with compact closure
+  have hU : IsCompact (closure U) := sorry
+  let V : Set E := sorry -- V is compact with nonempty interior
+  have hV : 1 ∈ interior V := sorry
+  let S := toContinuousMap ⁻¹' ContinuousMap.CompactOpen.gen U V
+  have hS : (interior S).Nonempty
+  · let T := toContinuousMap ⁻¹' ContinuousMap.CompactOpen.gen (closure U) (interior V)
+    have h1 : T ⊆ S
+    · apply Set.preimage_mono
+      intro f hf
+      rw [ContinuousMap.CompactOpen.gen] at hf
+      change f '' closure U ⊆ interior V at hf
+      change f '' U ⊆ V
+      exact (Set.image_subset f subset_closure).trans $ hf.trans interior_subset
+    have h2 : IsOpen T := isOpen_induced (ContinuousMap.isOpen_gen hU isOpen_interior)
+    have h3 : T.Nonempty
+    · use 1
+      apply mylem
+      exact hV
+    exact h3.mono (interior_maximal h1 h2)
+  refine' ⟨⟨S, _⟩, hS⟩
+
+
+
 end ContinuousMonoidHom
 
 
@@ -419,6 +453,9 @@ instance : TopologicalSpace (PontryaginDual A) :=
 
 instance : T2Space (PontryaginDual A) :=
   (inferInstance : T2Space (ContinuousMonoidHom A circle))
+
+instance : LocallyCompactSpace (PontryaginDual A) :=
+  (inferInstance : LocallyCompactSpace (ContinuousMonoidHom A circle))
 
 -- porting note: instance is now noncomputable
 noncomputable instance : CommGroup (PontryaginDual A) :=
