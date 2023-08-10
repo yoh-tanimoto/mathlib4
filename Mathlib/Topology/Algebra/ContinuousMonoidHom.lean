@@ -421,13 +421,7 @@ instance [T2Space E] : LocallyCompactSpace (ContinuousMonoidHom A E) := by
   let S := toContinuousMap ⁻¹' ContinuousMap.CompactOpen.gen U V
   have hS : (interior S).Nonempty
   · let T := toContinuousMap ⁻¹' ContinuousMap.CompactOpen.gen (closure U) (interior V)
-    have h1 : T ⊆ S
-    · apply Set.preimage_mono
-      intro f hf
-      rw [ContinuousMap.CompactOpen.gen] at hf
-      change f '' closure U ⊆ interior V at hf
-      change f '' U ⊆ V
-      exact (Set.image_subset f subset_closure).trans $ hf.trans interior_subset
+    have h1 : T ⊆ S := fun f hf x hx => interior_subset (hf (Set.image_subset f subset_closure hx))
     have h2 : IsOpen T := isOpen_induced (ContinuousMap.isOpen_gen hU isOpen_interior)
     have h3 : T.Nonempty
     · use 1
@@ -435,6 +429,10 @@ instance [T2Space E] : LocallyCompactSpace (ContinuousMonoidHom A E) := by
       exact hV
     exact h3.mono (interior_maximal h1 h2)
   refine' ⟨⟨S, _⟩, hS⟩
+  -- this is where it gets tricky:
+  -- show that S is a subset of ContHom (or maybe defined a subspace S' of ContHom)
+  -- show that S is compact in the pointwise topology (not hard)
+  -- show that S is equicontinuous (a tad bit tricky...)
 
 
 
