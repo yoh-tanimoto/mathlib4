@@ -109,7 +109,8 @@ theorem single_add (a : G) (b₁ b₂ : k) : single a (b₁ + b₂) = single a b
   Finsupp.single_add a b₁ b₂
 
 @[simp]
-theorem sum_single_index [AddCommMonoid N] {a : G} {b : k} {h : G → k → N} (h_zero : h a 0 = 0) :
+theorem sum_single_index {N : Type*} [AddCommMonoid N] {a : G} {b : k} {h : G → k → N}
+  (h_zero : h a 0 = 0) :
   (single a b).sum h = h a b := Finsupp.sum_single_index h_zero
 
 @[simp]
@@ -414,6 +415,46 @@ def comapDistribMulActionSelf [Group G] [Semiring k] : DistribMulAction G (Monoi
 
 end DerivedInstances
 
+/-! #### Copies of `ext` lemams from `Finsupp`
+
+As `MonoidAlgebra` is a type synonym, `ext` will not unfold it to find `ext` lemmas. -/
+
+section ExtLemmas
+
+/-- A copy of `Finsupp.ext` for `MonoidAlgebra`. -/
+@[ext]
+theorem ext [Semiring k] ⦃f g : MonoidAlgebra k G⦄ (H : ∀ (x : G), f x = g x) :
+    f = g :=
+  Finsupp.ext H
+
+/-- A copy of `Finsupp.addHom_ext'` for `MonoidAlgebra`. -/
+@[ext high]
+theorem addHom_ext' {N : Type*} [Semiring k] [AddZeroClass N]
+    ⦃f g : MonoidAlgebra k G →+ N⦄
+    (H : ∀ (x : G), AddMonoidHom.comp f (singleAddHom x) = AddMonoidHom.comp g (singleAddHom x)) :
+    f = g :=
+  Finsupp.addHom_ext' H
+
+/-- A copy of `Finsupp.distribMulActionHom_ext'` for `MonoidAlgebra`. -/
+@[ext]
+theorem distribMulActionHom_ext' {N : Type*} [Monoid R] [Semiring k] [AddMonoid N]
+    [DistribMulAction R N] [DistribMulAction R k]
+    {f g : MonoidAlgebra k G →+[R] N}
+    (h : ∀ a : G,
+      f.comp (DistribMulActionHom.single (M := k) a) = g.comp (DistribMulActionHom.single a)) :
+    f = g :=
+  Finsupp.distribMulActionHom_ext' h
+
+/-- A copy of `Finsupp.lhom_ext'` for `MonoidAlgebra`. -/
+@[ext high]
+theorem lhom_ext' {N : Type*} [Semiring R] [Semiring k] [AddCommMonoid N] [Module R N] [Module R k]
+    ⦃f g : MonoidAlgebra k G →ₗ[R] N⦄
+    (H : ∀ (x : G), LinearMap.comp f (lsingle x) = LinearMap.comp g (lsingle x)) :
+    f = g :=
+  Finsupp.lhom_ext' H
+
+end ExtLemmas
+
 section MiscTheorems
 
 variable [Semiring k]
@@ -602,11 +643,10 @@ theorem single_mul_apply_of_not_exists_mul [Mul G] (r : k) {g g' : G} (x : Monoi
 theorem liftNC_smul [MulOneClass G] {R : Type*} [Semiring R] (f : k →+* R) (g : G →* R) (c : k)
     (φ : MonoidAlgebra k G) : liftNC (f : k →+ R) g (c • φ) = f c * liftNC (f : k →+ R) g φ := by
   suffices :
-    (liftNC (↑f) g).comp (smulAddHom k (MonoidAlgebra k G) c) =
-      (AddMonoidHom.mulLeft (f c)).comp (liftNC (↑f) g)
-  exact FunLike.congr_fun this φ
-  -- Porting note: `ext` couldn't a find appropriate theorem.
-  refine addHom_ext' fun a => AddMonoidHom.ext fun b => ?_
+      (liftNC (↑f) g).comp (smulAddHom k (MonoidAlgebra k G) c) =
+        (AddMonoidHom.mulLeft (f c)).comp (liftNC (↑f) g)
+  · exact FunLike.congr_fun this φ
+  ext a b
   -- Porting note: `reducible` cannot be `local` so the proof gets more complex.
   unfold MonoidAlgebra
   simp
@@ -625,8 +665,7 @@ variable (k) [Semiring k] [DistribSMul R k] [Mul G]
 instance isScalarTower_self [IsScalarTower R k k] :
     IsScalarTower R (MonoidAlgebra k G) (MonoidAlgebra k G) :=
   ⟨fun t a b => by
-    -- Porting note: `ext` → `refine Finsupp.ext fun _ => ?_`
-    refine Finsupp.ext fun m => ?_
+    ext m
     -- Porting note: `refine` & `rw` are required because `simp` behaves differently.
     classical
       simp only [smul_eq_mul, mul_apply]
