@@ -412,16 +412,21 @@ lemma mylem {α β : Type*} [TopologicalSpace α] [TopologicalSpace β] (S : Set
   rintro - ⟨-, -, rfl⟩
   exact h
 
-instance [T2Space E] : LocallyCompactSpace (ContinuousMonoidHom A E) := by
+noncomputable def keydef [ContinuousMul B] {U : Set B} (hU : U ∈ nhds 1) :
+    ℕ → {S | S ∈ nhds (1 : B)}
+  | 0 => ⟨U, hU⟩
+  | n + 1 => ⟨Classical.choose (exists_open_nhds_one_mul_subset (keydef hU n).2), sorry⟩
+
+instance [ContinuousMul A] [LocallyCompactSpace A] [T2Space E] :
+  LocallyCompactSpace (ContinuousMonoidHom A E) := by
+  obtain ⟨U, hU, hU'⟩ := exists_compact_mem_nhds (1 : A)
   apply TopologicalSpace.PositiveCompacts.locallyCompactSpace_of_group
-  let U : Set A := sorry -- U is open with compact closure
-  have hU : IsCompact (closure U) := sorry
   let V : Set E := sorry -- V is compact with nonempty interior
   have hV : 1 ∈ interior V := sorry
   let S := toContinuousMap ⁻¹' ContinuousMap.CompactOpen.gen U V
   have hS : (interior S).Nonempty
-  · let T := toContinuousMap ⁻¹' ContinuousMap.CompactOpen.gen (closure U) (interior V)
-    have h1 : T ⊆ S := fun f hf x hx => interior_subset (hf (Set.image_subset f subset_closure hx))
+  · let T := toContinuousMap ⁻¹' ContinuousMap.CompactOpen.gen U (interior V)
+    have h1 : T ⊆ S := fun f hf x hx => interior_subset (hf hx)
     have h2 : IsOpen T := isOpen_induced (ContinuousMap.isOpen_gen hU isOpen_interior)
     have h3 : T.Nonempty
     · use 1
@@ -433,8 +438,8 @@ instance [T2Space E] : LocallyCompactSpace (ContinuousMonoidHom A E) := by
   -- show that S is a subset of ContHom (or maybe defined a subspace S' of ContHom)
   -- show that S is compact in the pointwise topology (not hard)
   -- show that S is equicontinuous (a tad bit tricky...)
-
-
+  let Un : ℕ → {S | S ∈ nhds (1 : A)} := keydef hU'
+  sorry
 
 end ContinuousMonoidHom
 
