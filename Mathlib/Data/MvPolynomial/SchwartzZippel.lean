@@ -14,6 +14,7 @@ import Mathlib.Data.Polynomial.RingDivision
 
 
 
+
 -- open_locale classical
 
 -- example (A B : Type) (f g : A -> B) (h :  f = g) (x : A) : f x = g x :=
@@ -27,6 +28,7 @@ that finset
 -/
 def function_finset (A : Type) (B : Type) [DecidableEq A] [Fintype A] (S : Finset B) : Finset (A -> B) :=
   Fintype.piFinset (fun _ => S)
+
 
 
 
@@ -81,7 +83,7 @@ lemma and_and_and_not_iff (p q : Prop) : ((p ∧ q) ∧ (p ∧ ¬ q)) ↔ false 
 lemma mk_prod_of_proj (A B : Type) (ab : A × B) : (ab.fst, ab.snd) = ab := by
   exact rfl
 
-
+-- set_option maxHeartbeats 0
 
 -- lemma Finset.card_product_sum_left {α β : Type} [Fintype α] (r : Finset (α × β)) :
 --     Finset.card r = ∑ a in α, Finset.card (r.filter (r.fst = a)) := by
@@ -257,7 +259,7 @@ lemma schwartz_zippel (F : Type) [Field F] [DecidableEq F] (n : ℕ)
         · intros b hb
           simp only [Equiv.invFun_as_coe, Equiv.piFinSucc_symm_apply]
           -- Diamond!
-          -- apply le_trans _ (Polynomial.card_roots' (p'))
+          apply le_trans _ (Polynomial.card_roots' (p'))
           sorry
       · -- Note Polynomial.coeff_natDegree, MvPolynomial.finSuccEquiv_apply, MvPolynomial.coe_eval₂Hom, are triggering but I don't want them
         unfold function_finset
@@ -406,9 +408,5 @@ lemma schwartz_zippel (F : Type) [Field F] [DecidableEq F] (n : ℕ)
         rw [<-add_mul]
         apply Nat.mul_le_mul_right
         apply le_of_eq
-        apply Nat.sub_add_cancel --(?_ (id (Ne.symm hp)))
-        -- TODO this should be a lemma about MvPolynomial.finSuccEquiv
-        sorry
-
-
-    -- sorry
+        apply Nat.sub_add_cancel
+        apply le_of_add_le_right h0
