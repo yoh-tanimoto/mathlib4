@@ -3,6 +3,7 @@ import Mathlib.Data.MvPolynomial.Basic
 import Mathlib.Data.Polynomial.Basic
 import Mathlib.Data.Polynomial.Eval
 -- import Mathlib.Data.Polynomial.Degree
+import Mathlib.Data.MvPolynomial.CommRing
 import Mathlib.Data.MvPolynomial.Variables
 import Mathlib.Data.Fintype.Pi
 import Mathlib.Logic.Embedding.Basic
@@ -11,9 +12,10 @@ import Mathlib.Tactic.ClearExcept
 import Mathlib.Data.MvPolynomial.Equiv
 import Mathlib.Algebra.BigOperators.Basic
 import Mathlib.Data.Polynomial.RingDivision
+import Mathlib.RingTheory.Polynomial.Basic
+-- import Mathlib.Tactic.DefeqTransformations
 
-
-
+open BigOperators
 
 -- open_locale classical
 
@@ -32,30 +34,20 @@ def function_finset (A : Type) (B : Type) [DecidableEq A] [Fintype A] (S : Finse
 
 
 
-lemma forall_cons_eval
-  {n: ℕ}
-  {S: F → Prop}
-  (a: F)
-  (b: Fin n → F) :
-    ∀ n' : Fin (n+1), S ((@Fin.cons n (fun _ => F) (a : F) b n') : F)
-    ↔
-    ∀ (n' : Fin n), S (b n')
-      ∧
-    S a := by
-  simp only
-  apply?
+-- lemma Fin.elim_succ {F: Type}
+--   {n: ℕ}
+--   {S: F → Prop}
+--   (a: F)
+--   (b: Fin n → F)
+--   (hab1: ∀ (n' : Fin n), S (b n'))
+--   (hab2: S a)
+--   (n': Fin (n + 1)) :
+--     S ((@Fin.cons n (fun _ => F) (a : F) b n') : F) := by
+--   apply?
 
 
-lemma Fin.elim_succ {F: Type}
-  {n: ℕ}
-  {S: F → Prop}
-  (a: F)
-  (b: Fin n → F)
-  (hab1: ∀ (n' : Fin n), S (b n'))
-  (hab2: S a)
-  (n': Fin (n + 1)) :
-    S ((@Fin.cons n (fun _ => F) (a : F) b n') : F) := by
-  apply?
+lemma cases_fin_succ (n : ℕ) (a: Fin (n + 1)) : a = 0 ∨ ∃ b : Fin n, a = Fin.succ b := by
+  exact Fin.eq_zero_or_eq_succ a
 
 @[simp]
 lemma Fin.cons_mem_piFinset_iff {n : ℕ} (a : (Fin n → F)) (b: F)  (S : Finset F) :
@@ -65,7 +57,26 @@ lemma Fin.cons_mem_piFinset_iff {n : ℕ} (a : (Fin n → F)) (b: F)  (S : Finse
     ∧
     b ∈ S := by
   simp only [Fintype.mem_piFinset]
-  simp_rw [forall_cons_eval]
+  simp at *
+  constructor
+  · intros ha_1
+    constructor
+    · intro a_1
+      have foo := ha_1 (Fin.succ a_1)
+      simp at foo
+      exact foo
+    · have foo := ha_1 0
+      simp at foo
+      exact foo
+  · intro ha1 a1
+    have foo := Fin.eq_zero_or_eq_succ a1
+    cases foo
+    · simp_all only [cons_zero]
+    · rename_i h
+      unhygienic with_reducible aesop_destruct_products
+      aesop_subst h_1
+      simp_all only [cons_succ]
+
 
 
 
@@ -83,11 +94,71 @@ lemma and_and_and_not_iff (p q : Prop) : ((p ∧ q) ∧ (p ∧ ¬ q)) ↔ false 
 lemma mk_prod_of_proj (A B : Type) (ab : A × B) : (ab.fst, ab.snd) = ab := by
   exact rfl
 
--- set_option maxHeartbeats 0
+lemma foos (a b : ℕ) (aa : a ≤ b ) (shj : b ≤ a) : a = b := by
+  exact Nat.le_antisymm aa shj
 
--- lemma Finset.card_product_sum_left {α β : Type} [Fintype α] (r : Finset (α × β)) :
---     Finset.card r = ∑ a in α, Finset.card (r.filter (r.fst = a)) := by
---   sorry
+lemma Finsupp.cons_sum (n : ℕ) (σ: Fin n →₀ ℕ) : (Finsupp.sum σ (fun _ e ↦ e)) + i = Finsupp.sum (Finsupp.cons i σ) fun _ e ↦ e := by
+
+  rw [eq_comm]
+  simp_rw [add_comm]
+
+  convert Fin.sum_cons i σ
+  · rw [Finsupp.sum_fintype]
+    congr
+    simp
+  · rw [Finsupp.sum_fintype]
+
+    simp
+
+
+lemma MvPolynomial.support_nonempty_iff [Field F] (p : MvPolynomial σ F) :
+  Finset.Nonempty (MvPolynomial.support p) ↔ p ≠ 0 := by
+  simp
+  rw [←MvPolynomial.support_eq_empty]
+  rw [Finset.nonempty_iff_ne_empty]
+
+lemma foosdad [Field F] (n: ℕ)
+  (p : MvPolynomial (Fin (Nat.succ n)) F)
+  (i : ℕ)
+  (hi : (Polynomial.coeff ((MvPolynomial.finSuccEquiv F n) p) i) ≠ 0)
+-- hp: p ≠ 0
+-- S: Finset F
+-- p': Polynomial (MvPolynomial (Fin n) F) := ↑
+-- hp': p' = ↑(MvPolynomial.finSuccEquiv F n) p
+-- i: ℕ := Polynomial.natDegree p'
+-- hi: i = Polynomial.natDegree p'
+-- p_i': MvPolynomial (Fin n) F := Polynomial.coeff p' i
+-- hp_i': p_i' = Polynomial.coeff p' i
+:
+    MvPolynomial.totalDegree (Polynomial.coeff ((MvPolynomial.finSuccEquiv F n) p) i) + i ≤ MvPolynomial.totalDegree p := by
+
+
+  have hp'_sup : (Polynomial.coeff ((MvPolynomial.finSuccEquiv F n) p) i).support.Nonempty := by
+    rw [MvPolynomial.support_nonempty_iff]
+    exact hi
+  -- Let sigma be a monomial index of (Polynomial.coeff ((MvPolynomial.finSuccEquiv F n) p) i) of maximal total degree
+  have ⟨σ, hσ1, hσ2⟩ := Finset.exists_mem_eq_sup (MvPolynomial.support _) hp'_sup (fun s => Finsupp.sum s fun _ e => e)
+
+  let σ' : Fin (n+1) →₀ ℕ := Finsupp.cons i σ
+  -- let σ' : Fin (n+1) →₀ ℕ := Finsupp.ofSupportFinite σ'_ (by exact Set.toFinite (Function.support σ'_))
+
+
+
+  convert MvPolynomial.le_totalDegree (p := p) (s := σ') _
+  · unfold MvPolynomial.totalDegree
+    rw [hσ2]
+    simp
+    rw [Finsupp.cons_sum]
+    -- rw
+  · rw [←MvPolynomial.support_coeff_finSuccEquiv]
+    exact hσ1
+  -- aesop?
+  -- unfold MvPolynomial.totalDegree
+  -- simp only [MvPolynomial.finSuccEquiv_apply, MvPolynomial.coe_eval₂Hom, bot_eq_zero', gt_iff_lt, add_pos_iff,
+  --   Finset.lt_sup_iff, MvPolynomial.mem_support_iff, ne_eq]
+
+
+
 
 -- Following the wikipedia proof
 -- I don't think that the wikipedia proof technique of starting at n=1 is necessary, so I start at n = 0
@@ -126,46 +197,33 @@ lemma schwartz_zippel (F : Type) [Field F] [DecidableEq F] (n : ℕ)
   | succ n ih =>
     intros p hp S
     -- We can then consider p to be a polynomial in x_1
-    let p' : Polynomial (MvPolynomial (Fin n) F) := MvPolynomial.finSuccEquiv F n p
+    set p' : Polynomial (MvPolynomial (Fin n) F) := MvPolynomial.finSuccEquiv F n p with hp'
     -- since p is not identically zero, there is some i such that p_i' is not identically zero
     -- take the largest such i
-    let i := p'.natDegree
-    let p_i' := Polynomial.coeff p' i
+    set i := p'.natDegree with hi
+    set p_i' := Polynomial.coeff p' i with hp_i'
 
     have h0 : (p'.coeff i).totalDegree + i ≤ (p.totalDegree) := by
-
-      sorry
+      apply foosdad
+      rw [←Polynomial.leadingCoeff]
+      rw [Polynomial.leadingCoeff_ne_zero]
+      exact Iff.mpr (AddEquivClass.map_ne_zero_iff (MvPolynomial.finSuccEquiv F n)) hp
+      -- unfold_let i
+      -- sorry
 
     have h1 : Polynomial.coeff p' i ≠ 0 := by
-      sorry
+      rw [hi]
+      rw [←Polynomial.leadingCoeff]
+      rw [Polynomial.leadingCoeff_ne_zero]
+      exact Iff.mpr (AddEquivClass.map_ne_zero_iff (MvPolynomial.finSuccEquiv F n)) hp
 
+    -- done
 
     replace ih := ih p_i' h1 S
-    -- Pr[p(r_1, r_2 ..., r_n) = 0 | p'_i(r_2, ..., r_n) ≠ 0 ] ≤ i / S.card
 
-    -- have h2 :
-    --   (Finset.card
-    --     (Finset.filter
-    --       (fun (r : Fin (n+1) → F) ↦
-    --         (MvPolynomial.eval (r : Fin (n+1) → F )) p ≠ 0
-    --         ∧ MvPolynomial.eval (r ∘ Fin.succ) p_i' ≠ 0)
-    --       (function_finset (Fin (n+1)) F S)
-    --     ))
-    --   *
-    --   S.card
-    --   ≤
-    --   i *
-    --   (Finset.card
-    --     (Finset.filter
-    --       (fun r ↦ MvPolynomial.eval (r ∘ Fin.succ) p_i' ≠ 0)
-    --       (function_finset (Fin (n+1)) F S))) := by
-
-    --   sorry
 
     have h_p_i'_deg_le : MvPolynomial.totalDegree p_i' ≤ (MvPolynomial.totalDegree p - i) := by
-
-      sorry
-
+      exact Nat.le_sub_of_add_le h0
 
     -- Pr[B] ≤ (d - i)/|S|
     have h_first_half :
@@ -256,11 +314,49 @@ lemma schwartz_zippel (F : Type) [Field F] [DecidableEq F] (n : ℕ)
           apply le_of_eq
           rw [Fintype.card_piFinset]
           simp only [Finset.prod_const, Finset.card_fin]
-        · intros b hb
+        · intros r hr
           simp only [Equiv.invFun_as_coe, Equiv.piFinSucc_symm_apply]
-          -- Diamond!
-          apply le_trans _ (Polynomial.card_roots' (p'))
-          sorry
+          -- apply le_trans _ (Polynomial.card_roots' (p'))
+          simp_rw [MvPolynomial.eval_eq_eval_mv_eval']
+          rw [←hp']
+          -- simp_rw [] at hr
+          simp only [←hp',
+            Fintype.mem_piFinset, Finset.mem_filter] at hr
+          -- hr2 is in wikipedia P_i(r_2, ... , r_n) ≠ 0
+          rcases hr with ⟨hr1, hr2⟩
+          -- my pr is wikis P(x_1, r_2, ... r_n) = ∑ x_1^i P_i(r_2, ... r_n)
+          save
+          set p_r := (Polynomial.map (MvPolynomial.eval r) p') with hp_r
+          have : p_r.natDegree = i := by
+            rw [<-hi] at hr2
+            rw [hp_r]
+            rw [hi]
+            apply Polynomial.natDegree_map_of_leadingCoeff_ne_zero
+            -- rw [Polynomial.natDegree_map_eq_iff (f := MvPolynomial.eval r) p']
+            unfold Polynomial.leadingCoeff
+            exact hr2
+          rw [←hi, ←this]
+          apply le_trans _ (Polynomial.card_roots' _)
+          apply le_trans _ (Multiset.toFinset_card_le _)
+          apply Finset.card_le_of_subset
+          rw [Finset.subset_iff]
+          intro x
+          rw [Finset.mem_filter,
+            Multiset.mem_toFinset, Polynomial.mem_roots', ne_eq, and_imp]
+          intros XS hxr
+          rw [Polynomial.IsRoot.def]
+          rw [hxr]
+          -- rw [refl]
+          simp only [<-hp_r, and_true]
+          intro hpr_zero
+          contrapose! hr2
+          rw [<-hp'] at *
+          rw [hpr_zero] at this
+          rw [Polynomial.natDegree_zero] at this
+          rw [<-hi, <-this]
+          have bar : p_r.coeff 0 = 0 := by simp [hpr_zero]
+          rw [←bar]
+          simp only [MvPolynomial.finSuccEquiv_apply, MvPolynomial.coe_eval₂Hom, Polynomial.coeff_map]
       · -- Note Polynomial.coeff_natDegree, MvPolynomial.finSuccEquiv_apply, MvPolynomial.coe_eval₂Hom, are triggering but I don't want them
         unfold function_finset
         simp only [
@@ -340,7 +436,6 @@ lemma schwartz_zippel (F : Type) [Field F] [DecidableEq F] (n : ℕ)
         rw [Pi.le_def]
         intro i
         aesop
-      --
       _ ≤ ((MvPolynomial.totalDegree p - i) * (Finset.card S) ^ n
           +
           (i) * (Finset.card S) ^ n
@@ -350,56 +445,6 @@ lemma schwartz_zippel (F : Type) [Field F] [DecidableEq F] (n : ℕ)
         apply add_le_add
         exact h_first_half
         exact h_second_half
-      -- -- Pr [B] + Pr [A ∩ Bᶜ]
-      -- _ =
-      -- Finset.card
-      --   (Finset.filter
-      --     (fun r ↦ MvPolynomial.eval (r ∘ Fin.succ) p_i' = 0)
-      --     (function_finset (Fin (Nat.succ n)) F S))
-      -- * Finset.card S
-      -- +
-      -- Finset.card
-      --   (Finset.filter
-      --     (fun r ↦ MvPolynomial.eval r p = 0 ∧ MvPolynomial.eval (r ∘ Fin.succ) p_i' ≠ 0)
-      --     (function_finset (Fin (Nat.succ n)) F S))
-      -- * Finset.card S := by
-      --   rw [add_mul]
-      --   done
-      -- -- Pr [B] + Pr [A | Bᶜ]
-      -- -- _ ≤
-      -- -- Finset.card
-      -- --   (Finset.filter
-      -- --     (fun r ↦ MvPolynomial.eval (r ∘ Fin.succ) p_i' = 0)
-      -- --     (function_finset (Fin (Nat.succ n)) F S))
-      -- -- * Finset.card S
-      -- -- +
-      -- -- i *
-      -- -- (Finset.card
-      -- --   (Finset.filter
-      -- --     (fun r ↦ MvPolynomial.eval (r ∘ Fin.succ) p_i' ≠ 0)
-      -- --     (function_finset (Fin (n+1)) F S))) := by
-      -- --   rw [add_le_add_iff_left]
-
-
-      -- --   sorry
-      -- -- todo
-      -- _ ≤
-      -- (MvPolynomial.totalDegree p_i' * Finset.card S ^ n)
-      -- * Finset.card S
-      -- +
-      -- i *
-      -- (Finset.card
-      --   (Finset.filter
-      --     (fun r ↦ MvPolynomial.eval (r ∘ Fin.succ) p_i' ≠ 0)
-      --     (function_finset (Fin (n+1)) F S))) := by
-      --   -- sorry
-      --   -- simp
-      --   -- congr 2
-
-      --   apply add_le_add_right
-      --   -- need to rewrite LHS to have ... * S.card * S.card
-      --   exact ih
-      --   -- sorry
       _ ≤
       MvPolynomial.totalDegree p * Finset.card S ^ Nat.succ n := by
         rw [Nat.pow_succ]

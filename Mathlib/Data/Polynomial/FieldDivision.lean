@@ -143,6 +143,18 @@ theorem map_ne_zero [Semiring S] [Nontrivial S] {f : R →+* S} (hp : p ≠ 0) :
   mt (map_eq_zero f).1 hp
 #align polynomial.map_ne_zero Polynomial.map_ne_zero
 
+@[simp]
+theorem degree_map [Semiring k] [Nontrivial k] (p : R[X]) (f : R →+* k) :
+    degree (p.map f) = degree p :=
+  p.degree_map_eq_of_injective f.injective
+#align polynomial.degree_map Polynomial.degree_map
+
+@[simp]
+theorem natDegree_map [Semiring k] [Nontrivial k] (f : R →+* k) :
+    natDegree (p.map f) = natDegree p :=
+  natDegree_eq_of_degree_eq (degree_map _ f)
+#align polynomial.nat_degree_map Polynomial.natDegree_map
+
 end DivisionRing
 
 section Field
@@ -270,16 +282,6 @@ theorem degree_div_lt (hp : p ≠ 0) (hq : 0 < degree q) : degree (p / q) < degr
       degree_divByMonic_lt _ (monic_mul_leadingCoeff_inv hq0) hp
         (by rw [degree_mul_leadingCoeff_inv _ hq0]; exact hq)
 #align polynomial.degree_div_lt Polynomial.degree_div_lt
-
-@[simp]
-theorem degree_map [DivisionRing k] (p : R[X]) (f : R →+* k) : degree (p.map f) = degree p :=
-  p.degree_map_eq_of_injective f.injective
-#align polynomial.degree_map Polynomial.degree_map
-
-@[simp]
-theorem natDegree_map [DivisionRing k] (f : R →+* k) : natDegree (p.map f) = natDegree p :=
-  natDegree_eq_of_degree_eq (degree_map _ f)
-#align polynomial.nat_degree_map Polynomial.natDegree_map
 
 @[simp]
 theorem leadingCoeff_map [DivisionRing k] (f : R →+* k) :
