@@ -11,6 +11,7 @@ import Mathlib.CategoryTheory.Limits.Final
 import Mathlib.CategoryTheory.Limits.FunctorCategory
 import Mathlib.CategoryTheory.Limits.KanExtension
 import Mathlib.CategoryTheory.Limits.Shapes.Terminal
+import Mathlib.CategoryTheory.Limits.Shapes.Products
 import Mathlib.CategoryTheory.Limits.Types
 import Mathlib.CategoryTheory.Limits.Over
 
@@ -484,12 +485,148 @@ lemma a : 0 = 0 := rfl
 
 variable {I : Type v₁} [SmallCategory I] (α : I ⥤ C)
 
-def terribleEquiv (A : Cᵒᵖ ⥤ Type v₁) : Over A ≌ ((CostructuredArrow yoneda A)ᵒᵖ ⥤ Type v₁) :=
-  sorry
+@[simps]
+def blub (A : Cᵒᵖ ⥤ Type v₁) (t : Over A) : (CostructuredArrow yoneda A)ᵒᵖ ⥤ Type v₁ where
+  obj := fun s => { f : t.left.obj (Opposite.op s.unop.left) // yonedaEquiv.symm f ≫ t.hom = s.unop.hom }
+  map := fun {s s'} f x => by
+    refine' ⟨t.left.map f.unop.left.op x.1, _⟩
+    erw [yonedaEquiv_symm_map f.unop.left.op]
+    rw [Category.assoc]
+    erw [x.2]
+    exact f.unop.w
+
+@[simps]
+def terribleFunctor (A : Cᵒᵖ ⥤ Type v₁) : Over A ⥤ (CostructuredArrow yoneda A)ᵒᵖ ⥤ Type v₁ where
+  obj := blub A
+  map {t t'} η :=
+    { app := fun s x => by
+        dsimp
+        dsimp at x
+        refine' ⟨η.left.app _ x.1, _⟩
+        have := η.w
+        dsimp at this
+        rw [Category.comp_id] at this
+        simp only [← x.2, ← this]
+        rw [← Category.assoc]
+        congr 1
+        apply yonedaEquiv.injective
+        rw [Equiv.apply_symm_apply]
+        rw [yonedaEquiv_apply]
+        simp
+      naturality := fun s s' f => by
+        dsimp
+        ext x
+        dsimp
+        have := (η.left.naturality f.unop.left.op)
+        exact congr_fun this x.1 }
+
+@[simps]
+noncomputable def bla (A : Cᵒᵖ ⥤ Type v₁) (F : (CostructuredArrow yoneda A)ᵒᵖ ⥤ Type v₁) :
+    Cᵒᵖ ⥤ Type v₁ where
+  obj := fun X => ∐ fun (s : A.obj X) => F.obj (Opposite.op (CostructuredArrow.mk (yonedaEquiv.symm s)))
+  map := fun {X Y} f => by
+    refine' Sigma.desc (fun s => (fun x => _) ≫ Sigma.ι _ (A.map f s))
+    refine' F.map (Quiver.Hom.op (CostructuredArrow.homMk _ _)) x
+    dsimp
+    exact f.unop
+    exact (yonedaEquiv_symm_map _ _).symm
+  map_id := fun X => by
+    apply Sigma.hom_ext
+    intro s
+    simp
+    sorry
+  map_comp := fun {X Y Z} f g => by
+    apply Sigma.hom_ext
+    intro s
+    simp
+    sorry
+
+@[simps]
+noncomputable def bloink (A : Cᵒᵖ ⥤ Type v₁) (F : (CostructuredArrow yoneda A)ᵒᵖ ⥤ Type v₁) :
+    bla A F ⟶ A where
+  app X := Sigma.desc (fun s _ => s)
+
+@[simps]
+noncomputable def terribleReverse (A : Cᵒᵖ ⥤ Type v₁) : ((CostructuredArrow yoneda A)ᵒᵖ ⥤ Type v₁) ⥤ Over A where
+  obj F := Over.mk (bloink A F)
+  map {F G} η := by
+    refine' Over.homMk _ _
+    · refine' ⟨fun X => Sigma.desc (fun s => _ ≫ Sigma.ι _ s), _⟩
+      · exact η.app (Opposite.op (CostructuredArrow.mk (yonedaEquiv.symm s)))
+      · intros X Y f
+        sorry
+        -- apply Sigma.hom_ext
+        -- intro s
+        -- dsimp
+        -- simp
+        -- erw [colimit.ι_desc_assoc, colimit.ι_desc]
+        -- simp
+        -- rw [← Category.assoc, ← Category.assoc]
+        -- congr 1
+    · ext1
+      ext1 X
+      simp
+      apply Sigma.hom_ext
+      intro s
+      simp
+      erw [colimit.ι_desc, colimit.ι_desc]
+      dsimp
+      ext x
+      rfl
+  map_id := fun F => by
+    apply Over.OverMorphism.ext
+    simp
+    ext1
+    ext1 X
+    simp
+    apply Sigma.hom_ext
+    intro s
+    simp
+  map_comp := fun {F G H} η μ => by
+    apply Over.OverMorphism.ext
+    simp
+    ext1
+    ext1 X
+    simp
+    apply Sigma.hom_ext
+    intro s
+    simp
+
+noncomputable def terribleEquiv (A : Cᵒᵖ ⥤ Type v₁) : Over A ≌ ((CostructuredArrow yoneda A)ᵒᵖ ⥤ Type v₁) := by
+  refine' Equivalence.mk (terribleFunctor A) (terribleReverse A) _ _
+  · refine' NatIso.ofComponents (fun F => Over.isoMk (NatIso.ofComponents (fun X => _) _) _) _
+    · dsimp
+      refine' ⟨fun x => _, _, _, _⟩
+      · refine' Sigma.ι (fun s => { x : F.left.obj X // yonedaEquiv.symm x ≫ F.hom = yonedaEquiv.symm s }) (yonedaEquiv (yonedaEquiv.symm x ≫ F.hom)) ⟨x, _⟩
+        rw [Equiv.symm_apply_apply]
+      · refine' Sigma.desc (fun s x => x.1)
+      · aesop_cat
+      · apply Sigma.hom_ext
+        intro s
+        simp
+        ext x
+        simp
+
+
+
+
+        sorry
+    · sorry
+    · sorry
+    · sorry
+  · sorry
 
 def terribleTriangle (A : Cᵒᵖ ⥤ Type v₁) :
-    CostructuredArrow.toOver yoneda A ⋙ (terribleEquiv A).functor ≅ yoneda :=
-  sorry
+    CostructuredArrow.toOver yoneda A ⋙ terribleFunctor A ≅ yoneda :=
+  NatIso.ofComponents (fun X => by
+    refine' NatIso.ofComponents (fun Y => _) _
+    · dsimp
+      refine' ⟨fun f => _, fun f => _, _, _⟩
+      · refine' CostructuredArrow.homMk f.1 f.2
+      · refine' ⟨f.left, f.w⟩
+      · aesop_cat
+      · aesop_cat
+    · aesop_cat) (by aesop_cat)
 
 def Over.mkIdTerminal (A : C) : IsTerminal (Over.mk (𝟙 A)) :=
   CostructuredArrow.mkIdTerminal
