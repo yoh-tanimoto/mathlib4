@@ -501,7 +501,7 @@ def terribleFunctor (A : Cᵒᵖ ⥤ Type v₁) : Over A ⥤ (CostructuredArrow 
   map {t t'} η :=
     { app := fun s x => by
         dsimp
-        dsimp at x
+        dsimp at yx
         refine' ⟨η.left.app _ x.1, _⟩
         have := η.w
         dsimp at this
