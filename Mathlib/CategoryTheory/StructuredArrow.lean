@@ -38,10 +38,6 @@ def StructuredArrow (S : D) (T : C ⥤ D) :=
   Comma (Functor.fromPUnit S) T
 #align category_theory.structured_arrow CategoryTheory.StructuredArrow
 
-structure StructuredArrowHom (S : D) (T : C ⥤ D) (f g : StructuredArrow S T) : Type v₁ where
-  h : f.right ⟶ g.right
-  prop : f.hom ≫ T.map h = g.hom
-
 -- Porting note: not found by inferInstance
 instance (S : D) (T : C ⥤ D) : Category (StructuredArrow S T) := commaCategory
 
