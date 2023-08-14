@@ -315,6 +315,24 @@ end IsGalois
 
 end GaloisCorrespondence
 
+section GaloisQuotient
+
+open IntermediateField
+
+variable {K L : Type*} [Field K] [Field L] [Algebra K L] [Normal K L] [FiniteDimensional K L] (H : Subgroup (L ≃ₐ[K] L))
+
+def tada [H.Normal] [Finite H] : (fixedField H ≃ₐ[K] fixedField H) ≃* (L ≃ₐ[K] L) ⧸ H := by
+  have h0 : Normal K (fixedField H) := sorry
+  let π : (L ≃ₐ[K] L) →* (fixedField H ≃ₐ[K] fixedField H) :=
+    AlgEquiv.restrictNormalHom (fixedField H)
+  have h2 := QuotientGroup.quotientKerEquivOfSurjective π (AlgEquiv.restrictNormalHom_surjective L)
+  have h3 : π.ker = H := by
+    have h4 := fixingSubgroup_fixedField H
+    sorry
+  -- some congr lemma
+
+end GaloisQuotient
+
 section GaloisEquivalentDefinitions
 
 variable (F : Type*) [Field F] (E : Type*) [Field E] [Algebra F E]
