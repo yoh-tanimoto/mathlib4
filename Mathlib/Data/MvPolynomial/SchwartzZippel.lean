@@ -1,17 +1,7 @@
 
-import Mathlib.Data.MvPolynomial.Basic
-import Mathlib.Data.Polynomial.Basic
-import Mathlib.Data.Polynomial.Eval
-import Mathlib.Data.MvPolynomial.CommRing
-import Mathlib.Data.MvPolynomial.Variables
-import Mathlib.Data.Fintype.Pi
-import Mathlib.Logic.Embedding.Basic
-import Mathlib.Algebra.Hom.Ring
-import Mathlib.Tactic.ClearExcept
+
 import Mathlib.Data.MvPolynomial.Equiv
-import Mathlib.Algebra.BigOperators.Basic
 import Mathlib.Data.Polynomial.RingDivision
--- import Mathlib.RingTheory.Polynomial.Basic
 
 open BigOperators
 
