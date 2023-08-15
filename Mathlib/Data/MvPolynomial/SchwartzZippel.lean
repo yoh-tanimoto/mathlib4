@@ -78,10 +78,10 @@ lemma MvPolynomial.totalDegree_coeff_finSuccEquiv_add_le {F} [CommSemiring F] (n
     exact hσ1
 
 /-- MvPolynomials over an empty type of variables are always constant -/
-lemma MvPolynomial.eq_C_of_empty {F σ} [CommSemiring F] [h : IsEmpty σ]
+lemma MvPolynomial.eq_C_of_empty {F σ} [CommSemiring F] [IsEmpty σ]
   (p : MvPolynomial σ F) : p = C (p.coeff 0) := by
   ext m
-  rw [Subsingleton.eq_zero m, coeff_C]
+  rw [Subsingleton.eq_zero m]
   simp
 
 end find_home
