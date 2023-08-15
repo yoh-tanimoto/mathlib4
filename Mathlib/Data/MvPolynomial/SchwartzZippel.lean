@@ -36,18 +36,13 @@ lemma Fin.cons_mem_piFinset_iff {F} {n : ℕ} (a : (Fin n → F)) (b: F) (S : Fi
     constructor
     · exact fun a_1 ↦ ha_1 (succ a_1)
     · exact ha_1 0
-  · intro ha1 a1
-    cases Fin.eq_zero_or_eq_succ a1
-    · simp_all only [cons_zero]
-    · rename_i h
-      unhygienic with_reducible aesop_destruct_products
-      aesop_subst h_1
-      simp_all only [cons_succ]
+  · intro ⟨ha11, ha12⟩ a1
+    rcases Fin.eq_zero_or_eq_succ a1 with rfl | ⟨j, rfl⟩
+    · rwa [cons_zero]
+    · rw [cons_succ]
+      exact ha11 j
 
-@[simp]
-lemma Fin.cons_comp_succ {F} {n : ℕ} (a : (Fin n → F)) (b : F) :
-    @Fin.cons _ (fun _ => F) b a ∘ Fin.succ = a := by
-  apply Eq.refl
+
 
 lemma and_or_and_not_iff (p q : Prop) : ((p ∧ q) ∨ (p ∧ ¬ q)) ↔ p := by
   tauto
@@ -176,8 +171,7 @@ lemma schwartz_zippel (F : Type) [Field F] [DecidableEq F] (n : ℕ)
           rw [Fin.cons_mem_piFinset_iff]
           constructor
           · exact ⟨b_mem_ffS, a_mem_S⟩
-          · rw [Fin.cons_comp_succ]
-            exact eval_b_zero
+          · exact eval_b_zero
         · intros ab1 ab2 _ _ hmkeq
           simp only [Fin.cons_eq_cons] at hmkeq
           exact Iff.mpr Prod.ext_iff hmkeq
@@ -275,7 +269,7 @@ lemma schwartz_zippel (F : Type) [Field F] [DecidableEq F] (n : ℕ)
       · -- Note Polynomial.coeff_natDegree, MvPolynomial.finSuccEquiv_apply, MvPolynomial.coe_eval₂Hom, are triggering but I don't want them
         unfold function_finset
         simp only [
-          Equiv.piFinSucc_symm_apply, Finset.mem_map_equiv, Fintype.mem_piFinset, Function.comp_apply, Fin.cons_comp_succ,
+          Equiv.piFinSucc_symm_apply, Finset.mem_map_equiv, Fintype.mem_piFinset, Function.comp_apply,
           Prod.forall, Finset.mem_filter, Equiv.invFun_as_coe]
         intros a b
         -- TODO write unfold_projs tactic in Lean 4
