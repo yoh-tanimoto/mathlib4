@@ -11,9 +11,11 @@ import Mathlib.Tactic.ClearExcept
 import Mathlib.Data.MvPolynomial.Equiv
 import Mathlib.Algebra.BigOperators.Basic
 import Mathlib.Data.Polynomial.RingDivision
-import Mathlib.RingTheory.Polynomial.Basic
+-- import Mathlib.RingTheory.Polynomial.Basic
 
 open BigOperators
+
+section find_home
 
 /--
 Given a finite type and a finset , returns the finite set of all functions with range contained in
@@ -25,7 +27,7 @@ def function_finset (A : Type) (B : Type) [DecidableEq A] [Fintype A] (S : Finse
 -- TODO generalize to dependent piFinset
 @[simp]
 lemma Fin.cons_mem_piFinset_iff {F} {n : ℕ} (a : (Fin n → F)) (b: F) (S : Finset F) :
-    @Fin.cons _ (fun _ => F) b a ∈ Fintype.piFinset (fun _ => S)
+    @Fin.cons _ _ b a ∈ Fintype.piFinset (fun _ => S)
     ↔
     a ∈ Fintype.piFinset (fun _ => S)
     ∧
@@ -42,16 +44,11 @@ lemma Fin.cons_mem_piFinset_iff {F} {n : ℕ} (a : (Fin n → F)) (b: F) (S : Fi
     · rw [cons_succ]
       exact ha11 j
 
-
-
 lemma and_or_and_not_iff (p q : Prop) : ((p ∧ q) ∨ (p ∧ ¬ q)) ↔ p := by
   tauto
 
 lemma and_and_and_not_iff (p q : Prop) : ((p ∧ q) ∧ (p ∧ ¬ q)) ↔ false := by
   tauto
-
-lemma mk_prod_of_proj (A B : Type) (ab : A × B) : (ab.fst, ab.snd) = ab := by
-  exact rfl
 
 lemma Finsupp.cons_sum (n : ℕ) (σ: Fin n →₀ ℕ) {i : ℕ} : (Finsupp.sum σ (fun _ e ↦ e)) + i = Finsupp.sum (Finsupp.cons i σ) fun _ e ↦ e := by
 
@@ -65,11 +62,12 @@ lemma Finsupp.cons_sum (n : ℕ) (σ: Fin n →₀ ℕ) {i : ℕ} : (Finsupp.sum
   · rw [Finsupp.sum_fintype]
     simp
 
-lemma MvPolynomial.support_nonempty_iff {F σ} [Field F] (p : MvPolynomial σ F) :
+@[simp]
+lemma MvPolynomial.support_nonempty_iff {F σ} [CommSemiring F] (p : MvPolynomial σ F) :
     (MvPolynomial.support p).Nonempty ↔ p ≠ 0 := by
   rw [ne_eq, ←MvPolynomial.support_eq_empty, Finset.nonempty_iff_ne_empty]
 
-lemma MvPolynomial.totalDegree_coeff_finSuccEquiv_add_le {F} [Field F] (n: ℕ)
+lemma MvPolynomial.totalDegree_coeff_finSuccEquiv_add_le {F} [CommSemiring F] (n: ℕ)
   (p : MvPolynomial (Fin (Nat.succ n)) F)
   (i : ℕ)
   (hi : (Polynomial.coeff ((MvPolynomial.finSuccEquiv F n) p) i) ≠ 0) :
@@ -78,7 +76,7 @@ lemma MvPolynomial.totalDegree_coeff_finSuccEquiv_add_le {F} [Field F] (n: ℕ)
   have hp'_sup : (Polynomial.coeff ((MvPolynomial.finSuccEquiv F n) p) i).support.Nonempty := by
     rw [MvPolynomial.support_nonempty_iff]
     exact hi
-  -- Let sigma be a monomial index of (Polynomial.coeff ((MvPolynomial.finSuccEquiv F n) p) i) of
+  -- Let σ be a monomial index of (Polynomial.coeff ((MvPolynomial.finSuccEquiv F n) p) i) of
   -- maximal total degree
   have ⟨σ, hσ1, hσ2⟩ := Finset.exists_mem_eq_sup (MvPolynomial.support _) hp'_sup
                           (fun s => Finsupp.sum s fun _ e => e)
@@ -89,16 +87,14 @@ lemma MvPolynomial.totalDegree_coeff_finSuccEquiv_add_le {F} [Field F] (n: ℕ)
   · rw [←MvPolynomial.support_coeff_finSuccEquiv]
     exact hσ1
 
-/-- MvPolynomials over a type of variables are always constant -/
-lemma MvPolynomial.eq_C_of_empty {F σ} [Field F] [h : IsEmpty σ]
+/-- MvPolynomials over an empty type of variables are always constant -/
+lemma MvPolynomial.eq_C_of_empty {F σ} [CommSemiring F] [h : IsEmpty σ]
   (p : MvPolynomial σ F) : p = C (p.coeff 0) := by
   ext m
-  have m0 : m = 0 := by
-    ext a
-    by_contra
-    exact IsEmpty.false a
-  rw [m0]
+  rw [Subsingleton.eq_zero m, coeff_C]
   simp
+
+end find_home
 
 -- Following the wikipedia proof
 -- I don't think that the wikipedia proof technique of starting at n=1 is necessary, so I start at n = 0
@@ -160,7 +156,7 @@ lemma schwartz_zippel (F : Type) [Field F] [DecidableEq F] (n : ℕ)
       _ ≤ (MvPolynomial.totalDegree p_i') * (Finset.card S) ^ n := by
         convert ih
         rw [mul_comm, ←Finset.card_product, eq_comm]
-        apply Finset.card_congr (fun ab _ => (@Fin.cons _ (fun _ => F)) ab.fst ab.snd )
+        apply Finset.card_congr (fun ab _ => Fin.cons ab.fst ab.snd )
         · intro ab ha
           rcases ab with ⟨a, b⟩
           rw [Finset.mem_product, Finset.mem_filter] at ha
