@@ -28,7 +28,7 @@ lemma cases_fin_succ (n : ℕ) (a: Fin (n + 1)) : a = 0 ∨ ∃ b : Fin n, a = F
   exact Fin.eq_zero_or_eq_succ a
 
 @[simp]
-lemma Fin.cons_mem_piFinset_iff {n : ℕ} (a : (Fin n → F)) (b: F)  (S : Finset F) :
+lemma Fin.cons_mem_piFinset_iff {F} {n : ℕ} (a : (Fin n → F)) (b: F)  (S : Finset F) :
     @Fin.cons _ (fun _ => F) b a ∈ Fintype.piFinset (fun _ => S)
     ↔
     a ∈ Fintype.piFinset (fun _ => S)
@@ -56,7 +56,7 @@ lemma Fin.cons_mem_piFinset_iff {n : ℕ} (a : (Fin n → F)) (b: F)  (S : Finse
       simp_all only [cons_succ]
 
 @[simp]
-lemma Fin.cons_comp_succ {n : ℕ} (a : (Fin n → F)) (b : F) :
+lemma Fin.cons_comp_succ {F} {n : ℕ} (a : (Fin n → F)) (b : F) :
     @Fin.cons _ (fun _ => F) b a ∘ Fin.succ = a := by
   apply Eq.refl
 
@@ -72,7 +72,7 @@ lemma mk_prod_of_proj (A B : Type) (ab : A × B) : (ab.fst, ab.snd) = ab := by
 lemma foos (a b : ℕ) (aa : a ≤ b ) (shj : b ≤ a) : a = b := by
   exact Nat.le_antisymm aa shj
 
-lemma Finsupp.cons_sum (n : ℕ) (σ: Fin n →₀ ℕ) : (Finsupp.sum σ (fun _ e ↦ e)) + i = Finsupp.sum (Finsupp.cons i σ) fun _ e ↦ e := by
+lemma Finsupp.cons_sum (n : ℕ) (σ: Fin n →₀ ℕ) {i : ℕ} : (Finsupp.sum σ (fun _ e ↦ e)) + i = Finsupp.sum (Finsupp.cons i σ) fun _ e ↦ e := by
 
   rw [eq_comm]
   simp_rw [add_comm]
@@ -84,13 +84,13 @@ lemma Finsupp.cons_sum (n : ℕ) (σ: Fin n →₀ ℕ) : (Finsupp.sum σ (fun _
   · rw [Finsupp.sum_fintype]
     simp
 
-lemma MvPolynomial.support_nonempty_iff [Field F] (p : MvPolynomial σ F) :
+lemma MvPolynomial.support_nonempty_iff {F σ} [Field F] (p : MvPolynomial σ F) :
   Finset.Nonempty (MvPolynomial.support p) ↔ p ≠ 0 := by
   simp
   rw [←MvPolynomial.support_eq_empty]
   rw [Finset.nonempty_iff_ne_empty]
 
-lemma foosdad [Field F] (n: ℕ)
+lemma foosdad {F} [Field F] (n: ℕ)
   (p : MvPolynomial (Fin (Nat.succ n)) F)
   (i : ℕ)
   (hi : (Polynomial.coeff ((MvPolynomial.finSuccEquiv F n) p) i) ≠ 0) :
