@@ -69,9 +69,6 @@ lemma and_and_and_not_iff (p q : Prop) : ((p ∧ q) ∧ (p ∧ ¬ q)) ↔ false 
 lemma mk_prod_of_proj (A B : Type) (ab : A × B) : (ab.fst, ab.snd) = ab := by
   exact rfl
 
-lemma foos (a b : ℕ) (aa : a ≤ b ) (shj : b ≤ a) : a = b := by
-  exact Nat.le_antisymm aa shj
-
 lemma Finsupp.cons_sum (n : ℕ) (σ: Fin n →₀ ℕ) {i : ℕ} : (Finsupp.sum σ (fun _ e ↦ e)) + i = Finsupp.sum (Finsupp.cons i σ) fun _ e ↦ e := by
 
   rw [eq_comm]
@@ -90,7 +87,7 @@ lemma MvPolynomial.support_nonempty_iff {F σ} [Field F] (p : MvPolynomial σ F)
   rw [←MvPolynomial.support_eq_empty]
   rw [Finset.nonempty_iff_ne_empty]
 
-lemma foosdad {F} [Field F] (n: ℕ)
+lemma MvPolynomial.totalDegree_coeff_finSuccEquiv_add_le {F} [Field F] (n: ℕ)
   (p : MvPolynomial (Fin (Nat.succ n)) F)
   (i : ℕ)
   (hi : (Polynomial.coeff ((MvPolynomial.finSuccEquiv F n) p) i) ≠ 0) :
@@ -155,7 +152,7 @@ lemma schwartz_zippel (F : Type) [Field F] [DecidableEq F] (n : ℕ)
     set i := p'.natDegree with hi
     set p_i' := Polynomial.coeff p' i with hp_i'
     have h0 : (p'.coeff i).totalDegree + i ≤ (p.totalDegree) := by
-      apply foosdad
+      apply MvPolynomial.totalDegree_coeff_finSuccEquiv_add_le
       rw [←Polynomial.leadingCoeff]
       rw [Polynomial.leadingCoeff_ne_zero]
       exact Iff.mpr (AddEquivClass.map_ne_zero_iff (MvPolynomial.finSuccEquiv F n)) hp
