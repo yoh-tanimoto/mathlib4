@@ -160,7 +160,7 @@ lemma schwartz_zippel (F : Type) [Field F] [DecidableEq F] (n : ℕ)
       calc
       _ ≤ (MvPolynomial.totalDegree p_i') * (Finset.card S) ^ n := by
         convert ih
-        rw [mul_comm, <-Finset.card_product, eq_comm]
+        rw [mul_comm, ←Finset.card_product, eq_comm]
         apply Finset.card_congr (fun ab _ => (@Fin.cons _ (fun _ => F)) ab.fst ab.snd )
         · intro ab ha
           rcases ab with ⟨a, b⟩
@@ -240,7 +240,7 @@ lemma schwartz_zippel (F : Type) [Field F] [DecidableEq F] (n : ℕ)
           save
           set p_r := (Polynomial.map (MvPolynomial.eval r) p') with hp_r
           have : p_r.natDegree = i := by
-            rw [<-hi] at hr2
+            rw [←hi] at hr2
             rw [hp_r]
             rw [hi]
             apply Polynomial.natDegree_map_of_leadingCoeff_ne_zero
@@ -259,13 +259,13 @@ lemma schwartz_zippel (F : Type) [Field F] [DecidableEq F] (n : ℕ)
           rw [Polynomial.IsRoot.def]
           rw [hxr]
           -- rw [refl]
-          simp only [<-hp_r, and_true]
+          simp only [←hp_r, and_true]
           intro hpr_zero
           contrapose! hr2
-          rw [<-hp'] at *
+          rw [←hp'] at *
           rw [hpr_zero] at this
           rw [Polynomial.natDegree_zero] at this
-          rw [<-hi, <-this]
+          rw [←hi, ←this]
           have bar : p_r.coeff 0 = 0 := by simp [hpr_zero]
           rw [←bar]
           simp only [MvPolynomial.finSuccEquiv_apply, MvPolynomial.coe_eval₂Hom, Polynomial.coeff_map]
@@ -319,11 +319,11 @@ lemma schwartz_zippel (F : Type) [Field F] [DecidableEq F] (n : ℕ)
       )
       * Finset.card S := by
         congr
-        rw [<-Finset.card_union_add_card_inter]
+        rw [←Finset.card_union_add_card_inter]
         rw [Finset.filter_union_right]
         -- todo note filter_or is the symm of this. Golf that proof.
         -- Also if filter and exists, maybe so should filter_inter_right
-        rw [<-Finset.filter_and]
+        rw [←Finset.filter_and]
         simp only [ne_eq, and_or_and_not_iff, and_and_and_not_iff]
         simp only [Finset.filter_False, Finset.card_empty, add_zero]
       -- Pr [B] + Pr [A ∩ Bᶜ]
@@ -359,7 +359,7 @@ lemma schwartz_zippel (F : Type) [Field F] [DecidableEq F] (n : ℕ)
         rw [Nat.pow_succ]
         rw [←mul_assoc]
         apply Nat.mul_le_mul_right
-        rw [<-add_mul]
+        rw [←add_mul]
         apply Nat.mul_le_mul_right
         apply le_of_eq
         apply Nat.sub_add_cancel
