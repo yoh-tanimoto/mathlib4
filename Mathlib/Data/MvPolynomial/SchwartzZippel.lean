@@ -22,33 +22,22 @@ that finset
 def function_finset (A : Type) (B : Type) [DecidableEq A] [Fintype A] (S : Finset B) : Finset (A -> B) :=
   Fintype.piFinset (fun _ => S)
 
-
-
-lemma cases_fin_succ (n : ℕ) (a: Fin (n + 1)) : a = 0 ∨ ∃ b : Fin n, a = Fin.succ b := by
-  exact Fin.eq_zero_or_eq_succ a
-
+-- TODO generalize to dependent piFinset
 @[simp]
-lemma Fin.cons_mem_piFinset_iff {F} {n : ℕ} (a : (Fin n → F)) (b: F)  (S : Finset F) :
+lemma Fin.cons_mem_piFinset_iff {F} {n : ℕ} (a : (Fin n → F)) (b: F) (S : Finset F) :
     @Fin.cons _ (fun _ => F) b a ∈ Fintype.piFinset (fun _ => S)
     ↔
     a ∈ Fintype.piFinset (fun _ => S)
     ∧
     b ∈ S := by
   simp only [Fintype.mem_piFinset]
-  simp at *
   constructor
   · intros ha_1
     constructor
-    · intro a_1
-      have foo := ha_1 (Fin.succ a_1)
-      simp at foo
-      exact foo
-    · have foo := ha_1 0
-      simp at foo
-      exact foo
+    · exact fun a_1 ↦ ha_1 (succ a_1)
+    · exact ha_1 0
   · intro ha1 a1
-    have foo := Fin.eq_zero_or_eq_succ a1
-    cases foo
+    cases Fin.eq_zero_or_eq_succ a1
     · simp_all only [cons_zero]
     · rename_i h
       unhygienic with_reducible aesop_destruct_products
@@ -82,30 +71,26 @@ lemma Finsupp.cons_sum (n : ℕ) (σ: Fin n →₀ ℕ) {i : ℕ} : (Finsupp.sum
     simp
 
 lemma MvPolynomial.support_nonempty_iff {F σ} [Field F] (p : MvPolynomial σ F) :
-  Finset.Nonempty (MvPolynomial.support p) ↔ p ≠ 0 := by
-  simp
-  rw [←MvPolynomial.support_eq_empty]
-  rw [Finset.nonempty_iff_ne_empty]
+    (MvPolynomial.support p).Nonempty ↔ p ≠ 0 := by
+  rw [ne_eq, ←MvPolynomial.support_eq_empty, Finset.nonempty_iff_ne_empty]
 
 lemma MvPolynomial.totalDegree_coeff_finSuccEquiv_add_le {F} [Field F] (n: ℕ)
   (p : MvPolynomial (Fin (Nat.succ n)) F)
   (i : ℕ)
   (hi : (Polynomial.coeff ((MvPolynomial.finSuccEquiv F n) p) i) ≠ 0) :
-    MvPolynomial.totalDegree (Polynomial.coeff ((MvPolynomial.finSuccEquiv F n) p) i) + i ≤ MvPolynomial.totalDegree p := by
-
-
+    MvPolynomial.totalDegree (Polynomial.coeff ((MvPolynomial.finSuccEquiv F n) p) i) + i
+      ≤ MvPolynomial.totalDegree p := by
   have hp'_sup : (Polynomial.coeff ((MvPolynomial.finSuccEquiv F n) p) i).support.Nonempty := by
     rw [MvPolynomial.support_nonempty_iff]
     exact hi
-  -- Let sigma be a monomial index of (Polynomial.coeff ((MvPolynomial.finSuccEquiv F n) p) i) of maximal total degree
-  have ⟨σ, hσ1, hσ2⟩ := Finset.exists_mem_eq_sup (MvPolynomial.support _) hp'_sup (fun s => Finsupp.sum s fun _ e => e)
+  -- Let sigma be a monomial index of (Polynomial.coeff ((MvPolynomial.finSuccEquiv F n) p) i) of
+  -- maximal total degree
+  have ⟨σ, hσ1, hσ2⟩ := Finset.exists_mem_eq_sup (MvPolynomial.support _) hp'_sup
+                          (fun s => Finsupp.sum s fun _ e => e)
+  -- Then cons i σ is a monomial index of p with total degree equal to the desired bound
   let σ' : Fin (n+1) →₀ ℕ := Finsupp.cons i σ
   convert MvPolynomial.le_totalDegree (p := p) (s := σ') _
-  · unfold MvPolynomial.totalDegree
-    rw [hσ2]
-    simp
-    rw [Finsupp.cons_sum]
-    -- rw
+  · rw [MvPolynomial.totalDegree, hσ2, Finsupp.cons_sum]
   · rw [←MvPolynomial.support_coeff_finSuccEquiv]
     exact hσ1
 
@@ -175,17 +160,8 @@ lemma schwartz_zippel (F : Type) [Field F] [DecidableEq F] (n : ℕ)
       calc
       _ ≤ (MvPolynomial.totalDegree p_i') * (Finset.card S) ^ n := by
         convert ih
-        rw [mul_comm, <-Finset.card_product]
-        apply Eq.symm
-        -- -- Potential golf: apply ext next
-        -- convert Finset.card_map (Equiv.toEmbedding (Equiv.piFinSucc n F))
-        -- rw [Finset.map_filter]
-        -- simp only [
-        --   Equiv.piFinSucc_symm_apply, Finset.mem_map_equiv, Function.comp_apply, Prod.forall]
-        -- done
-        -- --
-        apply Finset.card_congr
-          (fun ab _ => (@Fin.cons _ (fun _ => F)) ab.fst ab.snd )
+        rw [mul_comm, <-Finset.card_product, eq_comm]
+        apply Finset.card_congr (fun ab _ => (@Fin.cons _ (fun _ => F)) ab.fst ab.snd )
         · intro ab ha
           rcases ab with ⟨a, b⟩
           rw [Finset.mem_product, Finset.mem_filter] at ha
@@ -195,15 +171,12 @@ lemma schwartz_zippel (F : Type) [Field F] [DecidableEq F] (n : ℕ)
           unfold function_finset
           rw [Fin.cons_mem_piFinset_iff]
           constructor
-          · constructor
-            · exact b_mem_ffS
-            · exact a_mem_S
+          · exact ⟨b_mem_ffS, a_mem_S⟩
           · rw [Fin.cons_comp_succ]
             exact eval_b_zero
         · intros ab1 ab2 _ _ hmkeq
           simp only [Fin.cons_eq_cons] at hmkeq
-          rcases hmkeq with ⟨abfst, absnd⟩
-          exact Prod.ext abfst absnd
+          exact Iff.mpr Prod.ext_iff hmkeq
         · unfold function_finset
           intros b hb
           use (Equiv.piFinSucc n F).toFun b
@@ -321,9 +294,6 @@ lemma schwartz_zippel (F : Type) [Field F] [DecidableEq F] (n : ℕ)
           simp only [Fin.cons_mem_piFinset_iff]
           constructor
           · simp [hab1, hab2]
-            -- intro n'
-            -- clear hab3 hab1' h_p_i'_deg_le ih h1 h0 p_i' i p' hp p
-            -- apply @Fin.elim_succ F n (· ∈ S) a b hab1 hab2 n'
           · exact { left := hab3, right := hab1' }
 
 
