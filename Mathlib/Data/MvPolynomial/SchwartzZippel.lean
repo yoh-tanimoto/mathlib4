@@ -94,6 +94,17 @@ lemma MvPolynomial.totalDegree_coeff_finSuccEquiv_add_le {F} [Field F] (n: ℕ)
   · rw [←MvPolynomial.support_coeff_finSuccEquiv]
     exact hσ1
 
+/-- MvPolynomials over a type of variables are always constant -/
+lemma MvPolynomial.eq_C_of_empty {F σ} [Field F] [h : IsEmpty σ]
+  (p : MvPolynomial σ F) : p = C (p.coeff 0) := by
+  ext m
+  have m0 : m = 0 := by
+    ext a
+    by_contra
+    exact IsEmpty.false a
+  rw [m0]
+  simp
+
 -- Following the wikipedia proof
 -- I don't think that the wikipedia proof technique of starting at n=1 is necessary, so I start at n = 0
 lemma schwartz_zippel (F : Type) [Field F] [DecidableEq F] (n : ℕ)
@@ -106,20 +117,12 @@ lemma schwartz_zippel (F : Type) [Field F] [DecidableEq F] (n : ℕ)
   | zero =>
     intros p hp S
     convert Nat.zero_le (MvPolynomial.totalDegree p * Finset.card S ^ Nat.zero)
-    simp
+    simp only [Nat.zero_eq, Fin.forall_fin_zero_pi, mul_eq_zero, Finset.card_eq_zero]
     left
     convert Finset.filter_False (function_finset (Fin 0) F S)
-    simp
-    -- Because p is a polynomial over an empty set of variables, it is constant
-    have p_const : (p : MvPolynomial (Fin Nat.zero) F)
-        = ((MvPolynomial.C (p.coeff 0)) : MvPolynomial (Fin Nat.zero) F) := by
-        ext m
-        have m0 : m = 0 := by
-          ext a
-          by_contra
-          exact Fin.elim0 a
-        rw [m0]
-        simp
+    simp only [iff_false]
+    -- Because p is a polynomial over the (empty) type Fin 0 of variables, it is constant
+    have p_const := MvPolynomial.eq_C_of_empty p
     rw [p_const]
     simp only [Nat.zero_eq, MvPolynomial.eval_C, iff_false, ne_eq]
     contrapose! hp
@@ -146,10 +149,10 @@ lemma schwartz_zippel (F : Type) [Field F] [DecidableEq F] (n : ℕ)
       rw [←Polynomial.leadingCoeff]
       rw [Polynomial.leadingCoeff_ne_zero]
       exact Iff.mpr (AddEquivClass.map_ne_zero_iff (MvPolynomial.finSuccEquiv F n)) hp
+    -- We use the inductive hypothesis on p_i'
     replace ih := ih p_i' h1 S
-    have h_p_i'_deg_le : MvPolynomial.totalDegree p_i' ≤ (MvPolynomial.totalDegree p - i) := by
-      exact Nat.le_sub_of_add_le h0
-    -- Pr[B] ≤ (d - i)/|S|
+    -- We then split the set of possible zeros into a union of two cases:
+    -- In the first case, p_i' evaluates to 0.
     have h_first_half :
       Finset.card
         (Finset.filter
@@ -157,6 +160,7 @@ lemma schwartz_zippel (F : Type) [Field F] [DecidableEq F] (n : ℕ)
           (function_finset (Fin (Nat.succ n)) F S))
       ≤
       (MvPolynomial.totalDegree p - i) * (Finset.card S) ^ n := by
+      -- In this case, we bound the size of the set by the inductive hypothesis
       calc
       _ ≤ (MvPolynomial.totalDegree p_i') * (Finset.card S) ^ n := by
         convert ih
@@ -196,8 +200,9 @@ lemma schwartz_zippel (F : Type) [Field F] [DecidableEq F] (n : ℕ)
             refine Fin.cons_self_tail b
       _ ≤ _ := by
         apply Nat.mul_le_mul_right
-        exact h_p_i'_deg_le
+        exact Nat.le_sub_of_add_le h0
     save
+    -- In the second case p_i' does not evaluate to zero.
     have h_second_half :
       Finset.card
           (Finset.filter
@@ -205,18 +210,18 @@ lemma schwartz_zippel (F : Type) [Field F] [DecidableEq F] (n : ℕ)
             (function_finset (Fin (Nat.succ n)) F S))
       ≤
       (i) * (Finset.card S) ^ n := by
-      -- Use polynomial.card_roots or card_roots'
       clear h_first_half
-      -- rw [←Finset.card_congr
-      --     (fun (ab : F × (Fin n → F)) _ => mk_fin_succ_function ab.snd ab.fst)]
+      -- In this case, given r on which p_i' does not evaluate to zero, p' mapped over the
+      -- evaluation
+      -- on r of p_i' is a nonzero univariate polynomial of degree i.
+      -- There can therefore only be at most i zeros per r value.
       rw [←Finset.card_map (Equiv.toEmbedding (Equiv.piFinSucc n F))]
       rw [Finset.map_filter]
       rw [Finset.card_eq_sum_ones]
       rw [Finset.sum_finset_product_right _
             (s := (Finset.filter (fun r ↦ (MvPolynomial.eval (r)) p_i' ≠ 0)
               (function_finset (Fin (n)) F S)))
-            (t := fun r => Finset.filter (fun f => (MvPolynomial.eval ((Equiv.piFinSucc n F).invFun (f, r))) p = 0) S)]
-      -- Note that ((Equiv.piFinSucc n F).invFun (f, r)) can be more simply written with Fin.cons
+            (t := fun r => Finset.filter (fun f => (MvPolynomial.eval ((Equiv.piFinSucc n F).invFun (f, r))) p = 0) S)] -- Note that ((Equiv.piFinSucc n F).invFun (f, r)) can be more simply written with Fin.cons
       · unfold function_finset
         simp_rw [←Finset.card_eq_sum_ones]
         apply le_trans (Finset.sum_le_sum (g := fun _ => i) _)
@@ -228,10 +233,8 @@ lemma schwartz_zippel (F : Type) [Field F] [DecidableEq F] (n : ℕ)
           simp only [Finset.prod_const, Finset.card_fin]
         · intros r hr
           simp only [Equiv.invFun_as_coe, Equiv.piFinSucc_symm_apply]
-          -- apply le_trans _ (Polynomial.card_roots' (p'))
           simp_rw [MvPolynomial.eval_eq_eval_mv_eval']
           rw [←hp']
-          -- simp_rw [] at hr
           simp only [←hp',
             Fintype.mem_piFinset, Finset.mem_filter] at hr
           -- hr2 is in wikipedia P_i(r_2, ... , r_n) ≠ 0
@@ -297,7 +300,8 @@ lemma schwartz_zippel (F : Type) [Field F] [DecidableEq F] (n : ℕ)
           · exact { left := hab3, right := hab1' }
 
 
-
+    -- Putting these results together, we take a union bound over these two cases to finish the
+    -- induction
     calc
       -- Pr[A]
       Finset.card
