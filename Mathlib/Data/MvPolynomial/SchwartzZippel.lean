@@ -11,7 +11,7 @@ section find_home
 Given a finite type and a finset , returns the finite set of all functions with range contained in
 that finset
 -/
-def function_finset (A : Type) (B : Type) [DecidableEq A] [Fintype A] (S : Finset B) : Finset (A -> B) :=
+def function_finset (A : Type) {B : Type} [DecidableEq A] [Fintype A] (S : Finset B) : Finset (A -> B) :=
   Fintype.piFinset (fun _ => S)
 
 -- TODO generalize to dependent piFinset
@@ -84,11 +84,53 @@ lemma MvPolynomial.eq_C_of_empty {F σ} [CommSemiring F] [IsEmpty σ]
 
 end find_home
 
+
+lemma foosads {F: Type} [CommSemiring F] [DecidableEq F] (n: ℕ) (S: Finset F)
+  (p_i': MvPolynomial (Fin n) F) :
+    Finset.card
+      (S ×ˢ Finset.filter (fun f ↦ (MvPolynomial.eval f) p_i' = 0) (function_finset (Fin n) S))
+    =
+    Finset.card
+      (Finset.filter (fun r ↦ (MvPolynomial.eval (r ∘ Fin.succ)) p_i' = 0)
+        (function_finset (Fin (Nat.succ n)) S)) := by
+  apply Finset.card_congr (fun ab _ => Fin.cons ab.fst ab.snd )
+  · intro ab ha
+    rcases ab with ⟨a, b⟩
+    rw [Finset.mem_product, Finset.mem_filter] at ha
+    rcases ha with ⟨a_mem_S, b_mem_ffS, eval_b_zero⟩
+    rw [Finset.mem_filter]
+    simp only []
+    unfold function_finset
+    rw [Fin.cons_mem_piFinset_iff]
+    constructor
+    · exact ⟨b_mem_ffS, a_mem_S⟩
+    · exact eval_b_zero
+  · intros ab1 ab2 _ _ hmkeq
+    simp only [Fin.cons_eq_cons] at hmkeq
+    exact Iff.mpr Prod.ext_iff hmkeq
+  · unfold function_finset
+    intros b hb
+    use (Equiv.piFinSucc n F).toFun b
+    rw [exists_prop]
+    constructor
+    · simp only [Equiv.toFun_as_coe_apply, Equiv.piFinSucc_apply, Finset.mem_product, Finset.mem_filter, Fintype.mem_piFinset]
+      simp only [Finset.mem_filter, Fintype.mem_piFinset] at hb
+      rcases hb with ⟨hb, hb'⟩
+      constructor
+      · exact hb 0
+      · constructor
+        · intro a
+          apply hb
+        · exact hb'
+    · simp only [Equiv.toFun_as_coe_apply, Equiv.piFinSucc_apply]
+      -- The below is a simp lemma, so why does the above simp not close?
+      refine Fin.cons_self_tail b
+
 -- Following the wikipedia proof
 -- I don't think that the wikipedia proof technique of starting at n=1 is necessary, so I start at n = 0
 lemma schwartz_zippel (F : Type) [Field F] [DecidableEq F] (n : ℕ)
   (p : MvPolynomial (Fin (n)) F) (hp : p ≠ 0) (S : Finset F) :
-  (Finset.filter (fun f => MvPolynomial.eval f p = 0) (function_finset (Fin (n)) F S)).card * S.card
+  (Finset.filter (fun f => MvPolynomial.eval f p = 0) (function_finset (Fin (n)) S)).card * S.card
     ≤ (p.totalDegree) * S.card ^ (n)
 := by
   revert p hp S
@@ -98,7 +140,7 @@ lemma schwartz_zippel (F : Type) [Field F] [DecidableEq F] (n : ℕ)
     convert Nat.zero_le (MvPolynomial.totalDegree p * Finset.card S ^ Nat.zero)
     simp only [Nat.zero_eq, Fin.forall_fin_zero_pi, mul_eq_zero, Finset.card_eq_zero]
     left
-    convert Finset.filter_False (function_finset (Fin 0) F S)
+    convert Finset.filter_False (function_finset (Fin 0) S)
     simp only [iff_false]
     -- Because p is a polynomial over the (empty) type Fin 0 of variables, it is constant
     have p_const := MvPolynomial.eq_C_of_empty p
@@ -136,7 +178,7 @@ lemma schwartz_zippel (F : Type) [Field F] [DecidableEq F] (n : ℕ)
       Finset.card
         (Finset.filter
           (fun r ↦ MvPolynomial.eval (r ∘ Fin.succ) p_i' = 0)
-          (function_finset (Fin (Nat.succ n)) F S))
+          (function_finset (Fin (Nat.succ n)) S))
       ≤
       (MvPolynomial.totalDegree p - i) * (Finset.card S) ^ n := by
       -- In this case, we bound the size of the set by the inductive hypothesis
@@ -144,38 +186,7 @@ lemma schwartz_zippel (F : Type) [Field F] [DecidableEq F] (n : ℕ)
       _ ≤ (MvPolynomial.totalDegree p_i') * (Finset.card S) ^ n := by
         convert ih
         rw [mul_comm, ←Finset.card_product, eq_comm]
-        apply Finset.card_congr (fun ab _ => Fin.cons ab.fst ab.snd )
-        · intro ab ha
-          rcases ab with ⟨a, b⟩
-          rw [Finset.mem_product, Finset.mem_filter] at ha
-          rcases ha with ⟨a_mem_S, b_mem_ffS, eval_b_zero⟩
-          rw [Finset.mem_filter]
-          simp only []
-          unfold function_finset
-          rw [Fin.cons_mem_piFinset_iff]
-          constructor
-          · exact ⟨b_mem_ffS, a_mem_S⟩
-          · exact eval_b_zero
-        · intros ab1 ab2 _ _ hmkeq
-          simp only [Fin.cons_eq_cons] at hmkeq
-          exact Iff.mpr Prod.ext_iff hmkeq
-        · unfold function_finset
-          intros b hb
-          use (Equiv.piFinSucc n F).toFun b
-          rw [exists_prop]
-          constructor
-          · simp only [Equiv.toFun_as_coe_apply, Equiv.piFinSucc_apply, Finset.mem_product, Finset.mem_filter, Fintype.mem_piFinset]
-            simp only [Finset.mem_filter, Fintype.mem_piFinset] at hb
-            rcases hb with ⟨hb, hb'⟩
-            constructor
-            · exact hb 0
-            · constructor
-              · intro a
-                apply hb
-              · exact hb'
-          · simp only [Equiv.toFun_as_coe_apply, Equiv.piFinSucc_apply]
-            -- The below is a simp lemma, so why does the above simp not close?
-            refine Fin.cons_self_tail b
+        rw [foosads]
       _ ≤ _ := by
         apply Nat.mul_le_mul_right
         exact Nat.le_sub_of_add_le h0
@@ -185,7 +196,7 @@ lemma schwartz_zippel (F : Type) [Field F] [DecidableEq F] (n : ℕ)
       Finset.card
           (Finset.filter
             (fun r ↦ MvPolynomial.eval r p = 0 ∧ MvPolynomial.eval (r ∘ Fin.succ) p_i' ≠ 0)
-            (function_finset (Fin (Nat.succ n)) F S))
+            (function_finset (Fin (Nat.succ n)) S))
       ≤
       (i) * (Finset.card S) ^ n := by
       clear h_first_half
@@ -198,7 +209,7 @@ lemma schwartz_zippel (F : Type) [Field F] [DecidableEq F] (n : ℕ)
       rw [Finset.card_eq_sum_ones]
       rw [Finset.sum_finset_product_right _
             (s := (Finset.filter (fun r ↦ (MvPolynomial.eval (r)) p_i' ≠ 0)
-              (function_finset (Fin (n)) F S)))
+              (function_finset (Fin (n)) S)))
             (t := fun r => Finset.filter (fun f => (MvPolynomial.eval ((Equiv.piFinSucc n F).invFun (f, r))) p = 0) S)] -- Note that ((Equiv.piFinSucc n F).invFun (f, r)) can be more simply written with Fin.cons
       · unfold function_finset
         simp_rw [←Finset.card_eq_sum_ones]
@@ -285,19 +296,19 @@ lemma schwartz_zippel (F : Type) [Field F] [DecidableEq F] (n : ℕ)
       Finset.card
         (Finset.filter
           (fun r ↦ MvPolynomial.eval r p = 0)
-          (function_finset (Fin (Nat.succ n)) F S))
+          (function_finset (Fin (Nat.succ n)) S))
       * Finset.card S
       =
       -- Pr [A ∩ B] + Pr [A ∩ Bᶜ]
       (Finset.card
         (Finset.filter
           (fun r ↦ MvPolynomial.eval r p = 0 ∧ MvPolynomial.eval (r ∘ Fin.succ) p_i' = 0)
-          (function_finset (Fin (Nat.succ n)) F S))
+          (function_finset (Fin (Nat.succ n)) S))
       +
       Finset.card
         (Finset.filter
           (fun r ↦ MvPolynomial.eval r p = 0 ∧ MvPolynomial.eval (r ∘ Fin.succ) p_i' ≠ 0)
-          (function_finset (Fin (Nat.succ n)) F S))
+          (function_finset (Fin (Nat.succ n)) S))
       )
       * Finset.card S := by
         congr
@@ -312,12 +323,12 @@ lemma schwartz_zippel (F : Type) [Field F] [DecidableEq F] (n : ℕ)
       _ ≤ (Finset.card
         (Finset.filter
           (fun r ↦ MvPolynomial.eval (r ∘ Fin.succ) p_i' = 0)
-          (function_finset (Fin (Nat.succ n)) F S))
+          (function_finset (Fin (Nat.succ n)) S))
       +
       Finset.card
         (Finset.filter
           (fun r ↦ MvPolynomial.eval r p = 0 ∧ MvPolynomial.eval (r ∘ Fin.succ) p_i' ≠ 0)
-          (function_finset (Fin (Nat.succ n)) F S))
+          (function_finset (Fin (Nat.succ n)) S))
       )
       * Finset.card S := by
         apply Nat.mul_le_mul_right
