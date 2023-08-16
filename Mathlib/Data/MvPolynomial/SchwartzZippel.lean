@@ -15,9 +15,10 @@ def function_finset (A : Type) (B : Type) [DecidableEq A] [Fintype A] (S : Finse
   Fintype.piFinset (fun _ => S)
 
 -- TODO generalize to dependent piFinset
+-- no I can't - is there a dependent comp?
 @[simp]
 lemma Fin.cons_mem_piFinset_iff {F} {n : ℕ} (a : (Fin n → F)) (b: F) (S : Finset F) :
-    @Fin.cons _ _ b a ∈ Fintype.piFinset (fun _ => S)
+    Fin.cons b a ∈ Fintype.piFinset (fun _ => S)
     ↔
     a ∈ Fintype.piFinset (fun _ => S)
     ∧
@@ -40,11 +41,8 @@ lemma and_or_and_not_iff (p q : Prop) : ((p ∧ q) ∨ (p ∧ ¬ q)) ↔ p := by
 lemma and_and_and_not_iff (p q : Prop) : ((p ∧ q) ∧ (p ∧ ¬ q)) ↔ false := by
   tauto
 
-lemma Finsupp.cons_sum (n : ℕ) (σ: Fin n →₀ ℕ) {i : ℕ} : (Finsupp.sum σ (fun _ e ↦ e)) + i = Finsupp.sum (Finsupp.cons i σ) fun _ e ↦ e := by
-
-  rw [eq_comm]
-  simp_rw [add_comm]
-
+lemma Finsupp.cons_sum (n : ℕ) (σ: Fin n →₀ ℕ) {i : ℕ} :
+    (Finsupp.sum (Finsupp.cons i σ) fun _ e ↦ e) = i + (Finsupp.sum σ (fun _ e ↦ e)) := by
   convert Fin.sum_cons i σ
   · rw [Finsupp.sum_fintype]
     congr
@@ -73,7 +71,7 @@ lemma MvPolynomial.totalDegree_coeff_finSuccEquiv_add_le {F} [CommSemiring F] (n
   -- Then cons i σ is a monomial index of p with total degree equal to the desired bound
   let σ' : Fin (n+1) →₀ ℕ := Finsupp.cons i σ
   convert MvPolynomial.le_totalDegree (p := p) (s := σ') _
-  · rw [MvPolynomial.totalDegree, hσ2, Finsupp.cons_sum]
+  · rw [MvPolynomial.totalDegree, hσ2, Finsupp.cons_sum, add_comm]
   · rw [←MvPolynomial.support_coeff_finSuccEquiv]
     exact hσ1
 
