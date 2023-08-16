@@ -88,11 +88,11 @@ end find_home
 lemma foosads {F: Type} [CommSemiring F] [DecidableEq F] (n: ℕ) (S: Finset F)
   (p_i': MvPolynomial (Fin n) F) :
     Finset.card
-      (S ×ˢ Finset.filter (fun f ↦ (MvPolynomial.eval f) p_i' = 0) (function_finset (Fin n) S))
+      (S ×ˢ Finset.filter (fun f ↦ (MvPolynomial.eval f) p_i' = 0) (Fintype.piFinset (fun _ => S)))
     =
     Finset.card
       (Finset.filter (fun r ↦ (MvPolynomial.eval (r ∘ Fin.succ)) p_i' = 0)
-        (function_finset (Fin (Nat.succ n)) S)) := by
+        (Fintype.piFinset (fun _ => S))) := by
   apply Finset.card_congr (fun ab _ => Fin.cons ab.fst ab.snd )
   · intro ab ha
     rcases ab with ⟨a, b⟩
@@ -100,7 +100,7 @@ lemma foosads {F: Type} [CommSemiring F] [DecidableEq F] (n: ℕ) (S: Finset F)
     rcases ha with ⟨a_mem_S, b_mem_ffS, eval_b_zero⟩
     rw [Finset.mem_filter]
     simp only []
-    unfold function_finset
+    -- unfold function_finset
     rw [Fin.cons_mem_piFinset_iff]
     constructor
     · exact ⟨b_mem_ffS, a_mem_S⟩
@@ -108,7 +108,7 @@ lemma foosads {F: Type} [CommSemiring F] [DecidableEq F] (n: ℕ) (S: Finset F)
   · intros ab1 ab2 _ _ hmkeq
     simp only [Fin.cons_eq_cons] at hmkeq
     exact Iff.mpr Prod.ext_iff hmkeq
-  · unfold function_finset
+  · --unfold function_finset
     intros b hb
     use (Equiv.piFinSucc n F).toFun b
     rw [exists_prop]
@@ -186,6 +186,7 @@ lemma schwartz_zippel (F : Type) [Field F] [DecidableEq F] (n : ℕ)
       _ ≤ (MvPolynomial.totalDegree p_i') * (Finset.card S) ^ n := by
         convert ih
         rw [mul_comm, ←Finset.card_product, eq_comm]
+        unfold function_finset
         rw [foosads]
       _ ≤ _ := by
         apply Nat.mul_le_mul_right
