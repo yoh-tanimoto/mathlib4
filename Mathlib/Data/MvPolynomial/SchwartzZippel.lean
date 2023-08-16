@@ -2,6 +2,7 @@
 
 import Mathlib.Data.MvPolynomial.Equiv
 import Mathlib.Data.Polynomial.RingDivision
+import Mathlib.Data.Fin.Tuple.Basic
 -- import Mathlib.Logic.Embedding.Basic
 
 
@@ -43,7 +44,7 @@ lemma and_or_and_not_iff (p q : Prop) : ((p ∧ q) ∨ (p ∧ ¬ q)) ↔ p := by
 lemma and_and_and_not_iff (p q : Prop) : ((p ∧ q) ∧ (p ∧ ¬ q)) ↔ false := by
   tauto
 
-lemma Finsupp.cons_sum (n : ℕ) (σ: Fin n →₀ ℕ) {i : ℕ} :
+lemma Finsupp.sum_cons (n : ℕ) (σ: Fin n →₀ ℕ) {i : ℕ} :
     (Finsupp.sum (Finsupp.cons i σ) fun _ e ↦ e) = i + (Finsupp.sum σ (fun _ e ↦ e)) := by
   convert Fin.sum_cons i σ
   · rw [Finsupp.sum_fintype]
@@ -51,6 +52,8 @@ lemma Finsupp.cons_sum (n : ℕ) (σ: Fin n →₀ ℕ) {i : ℕ} :
     simp
   · rw [Finsupp.sum_fintype]
     simp
+
+#find_home Finsupp.sum_cons
 
 @[simp]
 lemma MvPolynomial.support_nonempty_iff {F σ} [CommSemiring F] (p : MvPolynomial σ F) :
@@ -73,7 +76,7 @@ lemma MvPolynomial.totalDegree_coeff_finSuccEquiv_add_le {F} [CommSemiring F] (n
   -- Then cons i σ is a monomial index of p with total degree equal to the desired bound
   let σ' : Fin (n+1) →₀ ℕ := Finsupp.cons i σ
   convert MvPolynomial.le_totalDegree (p := p) (s := σ') _
-  · rw [MvPolynomial.totalDegree, hσ2, Finsupp.cons_sum, add_comm]
+  · rw [MvPolynomial.totalDegree, hσ2, Finsupp.sum_cons, add_comm]
   · rw [←MvPolynomial.support_coeff_finSuccEquiv]
     exact hσ1
 
@@ -85,10 +88,6 @@ lemma MvPolynomial.eq_C_of_empty {F σ} [CommSemiring F] [IsEmpty σ]
   simp
 
 end find_home
-
-@[simp]
-lemma Fin.cons_comp_succ_eq {F} {n : ℕ} (x : F) (f : Fin n → F) : Fin.cons x f ∘ Fin.succ = f := by
-  exact rfl
 
 lemma card_prod_filter_eval_eq_zero_piFinset_eq {F} [CommSemiring F] [DecidableEq F] {n: ℕ}
   (S: Finset F) (p_i': MvPolynomial (Fin n) F) :
@@ -102,7 +101,7 @@ lemma card_prod_filter_eval_eq_zero_piFinset_eq {F} [CommSemiring F] [DecidableE
   congr
   ext ⟨x, f⟩
   simp only [Fintype.mem_piFinset, Finset.mem_product, Finset.mem_filter, Finset.mem_map_equiv,
-    Equiv.piFinSucc_symm_apply, Fin.cons_mem_piFinset_iff, Fin.cons_comp_succ_eq]
+    Equiv.piFinSucc_symm_apply, Fin.cons_mem_piFinset_iff]
   tauto
 
 
@@ -140,15 +139,12 @@ lemma schwartz_zippel (F : Type) [Field F] [DecidableEq F] (n : ℕ)
     -- take the largest such i
     set i := p'.natDegree with hi
     set p_i' := Polynomial.coeff p' i with hp_i'
-    have h0 : (p'.coeff i).totalDegree + i ≤ (p.totalDegree) := by
+    have h0 : p_i'.totalDegree + i ≤ (p.totalDegree) := by
       apply MvPolynomial.totalDegree_coeff_finSuccEquiv_add_le
-      rw [←Polynomial.leadingCoeff]
-      rw [Polynomial.leadingCoeff_ne_zero]
+      rw [←Polynomial.leadingCoeff, Polynomial.leadingCoeff_ne_zero]
       exact Iff.mpr (AddEquivClass.map_ne_zero_iff (MvPolynomial.finSuccEquiv F n)) hp
-    have h1 : Polynomial.coeff p' i ≠ 0 := by
-      rw [hi]
-      rw [←Polynomial.leadingCoeff]
-      rw [Polynomial.leadingCoeff_ne_zero]
+    have h1 : p_i' ≠ 0 := by
+      rw [hp_i', hi, ←Polynomial.leadingCoeff, Polynomial.leadingCoeff_ne_zero]
       exact Iff.mpr (AddEquivClass.map_ne_zero_iff (MvPolynomial.finSuccEquiv F n)) hp
     -- We use the inductive hypothesis on p_i'
     replace ih := ih p_i' h1 S
@@ -161,7 +157,7 @@ lemma schwartz_zippel (F : Type) [Field F] [DecidableEq F] (n : ℕ)
           (function_finset (Fin (Nat.succ n)) S))
       ≤
       (MvPolynomial.totalDegree p - i) * (Finset.card S) ^ n := by
-      -- In this case, we bound the size of the set by the inductive hypothesis
+      -- In this case, we bound the size of the set via the inductive hypothesis
       calc
       _ ≤ (MvPolynomial.totalDegree p_i') * (Finset.card S) ^ n := by
         convert ih
@@ -181,14 +177,13 @@ lemma schwartz_zippel (F : Type) [Field F] [DecidableEq F] (n : ℕ)
       ≤
       (i) * (Finset.card S) ^ n := by
       clear h_first_half
+
       -- In this case, given r on which p_i' does not evaluate to zero, p' mapped over the
       -- evaluation
       -- on r of p_i' is a nonzero univariate polynomial of degree i.
       -- There can therefore only be at most i zeros per r value.
-      rw [←Finset.card_map (Equiv.toEmbedding (Equiv.piFinSucc n F))]
-      rw [Finset.map_filter]
-      rw [Finset.card_eq_sum_ones]
-      rw [Finset.sum_finset_product_right _
+      rw [←Finset.card_map (Equiv.toEmbedding (Equiv.piFinSucc n F)), Finset.map_filter,
+        Finset.card_eq_sum_ones, Finset.sum_finset_product_right _
             (s := (Finset.filter (fun r ↦ (MvPolynomial.eval (r)) p_i' ≠ 0)
               (function_finset (Fin (n)) S)))
             (t := fun r => Finset.filter (fun f => (MvPolynomial.eval ((Equiv.piFinSucc n F).invFun (f, r))) p = 0) S)] -- Note that ((Equiv.piFinSucc n F).invFun (f, r)) can be more simply written with Fin.cons
@@ -239,9 +234,9 @@ lemma schwartz_zippel (F : Type) [Field F] [DecidableEq F] (n : ℕ)
           rw [hpr_zero] at this
           rw [Polynomial.natDegree_zero] at this
           rw [←hi, ←this]
-          have bar : p_r.coeff 0 = 0 := by simp [hpr_zero]
-          rw [←bar]
-          simp only [MvPolynomial.finSuccEquiv_apply, MvPolynomial.coe_eval₂Hom, Polynomial.coeff_map]
+          have hp_r0 : p_r.coeff 0 = 0 := by simp [hpr_zero]
+          rw [←hp_r0]
+          rw [Polynomial.coeff_map]
       · -- Note Polynomial.coeff_natDegree, MvPolynomial.finSuccEquiv_apply, MvPolynomial.coe_eval₂Hom, are triggering but I don't want them
         unfold function_finset
         simp only [
