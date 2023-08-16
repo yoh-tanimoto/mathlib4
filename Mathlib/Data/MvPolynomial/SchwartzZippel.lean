@@ -2,6 +2,8 @@
 
 import Mathlib.Data.MvPolynomial.Equiv
 import Mathlib.Data.Polynomial.RingDivision
+-- import Mathlib.Logic.Embedding.Basic
+
 
 open BigOperators
 
@@ -84,47 +86,25 @@ lemma MvPolynomial.eq_C_of_empty {F σ} [CommSemiring F] [IsEmpty σ]
 
 end find_home
 
+@[simp]
+lemma Fin.cons_comp_succ_eq {F} {n : ℕ} (x : F) (f : Fin n → F) : Fin.cons x f ∘ Fin.succ = f := by
+  exact rfl
 
-lemma foosads {F: Type} [CommSemiring F] [DecidableEq F] (n: ℕ) (S: Finset F)
-  (p_i': MvPolynomial (Fin n) F) :
+lemma card_prod_filter_eval_eq_zero_piFinset_eq {F} [CommSemiring F] [DecidableEq F] {n: ℕ}
+  (S: Finset F) (p_i': MvPolynomial (Fin n) F) :
     Finset.card
       (S ×ˢ Finset.filter (fun f ↦ (MvPolynomial.eval f) p_i' = 0) (Fintype.piFinset (fun _ => S)))
     =
     Finset.card
       (Finset.filter (fun r ↦ (MvPolynomial.eval (r ∘ Fin.succ)) p_i' = 0)
         (Fintype.piFinset (fun _ => S))) := by
-  apply Finset.card_congr (fun ab _ => Fin.cons ab.fst ab.snd )
-  · intro ab ha
-    rcases ab with ⟨a, b⟩
-    rw [Finset.mem_product, Finset.mem_filter] at ha
-    rcases ha with ⟨a_mem_S, b_mem_ffS, eval_b_zero⟩
-    rw [Finset.mem_filter]
-    simp only []
-    -- unfold function_finset
-    rw [Fin.cons_mem_piFinset_iff]
-    constructor
-    · exact ⟨b_mem_ffS, a_mem_S⟩
-    · exact eval_b_zero
-  · intros ab1 ab2 _ _ hmkeq
-    simp only [Fin.cons_eq_cons] at hmkeq
-    exact Iff.mpr Prod.ext_iff hmkeq
-  · --unfold function_finset
-    intros b hb
-    use (Equiv.piFinSucc n F).toFun b
-    rw [exists_prop]
-    constructor
-    · simp only [Equiv.toFun_as_coe_apply, Equiv.piFinSucc_apply, Finset.mem_product, Finset.mem_filter, Fintype.mem_piFinset]
-      simp only [Finset.mem_filter, Fintype.mem_piFinset] at hb
-      rcases hb with ⟨hb, hb'⟩
-      constructor
-      · exact hb 0
-      · constructor
-        · intro a
-          apply hb
-        · exact hb'
-    · simp only [Equiv.toFun_as_coe_apply, Equiv.piFinSucc_apply]
-      -- The below is a simp lemma, so why does the above simp not close?
-      refine Fin.cons_self_tail b
+  rw [←Finset.card_map ((Equiv.piFinSucc n F).toEmbedding)]
+  congr
+  ext ⟨x, f⟩
+  simp only [Fintype.mem_piFinset, Finset.mem_product, Finset.mem_filter, Finset.mem_map_equiv,
+    Equiv.piFinSucc_symm_apply, Fin.cons_mem_piFinset_iff, Fin.cons_comp_succ_eq]
+  tauto
+
 
 -- Following the wikipedia proof
 -- I don't think that the wikipedia proof technique of starting at n=1 is necessary, so I start at n = 0
@@ -187,7 +167,7 @@ lemma schwartz_zippel (F : Type) [Field F] [DecidableEq F] (n : ℕ)
         convert ih
         rw [mul_comm, ←Finset.card_product, eq_comm]
         unfold function_finset
-        rw [foosads]
+        rw [card_prod_filter_eval_eq_zero_piFinset_eq]
       _ ≤ _ := by
         apply Nat.mul_le_mul_right
         exact Nat.le_sub_of_add_le h0
