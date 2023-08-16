@@ -44,6 +44,7 @@ lemma and_or_and_not_iff (p q : Prop) : ((p ∧ q) ∨ (p ∧ ¬ q)) ↔ p := by
 lemma and_and_and_not_iff (p q : Prop) : ((p ∧ q) ∧ (p ∧ ¬ q)) ↔ false := by
   tauto
 
+-- https://github.com/leanprover-community/mathlib4/pull/6604
 lemma Finsupp.sum_cons (n : ℕ) (σ: Fin n →₀ ℕ) {i : ℕ} :
     (Finsupp.sum (Finsupp.cons i σ) fun _ e ↦ e) = i + (Finsupp.sum σ (fun _ e ↦ e)) := by
   convert Fin.sum_cons i σ
@@ -52,8 +53,6 @@ lemma Finsupp.sum_cons (n : ℕ) (σ: Fin n →₀ ℕ) {i : ℕ} :
     simp
   · rw [Finsupp.sum_fintype]
     simp
-
-#find_home Finsupp.sum_cons
 
 @[simp]
 lemma MvPolynomial.support_nonempty_iff {F σ} [CommSemiring F] (p : MvPolynomial σ F) :
