@@ -69,26 +69,28 @@ end Defs
 
 section Instances
 
+open Function
+
 variable {α : Type*} [Fintype α] [DecidableEq α] (f : Function.End α)
 
-noncomputable instance : Fintype (Function.fixedPoints f) := Fintype.ofFinite _
+noncomputable instance : Fintype (fixedPoints f) := Fintype.ofFinite _
 
 theorem card_modEq_card_fixedPoints_of_sq (hf : f ^ 2 = 1) :
-    Fintype.card α ≡ Fintype.card (Function.fixedPoints f) [MOD 2] := by
+    Fintype.card α ≡ Fintype.card (fixedPoints f) [MOD 2] := by
   let σ : α ≃ α := ⟨f, f, congrFun hf, congrFun hf⟩
   have hσ : σ ^ (2 ^ 1) = 1 := by ext x; exact congrFun hf x
-  suffices : Fintype.card (Function.fixedPoints f) = Finset.card (Equiv.Perm.support σ)ᶜ
+  suffices : Fintype.card (fixedPoints f) = Finset.card (Equiv.Perm.support σ)ᶜ
   · exact this ▸ (Equiv.Perm.card_compl_support_modEq hσ).symm
-  suffices : Function.fixedPoints f = (Equiv.Perm.support σ)ᶜ
+  suffices : fixedPoints f = (Equiv.Perm.support σ)ᶜ
   · simp only [this]
     apply Fintype.card_coe
-  simp [Set.ext_iff, Function.IsFixedPt]
+  simp [Set.ext_iff, IsFixedPt]
 
 end Instances
 
 section Involutions
 
-open Function Submonoid
+open Function
 
 variable (k : ℕ) [hk : Fact (4 * k + 1).Prime]
 
@@ -100,11 +102,11 @@ def obvInvo : Function.End (zagierSet k) := fun ⟨⟨x, y, z⟩, h⟩ => ⟨⟨
 theorem obvInvo_sq : obvInvo k ^ 2 = 1 := rfl
 
 theorem sq_add_sq_of_nonempty_fixedPoints
-    (hn : (Function.fixedPoints (obvInvo k)).Nonempty) :
+    (hn : (fixedPoints (obvInvo k)).Nonempty) :
     ∃ a b : ℕ, a ^ 2 + b ^ 2 = 4 * k + 1 := by
   simp_rw [sq]
   obtain ⟨⟨⟨x, y, z⟩, he⟩, hf⟩ := hn
-  have := Function.mem_fixedPoints_iff.mp hf
+  have := mem_fixedPoints_iff.mp hf
   unfold obvInvo at this; simp at this
   unfold zagierSet at he; simp at he
   use x, (2 * y)
@@ -148,9 +150,9 @@ theorem complexInvo_sq : complexInvo k ^ 2 = 1 := by
         Nat.sub_sub _ _ y, ← two_mul, add_comm, Nat.add_sub_cancel]
 
 theorem unique_of_mem_fixedPoints {t : zagierSet k}
-    (mem : t ∈ (Function.fixedPoints (complexInvo k))) :
+    (mem : t ∈ (fixedPoints (complexInvo k))) :
     t.val = (1, 1, k) := by
-  rw [Function.mem_fixedPoints_iff] at mem
+  rw [mem_fixedPoints_iff] at mem
   unfold complexInvo at mem
   obtain ⟨⟨x, y, z⟩, h⟩ := t
   obtain ⟨xb, yb, zb⟩ := zagierSet_lower_bound k h
@@ -169,9 +171,9 @@ theorem unique_of_mem_fixedPoints {t : zagierSet k}
     · rw [e, mul_left_eq_self₀] at h; simp_all; linarith [e]
 
 theorem fixedPoints_eq_singleton :
-    Function.fixedPoints (complexInvo k) =
+    fixedPoints (complexInvo k) =
     {⟨(1, 1, k), (by unfold zagierSet; simp; linarith)⟩} := by
-  rw [Set.eq_singleton_iff_unique_mem, Function.mem_fixedPoints_iff]
+  rw [Set.eq_singleton_iff_unique_mem, mem_fixedPoints_iff]
   constructor
   · unfold complexInvo
     simp
