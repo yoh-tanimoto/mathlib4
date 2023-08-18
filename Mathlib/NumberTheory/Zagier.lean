@@ -69,8 +69,7 @@ end Defs
 
 section Instances
 
-variable {α : Type*} [Fintype α] [DecidableEq α] {p : ℕ} [hp : Fact p.Prime] {k : ℕ}
-  (f : Function.End α) (hf : f ^ p = 1)
+variable {α : Type*} [Fintype α] [DecidableEq α] (f : Function.End α)
 
 noncomputable instance : Fintype (Function.fixedPoints f) := Fintype.ofFinite _
 
