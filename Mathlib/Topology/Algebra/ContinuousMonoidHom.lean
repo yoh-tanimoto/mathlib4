@@ -6,6 +6,7 @@ Authors: Thomas Browning
 import Mathlib.Analysis.Complex.Circle
 import Mathlib.Topology.Algebra.Group.Compact
 import Mathlib.Topology.ContinuousFunction.Algebra
+import Mathlib.Topology.UniformSpace.Equicontinuity
 
 #align_import topology.algebra.continuous_monoid_hom from "leanprover-community/mathlib"@"6ca1a09bc9aa75824bf97388c9e3b441fc4ccf3f"
 
@@ -412,34 +413,67 @@ lemma mylem {α β : Type*} [TopologicalSpace α] [TopologicalSpace β] (S : Set
   rintro - ⟨-, -, rfl⟩
   exact h
 
-noncomputable def keydef [ContinuousMul B] {U : Set B} (hU : U ∈ nhds 1) :
-    ℕ → {S | S ∈ nhds (1 : B)}
-  | 0 => ⟨U, hU⟩
-  | n + 1 => ⟨Classical.choose (exists_open_nhds_one_mul_subset (keydef hU n).2), sorry⟩
-
-instance [ContinuousMul A] [LocallyCompactSpace A] [T2Space E] :
-  LocallyCompactSpace (ContinuousMonoidHom A E) := by
-  obtain ⟨U, hU, hU'⟩ := exists_compact_mem_nhds (1 : A)
+theorem mythm {X Y : Type*} [TopologicalSpace X] [Monoid X]
+    [ContinuousMul X] [LocallyCompactSpace X]
+    [UniformSpace Y] [CommGroup Y] [UniformGroup Y] [T2Space Y] [CompactSpace Y]
+    (U : Set X) (V : Set Y)
+    (hUc : IsCompact U) (hVc : IsCompact V)
+    (hUo : U ∈ nhds 1) (hVo : V ∈ nhds 1)
+    (h : Set.EquicontinuousAt ((↑) '' {f : X →* Y | f '' U ⊆ V} : Set (X → Y)) 1) :
+    LocallyCompactSpace (ContinuousMonoidHom X Y) := by
   apply TopologicalSpace.PositiveCompacts.locallyCompactSpace_of_group
-  let V : Set E := sorry -- V is compact with nonempty interior
-  have hV : 1 ∈ interior V := sorry
   let S := toContinuousMap ⁻¹' ContinuousMap.CompactOpen.gen U V
+  let S' : Set (X → Y) := (↑) '' {f : X →* Y | f '' U ⊆ V}
+  change Set.EquicontinuousAt S' 1 at h
+  have h2 : ∀ f : X → Y, f ∈ S' ↔ (∀ x ∈ U, f x ∈ V) ∧ ∀ x y, f (x * y) = f x * f y
+  · intro f
+    constructor
+    · rintro ⟨f, hf, rfl⟩
+      exact ⟨Set.image_subset_iff.mp hf, map_mul f⟩
+    · rintro ⟨hf, hf₀⟩
+      exact ⟨MonoidHom.mk' f hf₀, Set.image_subset_iff.mpr hf, rfl⟩
+  have h3 : S' = (⋂ (x ∈ U), {f | f x ∈ V}) ∩ ⋂ (x : X) (y : X), {f | f (x * y) = f x * f y}
+  · ext f
+    simp only [Set.mem_inter_iff, Set.mem_iInter]
+    exact h2 f
+  have h4 : IsClosed S'
+  · rw [h3]
+    apply IsClosed.inter
+    · apply isClosed_biInter
+      intros x hx
+      exact Set.singleton_pi' x (fun _ ↦ V) ▸ isClosed_set_pi (fun _ _ ↦ hVc.isClosed)
+    · apply isClosed_iInter
+      intro x
+      apply isClosed_iInter
+      intro y
+      let g : (X → Y) → Y := fun f ↦ (f (x * y))⁻¹ * (f x * f y)
+      have hg : Continuous g := by continuity
+      have key : g ⁻¹' {1} = {f | f (x * y) = f x * f y}
+      · ext f
+        exact inv_mul_eq_one
+      rw [← key]
+      exact isClosed_singleton.preimage hg
+  have h5 : IsCompact S' := h4.isCompact
+  have h6 : IsCompact S := sorry -- Arzela
   have hS : (interior S).Nonempty
   · let T := toContinuousMap ⁻¹' ContinuousMap.CompactOpen.gen U (interior V)
     have h1 : T ⊆ S := fun f hf x hx => interior_subset (hf hx)
-    have h2 : IsOpen T := isOpen_induced (ContinuousMap.isOpen_gen hU isOpen_interior)
+    have h2 : IsOpen T := isOpen_induced (ContinuousMap.isOpen_gen hUc isOpen_interior)
     have h3 : T.Nonempty
     · use 1
       apply mylem
-      exact hV
+      exact mem_interior_iff_mem_nhds.mpr hVo
     exact h3.mono (interior_maximal h1 h2)
-  refine' ⟨⟨S, _⟩, hS⟩
-  -- this is where it gets tricky:
-  -- show that S is a subset of ContHom (or maybe defined a subspace S' of ContHom)
-  -- show that S is compact in the pointwise topology (not hard)
-  -- show that S is equicontinuous (a tad bit tricky...)
-  let Un : ℕ → {S | S ∈ nhds (1 : A)} := keydef hU'
+  exact ⟨⟨S, h6⟩, hS⟩
+
+instance [ContinuousMul A] [LocallyCompactSpace A] :
+    LocallyCompactSpace (ContinuousMonoidHom A circle) := by
+  have : UniformGroup circle := ⟨sorry⟩
+  obtain ⟨U, hUc, hUo⟩ := exists_compact_mem_nhds (1 : A)
+  obtain ⟨V, hVc, hVo⟩ := exists_compact_mem_nhds (1 : circle)
+  apply mythm U V hUc hVc hUo hVo
   sorry
+  -- need to specify V more precisely, and prove equicontinuity
 
 end ContinuousMonoidHom
 
@@ -457,7 +491,7 @@ instance : TopologicalSpace (PontryaginDual A) :=
 instance : T2Space (PontryaginDual A) :=
   (inferInstance : T2Space (ContinuousMonoidHom A circle))
 
-instance : LocallyCompactSpace (PontryaginDual A) :=
+instance [ContinuousMul A] [LocallyCompactSpace A] : LocallyCompactSpace (PontryaginDual A) :=
   (inferInstance : LocallyCompactSpace (ContinuousMonoidHom A circle))
 
 -- porting note: instance is now noncomputable
