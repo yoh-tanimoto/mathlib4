@@ -12,7 +12,7 @@ import Mathlib.CategoryTheory.Limits.FunctorCategory
 import Mathlib.CategoryTheory.Limits.KanExtension
 import Mathlib.CategoryTheory.Limits.Shapes.Terminal
 import Mathlib.CategoryTheory.Limits.Shapes.Products
-import Mathlib.CategoryTheory.Limits.Types
+import Mathlib.CategoryTheory.Limits.Shapes.Types
 import Mathlib.CategoryTheory.Limits.Over
 
 #align_import category_theory.limits.presheaf from "leanprover-community/mathlib"@"70fd9563a21e7b963887c9360bd29b2393e6225a"
@@ -503,7 +503,7 @@ def terribleFunctor (A : Cᵒᵖ ⥤ Type v₁) : Over A ⥤ (CostructuredArrow 
   map {t t'} η :=
     { app := fun s x => by
         dsimp
-        dsimp at yx
+        dsimp at x
         refine' ⟨η.left.app _ x.1, _⟩
         have := η.w
         dsimp at this
@@ -630,9 +630,6 @@ def terribleTriangle (A : Cᵒᵖ ⥤ Type v₁) :
       · aesop_cat
     · aesop_cat) (by aesop_cat)
 
-def Over.mkIdTerminal (A : C) : IsTerminal (Over.mk (𝟙 A)) :=
-  CostructuredArrow.mkIdTerminal
-
 open Functor
 
 theorem final_toCostructuredArrow_comp_pre {c : Cocone (α ⋙ yoneda)} (hc : IsColimit c) :
@@ -648,7 +645,7 @@ theorem final_toCostructuredArrow_comp_pre {c : Cocone (α ⋙ yoneda)} (hc : Is
     exact e
   refine' IsTerminal.isTerminalOfObj (terribleEquiv c.pt).inverse
     (colimit (c.toCostructuredArrow ⋙ CostructuredArrow.pre α _ _  ⋙ yoneda)) _
-  apply IsTerminal.ofIso (Over.mkIdTerminal _)
+  apply IsTerminal.ofIso (Over.mkIdTerminal)
   let i := preservesColimitIso ((terribleEquiv c.pt).inverse) (Cocone.toCostructuredArrow c ⋙ CostructuredArrow.pre α yoneda c.pt ⋙ yoneda)
   refine' _ ≪≫ i.symm
   let j := terribleTriangle c.pt
