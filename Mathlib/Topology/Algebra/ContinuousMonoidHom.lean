@@ -416,9 +416,85 @@ lemma mylem {α β : Type*} [TopologicalSpace α] [TopologicalSpace β] (S : Set
   exact h
 
 theorem arzeli_ascoli {X Y : Type*} [TopologicalSpace X] [UniformSpace Y] [CompactSpace Y]
-    (H : Set C(X, Y)) (h1 : IsClosed H) (h2 : Equicontinuous ((↑) : H → X → Y)) :
-    IsCompact H := by
-  sorry
+    (S : Set C(X, Y)) (hS1 : IsClosed (ContinuousMap.toFun '' S))
+    (hS2 : Equicontinuous ((↑) : S → X → Y)) :
+    IsCompact S := by
+  let T := ContinuousMap.toFun '' S
+  have h1 : IsClosed T
+  · exact hS1
+  have h2 : IsCompact T := h1.isCompact
+  let f₀ : S ≃ T := Equiv.Set.image ContinuousMap.toFun S ContinuousMap.coe_injective
+  suffices : Inducing f₀
+  · let f : S ≃ₜ T := f₀.toHomeomorphOfInducing this
+    rw [isCompact_iff_compactSpace] at h2 ⊢
+    exact f.symm.compactSpace
+  rw [inducing_subtype_val.inducing_iff]
+  change Inducing (ContinuousMap.toFun ∘ Subtype.val)
+  rw [inducing_iff_nhds]
+  rintro ⟨ϕ, hϕ⟩
+  apply le_antisymm
+  · rw [←Filter.map_le_iff_le_comap]
+    exact (ContinuousMap.continuous_coe.comp continuous_subtype_val).continuousAt
+  · rw [inducing_subtype_val.nhds_eq_comap ⟨ϕ, hϕ⟩, ← Filter.map_le_iff_le_comap]
+    conv_rhs => rw [TopologicalSpace.nhds_generateFrom]
+    simp only [le_iInf_iff]
+    rintro - ⟨hg, K, hK, U, hU, rfl⟩
+    have key : ∃ V ∈ uniformity Y, ∀ x ∈ K, ∀ y : Y, (ϕ x, y) ∈ V → y ∈ U
+    · obtain ⟨V, hV, hV'⟩ := Disjoint.exists_uniform_thickening (hK.image ϕ.2) hU.isClosed_compl
+        (disjoint_compl_right_iff.mpr hg)
+      refine' ⟨V, hV, _⟩
+      intro x hx y hy
+      contrapose! hV'
+      rw [Set.not_disjoint_iff]
+      refine' ⟨y, _, _⟩
+      · simp only [Set.mem_iUnion]
+        refine' ⟨ϕ x, ⟨x, hx, rfl⟩, hy⟩
+      · simp only [Set.mem_iUnion]
+        refine' ⟨y, hV', _⟩
+        exact UniformSpace.mem_ball_self y hV
+    obtain ⟨V, hV, hVU⟩ := key
+    obtain ⟨W₀, hW₀, hW₀V⟩ := comp3_mem_uniformity hV -- three epsilon trick!
+    let W := symmetrizeRel W₀
+    have hW : W ∈ uniformity Y := symmetrize_mem_uniformity hW₀
+    have hWV : compRel W (compRel W W) ⊆ V
+    · refine' Set.Subset.trans _ hW₀V
+      refine' compRel_mono _ (compRel_mono _ _) <;> exact symmetrizeRel_subset_self W₀
+    obtain ⟨t, htK, htW⟩ := hK.elim_nhds_subcover
+      (fun x => {x' | ∀ ψ : S, ((ψ : X → Y) x, (ψ : X → Y) x') ∈ W})
+      (fun x hx => hS2 x W hW)
+    intro F hF
+    refine' ⟨⋂ x ∈ t, {ψ | (ϕ x, ψ x) ∈ W}, _, _⟩
+    · rw [Filter.biInter_finset_mem]
+      intro x hxt
+      simp only
+      change _ ∈ nhds ϕ.toFun
+      let Z : Set Y := {y | (ϕ x, y) ∈ W}
+      change {ψ | ψ x ∈ Z} ∈ nhds ϕ.toFun
+      have key' := Set.singleton_pi' x (fun _ ↦ Z)
+      rw [← key', set_pi_mem_nhds_iff]
+      rintro - ⟨-, -⟩
+      rw [mem_nhds_uniformity_iff_right]
+      refine' Filter.mem_of_superset hW _
+      intro a b c
+      rwa [← a.eta, c] at b
+      exact Set.finite_singleton x
+    · rintro ⟨ψ, hψ⟩ h
+      apply hF
+      rintro - ⟨x, hx, rfl⟩
+      refine' hVU x hx (ψ x) _
+      specialize htW hx
+      simp only [Set.mem_iUnion] at htW
+      obtain ⟨x', hx', h'⟩ := htW
+      have h1 := h' ⟨ϕ, hϕ⟩
+      have h2 := h' ⟨ψ, hψ⟩
+      simp only at h1 h2
+      simp only [Set.mem_preimage, Set.mem_iInter] at h
+      specialize h x' hx'
+      simp only at h
+      change (ϕ x', ψ x') ∈ W at h
+      apply hWV
+      refine' ⟨ϕ x', _, ψ x', h, h2⟩
+      exact (symmetric_symmetrizeRel W₀).mk_mem_comm.mp h1
 
 open BoundedContinuousFunction
 
@@ -487,12 +563,8 @@ theorem mythm {X Y : Type*} [TopologicalSpace X] [Group X]
         exact inv_mul_eq_one
       rw [← key]
       exact isClosed_singleton.preimage hg
-  have h8 : IsClosed S'
-  · rw [←Set.preimage_image_eq S' FunLike.coe_injective]
-    refine' h4.preimage _
-    exact continuous_pi ContinuousMap.continuous_eval_const
   have h9 : IsCompact S'
-  · refine' arzeli_ascoli S' h8 _
+  · refine' arzeli_ascoli S' h4 _
     rw [equicontinuous_iff_range] at h ⊢
     have key1 : Set.range (fun f : {f : X →* Y | f '' U ⊆ V} ↦ (f : X → Y)) = S''
     · ext f
