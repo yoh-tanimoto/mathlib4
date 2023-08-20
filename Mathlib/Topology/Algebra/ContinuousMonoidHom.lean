@@ -4,8 +4,10 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Thomas Browning
 -/
 import Mathlib.Analysis.Complex.Circle
+import Mathlib.Topology.Algebra.Equicontinuity
 import Mathlib.Topology.Algebra.Group.Compact
 import Mathlib.Topology.ContinuousFunction.Algebra
+import Mathlib.Topology.ContinuousFunction.Bounded
 import Mathlib.Topology.UniformSpace.Equicontinuity
 
 #align_import topology.algebra.continuous_monoid_hom from "leanprover-community/mathlib"@"6ca1a09bc9aa75824bf97388c9e3b441fc4ccf3f"
@@ -413,30 +415,62 @@ lemma mylem {α β : Type*} [TopologicalSpace α] [TopologicalSpace β] (S : Set
   rintro - ⟨-, -, rfl⟩
   exact h
 
-theorem mythm {X Y : Type*} [TopologicalSpace X] [Monoid X]
-    [ContinuousMul X] [LocallyCompactSpace X]
+theorem arzeli_ascoli {X Y : Type*} [TopologicalSpace X] [UniformSpace Y] [CompactSpace Y]
+    (H : Set C(X, Y)) (h1 : IsClosed H) (h2 : Equicontinuous ((↑) : H → X → Y)) :
+    IsCompact H := by
+  sorry
+
+open BoundedContinuousFunction
+
+-- not sure how to make this work, but it's just a side refactor
+example {α : Type u} {β : Type v} [inst : TopologicalSpace α] [inst_1 : CompactSpace α]
+    [inst_2 : PseudoMetricSpace β] [inst_3 : CompactSpace β] (A : Set (α →ᵇ β))
+    (h1 : IsClosed A) (h2 : Equicontinuous ((↑) : A → α → β)) : IsCompact A := by
+  let f : (α →ᵇ β) → C(α, β) := BoundedContinuousFunction.toContinuousMap
+  let B := f '' A
+  have hB1 : IsClosed B := sorry
+  have hB2 : Equicontinuous ((↑) : B → α → β) := sorry
+  have key := arzeli_ascoli B hB1 hB2
+  have hf0 : Inducing f
+  · rw [inducing_iff_nhds]
+    intro g
+    apply eq_of_forall_le_iff
+    intro c
+    rw [← Filter.tendsto_iff_comap, ← Filter.tendsto_id', tendsto_iff_tendstoUniformly]
+    rw [ContinuousMap.tendsto_compactOpen_iff_forall]
+    -- simp?
+
+  have hf : Continuous f := sorry
+  sorry
+
+theorem mythm {X Y : Type*} [TopologicalSpace X] [Group X]
+    [TopologicalGroup X] [LocallyCompactSpace X]
     [UniformSpace Y] [CommGroup Y] [UniformGroup Y] [T2Space Y] [CompactSpace Y]
     (U : Set X) (V : Set Y)
     (hUc : IsCompact U) (hVc : IsCompact V)
-    (hUo : U ∈ nhds 1) (hVo : V ∈ nhds 1)
-    (h : Set.EquicontinuousAt ((↑) '' {f : X →* Y | f '' U ⊆ V} : Set (X → Y)) 1) :
+    (hVo : V ∈ nhds (1 : Y))
+    (h : EquicontinuousAt (fun f : {f : X →* Y | f '' U ⊆ V} ↦ (f : X → Y)) 1) :
     LocallyCompactSpace (ContinuousMonoidHom X Y) := by
+  replace h := equicontinuous_of_equicontinuousAt_one _ h
   apply TopologicalSpace.PositiveCompacts.locallyCompactSpace_of_group
-  let S := toContinuousMap ⁻¹' ContinuousMap.CompactOpen.gen U V
-  let S' : Set (X → Y) := (↑) '' {f : X →* Y | f '' U ⊆ V}
-  change Set.EquicontinuousAt S' 1 at h
-  have h2 : ∀ f : X → Y, f ∈ S' ↔ (∀ x ∈ U, f x ∈ V) ∧ ∀ x y, f (x * y) = f x * f y
+  let S : Set (ContinuousMonoidHom X Y) := toContinuousMap ⁻¹' (ContinuousMap.CompactOpen.gen U V)
+  let S' : Set C(X, Y) := toContinuousMap '' S
+  let S'' : Set (X → Y) := ContinuousMap.toFun '' S'
+  have h2 : ∀ f : X → Y, f ∈ S'' ↔ f '' U ⊆ V ∧ ∀ x y, f (x * y) = f x * f y
   · intro f
     constructor
-    · rintro ⟨f, hf, rfl⟩
-      exact ⟨Set.image_subset_iff.mp hf, map_mul f⟩
+    · rintro ⟨-, ⟨f, hf, rfl⟩, rfl⟩
+      exact ⟨hf, map_mul f⟩
     · rintro ⟨hf, hf₀⟩
-      exact ⟨MonoidHom.mk' f hf₀, Set.image_subset_iff.mpr hf, rfl⟩
-  have h3 : S' = (⋂ (x ∈ U), {f | f x ∈ V}) ∩ ⋂ (x : X) (y : X), {f | f (x * y) = f x * f y}
-  · ext f
+      suffices : Continuous f
+      · exact ⟨⟨f, this⟩, ⟨⟨MonoidHom.mk' f hf₀, this⟩, hf, rfl⟩, rfl⟩
+      exact h.continuous ⟨MonoidHom.mk' f hf₀, hf⟩
+  have h3 : S'' = (⋂ (x ∈ U), {f | f x ∈ V}) ∩ ⋂ (x : X) (y : X), {f | f (x * y) = f x * f y}
+  · simp only [Set.image_subset_iff] at h2
+    ext f
     simp only [Set.mem_inter_iff, Set.mem_iInter]
     exact h2 f
-  have h4 : IsClosed S'
+  have h4 : IsClosed S''
   · rw [h3]
     apply IsClosed.inter
     · apply isClosed_biInter
@@ -453,8 +487,31 @@ theorem mythm {X Y : Type*} [TopologicalSpace X] [Monoid X]
         exact inv_mul_eq_one
       rw [← key]
       exact isClosed_singleton.preimage hg
-  have h5 : IsCompact S' := h4.isCompact
-  have h6 : IsCompact S := sorry -- Arzela
+  have h8 : IsClosed S'
+  · rw [←Set.preimage_image_eq S' FunLike.coe_injective]
+    refine' h4.preimage _
+    exact continuous_pi ContinuousMap.continuous_eval_const
+  have h9 : IsCompact S'
+  · refine' arzeli_ascoli S' h8 _
+    rw [equicontinuous_iff_range] at h ⊢
+    have key1 : Set.range (fun f : {f : X →* Y | f '' U ⊆ V} ↦ (f : X → Y)) = S''
+    · ext f
+      rw [h2]
+      constructor
+      · rintro ⟨⟨f, hf⟩, rfl⟩
+        exact ⟨hf, map_mul f⟩
+      · rintro ⟨hf, hf₀⟩
+        exact ⟨⟨MonoidHom.mk' f hf₀, hf⟩, rfl⟩
+    have key2 : Set.range (fun f : S' ↦ (f : X → Y)) = S''
+    · ext f
+      constructor
+      · rintro ⟨f, rfl⟩
+        exact ⟨f, f.2, rfl⟩
+      · rintro ⟨f, hf, rfl⟩
+        exact ⟨⟨f, hf⟩, rfl⟩
+    convert h <;> exact key2.trans key1.symm
+  have h6 : IsCompact S
+  · exact (inducing_toContinuousMap X Y).isCompact_iff.mp h9
   have hS : (interior S).Nonempty
   · let T := toContinuousMap ⁻¹' ContinuousMap.CompactOpen.gen U (interior V)
     have h1 : T ⊆ S := fun f hf x hx => interior_subset (hf hx)
@@ -466,12 +523,12 @@ theorem mythm {X Y : Type*} [TopologicalSpace X] [Monoid X]
     exact h3.mono (interior_maximal h1 h2)
   exact ⟨⟨S, h6⟩, hS⟩
 
-instance [ContinuousMul A] [LocallyCompactSpace A] :
-    LocallyCompactSpace (ContinuousMonoidHom A circle) := by
+instance {X : Type*} [Group X] [TopologicalSpace X] [TopologicalGroup X] [LocallyCompactSpace X] :
+    LocallyCompactSpace (ContinuousMonoidHom X circle) := by
   have : UniformGroup circle := ⟨sorry⟩
-  obtain ⟨U, hUc, hUo⟩ := exists_compact_mem_nhds (1 : A)
+  obtain ⟨U, hUc, hUo⟩ := exists_compact_mem_nhds (1 : X)
   obtain ⟨V, hVc, hVo⟩ := exists_compact_mem_nhds (1 : circle)
-  apply mythm U V hUc hVc hUo hVo
+  apply mythm U V hUc hVc hVo
   sorry
   -- need to specify V more precisely, and prove equicontinuity
 
