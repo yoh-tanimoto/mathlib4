@@ -8,6 +8,7 @@ import Mathlib.Algebra.Group.Commute
 import Mathlib.Algebra.Hom.Group
 import Mathlib.Algebra.Opposites
 import Mathlib.Logic.Embedding.Basic
+import Mathlib.Logic.Function.Iterate
 
 #align_import group_theory.group_action.defs from "leanprover-community/mathlib"@"dad7ecf9a1feae63e6e49f07619b7087403fb8d4"
 
@@ -1094,9 +1095,12 @@ protected def Function.End :=
 instance : Monoid (Function.End α) where
   one := id
   mul := (· ∘ ·)
-  mul_assoc f g h := rfl
-  mul_one f := rfl
-  one_mul f := rfl
+  mul_assoc _ _ _ := rfl
+  mul_one _ := rfl
+  one_mul _ := rfl
+  npow n f := f^[n]
+  npow_zero _ := rfl
+  npow_succ _ _ := Function.iterate_succ' _ _
 
 instance : Inhabited (Function.End α) :=
   ⟨1⟩
