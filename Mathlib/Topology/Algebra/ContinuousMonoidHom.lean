@@ -415,7 +415,7 @@ lemma mylem {α β : Type*} [TopologicalSpace α] [TopologicalSpace β] (S : Set
   rintro - ⟨-, -, rfl⟩
   exact h
 
-theorem arzeli_ascoli {X Y : Type*} [TopologicalSpace X] [UniformSpace Y] [CompactSpace Y]
+theorem arzela_ascoli {X Y : Type*} [TopologicalSpace X] [UniformSpace Y] [CompactSpace Y]
     (S : Set C(X, Y)) (hS1 : IsClosed (ContinuousMap.toFun '' S))
     (hS2 : Equicontinuous ((↑) : S → X → Y)) :
     IsCompact S := by
@@ -490,7 +490,6 @@ theorem arzeli_ascoli {X Y : Type*} [TopologicalSpace X] [UniformSpace Y] [Compa
       simp only at h1 h2
       simp only [Set.mem_preimage, Set.mem_iInter] at h
       specialize h x' hx'
-      simp only at h
       change (ϕ x', ψ x') ∈ W at h
       apply hWV
       refine' ⟨ϕ x', _, ψ x', h, h2⟩
@@ -499,14 +498,14 @@ theorem arzeli_ascoli {X Y : Type*} [TopologicalSpace X] [UniformSpace Y] [Compa
 open BoundedContinuousFunction
 
 -- not sure how to make this work, but it's just a side refactor
-example {α : Type u} {β : Type v} [inst : TopologicalSpace α] [inst_1 : CompactSpace α]
+example {α : Type*} {β : Type*} [inst : TopologicalSpace α] [inst_1 : CompactSpace α]
     [inst_2 : PseudoMetricSpace β] [inst_3 : CompactSpace β] (A : Set (α →ᵇ β))
     (h1 : IsClosed A) (h2 : Equicontinuous ((↑) : A → α → β)) : IsCompact A := by
   let f : (α →ᵇ β) → C(α, β) := BoundedContinuousFunction.toContinuousMap
   let B := f '' A
-  have hB1 : IsClosed B := sorry
+  have hB1 : IsClosed (ContinuousMap.toFun '' B) := sorry
   have hB2 : Equicontinuous ((↑) : B → α → β) := sorry
-  have key := arzeli_ascoli B hB1 hB2
+  have key := arzela_ascoli B hB1 hB2
   have hf0 : Inducing f
   · rw [inducing_iff_nhds]
     intro g
@@ -620,8 +619,9 @@ instance : TopologicalSpace (PontryaginDual A) :=
 instance : T2Space (PontryaginDual A) :=
   (inferInstance : T2Space (ContinuousMonoidHom A circle))
 
-instance [ContinuousMul A] [LocallyCompactSpace A] : LocallyCompactSpace (PontryaginDual A) :=
-  (inferInstance : LocallyCompactSpace (ContinuousMonoidHom A circle))
+instance {X : Type*} [Group X] [TopologicalSpace X] [TopologicalGroup X] [LocallyCompactSpace X] :
+    LocallyCompactSpace (PontryaginDual X) :=
+  (inferInstance : LocallyCompactSpace (ContinuousMonoidHom X circle))
 
 -- porting note: instance is now noncomputable
 noncomputable instance : CommGroup (PontryaginDual A) :=
