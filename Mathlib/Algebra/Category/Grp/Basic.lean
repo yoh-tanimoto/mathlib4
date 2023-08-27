@@ -12,10 +12,10 @@ import Mathlib.CategoryTheory.Endomorphism
 # Category instances for Group, AddGroup, CommGroup, and AddCommGroup.
 
 We introduce the bundled categories:
-* `GroupCat`
-* `AddGroupCat`
-* `CommGroupCat`
-* `AddCommGroupCat`
+* `Grp`
+* `AddGrp`
+* `CommGrp`
+* `AddCommGrp`
 along with the relevant forgetful functors between them, and to the bundled monoid categories.
 -/
 
@@ -27,388 +27,388 @@ universe u v
 open CategoryTheory
 
 /-- The category of groups and group morphisms. -/
-@[to_additive AddGroupCat]
-def GroupCat : Type (u + 1) :=
+@[to_additive AddGrp]
+def Grp : Type (u + 1) :=
   Bundled Group
 set_option linter.uppercaseLean3 false in
-#align Group GroupCat
+#align Group Grp
 set_option linter.uppercaseLean3 false in
-#align AddGroup AddGroupCat
+#align AddGroup AddGrp
 
 /-- The category of additive groups and group morphisms -/
-add_decl_doc AddGroupCat
+add_decl_doc AddGrp
 
-namespace GroupCat
+namespace Grp
 
 @[to_additive]
 instance : BundledHom.ParentProjection
   (fun {α : Type*} (h : Group α) => h.toDivInvMonoid.toMonoid) := ⟨⟩
 
-deriving instance LargeCategory for GroupCat
-attribute [to_additive] instGroupCatLargeCategory
+deriving instance LargeCategory for Grp
+attribute [to_additive] instGrpLargeCategory
 
 @[to_additive]
-instance concreteCategory : ConcreteCategory GroupCat := by
-  dsimp only [GroupCat]
+instance concreteCategory : ConcreteCategory Grp := by
+  dsimp only [Grp]
   infer_instance
 
 @[to_additive]
-instance : CoeSort GroupCat (Type*) where
+instance : CoeSort Grp (Type*) where
   coe X := X.α
 
 @[to_additive]
-instance (X : GroupCat) : Group X := X.str
+instance (X : Grp) : Group X := X.str
 
 -- porting note: this instance was not necessary in mathlib
 @[to_additive]
-instance {X Y : GroupCat} : CoeFun (X ⟶ Y) fun _ => X → Y where
+instance {X Y : Grp} : CoeFun (X ⟶ Y) fun _ => X → Y where
   coe (f : X →* Y) := f
 
 @[to_additive]
-instance FunLike_instance (X Y : GroupCat) : FunLike (X ⟶ Y) X (fun _ => Y) :=
+instance FunLike_instance (X Y : Grp) : FunLike (X ⟶ Y) X (fun _ => Y) :=
   show FunLike (X →* Y) X (fun _ => Y) from inferInstance
 
 -- porting note: added
 @[to_additive (attr := simp)]
-lemma coe_id {X : GroupCat} : (𝟙 X : X → X) = id := rfl
+lemma coe_id {X : Grp} : (𝟙 X : X → X) = id := rfl
 
 -- porting note: added
 @[to_additive (attr := simp)]
-lemma coe_comp {X Y Z : GroupCat} {f : X ⟶ Y} {g : Y ⟶ Z} : (f ≫ g : X → Z) = g ∘ f := rfl
+lemma coe_comp {X Y Z : Grp} {f : X ⟶ Y} {g : Y ⟶ Z} : (f ≫ g : X → Z) = g ∘ f := rfl
 
 @[to_additive]
-lemma comp_def {X Y Z : GroupCat} {f : X ⟶ Y} {g : Y ⟶ Z} : f ≫ g = g.comp f := rfl
+lemma comp_def {X Y Z : Grp} {f : X ⟶ Y} {g : Y ⟶ Z} : f ≫ g = g.comp f := rfl
 
 -- porting note: added
-@[simp] lemma forget_map (f : X ⟶ Y) : (forget GroupCat).map f = (f : X → Y) := rfl
+@[simp] lemma forget_map (f : X ⟶ Y) : (forget Grp).map f = (f : X → Y) := rfl
 
 @[to_additive (attr := ext)]
-lemma ext {X Y : GroupCat} {f g : X ⟶ Y} (w : ∀ x : X, f x = g x) : f = g :=
+lemma ext {X Y : Grp} {f g : X ⟶ Y} (w : ∀ x : X, f x = g x) : f = g :=
   MonoidHom.ext w
 
 /-- Construct a bundled `Group` from the underlying type and typeclass. -/
 @[to_additive]
-def of (X : Type u) [Group X] : GroupCat :=
+def of (X : Type u) [Group X] : Grp :=
   Bundled.of X
 set_option linter.uppercaseLean3 false in
-#align Group.of GroupCat.of
+#align Group.of Grp.of
 set_option linter.uppercaseLean3 false in
-#align AddGroup.of AddGroupCat.of
+#align AddGroup.of AddGrp.of
 
 /-- Construct a bundled `AddGroup` from the underlying type and typeclass. -/
-add_decl_doc AddGroupCat.of
+add_decl_doc AddGrp.of
 
 @[to_additive (attr := simp)]
-theorem coe_of (R : Type u) [Group R] : ↑(GroupCat.of R) = R :=
+theorem coe_of (R : Type u) [Group R] : ↑(Grp.of R) = R :=
   rfl
 set_option linter.uppercaseLean3 false in
-#align Group.coe_of GroupCat.coe_of
+#align Group.coe_of Grp.coe_of
 set_option linter.uppercaseLean3 false in
-#align AddGroup.coe_of AddGroupCat.coe_of
+#align AddGroup.coe_of AddGrp.coe_of
 
 @[to_additive]
-instance : Inhabited GroupCat :=
-  ⟨GroupCat.of PUnit⟩
+instance : Inhabited Grp :=
+  ⟨Grp.of PUnit⟩
 
 @[to_additive hasForgetToAddMonCat]
-instance hasForgetToMonCat : HasForget₂ GroupCat MonCat :=
+instance hasForgetToMonCat : HasForget₂ Grp MonCat :=
   BundledHom.forget₂ _ _
 set_option linter.uppercaseLean3 false in
-#align Group.has_forget_to_Mon GroupCat.hasForgetToMonCat
+#align Group.has_forget_to_Mon Grp.hasForgetToMonCat
 set_option linter.uppercaseLean3 false in
-#align AddGroup.has_forget_to_AddMon AddGroupCat.hasForgetToAddMonCat
+#align AddGroup.has_forget_to_AddMon AddGrp.hasForgetToAddMonCat
 
 @[to_additive]
-instance : Coe GroupCat.{u} MonCat.{u} where coe := (forget₂ GroupCat MonCat).obj
+instance : Coe Grp.{u} MonCat.{u} where coe := (forget₂ Grp MonCat).obj
 
 -- porting note: this instance was not necessary in mathlib
 @[to_additive]
-instance (G H : GroupCat) : One (G ⟶ H) := (inferInstance : One (MonoidHom G H))
+instance (G H : Grp) : One (G ⟶ H) := (inferInstance : One (MonoidHom G H))
 
 @[to_additive (attr := simp)]
-theorem one_apply (G H : GroupCat) (g : G) : ((1 : G ⟶ H) : G → H) g = 1 :=
+theorem one_apply (G H : Grp) (g : G) : ((1 : G ⟶ H) : G → H) g = 1 :=
   rfl
 set_option linter.uppercaseLean3 false in
-#align Group.one_apply GroupCat.one_apply
+#align Group.one_apply Grp.one_apply
 set_option linter.uppercaseLean3 false in
-#align AddGroup.zero_apply AddGroupCat.zero_apply
+#align AddGroup.zero_apply AddGrp.zero_apply
 
-/-- Typecheck a `MonoidHom` as a morphism in `GroupCat`. -/
+/-- Typecheck a `MonoidHom` as a morphism in `Grp`. -/
 @[to_additive]
 def ofHom {X Y : Type u} [Group X] [Group Y] (f : X →* Y) : of X ⟶ of Y :=
   f
 set_option linter.uppercaseLean3 false in
-#align Group.of_hom GroupCat.ofHom
+#align Group.of_hom Grp.ofHom
 set_option linter.uppercaseLean3 false in
-#align AddGroup.of_hom AddGroupCat.ofHom
+#align AddGroup.of_hom AddGrp.ofHom
 
 /-- Typecheck an `AddMonoidHom` as a morphism in `AddGroup`. -/
-add_decl_doc AddGroupCat.ofHom
+add_decl_doc AddGrp.ofHom
 
 @[to_additive (attr := simp)]
 theorem ofHom_apply {X Y : Type _} [Group X] [Group Y] (f : X →* Y) (x : X) :
     (ofHom f) x = f x :=
   rfl
 set_option linter.uppercaseLean3 false in
-#align Group.of_hom_apply GroupCat.ofHom_apply
+#align Group.of_hom_apply Grp.ofHom_apply
 set_option linter.uppercaseLean3 false in
-#align AddGroup.of_hom_apply AddGroupCat.ofHom_apply
+#align AddGroup.of_hom_apply AddGrp.ofHom_apply
 
 @[to_additive]
-instance ofUnique (G : Type*) [Group G] [i : Unique G] : Unique (GroupCat.of G) := i
+instance ofUnique (G : Type*) [Group G] [i : Unique G] : Unique (Grp.of G) := i
 set_option linter.uppercaseLean3 false in
-#align Group.of_unique GroupCat.ofUnique
+#align Group.of_unique Grp.ofUnique
 set_option linter.uppercaseLean3 false in
-#align AddGroup.of_unique AddGroupCat.ofUnique
+#align AddGroup.of_unique AddGrp.ofUnique
 
 -- We verify that simp lemmas apply when coercing morphisms to functions.
 @[to_additive]
-example {R S : GroupCat} (i : R ⟶ S) (r : R) (h : r = 1) : i r = 1 := by simp [h]
+example {R S : Grp} (i : R ⟶ S) (r : R) (h : r = 1) : i r = 1 := by simp [h]
 
-end GroupCat
+end Grp
 
 /-- The category of commutative groups and group morphisms. -/
-@[to_additive AddCommGroupCat]
-def CommGroupCat : Type (u + 1) :=
+@[to_additive AddCommGrp]
+def CommGrp : Type (u + 1) :=
   Bundled CommGroup
 set_option linter.uppercaseLean3 false in
-#align CommGroup CommGroupCat
+#align CommGroup CommGrp
 set_option linter.uppercaseLean3 false in
-#align AddCommGroup AddCommGroupCat
+#align AddCommGroup AddCommGrp
 
 /-- The category of additive commutative groups and group morphisms. -/
-add_decl_doc AddCommGroupCat
+add_decl_doc AddCommGrp
 
 /-- `Ab` is an abbreviation for `AddCommGroup`, for the sake of mathematicians' sanity. -/
-abbrev Ab := AddCommGroupCat
+abbrev Ab := AddCommGrp
 set_option linter.uppercaseLean3 false in
 #align Ab Ab
 
-namespace CommGroupCat
+namespace CommGrp
 
 @[to_additive]
 instance : BundledHom.ParentProjection @CommGroup.toGroup := ⟨⟩
 
-deriving instance LargeCategory for CommGroupCat
-attribute [to_additive] instCommGroupCatLargeCategory
+deriving instance LargeCategory for CommGrp
+attribute [to_additive] instCommGrpLargeCategory
 
 @[to_additive]
-instance concreteCategory : ConcreteCategory CommGroupCat := by
-  dsimp only [CommGroupCat]
+instance concreteCategory : ConcreteCategory CommGrp := by
+  dsimp only [CommGrp]
   infer_instance
 
 @[to_additive]
-instance : CoeSort CommGroupCat (Type*) where
+instance : CoeSort CommGrp (Type*) where
   coe X := X.α
 
 @[to_additive]
-instance commGroupInstance (X : CommGroupCat) : CommGroup X := X.str
+instance commGroupInstance (X : CommGrp) : CommGroup X := X.str
 set_option linter.uppercaseLean3 false in
-#align CommGroup.comm_group_instance CommGroupCat.commGroupInstance
+#align CommGroup.comm_group_instance CommGrp.commGroupInstance
 set_option linter.uppercaseLean3 false in
-#align AddCommGroup.add_comm_group_instance AddCommGroupCat.addCommGroupInstance
+#align AddCommGroup.add_comm_group_instance AddCommGrp.addCommGroupInstance
 
 -- porting note: this instance was not necessary in mathlib
 @[to_additive]
-instance {X Y : CommGroupCat} : CoeFun (X ⟶ Y) fun _ => X → Y where
+instance {X Y : CommGrp} : CoeFun (X ⟶ Y) fun _ => X → Y where
   coe (f : X →* Y) := f
 
 @[to_additive]
-instance FunLike_instance (X Y : CommGroupCat) : FunLike (X ⟶ Y) X (fun _ => Y) :=
+instance FunLike_instance (X Y : CommGrp) : FunLike (X ⟶ Y) X (fun _ => Y) :=
   show FunLike (X →* Y) X (fun _ => Y) from inferInstance
 
 -- porting note: added
 @[to_additive (attr := simp)]
-lemma coe_id {X : CommGroupCat} : (𝟙 X : X → X) = id := rfl
+lemma coe_id {X : CommGrp} : (𝟙 X : X → X) = id := rfl
 
 -- porting note: added
 @[to_additive (attr := simp)]
-lemma coe_comp {X Y Z : CommGroupCat} {f : X ⟶ Y} {g : Y ⟶ Z} : (f ≫ g : X → Z) = g ∘ f := rfl
+lemma coe_comp {X Y Z : CommGrp} {f : X ⟶ Y} {g : Y ⟶ Z} : (f ≫ g : X → Z) = g ∘ f := rfl
 
 @[to_additive]
-lemma comp_def {X Y Z : CommGroupCat} {f : X ⟶ Y} {g : Y ⟶ Z} : f ≫ g = g.comp f := rfl
+lemma comp_def {X Y Z : CommGrp} {f : X ⟶ Y} {g : Y ⟶ Z} : f ≫ g = g.comp f := rfl
 
 -- porting note: added
 @[to_additive (attr := simp)]
-lemma forget_map {X Y : CommGroupCat} (f : X ⟶ Y) :
-    (forget CommGroupCat).map f = (f : X → Y) :=
+lemma forget_map {X Y : CommGrp} (f : X ⟶ Y) :
+    (forget CommGrp).map f = (f : X → Y) :=
   rfl
 
 @[to_additive (attr := ext)]
-lemma ext {X Y : CommGroupCat} {f g : X ⟶ Y} (w : ∀ x : X, f x = g x) : f = g :=
+lemma ext {X Y : CommGrp} {f g : X ⟶ Y} (w : ∀ x : X, f x = g x) : f = g :=
   MonoidHom.ext w
 
 /-- Construct a bundled `CommGroup` from the underlying type and typeclass. -/
 @[to_additive]
-def of (G : Type u) [CommGroup G] : CommGroupCat :=
+def of (G : Type u) [CommGroup G] : CommGrp :=
   Bundled.of G
 set_option linter.uppercaseLean3 false in
-#align CommGroup.of CommGroupCat.of
+#align CommGroup.of CommGrp.of
 set_option linter.uppercaseLean3 false in
-#align AddCommGroup.of AddCommGroupCat.of
+#align AddCommGroup.of AddCommGrp.of
 
 /-- Construct a bundled `AddCommGroup` from the underlying type and typeclass. -/
-add_decl_doc AddCommGroupCat.of
+add_decl_doc AddCommGrp.of
 
 @[to_additive]
-instance : Inhabited CommGroupCat :=
-  ⟨CommGroupCat.of PUnit⟩
+instance : Inhabited CommGrp :=
+  ⟨CommGrp.of PUnit⟩
 
 -- Porting note: removed `@[simp]` here, as it makes it harder to tell when to apply
 -- bundled or unbundled lemmas.
 -- (This change seems dangerous!)
 @[to_additive]
-theorem coe_of (R : Type u) [CommGroup R] : (CommGroupCat.of R : Type u) = R :=
+theorem coe_of (R : Type u) [CommGroup R] : (CommGrp.of R : Type u) = R :=
   rfl
 set_option linter.uppercaseLean3 false in
-#align CommGroup.coe_of CommGroupCat.coe_of
+#align CommGroup.coe_of CommGrp.coe_of
 set_option linter.uppercaseLean3 false in
-#align AddCommGroup.coe_of AddCommGroupCat.coe_of
+#align AddCommGroup.coe_of AddCommGrp.coe_of
 
 @[to_additive]
-instance ofUnique (G : Type*) [CommGroup G] [i : Unique G] : Unique (CommGroupCat.of G) :=
+instance ofUnique (G : Type*) [CommGroup G] [i : Unique G] : Unique (CommGrp.of G) :=
   i
 set_option linter.uppercaseLean3 false in
-#align CommGroup.of_unique CommGroupCat.ofUnique
+#align CommGroup.of_unique CommGrp.ofUnique
 set_option linter.uppercaseLean3 false in
-#align AddCommGroup.of_unique AddCommGroupCat.ofUnique
+#align AddCommGroup.of_unique AddCommGrp.ofUnique
 
 @[to_additive]
-instance hasForgetToGroup : HasForget₂ CommGroupCat GroupCat :=
+instance hasForgetToGroup : HasForget₂ CommGrp Grp :=
   BundledHom.forget₂ _ _
 set_option linter.uppercaseLean3 false in
-#align CommGroup.has_forget_to_Group CommGroupCat.hasForgetToGroup
+#align CommGroup.has_forget_to_Group CommGrp.hasForgetToGroup
 set_option linter.uppercaseLean3 false in
-#align AddCommGroup.has_forget_to_AddGroup AddCommGroupCat.hasForgetToAddGroup
+#align AddCommGroup.has_forget_to_AddGroup AddCommGrp.hasForgetToAddGroup
 
 @[to_additive]
-instance : Coe CommGroupCat.{u} GroupCat.{u} where coe := (forget₂ CommGroupCat GroupCat).obj
+instance : Coe CommGrp.{u} Grp.{u} where coe := (forget₂ CommGrp Grp).obj
 
 @[to_additive hasForgetToAddCommMonCat]
-instance hasForgetToCommMonCat : HasForget₂ CommGroupCat CommMonCat :=
-  InducedCategory.hasForget₂ fun G : CommGroupCat => CommMonCat.of G
+instance hasForgetToCommMonCat : HasForget₂ CommGrp CommMonCat :=
+  InducedCategory.hasForget₂ fun G : CommGrp => CommMonCat.of G
 set_option linter.uppercaseLean3 false in
-#align CommGroup.has_forget_to_CommMon CommGroupCat.hasForgetToCommMonCat
+#align CommGroup.has_forget_to_CommMon CommGrp.hasForgetToCommMonCat
 set_option linter.uppercaseLean3 false in
-#align AddCommGroup.has_forget_to_AddCommMon AddCommGroupCat.hasForgetToAddCommMonCat
+#align AddCommGroup.has_forget_to_AddCommMon AddCommGrp.hasForgetToAddCommMonCat
 
 @[to_additive]
-instance : Coe CommGroupCat.{u} CommMonCat.{u} where coe := (forget₂ CommGroupCat CommMonCat).obj
+instance : Coe CommGrp.{u} CommMonCat.{u} where coe := (forget₂ CommGrp CommMonCat).obj
 
 -- porting note: this instance was not necessary in mathlib
 @[to_additive]
-instance (G H : CommGroupCat) : One (G ⟶ H) := (inferInstance : One (MonoidHom G H))
+instance (G H : CommGrp) : One (G ⟶ H) := (inferInstance : One (MonoidHom G H))
 
 @[to_additive (attr := simp)]
-theorem one_apply (G H : CommGroupCat) (g : G) : ((1 : G ⟶ H) : G → H) g = 1 :=
+theorem one_apply (G H : CommGrp) (g : G) : ((1 : G ⟶ H) : G → H) g = 1 :=
   rfl
 set_option linter.uppercaseLean3 false in
-#align CommGroup.one_apply CommGroupCat.one_apply
+#align CommGroup.one_apply CommGrp.one_apply
 set_option linter.uppercaseLean3 false in
-#align AddCommGroup.zero_apply AddCommGroupCat.zero_apply
+#align AddCommGroup.zero_apply AddCommGrp.zero_apply
 
 /-- Typecheck a `MonoidHom` as a morphism in `CommGroup`. -/
 @[to_additive]
 def ofHom {X Y : Type u} [CommGroup X] [CommGroup Y] (f : X →* Y) : of X ⟶ of Y :=
   f
 set_option linter.uppercaseLean3 false in
-#align CommGroup.of_hom CommGroupCat.ofHom
+#align CommGroup.of_hom CommGrp.ofHom
 set_option linter.uppercaseLean3 false in
-#align AddCommGroup.of_hom AddCommGroupCat.ofHom
+#align AddCommGroup.of_hom AddCommGrp.ofHom
 
 /-- Typecheck an `AddMonoidHom` as a morphism in `AddCommGroup`. -/
-add_decl_doc AddCommGroupCat.ofHom
+add_decl_doc AddCommGrp.ofHom
 
 @[to_additive (attr := simp)]
 theorem ofHom_apply {X Y : Type _} [CommGroup X] [CommGroup Y] (f : X →* Y) (x : X) :
     (ofHom f) x = f x :=
   rfl
 set_option linter.uppercaseLean3 false in
-#align CommGroup.of_hom_apply CommGroupCat.ofHom_apply
+#align CommGroup.of_hom_apply CommGrp.ofHom_apply
 set_option linter.uppercaseLean3 false in
-#align AddCommGroup.of_hom_apply AddCommGroupCat.ofHom_apply
+#align AddCommGroup.of_hom_apply AddCommGrp.ofHom_apply
 
 -- We verify that simp lemmas apply when coercing morphisms to functions.
 @[to_additive]
-example {R S : CommGroupCat} (i : R ⟶ S) (r : R) (h : r = 1) : i r = 1 := by simp [h]
+example {R S : CommGrp} (i : R ⟶ S) (r : R) (h : r = 1) : i r = 1 := by simp [h]
 
-end CommGroupCat
+end CommGrp
 
-namespace AddCommGroupCat
+namespace AddCommGrp
 
 -- Note that because `ℤ : Type 0`, this forces `G : AddCommGroup.{0}`,
 -- so we write this explicitly to be clear.
 -- TODO generalize this, requiring a `ULiftInstances.lean` file
 /-- Any element of an abelian group gives a unique morphism from `ℤ` sending
 `1` to that element. -/
-def asHom {G : AddCommGroupCat.{0}} (g : G) : AddCommGroupCat.of ℤ ⟶ G :=
+def asHom {G : AddCommGrp.{0}} (g : G) : AddCommGrp.of ℤ ⟶ G :=
   zmultiplesHom G g
 set_option linter.uppercaseLean3 false in
-#align AddCommGroup.as_hom AddCommGroupCat.asHom
+#align AddCommGroup.as_hom AddCommGrp.asHom
 
 @[simp]
-theorem asHom_apply {G : AddCommGroupCat.{0}} (g : G) (i : ℤ) : (asHom g) i = i • g :=
+theorem asHom_apply {G : AddCommGrp.{0}} (g : G) (i : ℤ) : (asHom g) i = i • g :=
   rfl
 set_option linter.uppercaseLean3 false in
-#align AddCommGroup.as_hom_apply AddCommGroupCat.asHom_apply
+#align AddCommGroup.as_hom_apply AddCommGrp.asHom_apply
 
-theorem asHom_injective {G : AddCommGroupCat.{0}} : Function.Injective (@asHom G) := fun h k w => by
-  convert congr_arg (fun k : AddCommGroupCat.of ℤ ⟶ G => (k : ℤ → G) (1 : ℤ)) w <;> simp
+theorem asHom_injective {G : AddCommGrp.{0}} : Function.Injective (@asHom G) := fun h k w => by
+  convert congr_arg (fun k : AddCommGrp.of ℤ ⟶ G => (k : ℤ → G) (1 : ℤ)) w <;> simp
 set_option linter.uppercaseLean3 false in
-#align AddCommGroup.as_hom_injective AddCommGroupCat.asHom_injective
+#align AddCommGroup.as_hom_injective AddCommGrp.asHom_injective
 
 @[ext]
-theorem int_hom_ext {G : AddCommGroupCat.{0}} (f g : AddCommGroupCat.of ℤ ⟶ G)
+theorem int_hom_ext {G : AddCommGrp.{0}} (f g : AddCommGrp.of ℤ ⟶ G)
     (w : f (1 : ℤ) = g (1 : ℤ)) : f = g :=
   @AddMonoidHom.ext_int G _ f g w
 set_option linter.uppercaseLean3 false in
-#align AddCommGroup.int_hom_ext AddCommGroupCat.int_hom_ext
+#align AddCommGroup.int_hom_ext AddCommGrp.int_hom_ext
 
 -- TODO: this argument should be generalised to the situation where
 -- the forgetful functor is representable.
-theorem injective_of_mono {G H : AddCommGroupCat.{0}} (f : G ⟶ H) [Mono f] : Function.Injective f :=
+theorem injective_of_mono {G H : AddCommGrp.{0}} (f : G ⟶ H) [Mono f] : Function.Injective f :=
   fun g₁ g₂ h => by
   have t0 : asHom g₁ ≫ f = asHom g₂ ≫ f := by aesop_cat
   have t1 : asHom g₁ = asHom g₂ := (cancel_mono _).1 t0
   apply asHom_injective t1
 set_option linter.uppercaseLean3 false in
-#align AddCommGroup.injective_of_mono AddCommGroupCat.injective_of_mono
+#align AddCommGroup.injective_of_mono AddCommGrp.injective_of_mono
 
-end AddCommGroupCat
+end AddCommGrp
 
-/-- Build an isomorphism in the category `GroupCat` from a `MulEquiv` between `Group`s. -/
-@[to_additive (attr := simps) AddEquiv.toAddGroupCatIso]
-def MulEquiv.toGroupCatIso {X Y : GroupCat} (e : X ≃* Y) : X ≅ Y where
+/-- Build an isomorphism in the category `Grp` from a `MulEquiv` between `Group`s. -/
+@[to_additive (attr := simps) AddEquiv.toAddGrpIso]
+def MulEquiv.toGrpIso {X Y : Grp} (e : X ≃* Y) : X ≅ Y where
   hom := e.toMonoidHom
   inv := e.symm.toMonoidHom
 set_option linter.uppercaseLean3 false in
-#align mul_equiv.to_Group_iso MulEquiv.toGroupCatIso
+#align mul_equiv.to_Group_iso MulEquiv.toGrpIso
 set_option linter.uppercaseLean3 false in
-#align add_equiv.to_AddGroup_iso AddEquiv.toAddGroupCatIso
+#align add_equiv.to_AddGroup_iso AddEquiv.toAddGrpIso
 
 /-- Build an isomorphism in the category `AddGroup` from an `AddEquiv` between `AddGroup`s. -/
-add_decl_doc AddEquiv.toAddGroupCatIso
+add_decl_doc AddEquiv.toAddGrpIso
 
-/-- Build an isomorphism in the category `CommGroupCat` from a `MulEquiv`
+/-- Build an isomorphism in the category `CommGrp` from a `MulEquiv`
 between `CommGroup`s. -/
-@[to_additive (attr := simps) AddEquiv.toAddCommGroupCatIso]
-def MulEquiv.toCommGroupCatIso {X Y : CommGroupCat} (e : X ≃* Y) : X ≅ Y where
+@[to_additive (attr := simps) AddEquiv.toAddCommGrpIso]
+def MulEquiv.toCommGrpIso {X Y : CommGrp} (e : X ≃* Y) : X ≅ Y where
   hom := e.toMonoidHom
   inv := e.symm.toMonoidHom
 set_option linter.uppercaseLean3 false in
-#align mul_equiv.to_CommGroup_iso MulEquiv.toCommGroupCatIso
+#align mul_equiv.to_CommGroup_iso MulEquiv.toCommGrpIso
 set_option linter.uppercaseLean3 false in
-#align add_equiv.to_AddCommGroup_iso AddEquiv.toAddCommGroupCatIso
+#align add_equiv.to_AddCommGroup_iso AddEquiv.toAddCommGrpIso
 
-/-- Build an isomorphism in the category `AddCommGroupCat` from an `AddEquiv`
+/-- Build an isomorphism in the category `AddCommGrp` from an `AddEquiv`
 between `AddCommGroup`s. -/
-add_decl_doc AddEquiv.toAddCommGroupCatIso
+add_decl_doc AddEquiv.toAddCommGrpIso
 
 namespace CategoryTheory.Iso
 
-/-- Build a `MulEquiv` from an isomorphism in the category `GroupCat`. -/
+/-- Build a `MulEquiv` from an isomorphism in the category `Grp`. -/
 @[to_additive (attr := simp)]
-def groupIsoToMulEquiv {X Y : GroupCat} (i : X ≅ Y) : X ≃* Y :=
+def groupIsoToMulEquiv {X Y : Grp} (i : X ≅ Y) : X ≃* Y :=
   MonoidHom.toMulEquiv i.hom i.inv i.hom_inv_id i.inv_hom_id
 set_option linter.uppercaseLean3 false in
 #align category_theory.iso.Group_iso_to_mul_equiv CategoryTheory.Iso.groupIsoToMulEquiv
@@ -420,7 +420,7 @@ add_decl_doc addGroupIsoToAddEquiv
 
 /-- Build a `MulEquiv` from an isomorphism in the category `CommGroup`. -/
 @[to_additive (attr := simps!)]
-def commGroupIsoToMulEquiv {X Y : CommGroupCat} (i : X ≅ Y) : X ≃* Y :=
+def commGroupIsoToMulEquiv {X Y : CommGrp} (i : X ≅ Y) : X ≃* Y :=
   MonoidHom.toMulEquiv i.hom i.inv i.hom_inv_id i.inv_hom_id
 set_option linter.uppercaseLean3 false in
 #align category_theory.iso.CommGroup_iso_to_mul_equiv CategoryTheory.Iso.commGroupIsoToMulEquiv
@@ -433,10 +433,10 @@ add_decl_doc addCommGroupIsoToAddEquiv
 end CategoryTheory.Iso
 
 /-- multiplicative equivalences between `Group`s are the same as (isomorphic to) isomorphisms
-in `GroupCat` -/
+in `Grp` -/
 @[to_additive]
-def mulEquivIsoGroupIso {X Y : GroupCat.{u}} : X ≃* Y ≅ X ≅ Y where
-  hom e := e.toGroupCatIso
+def mulEquivIsoGroupIso {X Y : Grp.{u}} : X ≃* Y ≅ X ≅ Y where
+  hom e := e.toGrpIso
   inv i := i.groupIsoToMulEquiv
 set_option linter.uppercaseLean3 false in
 #align mul_equiv_iso_Group_iso mulEquivIsoGroupIso
@@ -450,8 +450,8 @@ add_decl_doc addEquivIsoAddGroupIso
 /-- multiplicative equivalences between `comm_group`s are the same as (isomorphic to) isomorphisms
 in `CommGroup` -/
 @[to_additive]
-def mulEquivIsoCommGroupIso {X Y : CommGroupCat.{u}} : X ≃* Y ≅ X ≅ Y where
-  hom e := e.toCommGroupCatIso
+def mulEquivIsoCommGroupIso {X Y : CommGrp.{u}} : X ≃* Y ≅ X ≅ Y where
+  hom e := e.toCommGrpIso
   inv i := i.commGroupIsoToMulEquiv
 set_option linter.uppercaseLean3 false in
 #align mul_equiv_iso_CommGroup_iso mulEquivIsoCommGroupIso
@@ -466,7 +466,7 @@ namespace CategoryTheory.Aut
 
 /-- The (bundled) group of automorphisms of a type is isomorphic to the (bundled) group
 of permutations. -/
-def isoPerm {α : Type u} : GroupCat.of (Aut α) ≅ GroupCat.of (Equiv.Perm α) where
+def isoPerm {α : Type u} : Grp.of (Aut α) ≅ Grp.of (Equiv.Perm α) where
   hom :=
     { toFun := fun g => g.toEquiv
       map_one' := by aesop
@@ -488,27 +488,27 @@ set_option linter.uppercaseLean3 false in
 end CategoryTheory.Aut
 
 @[to_additive]
-instance GroupCat.forget_reflects_isos : ReflectsIsomorphisms (forget GroupCat.{u}) where
+instance Grp.forget_reflects_isos : ReflectsIsomorphisms (forget Grp.{u}) where
   reflects {X Y} f _ := by
-    let i := asIso ((forget GroupCat).map f)
+    let i := asIso ((forget Grp).map f)
     let e : X ≃* Y := MulEquiv.mk i.toEquiv
       -- Porting note: this would ideally be `by aesop`, as in `MonCat.forget_reflects_isos`
       (MonoidHom.map_mul (show MonoidHom X Y from f))
-    exact IsIso.of_iso e.toGroupCatIso
+    exact IsIso.of_iso e.toGrpIso
 set_option linter.uppercaseLean3 false in
-#align Group.forget_reflects_isos GroupCat.forget_reflects_isos
+#align Group.forget_reflects_isos Grp.forget_reflects_isos
 set_option linter.uppercaseLean3 false in
-#align AddGroup.forget_reflects_isos AddGroupCat.forget_reflects_isos
+#align AddGroup.forget_reflects_isos AddGrp.forget_reflects_isos
 
 @[to_additive]
-instance CommGroupCat.forget_reflects_isos : ReflectsIsomorphisms (forget CommGroupCat.{u}) where
+instance CommGrp.forget_reflects_isos : ReflectsIsomorphisms (forget CommGrp.{u}) where
   reflects {X Y} f _ := by
-    let i := asIso ((forget CommGroupCat).map f)
+    let i := asIso ((forget CommGrp).map f)
     let e : X ≃* Y := MulEquiv.mk i.toEquiv
       -- Porting note: this would ideally be `by aesop`, as in `MonCat.forget_reflects_isos`
       (MonoidHom.map_mul (show MonoidHom X Y from f))
-    exact IsIso.of_iso e.toCommGroupCatIso
+    exact IsIso.of_iso e.toCommGrpIso
 set_option linter.uppercaseLean3 false in
-#align CommGroup.forget_reflects_isos CommGroupCat.forget_reflects_isos
+#align CommGroup.forget_reflects_isos CommGrp.forget_reflects_isos
 set_option linter.uppercaseLean3 false in
-#align AddCommGroup.forget_reflects_isos AddCommGroupCat.forget_reflects_isos
+#align AddCommGroup.forget_reflects_isos AddCommGrp.forget_reflects_isos

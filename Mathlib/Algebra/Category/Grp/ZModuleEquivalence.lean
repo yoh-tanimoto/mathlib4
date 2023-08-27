@@ -26,7 +26,7 @@ universe u
 namespace Mod
 
 /-- The forgetful functor from `ℤ` modules to `AddCommGroup` is full. -/
-instance forget₂AddCommGroupFull : Full (forget₂ (Mod ℤ) AddCommGroupCat.{u}) where
+instance forget₂AddCommGroupFull : Full (forget₂ (Mod ℤ) AddCommGrp.{u}) where
   preimage {A B}
     -- `AddMonoidHom.toIntLinearMap` doesn't work here because `A` and `B` are not
     -- definitionally equal to the canonical `AddCommGroup.intModule` module
@@ -41,17 +41,17 @@ set_option linter.uppercaseLean3 false in
 #align Module.forget₂_AddCommGroup_full Mod.forget₂AddCommGroupFull
 
 /-- The forgetful functor from `ℤ` modules to `AddCommGroup` is essentially surjective. -/
-instance forget₂_addCommGroupCat_essSurj : EssSurj (forget₂ (Mod ℤ) AddCommGroupCat.{u})
+instance forget₂_addCommGrp_essSurj : EssSurj (forget₂ (Mod ℤ) AddCommGrp.{u})
     where mem_essImage A :=
     ⟨Mod.of ℤ A,
       ⟨{  hom := 𝟙 A
           inv := 𝟙 A }⟩⟩
 set_option linter.uppercaseLean3 false in
-#align Module.forget₂_AddCommGroup_ess_surj Mod.forget₂_addCommGroupCat_essSurj
+#align Module.forget₂_AddCommGroup_ess_surj Mod.forget₂_addCommGrp_essSurj
 
 noncomputable instance forget₂AddCommGroupIsEquivalence :
-    IsEquivalence (forget₂ (Mod ℤ) AddCommGroupCat.{u}) :=
-  Equivalence.ofFullyFaithfullyEssSurj (forget₂ (Mod ℤ) AddCommGroupCat)
+    IsEquivalence (forget₂ (Mod ℤ) AddCommGrp.{u}) :=
+  Equivalence.ofFullyFaithfullyEssSurj (forget₂ (Mod ℤ) AddCommGrp)
 set_option linter.uppercaseLean3 false in
 #align Module.forget₂_AddCommGroup_is_equivalence Mod.forget₂AddCommGroupIsEquivalence
 

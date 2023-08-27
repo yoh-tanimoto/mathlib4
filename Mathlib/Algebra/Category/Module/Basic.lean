@@ -3,7 +3,7 @@ Copyright (c) 2019 Robert A. Spencer. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Robert A. Spencer, Markus Himmel
 -/
-import Mathlib.Algebra.Category.GroupCat.Preadditive
+import Mathlib.Algebra.Category.Grp.Preadditive
 import Mathlib.CategoryTheory.Linear.Basic
 import Mathlib.CategoryTheory.Elementwise
 import Mathlib.LinearAlgebra.Basic
@@ -164,9 +164,9 @@ lemma ext {M N : ModuleCat.{v} R} {f₁ f₂ : M ⟶ N} (h : ∀ (x : M), f₁ x
 >>>>>>> origin/master:Mathlib/Algebra/Category/ModuleCat/Basic.lean
   FunLike.ext _ _ h
 
-instance hasForgetToAddCommGroup : HasForget₂ (Mod R) AddCommGroupCat where
+instance hasForgetToAddCommGroup : HasForget₂ (Mod R) AddCommGrp where
   forget₂ :=
-    { obj := fun M => AddCommGroupCat.of M
+    { obj := fun M => AddCommGrp.of M
 <<<<<<< HEAD:Mathlib/Algebra/Category/Module/Basic.lean
       map := fun f => LinearMap.toAddMonoidHom f }
 set_option linter.uppercaseLean3 false in
@@ -176,7 +176,7 @@ instance (M N : Mod R) : LinearMapClass (M ⟶ N) R M N :=
   { LinearMap.instSemilinearMapClassLinearMap with coe := fun f => f }
 
 =======
-      map := fun f => AddCommGroupCat.ofHom f.toAddMonoidHom }
+      map := fun f => AddCommGrp.ofHom f.toAddMonoidHom }
 #align Module.has_forget_to_AddCommGroup ModuleCat.hasForgetToAddCommGroup
 
 >>>>>>> origin/master:Mathlib/Algebra/Category/ModuleCat/Basic.lean
@@ -189,14 +189,14 @@ set_option linter.uppercaseLean3 false in
 
 -- porting note: remove simp attribute because it makes the linter complain
 theorem forget₂_obj (X : Mod R) :
-    (forget₂ (Mod R) AddCommGroupCat).obj X = AddCommGroupCat.of X :=
+    (forget₂ (Mod R) AddCommGrp).obj X = AddCommGrp.of X :=
   rfl
 set_option linter.uppercaseLean3 false in
 #align Module.forget₂_obj Mod.forget₂_obj
 
 @[simp 900]
 theorem forget₂_obj_Mod_of (X : Type v) [AddCommGroup X] [Module R X] :
-    (forget₂ (Mod R) AddCommGroupCat).obj (of R X) = AddCommGroupCat.of X :=
+    (forget₂ (Mod R) AddCommGrp).obj (of R X) = AddCommGrp.of X :=
   rfl
 set_option linter.uppercaseLean3 false in
 #align Module.forget₂_obj_Module_of Mod.forget₂_obj_Mod_of
@@ -205,24 +205,24 @@ set_option linter.uppercaseLean3 false in
 
 @[simp]
 theorem forget₂_obj (X : ModuleCat R) :
-    (forget₂ (ModuleCat R) AddCommGroupCat).obj X = AddCommGroupCat.of X :=
+    (forget₂ (ModuleCat R) AddCommGrp).obj X = AddCommGrp.of X :=
   rfl
 #align Module.forget₂_obj ModuleCat.forget₂_obj
 
 -- Porting note: the simpNF linter correctly doesn't like this.
 -- I'm not sure what this is for, actually.
 -- If it is really needed, better might be a simp lemma that says
--- `AddCommGroupCat.of (ModuleCat.of R X) = AddCommGroupCat.of X`.
+-- `AddCommGrp.of (ModuleCat.of R X) = AddCommGrp.of X`.
 -- @[simp 900]
 theorem forget₂_obj_moduleCat_of (X : Type v) [AddCommGroup X] [Module R X] :
-    (forget₂ (ModuleCat R) AddCommGroupCat).obj (of R X) = AddCommGroupCat.of X :=
+    (forget₂ (ModuleCat R) AddCommGrp).obj (of R X) = AddCommGrp.of X :=
   rfl
 #align Module.forget₂_obj_Module_of ModuleCat.forget₂_obj_moduleCat_of
 >>>>>>> origin/master:Mathlib/Algebra/Category/ModuleCat/Basic.lean
 
 @[simp]
 theorem forget₂_map (X Y : Mod R) (f : X ⟶ Y) :
-    (forget₂ (Mod R) AddCommGroupCat).map f = LinearMap.toAddMonoidHom f :=
+    (forget₂ (Mod R) AddCommGrp).map f = LinearMap.toAddMonoidHom f :=
   rfl
 <<<<<<< HEAD:Mathlib/Algebra/Category/Module/Basic.lean
 set_option linter.uppercaseLean3 false in
@@ -474,13 +474,13 @@ instance : Preadditive (Mod.{v} R) where
     ext
     rfl
 
-instance forget₂_addCommGroupCat_additive : (forget₂ (Mod.{v} R) AddCommGroupCat).Additive
+instance forget₂_addCommGrp_additive : (forget₂ (Mod.{v} R) AddCommGrp).Additive
     where
 <<<<<<< HEAD:Mathlib/Algebra/Category/Module/Basic.lean
 set_option linter.uppercaseLean3 false in
-#align Module.forget₂_AddCommGroup_additive Mod.forget₂_addCommGroupCat_additive
+#align Module.forget₂_AddCommGroup_additive Mod.forget₂_addCommGrp_additive
 =======
-#align Module.forget₂_AddCommGroup_additive ModuleCat.forget₂_addCommGroupCat_additive
+#align Module.forget₂_AddCommGroup_additive ModuleCat.forget₂_addCommGrp_additive
 >>>>>>> origin/master:Mathlib/Algebra/Category/ModuleCat/Basic.lean
 
 section

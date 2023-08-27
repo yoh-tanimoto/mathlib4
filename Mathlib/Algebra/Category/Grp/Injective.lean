@@ -3,7 +3,7 @@ Copyright (c) 2022 Jujian Zhang. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Jujian Zhang
 -/
-import Mathlib.Algebra.Category.GroupCat.EpiMono
+import Mathlib.Algebra.Category.Grp.EpiMono
 import Mathlib.Algebra.Category.ModuleCat.EpiMono
 import Mathlib.Algebra.Module.Injective
 import Mathlib.CategoryTheory.Preadditive.Injective
@@ -31,10 +31,10 @@ variable (A : Type u) [AddCommGroup A]
 
 set_option linter.uppercaseLean3 false
 
-namespace AddCommGroupCat
+namespace AddCommGrp
 
 theorem injective_of_injective_as_module [Injective (⟨A⟩ : ModuleCat ℤ)] :
-    CategoryTheory.Injective (⟨A,inferInstance⟩ : AddCommGroupCat) :=
+    CategoryTheory.Injective (⟨A,inferInstance⟩ : AddCommGrp) :=
   { factors := fun {X} {Y} g f m => by
       let G : (⟨X⟩ : ModuleCat ℤ) ⟶ ⟨A⟩ :=
         { g with
@@ -52,8 +52,8 @@ theorem injective_of_injective_as_module [Injective (⟨A⟩ : ModuleCat ℤ)] :
         refine' ⟨fun {Z} α β eq1 => _⟩
         -- Porting note: trouble getting to ℤ-module from ModuleCat ℤ
         -- AddCommGroup.intModule not defeq to .isModule
-        let α' : AddCommGroupCat.of Z ⟶ X := @LinearMap.toAddMonoidHom _ _ _ _ _ _ _ _ (_) _ _ α
-        let β' : AddCommGroupCat.of Z ⟶ X := @LinearMap.toAddMonoidHom _ _ _ _ _ _ _ _ (_) _ _ β
+        let α' : AddCommGrp.of Z ⟶ X := @LinearMap.toAddMonoidHom _ _ _ _ _ _ _ _ (_) _ _ α
+        let β' : AddCommGrp.of Z ⟶ X := @LinearMap.toAddMonoidHom _ _ _ _ _ _ _ _ (_) _ _ β
         have eq2 : α' ≫ f = β' ≫ f := by
           ext x
           simp only [CategoryTheory.comp_apply, LinearMap.toAddMonoidHom_coe]
@@ -66,14 +66,14 @@ theorem injective_of_injective_as_module [Injective (⟨A⟩ : ModuleCat ℤ)] :
       refine' ⟨(Injective.factorThru G F).toAddMonoidHom, _⟩
       ext x
       convert FunLike.congr_fun (Injective.comp_factorThru G F) x}
-#align AddCommGroup.injective_of_injective_as_module AddCommGroupCat.injective_of_injective_as_module
+#align AddCommGroup.injective_of_injective_as_module AddCommGrp.injective_of_injective_as_module
 
-theorem injective_as_module_of_injective_as_Ab [Injective (⟨A,inferInstance⟩ : AddCommGroupCat)] :
+theorem injective_as_module_of_injective_as_Ab [Injective (⟨A,inferInstance⟩ : AddCommGrp)] :
     Injective (⟨A⟩ : ModuleCat ℤ) :=
   { factors := fun {X} {Y} g f m => by
-      let G : (⟨X,inferInstance⟩ : AddCommGroupCat) ⟶ ⟨A,inferInstance⟩ :=
+      let G : (⟨X,inferInstance⟩ : AddCommGrp) ⟶ ⟨A,inferInstance⟩ :=
         @LinearMap.toAddMonoidHom _ _ _ _ _ _ _ _ (_) _ _ g
-      let F : (⟨X,inferInstance⟩ : AddCommGroupCat) ⟶ ⟨Y,inferInstance⟩ :=
+      let F : (⟨X,inferInstance⟩ : AddCommGrp) ⟶ ⟨Y,inferInstance⟩ :=
         @LinearMap.toAddMonoidHom _ _ _ _ _ _ _ _ (_) (_) _ f
       have : Mono F := by
         rw [mono_iff_injective]
@@ -104,10 +104,10 @@ theorem injective_as_module_of_injective_as_Ab [Injective (⟨A,inferInstance⟩
       have := congrFun (congrArg (fun H => H.toFun) (Injective.comp_factorThru G F)) x
       simp only [ModuleCat.coe_comp, Function.comp_apply] at this
       apply this }
-#align AddCommGroup.injective_as_module_of_injective_as_Ab AddCommGroupCat.injective_as_module_of_injective_as_Ab
+#align AddCommGroup.injective_as_module_of_injective_as_Ab AddCommGrp.injective_as_module_of_injective_as_Ab
 
 instance injective_of_divisible [DivisibleBy A ℤ] :
-    CategoryTheory.Injective (⟨A,inferInstance⟩ : AddCommGroupCat) :=
+    CategoryTheory.Injective (⟨A,inferInstance⟩ : AddCommGrp) :=
   @injective_of_injective_as_module A _ <|
     @Module.injective_object_of_injective_module ℤ _ A _ _ <|
       Module.Baer.injective fun I g => by
@@ -150,6 +150,6 @@ instance injective_of_divisible [DivisibleBy A ℤ] :
             dsimp at s
             rw [s, ← LinearMap.map_smul]
             congr
-#align AddCommGroup.injective_of_divisible AddCommGroupCat.injective_of_divisible
+#align AddCommGroup.injective_of_divisible AddCommGrp.injective_of_divisible
 
-end AddCommGroupCat
+end AddCommGrp

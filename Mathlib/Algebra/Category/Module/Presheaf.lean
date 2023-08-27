@@ -33,7 +33,7 @@ set_option autoImplicit true in
 described as a presheaf of abelian groups, and the extra data of the action at each object,
 and a condition relating functoriality and scalar multiplication. -/
 structure PresheafOfModules (R : Cᵒᵖ ⥤ RingCat.{u}) where
-  presheaf : Cᵒᵖ ⥤ AddCommGroupCat.{v}
+  presheaf : Cᵒᵖ ⥤ AddCommGrp.{v}
   module : ∀ X : Cᵒᵖ, Module (R.obj X) (presheaf.obj X)
   map_smul : ∀ {X Y : Cᵒᵖ} (f : X ⟶ Y) (r : R.obj X) (x : presheaf.obj X),
     presheaf.map f (r • x) = R.map f r • presheaf.map f x
@@ -125,7 +125,7 @@ theorem Hom.ext {f g : P ⟶ Q} (w : ∀ X, f.app X = g.app X) : f = g := by
 /-- The functor from presheaves of modules over a specified presheaf of rings,
 to presheaves of abelian groups.
 -/
-def toPresheaf : PresheafOfModules R ⥤ (Cᵒᵖ ⥤ AddCommGroupCat) where
+def toPresheaf : PresheafOfModules R ⥤ (Cᵒᵖ ⥤ AddCommGrp) where
   obj P := P.presheaf
   map f := f.hom
 
