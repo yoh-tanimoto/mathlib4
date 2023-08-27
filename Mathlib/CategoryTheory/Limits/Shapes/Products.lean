@@ -330,6 +330,17 @@ lemma Sigma.map_comp_map' {f g : α → C} {h : β → C} [HasCoproduct f] [HasC
     Sigma.map q ≫ Sigma.map' p q' = Sigma.map' p (fun a => q a ≫ q' a) := by
   ext; simp
 
+@[simp]
+lemma Sigma.map'_id_id {f : α → C} [HasCoproduct f] :
+    Sigma.map' id (fun a => 𝟙 (f a)) = 𝟙 (∐ f) := by
+  ext; simp
+
+lemma Sigma.map'_eq {f : α → C} {g : β → C} [HasCoproduct f] [HasCoproduct g]
+    {p p' : α → β} {q : ∀ (a : α), f a ⟶ g (p a)} {q' : ∀ (a : α), f a ⟶ g (p' a)}
+    (hp : p = p') (hq : ∀ (a : α), q a ≫ eqToHom (hp ▸ rfl) = q' a) :
+    Sigma.map' p q = Sigma.map' p' q' := by
+  aesop_cat
+
 /-- Construct an isomorphism between categorical coproducts (indexed by the same type)
 from a family of isomorphisms between the factors.
 -/

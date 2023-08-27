@@ -318,7 +318,7 @@ def proj (S : C ⥤ D) (T : D) : CostructuredArrow S T ⥤ C :=
   Comma.fst _ _
 #align category_theory.costructured_arrow.proj CategoryTheory.CostructuredArrow.proj
 
-variable {T T' T'' : D} {Y Y' : C} {S S' : C ⥤ D}
+variable {T T' T'' : D} {Y Y' Y'' : C} {S S' : C ⥤ D}
 
 -- porting note: this lemma was added because `Comma.hom_ext`
 -- was not triggered automatically
@@ -392,6 +392,11 @@ def homMk' (f : CostructuredArrow S T) (g : Y' ⟶ f.left) : mk (S.map g ≫ f.h
   left := g
   right := eqToHom (by ext)
 
+lemma homMk'_comp (f : CostructuredArrow S T) (g : Y' ⟶ f.left) (g' : Y'' ⟶ Y') :
+    homMk' (CostructuredArrow.mk (S.map g ≫ f.hom)) g' ≫ homMk' f g = eqToHom (by simp) ≫ homMk' f (g' ≫ g) := by
+  ext
+  simp [eqToHom_left]
+
 /-- To construct an isomorphism of costructured arrows,
 we need an isomorphism of the objects underlying the source,
 and to check that the triangle commutes.
@@ -441,6 +446,17 @@ instance epi_homMk {A B : CostructuredArrow S T} (f : A.left ⟶ B.left) (w) [h 
 theorem eq_mk (f : CostructuredArrow S T) : f = mk f.hom :=
   rfl
 #align category_theory.costructured_arrow.eq_mk CategoryTheory.CostructuredArrow.eq_mk
+
+lemma homMk'_id₂ (f : CostructuredArrow S T) : homMk' f (𝟙 _) = homMk (by
+  dsimp
+  exact 𝟙 _
+  ) (by simp) := by
+  aesop_cat
+
+lemma homMk'_id (f : CostructuredArrow S T) :
+    homMk' f (𝟙 _) = eqToHom (by rw [S.map_id, Category.id_comp, ← eq_mk]) := by
+  ext
+  simp only [mk_left, homMk'_left, eqToHom_left, eqToHom_refl]
 
 /-- Eta rule for costructured arrows. -/
 @[simps!]

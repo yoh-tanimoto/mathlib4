@@ -14,6 +14,7 @@ import Mathlib.CategoryTheory.Limits.Shapes.Terminal
 import Mathlib.CategoryTheory.Limits.Shapes.Products
 import Mathlib.CategoryTheory.Limits.Shapes.Types
 import Mathlib.CategoryTheory.Limits.Over
+import Mathlib.CategoryTheory.Limits.EssentiallySmall
 
 #align_import category_theory.limits.presheaf from "leanprover-community/mathlib"@"70fd9563a21e7b963887c9360bd29b2393e6225a"
 
@@ -521,6 +522,48 @@ def terribleFunctor (A : Cᵒᵖ ⥤ Type v₁) : Over A ⥤ (CostructuredArrow 
         dsimp
         have := (η.left.naturality f.unop.left.op)
         exact congr_fun this x.1 }
+
+lemma b : 0 = 0 := rfl
+
+instance abc {X : C} {F : Cᵒᵖ ⥤ Type v₁} : Small.{v₁} (yoneda.obj X ⟶ F) :=
+  Small.mk' yonedaEquiv
+
+instance u {X : C} {A : Cᵒᵖ ⥤ Type v₁} : HasCoproductsOfShape (yoneda.obj X ⟶ A) (Type v₁) :=
+  hasCoproductsOfShape_of_small _ _
+
+/-- Why is this needed?? -/
+instance {X : Cᵒᵖ} {A : Cᵒᵖ ⥤ Type v₁} (F : (CostructuredArrow yoneda A)ᵒᵖ ⥤ Type v₁) :
+    HasCoproduct (fun (s : yoneda.obj X.unop ⟶ A) => F.obj (Opposite.op (CostructuredArrow.mk s))) :=
+  u.has_colimit _
+
+noncomputable def bla₂ (A : Cᵒᵖ ⥤ Type v₁) (F : (CostructuredArrow yoneda A)ᵒᵖ ⥤ Type v₁) :
+    Cᵒᵖ ⥤ Type v₁ where
+  obj := fun X => ∐ fun (s : yoneda.obj X.unop ⟶ A) => F.obj (Opposite.op (CostructuredArrow.mk s))
+  map := fun {X Y} f => by
+    refine' Sigma.map' (fun s => yoneda.map f.unop ≫ s) (fun s => F.map (Quiver.Hom.op _))
+    refine' CostructuredArrow.homMk' (CostructuredArrow.mk s) _
+  map_id := fun X => by
+    dsimp only [unop_id]
+    rw [← Sigma.map'_id_id]
+    refine' Sigma.map'_eq _ _
+    · ext
+      simp only [Functor.map_id, id_comp, id_eq]
+    · intro s
+      simp only [id_eq]
+      erw [CostructuredArrow.homMk'_id (CostructuredArrow.mk s)]
+      rw [eqToHom_op, eqToHom_map]
+      simp only [id_eq, eqToHom_trans, eqToHom_refl]
+  map_comp := fun {X Y Z} f g => by
+    dsimp only [unop_comp]
+    rw [Sigma.map'_comp_map']
+    refine' Sigma.map'_eq _ _
+    · ext
+      simp only [Functor.map_comp, assoc, FunctorToTypes.comp, yoneda_map_app, Function.comp_apply]
+    · intro s
+      simp only [Function.comp_apply]
+      rw [← F.map_comp, ← op_comp]
+      erw [CostructuredArrow.homMk'_comp (CostructuredArrow.mk s)]
+      rw [op_comp, F.map_comp, eqToHom_op, eqToHom_map]
 
 @[simps]
 noncomputable def bla (A : Cᵒᵖ ⥤ Type v₁) (F : (CostructuredArrow yoneda A)ᵒᵖ ⥤ Type v₁) :
