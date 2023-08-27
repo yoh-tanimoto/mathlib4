@@ -12,9 +12,9 @@ import Mathlib.Algebra.Hom.Equiv.TypeTags
 # Equivalence between `Group` and `AddGroup`
 
 This file contains two equivalences:
-* `groupAddGroupEquivalence` : the equivalence between `Grp` and `AddGrp` by sending
+* `grpAddGrpEquivalence ` : the equivalence between `Grp` and `AddGrp` by sending
   `X : Grp` to `Additive X` and `Y : AddGrp` to `Multiplicative Y`.
-* `commGroupAddCommGroupEquivalence` : the equivalence between `CommGrp` and `AddCommGrp`
+* `commGrpAddCommGrpEquivalence ` : the equivalence between `CommGrp` and `AddCommGrp`
   by sending `X : CommGrp` to `Additive X` and `Y : AddCommGrp` to `Multiplicative Y`.
 -/
 
@@ -80,17 +80,17 @@ end AddCommGrp
 /-- The equivalence of categories between `Group` and `AddGroup`
 -/
 @[simps!]
-def groupAddGroupEquivalence : Grp ≌ AddGrp :=
+def grpAddGrpEquivalence  : Grp ≌ AddGrp :=
   CategoryTheory.Equivalence.mk Grp.toAddGrp AddGrp.toGrp
     (NatIso.ofComponents fun X => MulEquiv.toGrpIso (MulEquiv.multiplicativeAdditive X))
     (NatIso.ofComponents fun X => AddEquiv.toAddGrpIso (AddEquiv.additiveMultiplicative X))
-#align Group_AddGroup_equivalence groupAddGroupEquivalence
+#align Group_AddGroup_equivalence grpAddGrpEquivalence
 
 /-- The equivalence of categories between `CommGroup` and `AddCommGroup`.
 -/
 @[simps!]
-def commGroupAddCommGroupEquivalence : CommGrp ≌ AddCommGrp :=
+def commGrpAddCommGrpEquivalence  : CommGrp ≌ AddCommGrp :=
   CategoryTheory.Equivalence.mk CommGrp.toAddCommGrp AddCommGrp.toCommGrp
     (NatIso.ofComponents fun X => MulEquiv.toCommGrpIso (MulEquiv.multiplicativeAdditive X))
     (NatIso.ofComponents fun X => AddEquiv.toAddCommGrpIso (AddEquiv.additiveMultiplicative X))
-#align CommGroup_AddCommGroup_equivalence commGroupAddCommGroupEquivalence
+#align CommGroup_AddCommGroup_equivalence commGrpAddCommGrpEquivalence

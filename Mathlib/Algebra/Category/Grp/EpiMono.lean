@@ -364,10 +364,10 @@ set_option linter.uppercaseLean3 false
 variable {A B : AddGrp.{u}} (f : A ⟶ B)
 
 theorem epi_iff_surjective : Epi f ↔ Function.Surjective f := by
-  have i1 : Epi f ↔ Epi (groupAddGroupEquivalence.inverse.map f) := by
-    refine' ⟨_, groupAddGroupEquivalence.inverse.epi_of_epi_map⟩
+  have i1 : Epi f ↔ Epi (grpAddGrpEquivalence .inverse.map f) := by
+    refine' ⟨_, grpAddGrpEquivalence .inverse.epi_of_epi_map⟩
     intro e'
-    apply groupAddGroupEquivalence.inverse.map_epi
+    apply grpAddGrpEquivalence .inverse.map_epi
   rwa [Grp.epi_iff_surjective] at i1
 #align AddGroup.epi_iff_surjective AddGrp.epi_iff_surjective
 
