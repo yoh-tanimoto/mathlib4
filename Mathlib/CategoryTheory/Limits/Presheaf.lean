@@ -596,6 +596,7 @@ noncomputable def bla₂'' (A : Cᵒᵖ ⥤ Type v₁) (F : (CostructuredArrow y
     ext x
     exact (yonedaEquiv_naturality' _ _).symm
 
+@[simp]
 noncomputable def terribleReverse (A : Cᵒᵖ ⥤ Type v₁) : ((CostructuredArrow yoneda A)ᵒᵖ ⥤ Type v₁) ⥤ Over A :=
   (bla₂' A).toOver A (bla₂'' A) (by
     intros F G η
@@ -607,30 +608,6 @@ noncomputable def terribleReverse (A : Cᵒᵖ ⥤ Type v₁) : ((CostructuredAr
     simp
     ext1
     simp)
-
-noncomputable def terribleEquiv (A : Cᵒᵖ ⥤ Type v₁) : Over A ≌ ((CostructuredArrow yoneda A)ᵒᵖ ⥤ Type v₁) := by
-  refine' Equivalence.mk (terribleFunctor A) (terribleReverse A) _ _
-  · refine' NatIso.ofComponents (fun F => Over.isoMk (NatIso.ofComponents (fun X => _) _) _) _
-    · dsimp
-      refine' ⟨fun x => _, _, _, _⟩
-      · refine' Sigma.ι (fun s => { x : F.left.obj X // yonedaEquiv.symm x ≫ F.hom = yonedaEquiv.symm s }) (yonedaEquiv (yonedaEquiv.symm x ≫ F.hom)) ⟨x, _⟩
-        rw [Equiv.symm_apply_apply]
-      · refine' Sigma.desc (fun s x => x.1)
-      · aesop_cat
-      · apply Sigma.hom_ext
-        intro s
-        simp
-        ext x
-        simp
-
-
-
-
-        sorry
-    · sorry
-    · sorry
-    · sorry
-  · sorry
 
 def terribleTriangle (A : Cᵒᵖ ⥤ Type v₁) :
     CostructuredArrow.toOver yoneda A ⋙ terribleFunctor A ≅ yoneda :=
@@ -649,6 +626,87 @@ def terribleTriangle (A : Cᵒᵖ ⥤ Type v₁) :
       · aesop_cat
       · aesop_cat
     · aesop_cat) (by aesop_cat)
+
+theorem c : 0 = 0 := rfl
+
+instance {X : Cᵒᵖ} {A : Cᵒᵖ ⥤ Type v₁} (η : Over A) :
+    HasCoproduct (fun (s : yoneda.obj X.unop ⟶ A) => { u : η.left.obj X // NatTrans.app η.hom X u = yonedaEquiv s }) :=
+  u.has_colimit _
+
+@[simps!]
+noncomputable def unit_pt (A : Cᵒᵖ ⥤ Type v₁) (η : Over A) :
+    (terribleFunctor A ⋙ terribleReverse A).obj η ≅ η := by
+  refine' Over.isoMk (NatIso.ofComponents (fun X => _) _) _
+  · dsimp
+    refine' ⟨Sigma.desc fun s u => u.1, fun u => _, _, _⟩
+    · refine' Sigma.ι (fun (s : yoneda.obj X.unop ⟶ A) => { u : η.left.obj X // NatTrans.app η.hom X u = yonedaEquiv s })
+        (yonedaEquiv.symm (η.hom.app X u)) ⟨u, _⟩
+      erw [Equiv.apply_symm_apply]
+    · apply Sigma.hom_ext
+      intro s
+      simp
+      ext u
+      simp
+      rcases u with ⟨u, hu⟩
+      have : s = yonedaEquiv.symm (NatTrans.app η.hom X u)
+      · erw [hu, Equiv.symm_apply_apply]
+      subst this
+      simp only [Functor.const_obj_obj, Opposite.op_unop, Functor.id_obj]
+    · ext x
+      dsimp
+      erw [← types_comp_apply (Sigma.ι _ _) (Sigma.desc _)]
+      rw [colimit.ι_desc]
+      simp only [Cofan.mk_pt, Cofan.mk_ι_app]
+  · intros X Y f
+    simp
+    apply Sigma.hom_ext
+    intro s
+    ext u
+    rw [Sigma.ι_comp_map'_assoc, colimit.ι_desc_assoc]
+    simp only [colimit.ι_desc, Cofan.mk_pt, Cofan.mk_ι_app, types_comp_apply, blub₂_map_coe, Opposite.unop_op,
+      CostructuredArrow.mk_left, Opposite.op_unop, Quiver.Hom.unop_op, CostructuredArrow.homMk'_left,
+      Quiver.Hom.op_unop, Functor.const_obj_obj, Functor.id_obj, CostructuredArrow.mk_right,
+      CostructuredArrow.mk_hom_eq_self, Discrete.functor_obj]
+  · apply NatTrans.ext
+    apply funext
+    intro X
+    apply Sigma.hom_ext
+    intro s
+    dsimp
+    ext u
+    erw [colimit.ι_desc, colimit.ι_desc_assoc]
+    simp [u.2]
+
+noncomputable def unit (A : Cᵒᵖ ⥤ Type v₁) : (terribleFunctor A ⋙ terribleReverse A) ≅ 𝟭 (Over A) :=
+  NatIso.ofComponents (unit_pt A) (by
+    intros η μ ε
+    apply CostructuredArrow.hom_ext
+    apply NatTrans.ext
+    apply funext
+    intro X
+    apply Sigma.hom_ext
+    intro s
+    ext u
+    dsimp
+    erw [← types_comp_apply (Sigma.ι _ _) (Sigma.desc _), colimit.ι_desc,
+      ← types_comp_apply (Sigma.ι _ _) (Limits.Sigma.map _)]
+    rw [← Sigma.map'_id, Sigma.ι_comp_map']
+    simp
+    erw [← types_comp_apply (Sigma.ι _ _) (Sigma.desc _), colimit.ι_desc]
+    simp)
+
+noncomputable def counit_pt (A : Cᵒᵖ ⥤ Type v₁) (F : (CostructuredArrow yoneda A)ᵒᵖ ⥤ Type v₁) :
+    F ≅ (terribleReverse A ⋙ terribleFunctor A).obj F := by
+  refine' NatIso.ofComponents (fun X => _) _
+  · refine' ⟨fun u => _, _, _, _⟩
+    · refine' ⟨_, _⟩
+      · sorry
+      · sorry
+    · sorry
+    · sorry
+    · sorry
+  · sorry
+
 
 open Functor
 
