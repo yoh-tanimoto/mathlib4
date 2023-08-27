@@ -57,7 +57,7 @@ set_option linter.uppercaseLean3 false in
 
 /-- The category of modules has enough projectives, since every module is a quotient of a free
     module. -/
-instance ModuleCat_enoughProjectives : EnoughProjectives (ModuleCat.{max u v} R) where
+instance moduleCat_enoughProjectives : EnoughProjectives (ModuleCat.{max u v} R) where
   presentation M :=
     ⟨{  p := ModuleCat.of R (M →₀ R)
         projective :=
@@ -72,6 +72,6 @@ instance ModuleCat_enoughProjectives : EnoughProjectives (ModuleCat.{max u v} R)
               rw [Finsupp.total_single, one_smul]
               rfl ⟩) }⟩
 set_option linter.uppercaseLean3 false in
-#align Module.Module_enough_projectives ModuleCat.ModuleCat_enoughProjectives
+#align Module.Module_enough_projectives ModuleCat.moduleCat_enoughProjectives
 
 end ModuleCat
