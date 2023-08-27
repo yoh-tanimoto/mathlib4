@@ -214,10 +214,10 @@ theorem forget₂_obj (X : ModuleCat R) :
 -- If it is really needed, better might be a simp lemma that says
 -- `AddCommGrp.of (ModuleCat.of R X) = AddCommGrp.of X`.
 -- @[simp 900]
-theorem forget₂_obj_ModuleCat_of (X : Type v) [AddCommGroup X] [Module R X] :
+theorem forget₂_obj_moduleCat_of (X : Type v) [AddCommGroup X] [Module R X] :
     (forget₂ (ModuleCat R) AddCommGrp).obj (of R X) = AddCommGrp.of X :=
   rfl
-#align Module.forget₂_obj_Module_of ModuleCat.forget₂_obj_ModuleCat_of
+#align Module.forget₂_obj_Module_of ModuleCat.forget₂_obj_moduleCat_of
 >>>>>>> origin/master:Mathlib/Algebra/Category/ModuleCat/Basic.lean
 
 @[simp]

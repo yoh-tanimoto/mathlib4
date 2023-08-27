@@ -76,7 +76,7 @@ set_option linter.uppercaseLean3 false in
 
 /-- The category of R-modules is abelian. -/
 instance abelian : Abelian (ModuleCat.{v} R) where
-  has_cokernels := hasCokernels_ModuleCat
+  has_cokernels := hasCokernels_moduleCat
   normalMonoOfMono := normalMono
   normalEpiOfEpi := normalEpi
 set_option linter.uppercaseLean3 false in
