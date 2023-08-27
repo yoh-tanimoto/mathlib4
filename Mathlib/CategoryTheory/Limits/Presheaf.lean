@@ -536,12 +536,12 @@ instance {X : Cᵒᵖ} {A : Cᵒᵖ ⥤ Type v₁} (F : (CostructuredArrow yoned
     HasCoproduct (fun (s : yoneda.obj X.unop ⟶ A) => F.obj (Opposite.op (CostructuredArrow.mk s))) :=
   u.has_colimit _
 
+@[simps (config := { fullyApplied := false }) obj map]
 noncomputable def bla₂ (A : Cᵒᵖ ⥤ Type v₁) (F : (CostructuredArrow yoneda A)ᵒᵖ ⥤ Type v₁) :
     Cᵒᵖ ⥤ Type v₁ where
   obj := fun X => ∐ fun (s : yoneda.obj X.unop ⟶ A) => F.obj (Opposite.op (CostructuredArrow.mk s))
-  map := fun {X Y} f => by
-    refine' Sigma.map' (fun s => yoneda.map f.unop ≫ s) (fun s => F.map (Quiver.Hom.op _))
-    refine' CostructuredArrow.homMk' (CostructuredArrow.mk s) _
+  map := fun {X Y} f => Sigma.map' (fun s => yoneda.map f.unop ≫ s)
+    (fun s => F.map (Quiver.Hom.op (CostructuredArrow.homMk' (CostructuredArrow.mk s) _)))
   map_id := fun X => by
     dsimp only [unop_id]
     rw [← Sigma.map'_id_id]
@@ -565,77 +565,124 @@ noncomputable def bla₂ (A : Cᵒᵖ ⥤ Type v₁) (F : (CostructuredArrow yon
       erw [CostructuredArrow.homMk'_comp (CostructuredArrow.mk s)]
       rw [op_comp, F.map_comp, eqToHom_op, eqToHom_map]
 
-@[simps]
-noncomputable def bla (A : Cᵒᵖ ⥤ Type v₁) (F : (CostructuredArrow yoneda A)ᵒᵖ ⥤ Type v₁) :
-    Cᵒᵖ ⥤ Type v₁ where
-  obj := fun X => ∐ fun (s : A.obj X) => F.obj (Opposite.op (CostructuredArrow.mk (yonedaEquiv.symm s)))
-  map := fun {X Y} f => by
-    refine' Sigma.desc (fun s => (fun x => _) ≫ Sigma.ι _ (A.map f s))
-    refine' F.map (Quiver.Hom.op (CostructuredArrow.homMk _ _)) x
+attribute [local simp] Sigma.map'_comp_map Sigma.map_comp_map'
+
+@[simps (config := { fullyApplied := false })]
+noncomputable def bla₂' (A : Cᵒᵖ ⥤ Type v₁) : ((CostructuredArrow yoneda A)ᵒᵖ ⥤ Type v₁) ⥤ Cᵒᵖ ⥤ Type v₁ where
+  obj := bla₂ A
+  map := fun {F G} η => { app := fun X => Sigma.map' id (fun x => η.app _) }
+  map_id := by
+    intro F
+    ext1
+    ext1 x
     dsimp
-    exact f.unop
-    exact (yonedaEquiv_symm_map _ _).symm
-  map_id := fun X => by
     apply Sigma.hom_ext
     intro s
-    simp
-    sorry
-  map_comp := fun {X Y Z} f g => by
-    apply Sigma.hom_ext
-    intro s
-    simp
-    sorry
-
-@[simps]
-noncomputable def bloink (A : Cᵒᵖ ⥤ Type v₁) (F : (CostructuredArrow yoneda A)ᵒᵖ ⥤ Type v₁) :
-    bla A F ⟶ A where
-  app X := Sigma.desc (fun s _ => s)
-
-@[simps]
-noncomputable def terribleReverse (A : Cᵒᵖ ⥤ Type v₁) : ((CostructuredArrow yoneda A)ᵒᵖ ⥤ Type v₁) ⥤ Over A where
-  obj F := Over.mk (bloink A F)
-  map {F G} η := by
-    refine' Over.homMk _ _
-    · refine' ⟨fun X => Sigma.desc (fun s => _ ≫ Sigma.ι _ s), _⟩
-      · exact η.app (Opposite.op (CostructuredArrow.mk (yonedaEquiv.symm s)))
-      · intros X Y f
-        sorry
-        -- apply Sigma.hom_ext
-        -- intro s
-        -- dsimp
-        -- simp
-        -- erw [colimit.ι_desc_assoc, colimit.ι_desc]
-        -- simp
-        -- rw [← Category.assoc, ← Category.assoc]
-        -- congr 1
-    · ext1
-      ext1 X
-      simp
-      apply Sigma.hom_ext
-      intro s
-      simp
-      erw [colimit.ι_desc, colimit.ι_desc]
-      dsimp
-      ext x
-      rfl
-  map_id := fun F => by
-    apply Over.OverMorphism.ext
-    simp
+    simp only [ι_colimMap, Discrete.functor_obj, Discrete.natTrans_app, id_comp, comp_id]
+  map_comp := by
+    intro F G H η μ
     ext1
     ext1 X
-    simp
+    dsimp
+    apply Sigma.hom_ext
+    intro s
+    simp only [ι_colimMap, Discrete.functor_obj, Discrete.natTrans_app, assoc, ι_colimMap_assoc]
+
+@[simps (config := { fullyApplied := false })]
+noncomputable def bla₂'' (A : Cᵒᵖ ⥤ Type v₁) (F : (CostructuredArrow yoneda A)ᵒᵖ ⥤ Type v₁) :
+    (bla₂' A).obj F ⟶ A where
+  app := fun X => Sigma.desc (fun s _ => yonedaEquiv s)
+  naturality := by
+    intros X Y f
     apply Sigma.hom_ext
     intro s
     simp
-  map_comp := fun {F G H} η μ => by
-    apply Over.OverMorphism.ext
-    simp
+    ext x
+    exact (yonedaEquiv_naturality' _ _).symm
+
+noncomputable def terribleReverse (A : Cᵒᵖ ⥤ Type v₁) : ((CostructuredArrow yoneda A)ᵒᵖ ⥤ Type v₁) ⥤ Over A :=
+  (bla₂' A).toOver _ (bla₂'' A) (by
+    intros F G η
     ext1
     ext1 X
-    simp
+    dsimp
     apply Sigma.hom_ext
     intro s
     simp
+    ext1
+    simp)
+
+-- @[simps]
+-- noncomputable def bla (A : Cᵒᵖ ⥤ Type v₁) (F : (CostructuredArrow yoneda A)ᵒᵖ ⥤ Type v₁) :
+--     Cᵒᵖ ⥤ Type v₁ where
+--   obj := fun X => ∐ fun (s : A.obj X) => F.obj (Opposite.op (CostructuredArrow.mk (yonedaEquiv.symm s)))
+--   map := fun {X Y} f => by
+--     refine' Sigma.desc (fun s => (fun x => _) ≫ Sigma.ι _ (A.map f s))
+--     refine' F.map (Quiver.Hom.op (CostructuredArrow.homMk _ _)) x
+--     dsimp
+--     exact f.unop
+--     exact (yonedaEquiv_symm_map _ _).symm
+--   map_id := fun X => by
+--     apply Sigma.hom_ext
+--     intro s
+--     simp
+--     sorry
+--   map_comp := fun {X Y Z} f g => by
+--     apply Sigma.hom_ext
+--     intro s
+--     simp
+--     sorry
+
+-- @[simps]
+-- noncomputable def bloink (A : Cᵒᵖ ⥤ Type v₁) (F : (CostructuredArrow yoneda A)ᵒᵖ ⥤ Type v₁) :
+--     bla A F ⟶ A where
+--   app X := Sigma.desc (fun s _ => s)
+
+-- @[simps]
+-- noncomputable def terribleReverse (A : Cᵒᵖ ⥤ Type v₁) : ((CostructuredArrow yoneda A)ᵒᵖ ⥤ Type v₁) ⥤ Over A where
+--   obj F := Over.mk (bloink A F)
+--   map {F G} η := by
+--     refine' Over.homMk _ _
+--     · refine' ⟨fun X => Sigma.desc (fun s => _ ≫ Sigma.ι _ s), _⟩
+--       · exact η.app (Opposite.op (CostructuredArrow.mk (yonedaEquiv.symm s)))
+--       · intros X Y f
+--         sorry
+--         -- apply Sigma.hom_ext
+--         -- intro s
+--         -- dsimp
+--         -- simp
+--         -- erw [colimit.ι_desc_assoc, colimit.ι_desc]
+--         -- simp
+--         -- rw [← Category.assoc, ← Category.assoc]
+--         -- congr 1
+--     · ext1
+--       ext1 X
+--       simp
+--       apply Sigma.hom_ext
+--       intro s
+--       simp
+--       erw [colimit.ι_desc, colimit.ι_desc]
+--       dsimp
+--       ext x
+--       rfl
+--   map_id := fun F => by
+--     apply Over.OverMorphism.ext
+--     simp
+--     ext1
+--     ext1 X
+--     simp
+--     apply Sigma.hom_ext
+--     intro s
+--     simp
+--   map_comp := fun {F G H} η μ => by
+--     apply Over.OverMorphism.ext
+--     simp
+--     ext1
+--     ext1 X
+--     simp
+--     apply Sigma.hom_ext
+--     intro s
+--     simp
 
 noncomputable def terribleEquiv (A : Cᵒᵖ ⥤ Type v₁) : Over A ≌ ((CostructuredArrow yoneda A)ᵒᵖ ⥤ Type v₁) := by
   refine' Equivalence.mk (terribleFunctor A) (terribleReverse A) _ _
