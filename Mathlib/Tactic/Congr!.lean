@@ -457,16 +457,16 @@ where
           fixed := fixed.push true
         else
           fixed := fixed.push (← withReducible <| withNewMCtxDepth <| isDefEq larg rarg)
-      let (congrThm, congrProof) ← Congr!.mkHCongrThm (← inferType f) info
+      let (congrThm, conGroupCatroof) ← Congr!.mkHCongrThm (← inferType f) info
                                     (fixedFun := funDefEq) (fixedParams := fixed)
       -- Now see if the congruence theorem actually applies in this situation by applying it!
-      let (congrThm', congrProof') :=
+      let (congrThm', conGroupCatroof') :=
         if funDefEq then
-          (congrThm.bindingBody!.instantiate1 f, congrProof.beta #[f])
+          (congrThm.bindingBody!.instantiate1 f, conGroupCatroof.beta #[f])
         else
           (congrThm.bindingBody!.bindingBody!.instantiateRev #[f, f'],
-           congrProof.beta #[f, f'])
-      observing? <| applyCongrThm? config mvarId congrThm' congrProof'
+           conGroupCatroof.beta #[f, f'])
+      observing? <| applyCongrThm? config mvarId congrThm' conGroupCatroof'
     | _, _ => return none
   forSide (mvarId : MVarId) (side : Expr) : MetaM (Option (List MVarId)) := do
     let side := side.cleanupAnnotations
@@ -493,11 +493,11 @@ where
           fixed := fixed.push (pinfo.binderInfo != .default)
         else
           fixed := fixed.push true
-    let (congrThm, congrProof) ←
+    let (congrThm, conGroupCatroof) ←
       Congr!.mkHCongrThm (← inferType f) info (fixedFun := true) (fixedParams := fixed)
     let congrThm' := congrThm.bindingBody!.instantiate1 f
-    let congrProof' := congrProof.beta #[f]
-    observing? <| applyCongrThm? config mvarId congrThm' congrProof'
+    let conGroupCatroof' := conGroupCatroof.beta #[f]
+    observing? <| applyCongrThm? config mvarId congrThm' conGroupCatroof'
 
 /--
 Like `Lean.MVarId.congr?` but instead of using only the congruence lemma associated to the LHS,
@@ -610,7 +610,7 @@ def Lean.MVarId.liftReflToEq (mvarId : MVarId) : MetaM MVarId := do
 /--
 Try to apply `pi_congr`. This is similar to `Lean.MVar.congrImplies?`.
 -/
-def Lean.MVarId.congrPi? (mvarId : MVarId) : MetaM (Option (List MVarId)) :=
+def Lean.MVarId.conGroupCati? (mvarId : MVarId) : MetaM (Option (List MVarId)) :=
   observing? do withReducible <| mvarId.apply (← mkConstWithFreshMVarLevels `pi_congr)
 
 /--
@@ -680,7 +680,7 @@ def Lean.MVarId.subsingletonHelim? (mvarId : MVarId) : MetaM (Option (List MVarI
 /--
 A list of all the congruence strategies used by `Lean.MVarId.congrCore!`.
 -/
-def Lean.MVarId.congrPasses! :
+def Lean.MVarId.conGroupCatasses! :
     List (String × (Congr!.Config → MVarId → MetaM (Option (List MVarId)))) :=
   [("user congr", userCongr?),
    ("hcongr lemma", smartHCongr?),
@@ -689,7 +689,7 @@ def Lean.MVarId.congrPasses! :
    ("obvious funext", fun _ => obviousFunext?),
    ("obvious hfunext", fun _ => obviousHfunext?),
    ("congr_implies", fun _ => congrImplies?'),
-   ("congr_pi", fun _ => congrPi?)]
+   ("congr_pi", fun _ => conGroupCati?)]
 
 structure CongrState where
   /-- Accumulated goals that `congr!` could not handle. -/
@@ -799,7 +799,7 @@ def Lean.MVarId.congrCore! (config : Congr!.Config) (mvarId : MVarId) :
   mvarId.checkNotAssigned `congr!
   let s ← saveState
   let mvarId ← mvarId.liftReflToEq
-  for (passName, pass) in congrPasses! do
+  for (passName, pass) in conGroupCatasses! do
     try
       if let some mvarIds ← pass config mvarId then
         trace[congr!] "pass succeded: {passName}"

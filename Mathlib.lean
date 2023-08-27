@@ -29,10 +29,10 @@ import Mathlib.Algebra.BigOperators.Pi
 import Mathlib.Algebra.BigOperators.Ring
 import Mathlib.Algebra.BigOperators.RingEquiv
 import Mathlib.Algebra.Bounds
-import Mathlib.Algebra.Category.Grp.Basic
-import Mathlib.Algebra.Category.Grp.Preadditive
-import Mathlib.Algebra.Category.Grp.ZModuleEquivalence
-import Mathlib.Algebra.Category.Grp.Zero
+import Mathlib.Algebra.Category.GroupCat.Basic
+import Mathlib.Algebra.Category.GroupCat.Preadditive
+import Mathlib.Algebra.Category.GroupCat.ZModuleEquivalence
+import Mathlib.Algebra.Category.GroupCat.Zero
 import Mathlib.Algebra.Category.Mod.Basic
 import Mathlib.Algebra.Category.Mod.EpiMono
 import Mathlib.Algebra.Category.Mod.Products

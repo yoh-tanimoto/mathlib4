@@ -8,7 +8,7 @@ Authors: Robert A. Spencer, Markus Himmel
 ! Please do not edit these lines, except to modify the commit id
 ! if you have ported upstream changes.
 -/
-import Mathlib.Algebra.Category.Grp.Preadditive
+import Mathlib.Algebra.Category.GroupCat.Preadditive
 import Mathlib.CategoryTheory.Linear.Basic
 import Mathlib.CategoryTheory.Elementwise
 import Mathlib.LinearAlgebra.Basic
@@ -117,9 +117,9 @@ set_option linter.uppercaseLean3 false in
 lemma hom_ext {M N : Mod.{v} R} (f₁ f₂ : M ⟶ N) (h : ∀ (x : M), f₁ x = f₂ x) : f₁ = f₂ :=
   FunLike.ext _ _ h
 
-instance hasForgetToAddCommGroup : HasForget₂ (Mod R) AddCommGrp where
+instance hasForgetToAddCommGroup : HasForget₂ (Mod R) AddCommGroupCat where
   forget₂ :=
-    { obj := fun M => AddCommGrp.of M
+    { obj := fun M => AddCommGroupCat.of M
       map := fun f => LinearMap.toAddMonoidHom f }
 set_option linter.uppercaseLean3 false in
 #align Module.has_forget_to_AddCommGroup Mod.hasForgetToAddCommGroup
@@ -135,21 +135,21 @@ set_option linter.uppercaseLean3 false in
 
 -- porting note: remove simp attribute because it makes the linter complain
 theorem forget₂_obj (X : Mod R) :
-    (forget₂ (Mod R) AddCommGrp).obj X = AddCommGrp.of X :=
+    (forget₂ (Mod R) AddCommGroupCat).obj X = AddCommGroupCat.of X :=
   rfl
 set_option linter.uppercaseLean3 false in
 #align Module.forget₂_obj Mod.forget₂_obj
 
 @[simp 900]
 theorem forget₂_obj_Mod_of (X : Type v) [AddCommGroup X] [Module R X] :
-    (forget₂ (Mod R) AddCommGrp).obj (of R X) = AddCommGrp.of X :=
+    (forget₂ (Mod R) AddCommGroupCat).obj (of R X) = AddCommGroupCat.of X :=
   rfl
 set_option linter.uppercaseLean3 false in
 #align Module.forget₂_obj_Module_of Mod.forget₂_obj_Mod_of
 
 @[simp]
 theorem forget₂_map (X Y : Mod R) (f : X ⟶ Y) :
-    (forget₂ (Mod R) AddCommGrp).map f = LinearMap.toAddMonoidHom f :=
+    (forget₂ (Mod R) AddCommGroupCat).map f = LinearMap.toAddMonoidHom f :=
   rfl
 set_option linter.uppercaseLean3 false in
 #align Module.forget₂_map Mod.forget₂_map
@@ -348,10 +348,10 @@ instance : Preadditive (Mod.{v} R) where
     ext
     rfl
 
-instance forget₂_addCommGrp_additive : (forget₂ (Mod.{v} R) AddCommGrp).Additive
+instance forget₂_addCommGroupCat_additive : (forget₂ (Mod.{v} R) AddCommGroupCat).Additive
     where
 set_option linter.uppercaseLean3 false in
-#align Module.forget₂_AddCommGroup_additive Mod.forget₂_addCommGrp_additive
+#align Module.forget₂_AddCommGroup_additive Mod.forget₂_addCommGroupCat_additive
 
 section
 
