@@ -8,7 +8,7 @@ Authors: Robert A. Spencer, Markus Himmel
 ! Please do not edit these lines, except to modify the commit id
 ! if you have ported upstream changes.
 -/
-import Mathlib.Algebra.Category.GroupCat.Preadditive
+import Mathlib.Algebra.Category.Grp.Preadditive
 import Mathlib.CategoryTheory.Linear.Basic
 import Mathlib.CategoryTheory.Elementwise
 import Mathlib.LinearAlgebra.Basic
@@ -117,12 +117,12 @@ set_option linter.uppercaseLean3 false in
 lemma hom_ext {M N : ModuleCat.{v} R} (f₁ f₂ : M ⟶ N) (h : ∀ (x : M), f₁ x = f₂ x) : f₁ = f₂ :=
   FunLike.ext _ _ h
 
-instance hasForgetToAddCommGroup : HasForget₂ (ModuleCat R) AddCommGroupCat where
+instance hasForgetToAddCommGrp : HasForget₂ (ModuleCat R) AddCommGrp where
   forget₂ :=
-    { obj := fun M => AddCommGroupCat.of M
+    { obj := fun M => AddCommGrp.of M
       map := fun f => LinearMap.toAddMonoidHom f }
 set_option linter.uppercaseLean3 false in
-#align Module.has_forget_to_AddCommGroup ModuleCat.hasForgetToAddCommGroup
+#align Module.has_forget_to_AddCommGroup ModuleCat.hasForgetToAddCommGrp
 
 instance (M N : ModuleCat R) : LinearMapClass (M ⟶ N) R M N :=
   { LinearMap.instSemilinearMapClassLinearMap with coe := fun f => f }
@@ -135,21 +135,21 @@ set_option linter.uppercaseLean3 false in
 
 -- porting note: remove simp attribute because it makes the linter complain
 theorem forget₂_obj (X : ModuleCat R) :
-    (forget₂ (ModuleCat R) AddCommGroupCat).obj X = AddCommGroupCat.of X :=
+    (forget₂ (ModuleCat R) AddCommGrp).obj X = AddCommGrp.of X :=
   rfl
 set_option linter.uppercaseLean3 false in
 #align Module.forget₂_obj ModuleCat.forget₂_obj
 
 @[simp 900]
 theorem forget₂_obj_moduleCat_of (X : Type v) [AddCommGroup X] [Module R X] :
-    (forget₂ (ModuleCat R) AddCommGroupCat).obj (of R X) = AddCommGroupCat.of X :=
+    (forget₂ (ModuleCat R) AddCommGrp).obj (of R X) = AddCommGrp.of X :=
   rfl
 set_option linter.uppercaseLean3 false in
 #align Module.forget₂_obj_Module_of ModuleCat.forget₂_obj_moduleCat_of
 
 @[simp]
 theorem forget₂_map (X Y : ModuleCat R) (f : X ⟶ Y) :
-    (forget₂ (ModuleCat R) AddCommGroupCat).map f = LinearMap.toAddMonoidHom f :=
+    (forget₂ (ModuleCat R) AddCommGrp).map f = LinearMap.toAddMonoidHom f :=
   rfl
 set_option linter.uppercaseLean3 false in
 #align Module.forget₂_map ModuleCat.forget₂_map
@@ -348,10 +348,10 @@ instance : Preadditive (ModuleCat.{v} R) where
     ext
     rfl
 
-instance forget₂_addCommGroupCat_additive : (forget₂ (ModuleCat.{v} R) AddCommGroupCat).Additive
+instance forget₂_addCommGrp_additive : (forget₂ (ModuleCat.{v} R) AddCommGrp).Additive
     where
 set_option linter.uppercaseLean3 false in
-#align Module.forget₂_AddCommGroup_additive ModuleCat.forget₂_addCommGroupCat_additive
+#align Module.forget₂_AddCommGroup_additive ModuleCat.forget₂_addCommGrp_additive
 
 section
 
