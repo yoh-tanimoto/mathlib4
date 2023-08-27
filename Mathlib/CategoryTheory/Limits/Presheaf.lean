@@ -550,7 +550,7 @@ noncomputable def bla₂ (A : Cᵒᵖ ⥤ Type v₁) (F : (CostructuredArrow yon
       simp only [Functor.map_id, id_comp, id_eq]
     · intro s
       simp only [id_eq]
-      erw [CostructuredArrow.homMk'_id (CostructuredArrow.mk s)]
+      rw [CostructuredArrow.homMk'_mk_id]
       rw [eqToHom_op, eqToHom_map]
       simp only [id_eq, eqToHom_trans, eqToHom_refl]
   map_comp := fun {X Y Z} f g => by
@@ -560,10 +560,9 @@ noncomputable def bla₂ (A : Cᵒᵖ ⥤ Type v₁) (F : (CostructuredArrow yon
     · ext
       simp only [Functor.map_comp, assoc, FunctorToTypes.comp, yoneda_map_app, Function.comp_apply]
     · intro s
-      simp only [Function.comp_apply]
       rw [← F.map_comp, ← op_comp]
-      erw [CostructuredArrow.homMk'_comp (CostructuredArrow.mk s)]
-      rw [op_comp, F.map_comp, eqToHom_op, eqToHom_map]
+      rw [CostructuredArrow.homMk'_mk_comp]
+      rw [op_comp, F.map_comp, eqToHom_op, eqToHom_map, Category.assoc, eqToHom_trans, eqToHom_refl, Category.comp_id]
 
 attribute [local simp] Sigma.map'_comp_map Sigma.map_comp_map'
 
@@ -587,6 +586,7 @@ noncomputable def bla₂' (A : Cᵒᵖ ⥤ Type v₁) : ((CostructuredArrow yone
     apply Sigma.hom_ext
     intro s
     simp only [ι_colimMap, Discrete.functor_obj, Discrete.natTrans_app, assoc, ι_colimMap_assoc]
+    --simp only [ι_colimMap, Discrete.functor_obj, Discrete.natTrans_app, assoc, ι_colimMap_assoc]
 
 @[simps (config := { fullyApplied := false })]
 noncomputable def bla₂'' (A : Cᵒᵖ ⥤ Type v₁) (F : (CostructuredArrow yoneda A)ᵒᵖ ⥤ Type v₁) :
@@ -601,7 +601,7 @@ noncomputable def bla₂'' (A : Cᵒᵖ ⥤ Type v₁) (F : (CostructuredArrow y
     exact (yonedaEquiv_naturality' _ _).symm
 
 noncomputable def terribleReverse (A : Cᵒᵖ ⥤ Type v₁) : ((CostructuredArrow yoneda A)ᵒᵖ ⥤ Type v₁) ⥤ Over A :=
-  (bla₂' A).toOver _ (bla₂'' A) (by
+  (bla₂' A).toOver A (bla₂'' A) (by
     intros F G η
     ext1
     ext1 X

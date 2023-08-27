@@ -286,6 +286,10 @@ abbrev Sigma.map {f g : β → C} [HasCoproduct f] [HasCoproduct g] (p : ∀ b, 
   colimMap (Discrete.natTrans fun X => p X.as)
 #align category_theory.limits.sigma.map CategoryTheory.Limits.Sigma.map
 
+@[simp]
+lemma Sigma.map_id {f : α → C} [HasCoproduct f] : Sigma.map (fun a => 𝟙 (f a)) = 𝟙 (∐ f) := by
+  ext; simp
+
 lemma Sigma.map_comp_map {f g h : α → C} [HasCoproduct f] [HasCoproduct g] [HasCoproduct h]
     (q : ∀ (a : α), f a ⟶ g a) (q' : ∀ (a : α), g a ⟶ h a) :
     Sigma.map q ≫ Sigma.map q' = Sigma.map (fun a => q a ≫ q' a) := by
@@ -309,6 +313,10 @@ lemma Sigma.ι_comp_map' {f : α → C} {g : β → C} [HasCoproduct f] [HasCopr
     Sigma.ι f a ≫ Sigma.map' p q = q a ≫ Sigma.ι g (p a) :=
   colimit.ι_desc _ _
 
+lemma Sigma.map'_id_id {f : α → C} [HasCoproduct f] :
+    Sigma.map' id (fun a => 𝟙 (f a)) = 𝟙 (∐ f) := by
+  ext; simp
+
 @[simp]
 lemma Sigma.map'_id {f g : α → C} [HasCoproduct f] [HasCoproduct g] (p : ∀ b, f b ⟶ g b) :
     Sigma.map' id p = Sigma.map p :=
@@ -328,11 +336,6 @@ lemma Sigma.map'_comp_map {f : α → C} {g h : β → C} [HasCoproduct f] [HasC
 lemma Sigma.map_comp_map' {f g : α → C} {h : β → C} [HasCoproduct f] [HasCoproduct g]
     [HasCoproduct h] (p : α → β) (q : ∀ (a : α), f a ⟶ g a) (q' : ∀ (a : α), g a ⟶ h (p a)) :
     Sigma.map q ≫ Sigma.map' p q' = Sigma.map' p (fun a => q a ≫ q' a) := by
-  ext; simp
-
-@[simp]
-lemma Sigma.map'_id_id {f : α → C} [HasCoproduct f] :
-    Sigma.map' id (fun a => 𝟙 (f a)) = 𝟙 (∐ f) := by
   ext; simp
 
 lemma Sigma.map'_eq {f : α → C} {g : β → C} [HasCoproduct f] [HasCoproduct g]
