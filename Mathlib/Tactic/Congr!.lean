@@ -464,15 +464,6 @@ where
         return none
       let info ← getFunInfoNArgs f (numArgs + 1)
       let mut fixed : Array Bool := #[]
-<<<<<<< HEAD
-      for larg in lhsArgs', rarg in rhsArgs' do
-        if not config.typeEqs &&
-            (← isType larg) && (← isType rarg) && not (← Congr!.possiblyEqualTypes larg rarg) then
-          fixed := fixed.push true
-        else
-          fixed := fixed.push (← withReducible <| withNewMCtxDepth <| isDefEq larg rarg)
-      let (congrThm, conGrproof) ← Congr!.mkHCongrThm (← inferType f) info
-=======
       for larg in lhsArgs', rarg in rhsArgs', pinfo in info.paramInfo do
         if !config.typeEqs && (!pinfo.isExplicit || pinfo.hasFwdDeps) then
           -- When `typeEqs = false` then for non-explicit arguments or
@@ -485,16 +476,15 @@ where
               continue
         fixed := fixed.push (← withReducible <| withNewMCtxDepth <| isDefEq larg rarg)
       let (congrThm, congrProof) ← Congr!.mkHCongrThm (← inferType f) info
->>>>>>> origin/master
                                     (fixedFun := funDefEq) (fixedParams := fixed)
       -- Now see if the congruence theorem actually applies in this situation by applying it!
-      let (congrThm', conGrproof') :=
+      let (congrThm', congrProof') :=
         if funDefEq then
-          (congrThm.bindingBody!.instantiate1 f, conGrproof.beta #[f])
+          (congrThm.bindingBody!.instantiate1 f, congrProof.beta #[f])
         else
           (congrThm.bindingBody!.bindingBody!.instantiateRev #[f, f'],
-           conGrproof.beta #[f, f'])
-      observing? <| applyCongrThm? config mvarId congrThm' conGrproof'
+           congrProof.beta #[f, f'])
+      observing? <| applyCongrThm? config mvarId congrThm' congrProof'
     | _, _ => return none
   forSide (mvarId : MVarId) (side : Expr) : MetaM (Option (List MVarId)) := do
     let side := side.cleanupAnnotations
@@ -522,11 +512,11 @@ where
           fixed := fixed.push false
         else
           fixed := fixed.push true
-    let (congrThm, conGrproof) ←
+    let (congrThm, congrProof) ←
       Congr!.mkHCongrThm (← inferType f) info (fixedFun := true) (fixedParams := fixed)
     let congrThm' := congrThm.bindingBody!.instantiate1 f
-    let conGrproof' := conGrproof.beta #[f]
-    observing? <| applyCongrThm? config mvarId congrThm' conGrproof'
+    let congrProof' := congrProof.beta #[f]
+    observing? <| applyCongrThm? config mvarId congrThm' congrProof'
 
 /--
 Like `Lean.MVarId.congr?` but instead of using only the congruence lemma associated to the LHS,
@@ -639,7 +629,7 @@ def Lean.MVarId.liftReflToEq (mvarId : MVarId) : MetaM MVarId := do
 /--
 Try to apply `pi_congr`. This is similar to `Lean.MVar.congrImplies?`.
 -/
-def Lean.MVarId.conGrpi? (mvarId : MVarId) : MetaM (Option (List MVarId)) :=
+def Lean.MVarId.congrPi? (mvarId : MVarId) : MetaM (Option (List MVarId)) :=
   observing? do withReducible <| mvarId.apply (← mkConstWithFreshMVarLevels `pi_congr)
 
 /--
@@ -709,7 +699,7 @@ def Lean.MVarId.subsingletonHelim? (mvarId : MVarId) : MetaM (Option (List MVarI
 /--
 A list of all the congruence strategies used by `Lean.MVarId.congrCore!`.
 -/
-def Lean.MVarId.conGrpasses! :
+def Lean.MVarId.congrPasses! :
     List (String × (Congr!.Config → MVarId → MetaM (Option (List MVarId)))) :=
   [("user congr", userCongr?),
    ("hcongr lemma", smartHCongr?),
@@ -718,7 +708,7 @@ def Lean.MVarId.conGrpasses! :
    ("obvious funext", fun _ => obviousFunext?),
    ("obvious hfunext", fun _ => obviousHfunext?),
    ("congr_implies", fun _ => congrImplies?'),
-   ("congr_pi", fun _ => conGrpi?)]
+   ("congr_pi", fun _ => congrPi?)]
 
 structure CongrState where
   /-- Accumulated goals that `congr!` could not handle. -/
@@ -832,7 +822,7 @@ def Lean.MVarId.congrCore! (config : Congr!.Config) (mvarId : MVarId) :
   /- We do `liftReflToEq` here rather than in `preCongr!` since we don't want to commit to it
      if there are no relevant congr lemmas. -/
   let mvarId ← mvarId.liftReflToEq
-  for (passName, pass) in conGrpasses! do
+  for (passName, pass) in congrPasses! do
     try
       if let some mvarIds ← pass config mvarId then
         trace[congr!] "pass succeeded: {passName}"
