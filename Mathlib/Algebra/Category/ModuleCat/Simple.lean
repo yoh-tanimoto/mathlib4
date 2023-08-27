@@ -42,7 +42,7 @@ instance isSimpleModule_of_simple (M : ModuleCat R) [Simple M] : IsSimpleModule 
 
 open FiniteDimensional
 
-attribute [local instance] moduleOfAlgebraModule isScalarTower_of_algebra_moduleCat
+attribute [local instance] moduleOfAlgebraModule isScalarTower_of_algebra_ModuleCat
 
 /-- Any `k`-algebra module which is 1-dimensional over `k` is simple. -/
 theorem simple_of_finrank_eq_one {k : Type*} [Field k] [Algebra k R] {V : ModuleCat R}

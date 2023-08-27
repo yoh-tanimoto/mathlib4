@@ -73,11 +73,11 @@ noncomputable def subobjectModule : Subobject M ≃o Submodule R M :=
         · exact (Submodule.range_subtype _).symm }
 #align Module.subobject_Module ModuleCat.subobjectModule
 
-instance wellPowered_moduleCat : WellPowered (ModuleCat.{v} R) :=
+instance wellPowered_ModuleCat : WellPowered (ModuleCat.{v} R) :=
   ⟨fun M => ⟨⟨_, ⟨(subobjectModule M).toEquiv⟩⟩⟩⟩
-#align Module.well_powered_Module ModuleCat.wellPowered_moduleCat
+#align Module.well_powered_Module ModuleCat.wellPowered_ModuleCat
 
-attribute [local instance] hasKernels_moduleCat
+attribute [local instance] hasKernels_ModuleCat
 
 /-- Bundle an element `m : M` such that `f m = 0` as a term of `kernelSubobject f`. -/
 noncomputable def toKernelSubobject {M N : ModuleCat.{v} R} {f : M ⟶ N} :

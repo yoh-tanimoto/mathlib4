@@ -70,20 +70,20 @@ def cokernelIsColimit : IsColimit (cokernelCocone f) :=
 end
 
 /-- The category of R-modules has kernels, given by the inclusion of the kernel submodule. -/
-theorem hasKernels_moduleCat : HasKernels (ModuleCat R) :=
+theorem hasKernels_ModuleCat : HasKernels (ModuleCat R) :=
   ⟨fun f => HasLimit.mk ⟨_, kernelIsLimit f⟩⟩
-#align Module.has_kernels_Module ModuleCat.hasKernels_moduleCat
+#align Module.has_kernels_Module ModuleCat.hasKernels_ModuleCat
 
 /-- The category of R-modules has cokernels, given by the projection onto the quotient. -/
-theorem hasCokernels_moduleCat : HasCokernels (ModuleCat R) :=
+theorem hasCokernels_ModuleCat : HasCokernels (ModuleCat R) :=
   ⟨fun f => HasColimit.mk ⟨_, cokernelIsColimit f⟩⟩
-#align Module.has_cokernels_Module ModuleCat.hasCokernels_moduleCat
+#align Module.has_cokernels_Module ModuleCat.hasCokernels_ModuleCat
 
 open ModuleCat
 
-attribute [local instance] hasKernels_moduleCat
+attribute [local instance] hasKernels_ModuleCat
 
-attribute [local instance] hasCokernels_moduleCat
+attribute [local instance] hasCokernels_ModuleCat
 
 variable {G H : ModuleCat.{v} R} (f : G ⟶ H)
 

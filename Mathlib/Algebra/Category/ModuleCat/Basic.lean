@@ -105,7 +105,7 @@ attribute [coe] ModuleCat.carrier
 <<<<<<< HEAD:Mathlib/Algebra/Category/Module/Basic.lean
 instance Modegory : Category (Mod.{v} R) where
 =======
-instance moduleCategory : Category.{v, max (v+1) u} (ModuleCat.{v} R) where
+instance ModuleCategory : Category.{v, max (v+1) u} (ModuleCat.{v} R) where
 >>>>>>> origin/master:Mathlib/Algebra/Category/ModuleCat/Basic.lean
   Hom M N := M →ₗ[R] N
   id _ := LinearMap.id -- porting note: was `1`
@@ -125,7 +125,7 @@ instance {M N : Mod.{v} R} : FunLike (M ⟶ N) M (fun _ => N) :=
 instance moduleConcreteCategory : ConcreteCategory.{v} (Mod.{v} R) where
   Forget :=
 =======
-#align Module.Module_category ModuleCat.moduleCategory
+#align Module.Module_category ModuleCat.ModuleCategory
 
 -- porting note: was not necessary in mathlib
 instance {M N : ModuleCat.{v} R} : LinearMapClass (M ⟶ N) R M N :=
@@ -214,10 +214,10 @@ theorem forget₂_obj (X : ModuleCat R) :
 -- If it is really needed, better might be a simp lemma that says
 -- `AddCommGrp.of (ModuleCat.of R X) = AddCommGrp.of X`.
 -- @[simp 900]
-theorem forget₂_obj_moduleCat_of (X : Type v) [AddCommGroup X] [Module R X] :
+theorem forget₂_obj_ModuleCat_of (X : Type v) [AddCommGroup X] [Module R X] :
     (forget₂ (ModuleCat R) AddCommGrp).obj (of R X) = AddCommGrp.of X :=
   rfl
-#align Module.forget₂_obj_Module_of ModuleCat.forget₂_obj_moduleCat_of
+#align Module.forget₂_obj_Module_of ModuleCat.forget₂_obj_ModuleCat_of
 >>>>>>> origin/master:Mathlib/Algebra/Category/ModuleCat/Basic.lean
 
 @[simp]
