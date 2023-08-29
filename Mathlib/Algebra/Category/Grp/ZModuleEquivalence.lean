@@ -23,10 +23,10 @@ open CategoryTheory.Equivalence
 
 universe u
 
-namespace Mod
+namespace ModuleCat
 
 /-- The forgetful functor from `ℤ` modules to `AddCommGroup` is full. -/
-instance forget₂AddCommGroupFull : Full (forget₂ (Mod ℤ) AddCommGrp.{u}) where
+instance forget₂AddCommGroupFull : Full (forget₂ (ModuleCat ℤ) AddCommGrp.{u}) where
   preimage {A B}
     -- `AddMonoidHom.toIntLinearMap` doesn't work here because `A` and `B` are not
     -- definitionally equal to the canonical `AddCommGroup.intModule` module
@@ -38,21 +38,21 @@ instance forget₂AddCommGroupFull : Full (forget₂ (Mod ℤ) AddCommGrp.{u}) w
           convert AddMonoidHom.map_zsmul (show A.carrier →+ B.carrier from f) x n <;>
             ext <;> apply int_smul_eq_zsmul)
 set_option linter.uppercaseLean3 false in
-#align Module.forget₂_AddCommGroup_full Mod.forget₂AddCommGroupFull
+#align Module.forget₂_AddCommGroup_full ModuleCat.forget₂AddCommGroupFull
 
 /-- The forgetful functor from `ℤ` modules to `AddCommGroup` is essentially surjective. -/
-instance forget₂_addCommGrp_essSurj : EssSurj (forget₂ (Mod ℤ) AddCommGrp.{u})
+instance forget₂_addCommGrp_essSurj : EssSurj (forget₂ (ModuleCat ℤ) AddCommGrp.{u})
     where mem_essImage A :=
-    ⟨Mod.of ℤ A,
+    ⟨ModuleCat.of ℤ A,
       ⟨{  hom := 𝟙 A
           inv := 𝟙 A }⟩⟩
 set_option linter.uppercaseLean3 false in
-#align Module.forget₂_AddCommGroup_ess_surj Mod.forget₂_addCommGrp_essSurj
+#align Module.forget₂_AddCommGroup_ess_surj ModuleCat.forget₂_addCommGrp_essSurj
 
 noncomputable instance forget₂AddCommGroupIsEquivalence :
-    IsEquivalence (forget₂ (Mod ℤ) AddCommGrp.{u}) :=
-  Equivalence.ofFullyFaithfullyEssSurj (forget₂ (Mod ℤ) AddCommGrp)
+    IsEquivalence (forget₂ (ModuleCat ℤ) AddCommGrp.{u}) :=
+  Equivalence.ofFullyFaithfullyEssSurj (forget₂ (ModuleCat ℤ) AddCommGrp)
 set_option linter.uppercaseLean3 false in
-#align Module.forget₂_AddCommGroup_is_equivalence Mod.forget₂AddCommGroupIsEquivalence
+#align Module.forget₂_AddCommGroup_is_equivalence ModuleCat.forget₂AddCommGroupIsEquivalence
 
-end Mod
+end ModuleCat
