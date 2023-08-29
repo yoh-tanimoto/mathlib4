@@ -124,7 +124,7 @@ instance : Inhabited Magma :=
 end Magma
 
 /-- The category of semigroups and semigroup morphisms. -/
-@[to_additive AddSemigrp]
+@[to_additive]
 def Semigrp : Type (u + 1) :=
   Bundled Semigroup
 #align Semigroup Semigrp
@@ -258,17 +258,17 @@ namespace CategoryTheory.Iso
 /-- Build a `mul_equiv` from an isomorphism in the category `Magma`. -/
 @[to_additive
       "Build an `add_equiv` from an isomorphism in the category\n`AddMagma`."]
-def magmaCatIsoToMulEquiv {X Y : Magma} (i : X ≅ Y) : X ≃* Y :=
+def magmaIsoToMulEquiv {X Y : Magma} (i : X ≅ Y) : X ≃* Y :=
   MulHom.toMulEquiv i.hom i.inv i.hom_inv_id i.inv_hom_id
-#align category_theory.iso.Magma_iso_to_mul_equiv CategoryTheory.Iso.magmaCatIsoToMulEquiv
+#align category_theory.iso.Magma_iso_to_mul_equiv CategoryTheory.Iso.magmaIsoToMulEquiv
 #align category_theory.iso.AddMagma_iso_to_add_equiv CategoryTheory.Iso.addMagmaIsoToAddEquiv
 
 /-- Build a `mul_equiv` from an isomorphism in the category `Semigroup`. -/
 @[to_additive
   "Build an `add_equiv` from an isomorphism in the category\n`AddSemigroup`."]
-def semiGrpIsoToMulEquiv {X Y : Semigrp} (i : X ≅ Y) : X ≃* Y :=
+def semigrpIsoToMulEquiv {X Y : Semigrp} (i : X ≅ Y) : X ≃* Y :=
   MulHom.toMulEquiv i.hom i.inv i.hom_inv_id i.inv_hom_id
-#align category_theory.iso.Semigroup_iso_to_mul_equiv CategoryTheory.Iso.semiGrpIsoToMulEquiv
+#align category_theory.iso.Semigroup_iso_to_mul_equiv CategoryTheory.Iso.semigrpIsoToMulEquiv
 #align category_theory.iso.Semigroup_iso_to_add_equiv CategoryTheory.Iso.addSemigrpIsoToAddEquiv
 
 end CategoryTheory.Iso
@@ -281,7 +281,7 @@ in `Magma` -/
 def mulEquivIsoMagmaIso {X Y : Type u} [Mul X] [Mul Y] :
     X ≃* Y ≅ Magma.of X ≅ Magma.of Y where
   hom e := e.toMagmaIso
-  inv i := i.magmaCatIsoToMulEquiv
+  inv i := i.magmaIsoToMulEquiv
 #align mul_equiv_iso_Magma_iso mulEquivIsoMagmaIso
 #align add_equiv_iso_AddMagma_iso addEquivIsoAddMagmaIso
 
@@ -293,7 +293,7 @@ in `Semigroup` -/
 def mulEquivIsoSemigrpIso {X Y : Type u} [Semigroup X] [Semigroup Y] :
     X ≃* Y ≅ Semigrp.of X ≅ Semigrp.of Y where
   hom e := e.toSemigrpIso
-  inv i := i.semiGrpIsoToMulEquiv
+  inv i := i.semigrpIsoToMulEquiv
 #align mul_equiv_iso_Semigroup_iso mulEquivIsoSemigrpIso
 #align add_equiv_iso_AddSemigroup_iso addEquivIsoAddSemigrpIso
 
