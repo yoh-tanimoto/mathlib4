@@ -12,7 +12,7 @@ import Mathlib.CategoryTheory.Elementwise
 #align_import algebra.category.Semigroup.basic from "leanprover-community/mathlib"@"47b51515e69f59bca5cf34ef456e6000fe205a69"
 
 /-!
-# Category instances for has_mul, has_add, semigroup and add_semigroup
+# Category instances for magmas and semigroups
 
 We introduce the bundled categories:
 * `Magma`
@@ -285,11 +285,11 @@ def mulEquivIsoMagmaIso {X Y : Type u} [Mul X] [Mul Y] :
 #align mul_equiv_iso_Magma_iso mulEquivIsoMagmaIso
 #align add_equiv_iso_AddMagma_iso addEquivIsoAddMagmaIso
 
-/-- multiplicative equivalences between `semigroup`s are the same as (isomorphic to) isomorphisms
-in `Semigroup` -/
+/-- Multiplicative equivalences between `Semigroup`s are the same as (isomorphic to) isomorphisms
+in `Semigrp` -/
 @[to_additive
-  "additive equivalences between `add_semigroup`s are
-  the same as (isomorphic to) isomorphisms in `AddSemigroup`"]
+  "Additive equivalences between `AddSemigroup`s are
+  the same as (isomorphic to) isomorphisms in `AddSemigrp`"]
 def mulEquivIsoSemigrpIso {X Y : Type u} [Semigroup X] [Semigroup Y] :
     X ≃* Y ≅ Semigrp.of X ≅ Semigrp.of Y where
   hom e := e.toSemigrpIso
