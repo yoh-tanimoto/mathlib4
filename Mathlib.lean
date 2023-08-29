@@ -89,7 +89,7 @@ import Mathlib.Algebra.Category.Ring.Constructions
 import Mathlib.Algebra.Category.Ring.FilteredColimits
 import Mathlib.Algebra.Category.Ring.Instances
 import Mathlib.Algebra.Category.Ring.Limits
-import Mathlib.Algebra.Category.SemiGrp.Basic
+import Mathlib.Algebra.Category.Semigrp.Basic
 import Mathlib.Algebra.CharP.Algebra
 import Mathlib.Algebra.CharP.Basic
 import Mathlib.Algebra.CharP.CharAndCard
