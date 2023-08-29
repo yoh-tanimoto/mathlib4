@@ -27,7 +27,7 @@ universe u v
 open CategoryTheory
 
 /-- The category of groups and group morphisms. -/
-@[to_additive AddGrp]
+@[to_additive]
 def Grp : Type (u + 1) :=
   Bundled Group
 set_option linter.uppercaseLean3 false in
@@ -168,7 +168,7 @@ example {R S : Grp} (i : R ⟶ S) (r : R) (h : r = 1) : i r = 1 := by simp [h]
 end Grp
 
 /-- The category of commutative groups and group morphisms. -/
-@[to_additive AddCommGrp]
+@[to_additive]
 def CommGrp : Type (u + 1) :=
   Bundled CommGroup
 set_option linter.uppercaseLean3 false in
@@ -377,7 +377,7 @@ set_option linter.uppercaseLean3 false in
 end AddCommGrp
 
 /-- Build an isomorphism in the category `Grp` from a `MulEquiv` between `Group`s. -/
-@[to_additive (attr := simps) AddEquiv.toAddGrpIso]
+@[to_additive (attr := simps)]
 def MulEquiv.toGrpIso {X Y : Grp} (e : X ≃* Y) : X ≅ Y where
   hom := e.toMonoidHom
   inv := e.symm.toMonoidHom
@@ -391,7 +391,7 @@ add_decl_doc AddEquiv.toAddGrpIso
 
 /-- Build an isomorphism in the category `CommGrp` from a `MulEquiv`
 between `CommGroup`s. -/
-@[to_additive (attr := simps) AddEquiv.toAddCommGrpIso]
+@[to_additive (attr := simps)]
 def MulEquiv.toCommGrpIso {X Y : CommGrp} (e : X ≃* Y) : X ≅ Y where
   hom := e.toMonoidHom
   inv := e.symm.toMonoidHom
