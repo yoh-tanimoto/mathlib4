@@ -3,11 +3,11 @@ Copyright (c) 2020 Scott Morrison. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Scott Morrison
 -/
+import Mathlib.CategoryTheory.Limits.ConcreteCategory
 import Mathlib.CategoryTheory.Limits.Types
 import Mathlib.CategoryTheory.Limits.Shapes.Products
 import Mathlib.CategoryTheory.Limits.Shapes.BinaryProducts
 import Mathlib.CategoryTheory.Limits.Shapes.Terminal
-import Mathlib.CategoryTheory.ConcreteCategory.Basic
 import Mathlib.Tactic.CategoryTheory.Elementwise
 
 #align_import category_theory.limits.shapes.types from "leanprover-community/mathlib"@"5dc6092d09e5e489106865241986f7f2ad28d4c8"
@@ -435,6 +435,53 @@ theorem productIso_inv_comp_π {J : Type v} (F : J → Type u) [UnivLE.{v, u}] (
   limit.isoLimitCone_inv_π (productLimitCone.{v, u} F) ⟨j⟩
 
 end UnivLE
+
+section ArbitraryUniverses
+
+-- theorem Sigma.exists_rep_of_nonempty {α : Type v} (f : α → Type u) [HasCoproduct f]
+--     [∀ i, Nonempty (f i)] (x : ∐ f) : ∃ (i : α) (y : f i), Sigma.ι f i y = x := by
+--   have : Small.{u} α := by
+--     let inc : α → ∐ f := fun i => Sigma.ι f i (Classical.ofNonempty)
+--     suffices Function.Injective inc from small_of_injective this
+--     intros i j hij
+
+--     --let proj : ∐ f
+
+--   sorry
+
+theorem Sigma.exists_rep {α : Type u} (f : α → Type u) (x : ∐ f) :
+    ∃ (i : α) (y : f i), Sigma.ι f i y = x := by
+  obtain ⟨i, y, h⟩ := Concrete.sigma.exists_rep f x
+  exact ⟨i, y, h⟩
+
+theorem Sigma.exists_rep_of_small {α : Type v} [Small.{u} α] (f : α → Type u) [HasCoproduct f]
+    (x : ∐ f) : ∃ (i : α) (y : f i), Sigma.ι f i y = x := by
+  let f' : Shrink.{u} α → Type u := f ∘ (equivShrink _).symm
+  let w : ∀ j, f ((equivShrink _).symm j) ≅ f' j := fun j => Iso.refl _
+  let e : ∐ f' ≅ ∐ f := Sigma.whiskerEquiv _ w
+  obtain ⟨i, y, h⟩ := Sigma.exists_rep f' (e.toEquiv.symm x)
+  refine' ⟨(equivShrink α).symm i, y, _⟩
+  obtain rfl := e.toEquiv.eq_symm_apply.1 h
+  dsimp only [Function.comp_apply, Iso.toEquiv_fun, Sigma.whiskerEquiv_hom, Iso.refl_inv]
+  erw [← types_comp_apply (Sigma.ι _ _) (Sigma.map' _ _), colimit.ι_desc]
+  simp only [Cofan.mk_pt, Cofan.mk_ι_app, types_comp_apply, types_id_apply]
+
+noncomputable def Sigma.comp {α : Type v} [Small.{u} α] {f : α → Type u} [HasCoproduct f]
+    (x : ∐ f) : α := (Sigma.exists_rep_of_small f x).choose
+
+noncomputable def Sigma.rep {α : Type v} [Small.{u} α] {f : α → Type u} [HasCoproduct f]
+    (x : ∐ f) : f (comp x) := (Sigma.exists_rep_of_small f x).choose_spec.choose
+
+lemma Sigma.ι_comp_rep {α : Type v} [Small.{u} α] {f : α → Type u} [HasCoproduct f]
+    (x : ∐ f) : Sigma.ι f (Sigma.comp x) (Sigma.rep x) = x :=
+  (Sigma.exists_rep_of_small f x).choose_spec.choose_spec
+
+lemma Sigma.ι_eq {α : Type v} {f : α → Type u} [HasCoproduct f] {i i' : α} {y : f i}
+    {y' : f i'} (hi : i = i') (hy : (eqToHom (hi ▸ rfl) : f i ⟶ f i') y = y') :
+    Sigma.ι f i y = Sigma.ι f i' y' := by
+  aesop_cat
+
+end ArbitraryUniverses
 
 /-- The category of types has `Σ j, f j` as the coproduct of a type family `f : J → Type`.
 -/

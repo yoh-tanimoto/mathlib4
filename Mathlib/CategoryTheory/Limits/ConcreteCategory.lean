@@ -323,6 +323,16 @@ theorem Concrete.widePushout_exists_rep' {B : C} {α : Type _} [Nonempty α] {X 
 
 end WidePushout
 
+section Sigma
+
+theorem Concrete.sigma.exists_rep {α : Type v} (f : α → C) [HasCoproduct f]
+    [PreservesColimit (Discrete.functor f) (forget C)] (x : ↑(∐ f)) :
+    ∃ (i : α) (y : f i), Sigma.ι f i y = x := by
+  obtain ⟨⟨i⟩, y, rfl⟩ := Concrete.colimit_exists_rep _ x
+  exact ⟨i, y, rfl⟩
+
+end Sigma
+
 -- TODO: Add analogous lemmas about coproducts and coequalizers.
 end Colimits
 

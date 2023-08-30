@@ -171,6 +171,14 @@ theorem ext_iff {A B : StructuredArrow S T} (f g : A ⟶ B) : f = g ↔ f.right 
   ⟨fun h => h ▸ rfl, ext f g⟩
 #align category_theory.structured_arrow.ext_iff CategoryTheory.StructuredArrow.ext_iff
 
+/-- Equal arrows give isomorphic structured arrows -/
+@[simps!]
+def mkCongr {f g : S ⟶ T.obj Y} (h : f = g) : mk f ≅ mk g :=
+  isoMk (Iso.refl _)
+
+lemma mkCongr_eq_eqToIso {f g : S ⟶ T.obj Y} (h : f = g) : mkCongr h = eqToIso (by rw [h]) := by
+  aesop_cat
+
 instance proj_faithful : Faithful (proj S T) where
   map_injective {_ _} := ext
 #align category_theory.structured_arrow.proj_faithful CategoryTheory.StructuredArrow.proj_faithful
@@ -499,6 +507,14 @@ theorem ext {A B : CostructuredArrow S T} (f g : A ⟶ B) (h : f.left = g.left) 
 theorem ext_iff {A B : CostructuredArrow S T} (f g : A ⟶ B) : f = g ↔ f.left = g.left :=
   ⟨fun h => h ▸ rfl, ext f g⟩
 #align category_theory.costructured_arrow.ext_iff CategoryTheory.CostructuredArrow.ext_iff
+
+/-- Equal arrows give isomorphic costructured arrows -/
+@[simps!]
+def mkCongr {f g : S.obj Y ⟶ T} (h : f = g) : mk f ≅ mk g :=
+  isoMk (Iso.refl _)
+
+lemma mkCongr_eq_eqToIso {f g : S.obj Y ⟶ T} (h : f = g) : mkCongr h = eqToIso (by rw [h]) := by
+  aesop_cat
 
 instance proj_faithful : Faithful (proj S T) where map_injective {_ _} := ext
 #align category_theory.costructured_arrow.proj_faithful CategoryTheory.CostructuredArrow.proj_faithful
