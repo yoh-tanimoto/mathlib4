@@ -385,6 +385,13 @@ instance : SplitEpiCategory (Type u)
       { section_ := Function.surjInv <| (epi_iff_surjective f).1 hf
         id := funext <| Function.rightInverse_surjInv <| (epi_iff_surjective f).1 hf }
 
+theorem eqToHom_eq_cast {X Y : Type u} (h : X = Y) : eqToHom h = cast h := by
+  aesop_cat
+
+theorem eqToHom_eq_iff_heq {X Y : Type u} (h : X = Y) {x : X} {y : Y} :
+    eqToHom h x = y ↔ HEq x y := by
+  rw [eqToHom_eq_cast, cast_eq_iff_heq]
+
 end CategoryTheory
 
 -- We prove `equivIsoIso` and then use that to sneakily construct `equivEquivIso`.

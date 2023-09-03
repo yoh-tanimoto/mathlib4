@@ -572,7 +572,7 @@ end Unique
 
 section Reindex
 
-variable {γ : Type v} (ε : β ≃ γ) (f : γ → C)
+variable (ε : β ≃ γ) (f : γ → C)
 
 section
 

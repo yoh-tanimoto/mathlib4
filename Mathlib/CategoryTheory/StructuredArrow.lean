@@ -508,14 +508,6 @@ theorem ext_iff {A B : CostructuredArrow S T} (f g : A ⟶ B) : f = g ↔ f.left
   ⟨fun h => h ▸ rfl, ext f g⟩
 #align category_theory.costructured_arrow.ext_iff CategoryTheory.CostructuredArrow.ext_iff
 
-/-- Equal arrows give isomorphic costructured arrows -/
-@[simps!]
-def mkCongr {f g : S.obj Y ⟶ T} (h : f = g) : mk f ≅ mk g :=
-  isoMk (Iso.refl _)
-
-lemma mkCongr_eq_eqToIso {f g : S.obj Y ⟶ T} (h : f = g) : mkCongr h = eqToIso (by rw [h]) := by
-  aesop_cat
-
 instance proj_faithful : Faithful (proj S T) where map_injective {_ _} := ext
 #align category_theory.costructured_arrow.proj_faithful CategoryTheory.CostructuredArrow.proj_faithful
 
@@ -549,6 +541,21 @@ theorem eq_mk (f : CostructuredArrow S T) : f = mk f.hom :=
 def eta (f : CostructuredArrow S T) : f ≅ mk f.hom :=
   isoMk (Iso.refl _)
 #align category_theory.costructured_arrow.eta CategoryTheory.CostructuredArrow.eta
+
+lemma eta_eq_eqToIso (f : CostructuredArrow S T) : eta f = eqToIso (eq_mk f) := by
+  aesop_cat
+
+/-- Equal arrows give isomorphic costructured arrows -/
+@[simps!]
+def mkCongr {f g : S.obj Y ⟶ T} (h : f = g) : mk f ≅ mk g :=
+  isoMk (Iso.refl _)
+
+lemma mkCongr_eq_eqToIso {f g : S.obj Y ⟶ T} (h : f = g) : mkCongr h = eqToIso (by rw [h]) := by
+  aesop_cat
+
+@[simp]
+lemma mkCongr_inv {f g : S.obj Y ⟶ T} (h : f = g) : (mkCongr h).inv = (mkCongr h.symm).hom := by
+  aesop_cat
 
 /- Porting note : it appears the simp lemma is not getting generated but the linter
 picks up on it. Either way simp solves these. -/

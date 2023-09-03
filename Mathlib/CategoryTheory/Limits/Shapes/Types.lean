@@ -39,7 +39,7 @@ we use the `Types.terminalLimitCone` and `Types.binaryProductLimitCone` definiti
 -/
 
 
-universe v u
+universe v v' u
 
 open CategoryTheory Limits
 
@@ -436,53 +436,6 @@ theorem productIso_inv_comp_π {J : Type v} (F : J → Type u) [UnivLE.{v, u}] (
 
 end UnivLE
 
-section ArbitraryUniverses
-
--- theorem Sigma.exists_rep_of_nonempty {α : Type v} (f : α → Type u) [HasCoproduct f]
---     [∀ i, Nonempty (f i)] (x : ∐ f) : ∃ (i : α) (y : f i), Sigma.ι f i y = x := by
---   have : Small.{u} α := by
---     let inc : α → ∐ f := fun i => Sigma.ι f i (Classical.ofNonempty)
---     suffices Function.Injective inc from small_of_injective this
---     intros i j hij
-
---     --let proj : ∐ f
-
---   sorry
-
-theorem Sigma.exists_rep {α : Type u} (f : α → Type u) (x : ∐ f) :
-    ∃ (i : α) (y : f i), Sigma.ι f i y = x := by
-  obtain ⟨i, y, h⟩ := Concrete.sigma.exists_rep f x
-  exact ⟨i, y, h⟩
-
-theorem Sigma.exists_rep_of_small {α : Type v} [Small.{u} α] (f : α → Type u) [HasCoproduct f]
-    (x : ∐ f) : ∃ (i : α) (y : f i), Sigma.ι f i y = x := by
-  let f' : Shrink.{u} α → Type u := f ∘ (equivShrink _).symm
-  let w : ∀ j, f ((equivShrink _).symm j) ≅ f' j := fun j => Iso.refl _
-  let e : ∐ f' ≅ ∐ f := Sigma.whiskerEquiv _ w
-  obtain ⟨i, y, h⟩ := Sigma.exists_rep f' (e.toEquiv.symm x)
-  refine' ⟨(equivShrink α).symm i, y, _⟩
-  obtain rfl := e.toEquiv.eq_symm_apply.1 h
-  dsimp only [Function.comp_apply, Iso.toEquiv_fun, Sigma.whiskerEquiv_hom, Iso.refl_inv]
-  erw [← types_comp_apply (Sigma.ι _ _) (Sigma.map' _ _), colimit.ι_desc]
-  simp only [Cofan.mk_pt, Cofan.mk_ι_app, types_comp_apply, types_id_apply]
-
-noncomputable def Sigma.comp {α : Type v} [Small.{u} α] {f : α → Type u} [HasCoproduct f]
-    (x : ∐ f) : α := (Sigma.exists_rep_of_small f x).choose
-
-noncomputable def Sigma.rep {α : Type v} [Small.{u} α] {f : α → Type u} [HasCoproduct f]
-    (x : ∐ f) : f (comp x) := (Sigma.exists_rep_of_small f x).choose_spec.choose
-
-lemma Sigma.ι_comp_rep {α : Type v} [Small.{u} α] {f : α → Type u} [HasCoproduct f]
-    (x : ∐ f) : Sigma.ι f (Sigma.comp x) (Sigma.rep x) = x :=
-  (Sigma.exists_rep_of_small f x).choose_spec.choose_spec
-
-lemma Sigma.ι_eq {α : Type v} {f : α → Type u} [HasCoproduct f] {i i' : α} {y : f i}
-    {y' : f i'} (hi : i = i') (hy : (eqToHom (hi ▸ rfl) : f i ⟶ f i') y = y') :
-    Sigma.ι f i y = Sigma.ι f i' y' := by
-  aesop_cat
-
-end ArbitraryUniverses
-
 /-- The category of types has `Σ j, f j` as the coproduct of a type family `f : J → Type`.
 -/
 def coproductColimitCocone {J : Type u} (F : J → Type u) :
@@ -508,6 +461,10 @@ theorem coproductIso_ι_comp_hom {J : Type u} (F : J → Type u) (j : J) :
   colimit.isoColimitCocone_ι_hom (coproductColimitCocone F) ⟨j⟩
 #align category_theory.limits.types.coproduct_iso_ι_comp_hom CategoryTheory.Limits.Types.coproductIso_ι_comp_hom
 
+theorem coproductIso_ι_comp_hom_apply' {J : Type u} (F : J → Type u) (j : J) (x : F j) :
+    (coproductIso F).hom (Sigma.ι F j x) = ⟨j, x⟩ :=
+  coproductIso_ι_comp_hom_apply _ _ _
+
 -- porting note: was @[elementwise (attr := simp)], but it produces a trivial lemma
 -- removed simp attribute because it seems it never applies
 theorem coproductIso_mk_comp_inv {J : Type u} (F : J → Type u) (j : J) :
@@ -515,6 +472,134 @@ theorem coproductIso_mk_comp_inv {J : Type u} (F : J → Type u) (j : J) :
   rfl
 #align category_theory.limits.types.coproduct_iso_mk_comp_inv CategoryTheory.Limits.Types.coproductIso_mk_comp_inv
 
+section Small
+
+noncomputable def coproductEquiv {J : Type v} [Small.{u} J] (F : J → Type u) [HasCoproduct F] :
+  ∐ F ≃ Σj, F j := calc
+    ∐ F ≃ ∐ (F ∘ (equivShrink.{u} J).symm) := (Sigma.reindex _ _).symm.toEquiv
+    _ ≃ Σj, (F ∘ (equivShrink.{u} J).symm) j := (coproductIso _).toEquiv
+    _ ≃ Σj, F j := Equiv.sigmaCongrLeft _
+
+attribute [local instance] ConcreteCategory.funLike
+theorem forget_hom_Type (α β : Type u) (f : α ⟶ β) : FunLike.coe f = f := rfl
+
+@[simp]
+theorem coproductEquiv_ι {J : Type v} [Small.{u} J] (F : J → Type u) [HasCoproduct F] (j : J)
+    (x : F j) : coproductEquiv F (Sigma.ι F j x) = ⟨j, x⟩ := by
+  obtain ⟨j, rfl⟩ := (equivShrink.{u} J).symm.surjective j
+  dsimp [coproductEquiv]
+  rw [elementwise_of% Sigma.ι_reindex_inv (equivShrink.{u} J).symm F]
+  erw [forget_hom_Type _ _ (Sigma.ι (F ∘ (equivShrink.{u} J).symm) j)]
+  rw [coproductIso_ι_comp_hom_apply']
+
+@[simp]
+theorem mk_coproductEquiv_symm {J : Type v} [Small.{u} J] (F : J → Type u) [HasCoproduct F] (j : J)
+    (x : F j) : (coproductEquiv F).symm ⟨j, x⟩ = Sigma.ι F j x := by
+  rw [← coproductEquiv_ι, Equiv.symm_apply_apply]
+
+noncomputable def Sigma.comp {J : Type v} [Small.{u} J] {F : J → Type u} [HasCoproduct F]
+    (x : ∐ F) : J :=
+  (coproductEquiv F x).1
+
+noncomputable def Sigma.rep {J : Type v} [Small.{u} J] {F : J → Type u} [HasCoproduct F]
+    (x : ∐ F) : F (Sigma.comp x) :=
+  (coproductEquiv F x).2
+
+lemma Sigma.ι_comp_rep {J : Type v} [Small.{u} J] {F : J → Type u} [HasCoproduct F]
+    (x : ∐ F) : Sigma.ι F (Sigma.comp x) (Sigma.rep x) = x := by
+  apply (coproductEquiv F).injective
+  simp [comp, rep]
+
+theorem coproductEquiv_map' {J : Type v} {K : Type v'} [Small.{u} J] [Small.{u} K]
+    (F : J → Type u) (G : K → Type u) [HasCoproduct F] [HasCoproduct G] {p : J → K}
+    (q : ∀ (j : J), F j ⟶ G (p j)) (x : ∐ F) :
+    coproductEquiv G (Sigma.map' p q x) = _root_.Sigma.map p q (coproductEquiv F x) := by
+  rw [←Sigma.ι_comp_rep x, elementwise_of% Sigma.ι_comp_map' p q]
+  aesop_cat
+
+lemma Sigma.ι_eq_iff {J : Type v} [Small.{u} J] {F : J → Type u} [HasCoproduct F]
+    (j j' : J) (x : F j) (x' : F j') :
+    Sigma.ι F j x = Sigma.ι F j' x' ↔ ∃ h : j = j', (eqToHom (h ▸ rfl) : F j ⟶ F j') x = x' :=
+  ⟨fun h => by apply_fun coproductEquiv F at h; aesop_cat, by aesop_cat⟩
+
+@[simp]
+lemma Sigma.comp_ι {J : Type v} [Small.{u} J] {F : J → Type u} [HasCoproduct F] (j : J) (x : F j) :
+    Sigma.comp (Sigma.ι F j x) = j := by
+  simp [comp]
+
+lemma Sigma.rep_ι {J : Type v} [Small.{u} J] {F : J → Type u} [HasCoproduct F] (j : J)
+    (x : F j) : Sigma.rep (Sigma.ι F j x) = (eqToHom (by simp) : F j ⟶ F (Sigma.comp (Sigma.ι F j x))) x := by
+  dsimp only [rep]
+  have := coproductEquiv_ι F j x
+  rw [Sigma.ext_iff] at this
+  dsimp at this
+  symm
+  rw [eqToHom_eq_iff_heq]
+  symm
+  exact this.2
+
+lemma Sigma.comp_map' {J : Type v} {K : Type v'} [Small.{u} J] [Small.{u} K]
+    (F : J → Type u) (G : K → Type u) [HasCoproduct F] [HasCoproduct G] {p : J → K}
+    (q : ∀ (j : J), F j ⟶ G (p j)) (x : ∐ F) : Sigma.comp (Sigma.map' p q x) = p (Sigma.comp x) := by
+  simp only [comp, coproductEquiv_map']
+  aesop_cat
+
+lemma Sigma.rep_map' {J : Type v} {K : Type v'} [Small.{u} J] [Small.{u} K]
+    (F : J → Type u) (G : K → Type u) [HasCoproduct F] [HasCoproduct G] {p : J → K}
+    (q : ∀ (j : J), F j ⟶ G (p j)) (x : ∐ F) :
+    Sigma.rep (Sigma.map' p q x) = (eqToHom (by rw [Sigma.comp_map']) : G (p (Sigma.comp x)) ⟶ G (Sigma.comp (Sigma.map' p q x))) (q (Sigma.comp x) (Sigma.rep x)) := by
+  simp only [rep]
+  symm
+  rw [eqToHom_eq_iff_heq]
+  have := coproductEquiv_map' _ _ q x
+  rw [Sigma.ext_iff] at this
+  symm
+  exact this.2
+
+-- theorem Sigma.exists_rep_of_nonempty {α : Type v} (f : α → Type u) [HasCoproduct f]
+--     [∀ i, Nonempty (f i)] (x : ∐ f) : ∃ (i : α) (y : f i), Sigma.ι f i y = x := by
+--   have : Small.{u} α := by
+--     let inc : α → ∐ f := fun i => Sigma.ι f i (Classical.ofNonempty)
+--     suffices Function.Injective inc from small_of_injective this
+--     intros i j hij
+
+--     --let proj : ∐ f
+
+--   sorry
+
+-- theorem Sigma.exists_rep {α : Type u} (f : α → Type u) (x : ∐ f) :
+--     ∃ (i : α) (y : f i), Sigma.ι f i y = x := by
+--   obtain ⟨i, y, h⟩ := Concrete.sigma.exists_rep f x
+--   exact ⟨i, y, h⟩
+
+-- theorem Sigma.exists_rep_of_small {α : Type v} [Small.{u} α] (f : α → Type u) [HasCoproduct f]
+--     (x : ∐ f) : ∃ (i : α) (y : f i), Sigma.ι f i y = x := by
+--   let f' : Shrink.{u} α → Type u := f ∘ (equivShrink _).symm
+--   let w : ∀ j, f ((equivShrink _).symm j) ≅ f' j := fun j => Iso.refl _
+--   let e : ∐ f' ≅ ∐ f := Sigma.whiskerEquiv _ w
+--   obtain ⟨i, y, h⟩ := Sigma.exists_rep f' (e.toEquiv.symm x)
+--   refine' ⟨(equivShrink α).symm i, y, _⟩
+--   obtain rfl := e.toEquiv.eq_symm_apply.1 h
+--   dsimp only [Function.comp_apply, Iso.toEquiv_fun, Sigma.whiskerEquiv_hom, Iso.refl_inv]
+--   erw [← types_comp_apply (Sigma.ι _ _) (Sigma.map' _ _), colimit.ι_desc]
+--   simp only [Cofan.mk_pt, Cofan.mk_ι_app, types_comp_apply, types_id_apply]
+
+-- noncomputable def Sigma.comp {α : Type v} [Small.{u} α] {f : α → Type u} [HasCoproduct f]
+--     (x : ∐ f) : α := (Sigma.exists_rep_of_small f x).choose
+
+-- noncomputable def Sigma.rep {α : Type v} [Small.{u} α] {f : α → Type u} [HasCoproduct f]
+--     (x : ∐ f) : f (comp x) := (Sigma.exists_rep_of_small f x).choose_spec.choose
+
+-- lemma Sigma.ι_comp_rep {α : Type v} [Small.{u} α] {f : α → Type u} [HasCoproduct f]
+--     (x : ∐ f) : Sigma.ι f (Sigma.comp x) (Sigma.rep x) = x :=
+--   (Sigma.exists_rep_of_small f x).choose_spec.choose_spec
+
+-- lemma Sigma.ι_eq {α : Type v} {f : α → Type u} [HasCoproduct f] {i i' : α} {y : f i}
+--     {y' : f i'} (hi : i = i') (hy : (eqToHom (hi ▸ rfl) : f i ⟶ f i') y = y') :
+--     Sigma.ι f i y = Sigma.ι f i' y' := by
+--   aesop_cat
+
+end Small
 section Fork
 
 variable {X Y Z : Type u} (f : X ⟶ Y) {g h : Y ⟶ Z} (w : f ≫ g = f ≫ h)
