@@ -8,7 +8,10 @@ open Function
 
 namespace LinearMap
 
-variable {K U V W : Type} [Field K] [AddCommGroup U] [Module K U] [AddCommGroup V] [Module K V] [AddCommGroup W] [Module K W]
+variable {K U V W : Type} [Field K]
+  [AddCommGroup U] [Module K U]
+  [AddCommGroup V] [Module K V]
+  [AddCommGroup W] [Module K W]
 
 def isFiniteRank (A : V →ₗ[K] W) : Prop :=
   rank A < ℵ₀
@@ -17,12 +20,12 @@ def eqUpToFiniteRank (A B : V →ₗ[K] W) : Prop := isFiniteRank (A - B)
 infix:50 " =ᶠ " => eqUpToFiniteRank
 
 
-lemma sumFiniteRank (A B : V →ₗ[K] W) (hA : isFiniteRank A) (hB : isFiniteRank B):
+lemma sumFiniteRank (A B : V →ₗ[K] W) (hA : isFiniteRank A) (hB : isFiniteRank B) :
     isFiniteRank (A + B) := by
-    dsimp only [isFiniteRank]
-    calc
-      rank (A + B) ≤ rank A + rank B := by apply rank_add_le
-                 _ < ℵ₀              := by apply add_lt_aleph0 <;> assumption
+  dsimp only [isFiniteRank]
+  calc
+    rank (A + B) ≤ rank A + rank B := by apply rank_add_le
+               _ < ℵ₀              := by apply add_lt_aleph0 <;> assumption
 
 lemma rightCompFiniteRank (A : V →ₗ[K] W) (B : U →ₗ[K] V) (hB : isFiniteRank B) :
     isFiniteRank (A ∘ₗ B) := by
@@ -31,7 +34,7 @@ lemma rightCompFiniteRank (A : V →ₗ[K] W) (B : U →ₗ[K] V) (hB : isFinite
     rank (A ∘ₗ B) ≤ rank B := by apply rank_comp_le_right
                 _ < ℵ₀     := by assumption
 
-lemma leftCompFiniteRank (A : V →ₗ[K] W) (B : U →ₗ[K] V) (hA : isFiniteRank A):
+lemma leftCompFiniteRank (A : V →ₗ[K] W) (B : U →ₗ[K] V) (hA : isFiniteRank A) :
     isFiniteRank (A ∘ₗ B) := by
   dsimp only [isFiniteRank]
   calc
@@ -45,15 +48,15 @@ lemma smulFiniteRank (c : K) (A : V →ₗ[K] W) (hA : isFiniteRank A) : isFinit
   assumption
 
 theorem isFiniteRank_iff_eqUpToFiniteRank_zero (A : V →ₗ[K] W) :
-    isFiniteRank A ↔ A =ᶠ 0 := by
-    constructor
-    · intro hA
-      rw [← sub_zero A] at hA
-      assumption
-    · intro hA'
-      dsimp only [eqUpToFiniteRank] at hA'
-      simp at hA'
-      assumption
+  isFiniteRank A ↔ A =ᶠ 0 := by
+  constructor
+  · intro hA
+    rw [← sub_zero A] at hA
+    assumption
+  · intro hA'
+    dsimp only [eqUpToFiniteRank] at hA'
+    simp at hA'
+    assumption
 
 theorem zeroFiniteRank : isFiniteRank (0 : V →ₗ[K] W) := by
   dsimp only [isFiniteRank]
@@ -62,14 +65,14 @@ theorem zeroFiniteRank : isFiniteRank (0 : V →ₗ[K] W) := by
 
 lemma eqUpToFiniteRankLeft_of_eqUpToFiniteRank (A B : U →ₗ[K] V) (C : V →ₗ[K]  W)
     (hAB : A =ᶠ B) : C ∘ₗ A =ᶠ C ∘ₗ B := by
-    dsimp only [eqUpToFiniteRank]
-    convert rightCompFiniteRank C (A - B) hAB using 1
-    rw [comp_sub]
+  dsimp only [eqUpToFiniteRank]
+  convert rightCompFiniteRank C (A - B) hAB using 1
+  rw [comp_sub]
 
 lemma eqUpToFiniteRankRight_of_eqUpToFiniteRank (A B : V →ₗ[K] W) (C : U →ₗ[K]  V)
     (hAB : A =ᶠ B) : A ∘ₗ C =ᶠ B ∘ₗ C := by
-    dsimp only [eqUpToFiniteRank]
-    convert leftCompFiniteRank (A - B) C hAB  using 1
+  dsimp only [eqUpToFiniteRank]
+  convert leftCompFiniteRank (A - B) C hAB  using 1
 
 @[refl]
 theorem eqUpToFiniteRank_refl (A : V →ₗ[K] W) :  A =ᶠ A := by
@@ -128,7 +131,7 @@ lemma isFredholm_equiv (A : E ≃L[ℂ] F) : isFredholm (A : E →L[ℂ] F) := b
     rw [LinearMap.one_eq_id, ContinuousLinearMap.coe_id]
   }
 
-  protected def compOld (hT : isFredholm T) (hS : isFredholm S) : isFredholm (S.comp T) := by
+protected def compOld (hT : isFredholm T) (hS : isFredholm S) : isFredholm (S.comp T) := by
   obtain ⟨T', hTl, hTr⟩ := hT
   obtain ⟨S', hSl, hSr⟩ := hS
   use (T' ∘L S')
