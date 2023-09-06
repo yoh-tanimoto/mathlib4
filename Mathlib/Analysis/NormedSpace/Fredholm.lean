@@ -8,7 +8,7 @@ open Function
 
 namespace LinearMap
 
-variable {K U V W : Type 0} [Field K] [AddCommGroup U] [Module K U] [AddCommGroup V] [Module K V] [AddCommGroup W] [Module K W]
+variable {K U V W : Type} [Field K] [AddCommGroup U] [Module K U] [AddCommGroup V] [Module K V] [AddCommGroup W] [Module K W]
 
 def isFiniteRank (A : V →ₗ[K] W) : Prop :=
   rank A < ℵ₀
@@ -48,6 +48,17 @@ theorem zeroFiniteRank : isFiniteRank (0 : V →ₗ[K] W) := by
 def eqUpToFiniteRank (A B : V →ₗ[K] W) : Prop := isFiniteRank (A - B)
 infix:50 " =ᶠ " => eqUpToFiniteRank
 
+lemma eqUpToFiniteRankLeft_of_eqUpToFiniteRank (A B : U →ₗ[K] V) (C : V →ₗ[K]  W)
+    (hAB : A =ᶠ B) : C ∘ₗ A =ᶠ C ∘ₗ B := by
+    dsimp only [eqUpToFiniteRank]
+    convert rightCompFiniteRank C (A - B) hAB using 1
+    rw [comp_sub]
+
+lemma eqUpToFiniteRankRight_of_eqUpToFiniteRank (A B : V →ₗ[K] W) (C : U →ₗ[K]  V)
+    (hAB : A =ᶠ B) : A ∘ₗ C =ᶠ B ∘ₗ C := by
+    dsimp only [eqUpToFiniteRank]
+    convert leftCompFiniteRank (A - B) C hAB  using 1
+
 @[refl]
 theorem eqUpToFiniteRank_refl (A : V →ₗ[K] W) :  A =ᶠ A := by
   dsimp only [eqUpToFiniteRank]
@@ -65,8 +76,8 @@ theorem eqUpToFiniteRank_symm (A B : V →ₗ[K] W) (h: A =ᶠ B): B =ᶠ A := b
 @[trans]
 theorem eqUpToFiniteRank_trans (A B C : V →ₗ[K] W) (hAB : A =ᶠ B) (hBC : B =ᶠ C) : A =ᶠ C := by
   dsimp only [eqUpToFiniteRank]
-  rw [← sub_add_sub_cancel]
-  apply sumFiniteRank (A - B) (B - C) hAB hBC
+  convert sumFiniteRank (A - B) (B - C) hAB hBC using 1
+  simp
 
 def isQuasiInv (A : V →ₗ[K] W) (B : W →ₗ[K] V) : Prop :=
   1 =ᶠ B ∘ₗ A ∧ 1 =ᶠ A ∘ₗ B
