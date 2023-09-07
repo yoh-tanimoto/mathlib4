@@ -10,36 +10,42 @@ open Function
 
 namespace LinearMap
 
-variable {K U V W : Type 0} [Field K] [AddCommGroup U] [Module K U] [AddCommGroup V] [Module K V] [AddCommGroup W] [Module K W]
+variable {K U V W : Type} [Field K]
+  [AddCommGroup U] [Module K U]
+  [AddCommGroup V] [Module K V]
+  [AddCommGroup W] [Module K W]
 
 def isFiniteRank (A : V →ₗ[K] W) : Prop :=
   rank A < ℵ₀
 
-lemma sumFiniteRank (A B : V →ₗ[K] W) (hA : isFiniteRank A) (hB : isFiniteRank B):
+lemma isFiniteRank_sum (A B : V →ₗ[K] W) (hA : isFiniteRank A) (hB : isFiniteRank B) :
     isFiniteRank (A + B) := by
-    dsimp only [isFiniteRank]
-    calc
-      rank (A + B) ≤ rank A + rank B := by apply rank_add_le
-                 _ < ℵ₀              := by apply add_lt_aleph0 <;> assumption
+  dsimp only [isFiniteRank]
+  calc
+    rank (A + B) ≤ rank A + rank B := by apply rank_add_le
+               _ < ℵ₀              := by apply add_lt_aleph0 <;> assumption
 
-lemma rightCompFiniteRank (A : V →ₗ[K] W) (B : U →ₗ[K] V) (hB : isFiniteRank B) :
+lemma isFiniteRank_comp_right (A : V →ₗ[K] W) (B : U →ₗ[K] V) (hB : isFiniteRank B) :
     isFiniteRank (A ∘ₗ B) := by
   dsimp only [isFiniteRank]
   calc
     rank (A ∘ₗ B) ≤ rank B := by apply rank_comp_le_right
                 _ < ℵ₀     := by assumption
 
-lemma leftCompFiniteRank (A : V →ₗ[K] W) (B : U →ₗ[K] V) (hA : isFiniteRank A):
+lemma isFiniteRank_comp_left (A : V →ₗ[K] W) (B : U →ₗ[K] V) (hA : isFiniteRank A) :
     isFiniteRank (A ∘ₗ B) := by
   dsimp only [isFiniteRank]
   calc
     rank (A ∘ₗ B) ≤ rank A := by apply rank_comp_le_left
                 _ < ℵ₀     := by assumption
 
+lemma isFiniteRank_smul (c : K) (A : V →ₗ[K] W) (hA : isFiniteRank A) : isFiniteRank (c • A) := by
+  suffices : isFiniteRank ((c • id) ∘ₗ A)
+  · exact this -- "suffices + exact" cannot be changed to "change" (?!)
+  apply isFiniteRank_comp_right
+  assumption
 
-lemma smulFiniteRank (c : K) (A : V →ₗ[K] W) (hA : isFiniteRank A) : isFiniteRank (c • A) := sorry
-
-theorem zeroFiniteRank : isFiniteRank (0 : V →ₗ[K] W) := by
+theorem isFiniteRank_zero : isFiniteRank (0 : V →ₗ[K] W) := by
   dsimp only [isFiniteRank]
   rw [rank_zero]
   exact aleph0_pos
@@ -47,21 +53,61 @@ theorem zeroFiniteRank : isFiniteRank (0 : V →ₗ[K] W) := by
 def eqUpToFiniteRank (A B : V →ₗ[K] W) : Prop := isFiniteRank (A - B)
 infix:50 " =ᶠ " => eqUpToFiniteRank
 
+theorem isFiniteRank_iff_eqUpToFiniteRank_zero (A : V →ₗ[K] W) :
+  isFiniteRank A ↔ A =ᶠ 0 := by
+  constructor
+  · intro hA
+    rw [← sub_zero A] at hA
+    assumption
+  · intro hA'
+    dsimp only [eqUpToFiniteRank] at hA'
+    simp at hA'
+    assumption
+
+lemma eqUpToFiniteRankLeft_of_eqUpToFiniteRank (A B : U →ₗ[K] V) (C : V →ₗ[K]  W)
+    (hAB : A =ᶠ B) : C ∘ₗ A =ᶠ C ∘ₗ B := by
+  dsimp only [eqUpToFiniteRank]
+  convert isFiniteRank_comp_right C (A - B) hAB using 1
+  rw [comp_sub]
+
+lemma eqUpToFiniteRankRight_of_eqUpToFiniteRank (A B : V →ₗ[K] W) (C : U →ₗ[K]  V)
+    (hAB : A =ᶠ B) : A ∘ₗ C =ᶠ B ∘ₗ C := by
+  dsimp only [eqUpToFiniteRank]
+  convert isFiniteRank_comp_left (A - B) C hAB  using 1
+
 @[refl]
-theorem eqUpToFiniteRank_refl (A : V →ₗ[K] W) :  A =ᶠ A := by
+theorem eqUpToFiniteRank_refl {A : V →ₗ[K] W} :  A =ᶠ A := by
   dsimp only [eqUpToFiniteRank]
   rw [sub_self]
-  exact zeroFiniteRank
+  exact isFiniteRank_zero
 
 @[symm]
-theorem eqUpToFiniteRank_symm (A B : V →ₗ[K] W) (h: A =ᶠ B): B =ᶠ A :=
-  sorry
+theorem eqUpToFiniteRank_symm {A B : V →ₗ[K] W} (h: A =ᶠ B) : B =ᶠ A := by
+  dsimp only [eqUpToFiniteRank]
+  have : B - A = (-1 : K) • (A - B) := by simp only [neg_smul, one_smul, neg_sub]
+  rw [this]
+  apply isFiniteRank_smul
+  assumption
 
 @[trans]
-theorem eqUpToFiniteRank_trans (A B C : V →ₗ[K] W) (hAB : A =ᶠ B) (hBC : B =ᶠ C) : A =ᶠ C := by
+theorem eqUpToFiniteRank_trans {A B C : V →ₗ[K] W} (hAB : A =ᶠ B) (hBC : B =ᶠ C) : A =ᶠ C := by
   dsimp only [eqUpToFiniteRank]
-  rw [← sub_add_sub_cancel]
-  apply sumFiniteRank (A - B) (B - C) hAB hBC
+  convert isFiniteRank_sum (A - B) (B - C) hAB hBC using 1
+  simp
+
+-- For calc proofs
+instance : Trans (· =ᶠ · : (V →ₗ[K] W) → (V →ₗ[K] W) → Prop) (· =ᶠ ·) (· =ᶠ ·) where
+  trans := eqUpToFiniteRank_trans
+
+-- This is not be necessary. I just cannot structure proofs properly.
+lemma eqUpToFiniteRank_lift_eq {A B : V →ₗ[K] W} (h : A = B) : A =ᶠ B := by rw [h]
+
+example {A B C D A' : V →ₗ[K] W} (hAB : A =ᶠ B) (hBC : B = C) (hCD : C =ᶠ D) (hDA : D = A') : A =ᶠ A' := by
+  calc
+    A =ᶠ B  := hAB
+    _ =  C  := hBC
+    _ =ᶠ D  := hCD
+    _ =  A' := hDA
 
 def isQuasiInv (A : V →ₗ[K] W) (B : W →ₗ[K] V) : Prop :=
   1 =ᶠ B ∘ₗ A ∧ 1 =ᶠ A ∘ₗ B
@@ -81,16 +127,49 @@ def isFredholm (A : E →L[ℂ] F) : Prop :=
 
 namespace isFredholm
 
+macro "bourbaki" : tactic => `(tactic| sorry)
+
 -- TODO What assumptions are really needed here?
 lemma iff_finiteDimensional_ker_coker :
     isFredholm T ↔
     FiniteDimensional ℂ (LinearMap.ker T) ∧ FiniteDimensional ℂ (F ⧸ LinearMap.range T) := by
-  sorry
+  bourbaki
 
-example : isFredholm (1 : E →L[ℂ] E) := by
+lemma isFredholm_equiv (A : E ≃L[ℂ] F) : isFredholm (A : E →L[ℂ] F) := by
+  use A.symm
+  constructor <;> {
+    apply LinearMap.eqUpToFiniteRank_lift_eq
+    rw [←ContinuousLinearMap.coe_comp]
+    first | rw [ContinuousLinearEquiv.coe_symm_comp_coe]
+          | rw [ContinuousLinearEquiv.coe_comp_coe_symm]
+    rw [LinearMap.one_eq_id, ContinuousLinearMap.coe_id]
+  }
+
+-- composition using eqUpToFiniteRank
+protected def comp' (hT : isFredholm T) (hS : isFredholm S) : isFredholm (S ∘L T) := by
+  obtain ⟨T', hTl, hTr⟩ := hT
+  obtain ⟨S', hSl, hSr⟩ := hS
+  use (T' ∘L S')
   constructor
-  · --rw [LinearMap.mem_ker.mp]
-    sorry
+  simp only [ContinuousLinearMap.coe_comp] at *
+  · show (1 : E →ₗ[ℂ] E) =ᶠ (T' ∘L S') ∘L (S ∘L T)
+    calc
+      (1 : E →ₗ[ℂ] E) =ᶠ T' ∘L T := by exact hTl
+                    _ =ᶠ T' ∘L T + T' ∘L (S' ∘L S - 1) ∘L T := by sorry
+                    _ = T' ∘L ( S' ∘L S) ∘L T := by sorry
+                    _ =ᶠ (T' ∘L S') ∘L (S ∘L T) := by sorry
+
+    /-  show 1 =ᶠ (T' ∘ₗ S') ∘ₗ (S ∘ₗ T)
+        have h : isFiniteRank (T' ∘ₗ (1- S' ∘ₗ S) ∘ₗ T) := by pre- post-composing
+        calc
+          1 =ᶠ T' ∘ₗ T
+          _ =ᶠ T' ∘ₗ T - T' ∘ₗ (1- S' ∘ₗ S) ∘ₗ T := by apply add_finiteRank ; exact h
+          _ =ᶠ T' ∘ₗ 1 ∘ₗ T - T' ∘ₗ 1 ∘ₗ T + T' ∘ₗ (S' ∘ₗ S) ∘ₗ T := by apply lift_eq ; ring
+          _ =ᶠ T' ∘ₗ (S' ∘ₗ S) ∘ₗ T := like above
+          _ =ᶠ (T' ∘ₗ S') ∘ₗ (S ∘ₗ T) := like above
+    -/
+    --have : T' ∘L (S' ∘L S) ∘L T =ᶠ (T' ∘L S') ∘L (S ∘L T) := by sorry
+
   · sorry
 
 -- TODO maybe get rid of fixed u
