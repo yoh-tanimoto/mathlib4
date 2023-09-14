@@ -121,7 +121,7 @@ The **Schwartz-Zippel lemma**: For a nonzero multivariable polynomial `p`nover a
 probability that `p` evaluates to zero at points drawn at random from some finite subset `S` of the
 field is bounded by the degree of `p` over `|S|`. This version presents this lemma in terms of
 -/
-lemma schwartz_zippel (F : Type) [Field F] [DecidableEq F] (n : ℕ)
+lemma schwartz_zippel (F : Type) [CommRing F] [IsDomain F] [DecidableEq F] (n : ℕ)
   (p : MvPolynomial (Fin (n)) F) (hp : p ≠ 0) (S : Finset F) :
   (Finset.filter (fun f => MvPolynomial.eval f p = 0) (function_finset (Fin (n)) S)).card * S.card
     ≤ (p.totalDegree) * S.card ^ (n) := by
