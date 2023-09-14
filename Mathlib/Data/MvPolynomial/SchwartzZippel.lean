@@ -3,8 +3,20 @@
 import Mathlib.Data.MvPolynomial.Equiv
 import Mathlib.Data.Polynomial.RingDivision
 import Mathlib.Data.Fin.Tuple.Basic
--- import Mathlib.Logic.Embedding.Basic
 
+/-!
+# The Schwartz-Zippel lemma
+
+This file contains a proof of the
+[Schwartz-Zippel](https://en.wikipedia.org/wiki/Schwartz%E2%80%93Zippel_lemma) lemma. This lemma tells us that the probability of a nonzero multivariable polynomial over a finite field being zero at a random point is bounded by the degree of the polynomial and the size of the field, or more generally, that a nonzero multivariable polynomial over any field has a low probability of being zero when evaluated at points drawn at random from some finite subset of the field. This lemma is useful as a probabilistic polynomial identity test.
+
+## TODO
+
+* Generalize to subset of the field being different for each variable
+* Reexpress in terms of probabilities.
+* Write a tactic to apply this lemma to a given polynomial
+
+-/
 
 open BigOperators
 
@@ -44,15 +56,15 @@ lemma and_or_and_not_iff (p q : Prop) : ((p ∧ q) ∨ (p ∧ ¬ q)) ↔ p := by
 lemma and_and_and_not_iff (p q : Prop) : ((p ∧ q) ∧ (p ∧ ¬ q)) ↔ false := by
   tauto
 
--- https://github.com/leanprover-community/mathlib4/pull/6604
-lemma Finsupp.sum_cons (n : ℕ) (σ: Fin n →₀ ℕ) {i : ℕ} :
-    (Finsupp.sum (Finsupp.cons i σ) fun _ e ↦ e) = i + (Finsupp.sum σ (fun _ e ↦ e)) := by
-  convert Fin.sum_cons i σ
-  · rw [Finsupp.sum_fintype]
-    congr
-    simp
-  · rw [Finsupp.sum_fintype]
-    simp
+-- -- https://github.com/leanprover-community/mathlib4/pull/6604
+-- lemma Finsupp.sum_cons (n : ℕ) (σ: Fin n →₀ ℕ) {i : ℕ} :
+--     (Finsupp.sum (Finsupp.cons i σ) fun _ e ↦ e) = i + (Finsupp.sum σ (fun _ e ↦ e)) := by
+--   convert Fin.sum_cons i σ
+--   · rw [Finsupp.sum_fintype]
+--     congr
+--     simp
+--   · rw [Finsupp.sum_fintype]
+--     simp
 
 @[simp]
 lemma MvPolynomial.support_nonempty_iff {F σ} [CommSemiring F] (p : MvPolynomial σ F) :
@@ -104,13 +116,17 @@ lemma card_prod_filter_eval_eq_zero_piFinset_eq {F} [CommSemiring F] [DecidableE
   tauto
 
 
--- Following the wikipedia proof
--- I don't think that the wikipedia proof technique of starting at n=1 is necessary, so I start at n = 0
+/--
+The **Schwartz-Zippel lemma**: For a nonzero multivariable polynomial `p`nover a field, the
+probability that `p` evaluates to zero at points drawn at random from some finite subset `S` of the
+field is bounded by the degree of `p` over `|S|`. This version presents this lemma in terms of
+-/
 lemma schwartz_zippel (F : Type) [Field F] [DecidableEq F] (n : ℕ)
   (p : MvPolynomial (Fin (n)) F) (hp : p ≠ 0) (S : Finset F) :
   (Finset.filter (fun f => MvPolynomial.eval f p = 0) (function_finset (Fin (n)) S)).card * S.card
-    ≤ (p.totalDegree) * S.card ^ (n)
-:= by
+    ≤ (p.totalDegree) * S.card ^ (n) := by
+  -- Following the wikipedia proof
+  -- I don't think that the wikipedia proof technique of starting at n=1 is necessary, so I start at n = 0
   revert p hp S
   induction n with
   | zero =>
@@ -128,6 +144,7 @@ lemma schwartz_zippel (F : Type) [Field F] [DecidableEq F] (n : ℕ)
     rw [hp] at p_const
     rw [p_const]
     simp only [Nat.zero_eq, map_zero]
+    exact Set.decidableEmptyset
     done
     -- Now, assume that the theorem holds for all polynomials in n variables.
   | succ n ih =>
