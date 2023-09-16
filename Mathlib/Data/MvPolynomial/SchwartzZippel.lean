@@ -29,8 +29,7 @@ that finset
 def function_finset (A : Type) {B : Type} [DecidableEq A] [Fintype A] (S : Finset B) : Finset (A -> B) :=
   Fintype.piFinset (fun _ => S)
 
--- TODO generalize to dependent piFinset
--- no I can't - is there a dependent comp?
+-- #6605
 @[simp]
 lemma Fin.cons_mem_piFinset_iff {F} {n : ℕ} (a : (Fin n → F)) (b: F) (S : Finset F) :
     Fin.cons b a ∈ Fintype.piFinset (fun _ => S)
@@ -50,21 +49,13 @@ lemma Fin.cons_mem_piFinset_iff {F} {n : ℕ} (a : (Fin n → F)) (b: F) (S : Fi
     · rw [cons_succ]
       exact ha11 j
 
+
+-- Not sure what to do here. Presumably we don't want these lemmas
 lemma and_or_and_not_iff (p q : Prop) : ((p ∧ q) ∨ (p ∧ ¬ q)) ↔ p := by
   tauto
 
 lemma and_and_and_not_iff (p q : Prop) : ((p ∧ q) ∧ (p ∧ ¬ q)) ↔ false := by
   tauto
-
--- -- https://github.com/leanprover-community/mathlib4/pull/6604
--- lemma Finsupp.sum_cons (n : ℕ) (σ: Fin n →₀ ℕ) {i : ℕ} :
---     (Finsupp.sum (Finsupp.cons i σ) fun _ e ↦ e) = i + (Finsupp.sum σ (fun _ e ↦ e)) := by
---   convert Fin.sum_cons i σ
---   · rw [Finsupp.sum_fintype]
---     congr
---     simp
---   · rw [Finsupp.sum_fintype]
---     simp
 
 @[simp]
 lemma MvPolynomial.support_nonempty_iff {F σ} [CommSemiring F] (p : MvPolynomial σ F) :
