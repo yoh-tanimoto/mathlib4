@@ -92,22 +92,28 @@ lemma MvPolynomial.eq_C_of_empty {F σ} [CommSemiring F] [IsEmpty σ]
 
 end find_home
 
--- This lemma is weird and can probably be generalized.
--- for example, why not just card S * card ... for the lhs?
-lemma card_prod_filter_eval_eq_zero_piFinset_eq {F} [CommSemiring F] [DecidableEq F] {n: ℕ}
-  (S: Finset F) (p_i': MvPolynomial (Fin n) F) :
-    Finset.card
-      (S ×ˢ Finset.filter (fun f ↦ (MvPolynomial.eval f) p_i' = 0) (Fintype.piFinset (fun _ => S)))
+lemma card_filter_piFinset_eq {α} {n: ℕ} (p : (Fin (n) → α) → Prop) [DecidablePred p]
+  (S: Finset α) :
+    Finset.card (Finset.filter (fun r ↦ p (r ∘ Fin.succ)) (Fintype.piFinset (fun _ => S)))
     =
     Finset.card
-      (Finset.filter (fun r ↦ (MvPolynomial.eval (r ∘ Fin.succ)) p_i' = 0)
-        (Fintype.piFinset (fun _ => S))) := by
-  rw [←Finset.card_map ((Equiv.piFinSucc n F).toEmbedding)]
+      (S ×ˢ Finset.filter p (Fintype.piFinset (fun _ => S))) := by
+  rw [←Finset.card_map ((Equiv.piFinSucc n α).toEmbedding)]
   congr
   ext ⟨x, f⟩
   simp only [Fintype.mem_piFinset, Finset.mem_product, Finset.mem_filter, Finset.mem_map_equiv,
     Equiv.piFinSucc_symm_apply, Fin.cons_mem_piFinset_iff]
   tauto
+
+lemma card_filter_piFinset_eq' {α} {n: ℕ} (p : (Fin (n) → α) → Prop) [DecidablePred p]
+  (S: Finset α) :
+    Finset.card (Finset.filter (fun r ↦ p (r ∘ Fin.succ)) (Fintype.piFinset (fun _ => S)))
+    =
+    S.card *
+    Finset.card
+      (Finset.filter p (Fintype.piFinset (fun _ => S))) := by
+  rw [card_filter_piFinset_eq]
+  exact Finset.card_product S (Finset.filter p (Fintype.piFinset fun _ ↦ S))
 
 
 /--
@@ -172,7 +178,8 @@ lemma schwartz_zippel (F : Type) [CommRing F] [IsDomain F] [DecidableEq F] (n : 
         convert ih
         rw [mul_comm, ←Finset.card_product, eq_comm]
         unfold function_finset
-        rw [card_prod_filter_eval_eq_zero_piFinset_eq]
+        rw [eq_comm]
+        rw [←card_filter_piFinset_eq]
       _ ≤ _ := by
         apply Nat.mul_le_mul_right
         exact Nat.le_sub_of_add_le h0
