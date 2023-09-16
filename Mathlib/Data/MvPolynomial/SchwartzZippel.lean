@@ -83,6 +83,7 @@ lemma MvPolynomial.totalDegree_coeff_finSuccEquiv_add_le {F} [CommSemiring F] (n
     exact hσ1
 
 /-- MvPolynomials over an empty type of variables are always constant -/
+-- PRd as #7208
 lemma MvPolynomial.eq_C_of_empty {F σ} [CommSemiring F] [IsEmpty σ]
   (p : MvPolynomial σ F) : p = C (p.coeff 0) := by
   ext m
@@ -91,6 +92,8 @@ lemma MvPolynomial.eq_C_of_empty {F σ} [CommSemiring F] [IsEmpty σ]
 
 end find_home
 
+-- This lemma is weird and can probably be generalized.
+-- for example, why not just card S * card ... for the lhs?
 lemma card_prod_filter_eval_eq_zero_piFinset_eq {F} [CommSemiring F] [DecidableEq F] {n: ℕ}
   (S: Finset F) (p_i': MvPolynomial (Fin n) F) :
     Finset.card
@@ -122,26 +125,25 @@ lemma schwartz_zippel (F : Type) [CommRing F] [IsDomain F] [DecidableEq F] (n : 
   induction n with
   | zero =>
     intros p hp S
-    convert Nat.zero_le (MvPolynomial.totalDegree p * Finset.card S ^ Nat.zero)
-    simp only [Nat.zero_eq, Fin.forall_fin_zero_pi, mul_eq_zero, Finset.card_eq_zero]
-    left
-    convert Finset.filter_False (function_finset (Fin 0) S)
-    simp only [iff_false]
     -- Because p is a polynomial over the (empty) type Fin 0 of variables, it is constant
-    have p_const := MvPolynomial.eq_C_of_empty p
-    rw [p_const]
-    simp only [Nat.zero_eq, MvPolynomial.eval_C, iff_false, ne_eq]
-    contrapose! hp
-    rw [hp] at p_const
-    rw [p_const]
-    simp only [Nat.zero_eq, map_zero]
-    exact Set.decidableEmptyset
-    done
+    -- have p_const := MvPolynomial.eq_C_of_empty p
+    rw [MvPolynomial.eq_C_of_empty p] at *
+    simp only [Nat.zero_eq, MvPolynomial.eval_C, Fin.forall_fin_zero_pi, Finset.filter_const,
+      MvPolynomial.totalDegree_C, pow_zero, mul_one, nonpos_iff_eq_zero, mul_eq_zero,
+      Finset.card_eq_zero, ite_eq_right_iff, function_finset]
+    left
+    intro h
+    simp [h] at hp
     -- Now, assume that the theorem holds for all polynomials in n variables.
   | succ n ih =>
-    intros p hp S
-    -- We can then consider p to be a polynomial in x_1
+    intros p p_nonzero S
+    -- We can then consider p to be a polynomial over MvPolynomials in one fewer variables
     set p' : Polynomial (MvPolynomial (Fin n) F) := MvPolynomial.finSuccEquiv F n p with hp'
+    -- TODO remove p from context now by reexpressing everthing in terms of p'?
+    -- have : p = (MvPolynomial.finSuccEquiv F n).invFun p' := by
+    --   rw [hp']
+    --   simp?
+    --   exact (MvPolynomial.finSuccEquiv_symm_apply_apply F n p).symm
     -- since p is not identically zero, there is some i such that p_i' is not identically zero
     -- take the largest such i
     set i := p'.natDegree with hi
@@ -149,10 +151,10 @@ lemma schwartz_zippel (F : Type) [CommRing F] [IsDomain F] [DecidableEq F] (n : 
     have h0 : p_i'.totalDegree + i ≤ (p.totalDegree) := by
       apply MvPolynomial.totalDegree_coeff_finSuccEquiv_add_le
       rw [←Polynomial.leadingCoeff, Polynomial.leadingCoeff_ne_zero]
-      exact Iff.mpr (AddEquivClass.map_ne_zero_iff (MvPolynomial.finSuccEquiv F n)) hp
+      exact Iff.mpr (AddEquivClass.map_ne_zero_iff (MvPolynomial.finSuccEquiv F n)) p_nonzero
     have h1 : p_i' ≠ 0 := by
       rw [hp_i', hi, ←Polynomial.leadingCoeff, Polynomial.leadingCoeff_ne_zero]
-      exact Iff.mpr (AddEquivClass.map_ne_zero_iff (MvPolynomial.finSuccEquiv F n)) hp
+      exact Iff.mpr (AddEquivClass.map_ne_zero_iff (MvPolynomial.finSuccEquiv F n)) p_nonzero
     -- We use the inductive hypothesis on p_i'
     replace ih := ih p_i' h1 S
     -- We then split the set of possible zeros into a union of two cases:
