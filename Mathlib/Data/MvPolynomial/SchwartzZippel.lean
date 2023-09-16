@@ -90,9 +90,7 @@ lemma MvPolynomial.eq_C_of_empty {F σ} [CommSemiring F] [IsEmpty σ]
   rw [Subsingleton.eq_zero m]
   simp
 
-end find_home
-
-lemma card_filter_piFinset_eq {α} {n: ℕ} (p : (Fin (n) → α) → Prop) [DecidablePred p]
+lemma card_filter_piFinset_eq' {α} {n: ℕ} (p : (Fin (n) → α) → Prop) [DecidablePred p]
   (S: Finset α) :
     Finset.card (Finset.filter (fun r ↦ p (r ∘ Fin.succ)) (Fintype.piFinset (fun _ => S)))
     =
@@ -105,15 +103,19 @@ lemma card_filter_piFinset_eq {α} {n: ℕ} (p : (Fin (n) → α) → Prop) [Dec
     Equiv.piFinSucc_symm_apply, Fin.cons_mem_piFinset_iff]
   tauto
 
-lemma card_filter_piFinset_eq' {α} {n: ℕ} (p : (Fin (n) → α) → Prop) [DecidablePred p]
+lemma card_filter_succ_piFinset_eq {α} {n: ℕ} (p : (Fin (n) → α) → Prop) [DecidablePred p]
   (S: Finset α) :
     Finset.card (Finset.filter (fun r ↦ p (r ∘ Fin.succ)) (Fintype.piFinset (fun _ => S)))
     =
     S.card *
     Finset.card
       (Finset.filter p (Fintype.piFinset (fun _ => S))) := by
-  rw [card_filter_piFinset_eq]
+  rw [card_filter_piFinset_eq']
   exact Finset.card_product S (Finset.filter p (Fintype.piFinset fun _ ↦ S))
+
+
+end find_home
+
 
 
 /--
@@ -176,10 +178,12 @@ lemma schwartz_zippel (F : Type) [CommRing F] [IsDomain F] [DecidableEq F] (n : 
       calc
       _ ≤ (MvPolynomial.totalDegree p_i') * (Finset.card S) ^ n := by
         convert ih
-        rw [mul_comm, ←Finset.card_product, eq_comm]
-        unfold function_finset
-        rw [eq_comm]
-        rw [←card_filter_piFinset_eq]
+        rw [mul_comm]
+        convert card_filter_piFinset_eq ((fun f ↦ (MvPolynomial.eval (f)) p_i' = 0)) S
+        -- rw [mul_comm, ←Finset.card_product, eq_comm]
+        -- unfold function_finset
+        -- rw [eq_comm]
+        -- rw [←card_filter_piFinset_eq]
       _ ≤ _ := by
         apply Nat.mul_le_mul_right
         exact Nat.le_sub_of_add_le h0
