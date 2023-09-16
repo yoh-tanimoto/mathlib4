@@ -62,9 +62,8 @@ lemma MvPolynomial.support_nonempty_iff {F σ} [CommSemiring F] (p : MvPolynomia
     (MvPolynomial.support p).Nonempty ↔ p ≠ 0 := by
   rw [ne_eq, ←MvPolynomial.support_eq_empty, Finset.nonempty_iff_ne_empty]
 
-lemma MvPolynomial.totalDegree_coeff_finSuccEquiv_add_le {F} [CommSemiring F] (n: ℕ)
+lemma MvPolynomial.totalDegree_coeff_finSuccEquiv_add_le {F} [CommSemiring F] (n i : ℕ)
   (p : MvPolynomial (Fin (Nat.succ n)) F)
-  (i : ℕ)
   (hi : (Polynomial.coeff ((MvPolynomial.finSuccEquiv F n) p) i) ≠ 0) :
     MvPolynomial.totalDegree (Polynomial.coeff ((MvPolynomial.finSuccEquiv F n) p) i) + i
       ≤ MvPolynomial.totalDegree p := by
