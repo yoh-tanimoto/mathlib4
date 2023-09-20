@@ -12,7 +12,7 @@ lemma normal_sbgp_iff_stabilizing {F L : Type*}
     exact inv_smul_eq_iff.mp (hk_normal.conj_mem ϕ hϕ g⁻¹ ⟨x, hxk⟩)
   · intro hgfix
     refine' ⟨fun n hn g x ↦ _⟩
-    replace hn : n • g⁻¹ • (x : L) = g⁻¹ • (x : L) := hn ⟨g.symm x, hgfix g.symm x x.2⟩
+    replace hn : n • g⁻¹ • (x : L) = g⁻¹ • (x : L) := hn ⟨g⁻¹ x, hgfix g⁻¹ x x.2⟩
     rw [mul_smul, mul_smul, hn, smul_inv_smul]
 
 lemma stabilizing_iff_normal_ext {F L : Type*}
