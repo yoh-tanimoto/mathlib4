@@ -7,29 +7,13 @@ lemma normal_sbgp_iff_stabilizing {F L : Type*}
   K.fixingSubgroup.Normal ↔ ∀ (g : L ≃ₐ[F] L) (x : L), x ∈ K → g • x ∈ K := by
   constructor
   · intros hk_normal g x hxk
-    have hk_fixing := IsGalois.fixedField_fixingSubgroup K
-    rw [← hk_fixing]
-    rw [IntermediateField.fixedField]
-    rw [FixedPoints.intermediateField]
+    rw [← IsGalois.fixedField_fixingSubgroup K]
     rintro ⟨ϕ, hϕ⟩
-    change ϕ (g x) = g x
-    suffices: g.symm (ϕ (g x)) = x
-    · apply_fun g at this
-      rw [←AlgEquiv.mul_apply] at this
-      simp at this
-      exact this
-    have := hk_normal.conj_mem ϕ hϕ g.symm ⟨x, hxk⟩
-    simpa
+    exact inv_smul_eq_iff.mp (hk_normal.conj_mem ϕ hϕ g⁻¹ ⟨x, hxk⟩)
   · intro hgfix
     refine' ⟨fun n hn g x ↦ _⟩
-    rw [mul_smul, mul_smul]
-    have hx := hgfix g.symm x x.mem
-    specialize hn ⟨g.symm x, hx⟩
-    rw [Subtype.coe_mk] at hn
-    change n • g⁻¹ x = g⁻¹ x at hn
-    change g (n • g⁻¹ x) = _
-    rw [hn]
-    exact g.apply_symm_apply x
+    replace hn : n • g⁻¹ • (x : L) = g⁻¹ • (x : L) := hn ⟨g.symm x, hgfix g.symm x x.2⟩
+    rw [mul_smul, mul_smul, hn, smul_inv_smul]
 
 lemma stabilizing_iff_normal_ext {F L : Type*}
   [Field F] [Field L] [Algebra F L] [IsGalois F L]
@@ -40,11 +24,7 @@ lemma stabilizing_iff_normal_ext {F L : Type*}
   · rintro h g x ⟨y, hy, rfl⟩
     exact h g y hy
   · intro h g x hx
-    refine' h g _
-    use x
-    constructor
-    · exact hx
-    · rfl
+    exact h g ⟨x, hx, rfl⟩
 
 theorem normal_correspondence (F L : Type*)
   [Field F] [Field L] [Algebra F L] [IsGalois F L]
