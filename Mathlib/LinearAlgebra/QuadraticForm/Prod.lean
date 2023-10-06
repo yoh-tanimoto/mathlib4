@@ -125,7 +125,7 @@ theorem posDef_prod_iff {R} [OrderedRing R] [Module R M₁] [Module R M₂] {Q�
   · rintro ⟨⟨hle₁, ha₁⟩, ⟨hle₂, ha₂⟩⟩
     refine' ⟨⟨hle₁, hle₂⟩, _⟩
     rintro ⟨x₁, x₂⟩ (hx : Q₁ x₁ + Q₂ x₂ = 0)
-    rw [add_eq_zero_iff' (hle₁ x₁) (hle₂ x₂), ha₁.eq_zero_iff, ha₂.eq_zero_iff] at hx
+    rw [add_eq_zero_iff_of_nonneg (hle₁ x₁) (hle₂ x₂), ha₁.eq_zero_iff, ha₂.eq_zero_iff] at hx
     rwa [Prod.mk_eq_zero]
 #align quadratic_form.pos_def_prod_iff QuadraticForm.posDef_prod_iff
 

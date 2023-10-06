@@ -1860,7 +1860,7 @@ theorem eq_pow_of_mul_eq_pow [Nontrivial α] {a b c : Associates α} (ha : a ≠
     by_cases hk0 : k = 0
     · use 1
       rw [hk0, pow_zero] at h ⊢
-      apply (mul_eq_one_iff.1 h).1
+      apply (mul_eq_one.1 h).1
     · refine' is_pow_of_dvd_count ha _
       intro p hp
       apply dvd_count_of_dvd_count_mul hb hp hab

@@ -386,7 +386,7 @@ end CommRing
 theorem sq_add_sq_ne_zero {R : Type*} [LinearOrderedCommRing R] {a b : R} (h : IsCoprime a b) :
     a ^ 2 + b ^ 2 ≠ 0 := by
   intro h'
-  obtain ⟨ha, hb⟩ := (add_eq_zero_iff'
+  obtain ⟨ha, hb⟩ := (add_eq_zero_iff_of_nonneg
   --Porting TODO: replace with sq_nonneg when that file is ported
     (by rw [pow_two]; exact mul_self_nonneg _)
     (by rw [pow_two]; exact mul_self_nonneg _)).mp h'

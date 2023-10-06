@@ -940,7 +940,7 @@ theorem exists_intermediate_Set (i : ℕ) (h₁ : i + s.ncard ≤ t.ncard) (h₂
     exact ⟨r', by simpa using hsr', by simpa using hr't, by rw [← hr', ncard_coe_Finset]⟩
   rw [ht.ncard] at h₁
   have h₁' := Nat.eq_zero_of_le_zero h₁
-  rw [add_eq_zero_iff] at h₁'
+  rw [add_eq_zero] at h₁'
   refine' ⟨t, h₂, rfl.subset, _⟩
   rw [h₁'.2, h₁'.1, ht.ncard, add_zero]
 #align set.exists_intermediate_set Set.exists_intermediate_Set

@@ -263,7 +263,7 @@ theorem first_vote_neg (p q : ℕ) (h : 0 < p + q) :
     {l : List ℤ | l.headI = 1}ᶜ (countedSequence_finite p q) (countedSequence_nonempty p q)
   rw [compl_compl, first_vote_pos _ _ h] at this
   rw [(_ : (q / (p + q) : ENNReal) = 1 - p / (p + q)), ← this, ENNReal.add_sub_cancel_right]
-  · simp only [Ne.def, ENNReal.div_eq_top, Nat.cast_eq_zero, add_eq_zero_iff, ENNReal.nat_ne_top,
+  · simp only [Ne.def, ENNReal.div_eq_top, Nat.cast_eq_zero, add_eq_zero, ENNReal.nat_ne_top,
       false_and_iff, or_false_iff, not_and]
     intros
     contradiction
@@ -430,7 +430,7 @@ theorem ballot_problem :
     exacts [Nat.cast_le.2 qp.le, ENNReal.nat_ne_top _]
   rwa [ENNReal.toReal_eq_toReal (measure_lt_top _ _).ne] at this
   · simp only [Ne.def, ENNReal.div_eq_top, tsub_eq_zero_iff_le, Nat.cast_le, not_le,
-      add_eq_zero_iff, Nat.cast_eq_zero, ENNReal.add_eq_top, ENNReal.nat_ne_top, or_self_iff,
+      add_eq_zero, Nat.cast_eq_zero, ENNReal.add_eq_top, ENNReal.nat_ne_top, or_self_iff,
       not_false_iff, and_true_iff]
     push_neg
     exact ⟨fun _ _ => by linarith, (lt_of_le_of_lt tsub_le_self (ENNReal.nat_ne_top p).lt_top).ne⟩

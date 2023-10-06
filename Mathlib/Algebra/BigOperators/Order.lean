@@ -177,7 +177,6 @@ theorem prod_le_univ_prod_of_one_le' [Fintype ι] {s : Finset ι} (w : ∀ x, 1 
 #align finset.prod_le_univ_prod_of_one_le' Finset.prod_le_univ_prod_of_one_le'
 #align finset.sum_le_univ_sum_of_nonneg Finset.sum_le_univ_sum_of_nonneg
 
--- Porting Note: TODO -- The two next lemmas give the same lemma in additive version
 @[to_additive sum_eq_zero_iff_of_nonneg]
 theorem prod_eq_one_iff_of_one_le' :
     (∀ i ∈ s, 1 ≤ f i) → ((∏ i in s, f i) = 1 ↔ ∀ i ∈ s, f i = 1) := by
@@ -186,18 +185,15 @@ theorem prod_eq_one_iff_of_one_le' :
       (fun _ ↦ ⟨fun _ _ h ↦ False.elim (Finset.not_mem_empty _ h), fun _ ↦ rfl⟩) ?_
     intro a s ha ih H
     have : ∀ i ∈ s, 1 ≤ f i := fun _ ↦ H _ ∘ mem_insert_of_mem
-    rw [prod_insert ha, mul_eq_one_iff' (H _ <| mem_insert_self _ _) (one_le_prod' this),
+    rw [prod_insert ha, mul_eq_one_iff_of_one_le (H _ <| mem_insert_self _ _) (one_le_prod' this),
       forall_mem_insert, ih this]
 #align finset.prod_eq_one_iff_of_one_le' Finset.prod_eq_one_iff_of_one_le'
 #align finset.sum_eq_zero_iff_of_nonneg Finset.sum_eq_zero_iff_of_nonneg
 
-@[to_additive existing sum_eq_zero_iff_of_nonneg]
-theorem prod_eq_one_iff_of_le_one' :
-    (∀ i ∈ s, f i ≤ 1) → ((∏ i in s, f i) = 1 ↔ ∀ i ∈ s, f i = 1) :=
+@[to_additive sum_eq_zero_iff_of_nonpos]
+lemma prod_eq_one_iff_of_le_one' : (∀ i ∈ s, f i ≤ 1) → (∏ i in s, f i = 1 ↔ ∀ i ∈ s, f i = 1) :=
   @prod_eq_one_iff_of_one_le' _ Nᵒᵈ _ _ _
 #align finset.prod_eq_one_iff_of_le_one' Finset.prod_eq_one_iff_of_le_one'
--- Porting note: there is no align for the additive version since it aligns to the
--- same one as the previous lemma
 
 @[to_additive single_le_sum]
 theorem single_le_prod' (hf : ∀ i ∈ s, 1 ≤ f i) {a} (h : a ∈ s) : f a ≤ ∏ x in s, f x :=
@@ -638,6 +634,28 @@ theorem prod_add_prod_le {i : ι} {f g h : ι → R} (hi : i ∈ s) (h2i : g i +
     exact le_trans (hg j h1j) (hgf j h1j h2j)
 #align finset.prod_add_prod_le Finset.prod_add_prod_le
 
+lemma prod_eq_one_iff_of_one_le₀ :
+    (∀ i ∈ s, 1 ≤ f i) → (∏ i in s, f i = 1 ↔ ∀ i ∈ s, f i = 1) := by
+  classical
+  refine Finset.induction_on s
+    (fun _ ↦ ⟨fun _ _ h ↦ False.elim (Finset.not_mem_empty _ h), fun _ ↦ rfl⟩) ?_
+  intro a s ha ih H
+  have : ∀ i ∈ s, 1 ≤ f i := forall_of_forall_insert H
+  rw [prod_insert ha, mul_eq_one_iff_of_one_le (H _ <| mem_insert_self _ _) (one_le_prod' this),
+      forall_mem_insert, ih this]
+
+lemma prod_eq_one_iff_of_le_one' : (∀ i ∈ s, f i ≤ 1) → (∏ i in s, f i = 1 ↔ ∀ i ∈ s, f i = 1) :=
+  @prod_eq_one_iff_of_one_le' _ Nᵒᵈ _ _ _
+#align finset.prod_eq_one_iff_of_le_one' Finset.prod_eq_one_iff_of_le_one'
+
+@[to_additive]
+lemma prod_eq_one_iff_of_one_le (hf : 1 ≤ f) : ∏ i, f i = 1 ↔ f = 1 :=
+  (Finset.prod_eq_one_iff_of_one_le' $ fun i _ ↦ hf i).trans $ by simp [funext_iff]
+
+@[to_additive]
+lemma prod_eq_one_iff_of_le_one (hf : f ≤ 1) : ∏ i, f i = 1 ↔ f = 1 :=
+  (Finset.prod_eq_one_iff_of_le_one' $ fun i _ ↦ hf i).trans $ by simp [funext_iff]
+
 end OrderedCommSemiring
 
 section StrictOrderedCommSemiring
@@ -696,6 +714,14 @@ lemma one_le_prod (hf : 1 ≤ f) : 1 ≤ ∏ i, f i := Finset.one_le_prod' λ _ 
 
 @[to_additive] lemma prod_le_one (hf : f ≤ 1) : ∏ i, f i ≤ 1 := Finset.prod_le_one' λ _ _ ↦ hf _
 
+@[to_additive]
+lemma prod_eq_one_iff_of_one_le (hf : 1 ≤ f) : ∏ i, f i = 1 ↔ f = 1 :=
+  (Finset.prod_eq_one_iff_of_one_le' $ fun i _ ↦ hf i).trans $ by simp [funext_iff]
+
+@[to_additive]
+lemma prod_eq_one_iff_of_le_one (hf : f ≤ 1) : ∏ i, f i = 1 ↔ f = 1 :=
+  (Finset.prod_eq_one_iff_of_le_one' $ fun i _ ↦ hf i).trans $ by simp [funext_iff]
+
 end OrderedCommMonoid
 
 section OrderedCancelCommMonoid
@@ -725,17 +751,9 @@ lemma one_lt_prod_iff_of_one_le (hf : 1 ≤ f) : 1 < ∏ i, f i ↔ 1 < f := by
 lemma prod_lt_one_iff_of_le_one (hf : f ≤ 1) : ∏ i, f i < 1 ↔ f < 1 := by
   obtain rfl | hf := hf.eq_or_lt <;> simp [*, prod_lt_one]
 
-@[to_additive]
-lemma prod_eq_one_iff_of_one_le (hf : 1 ≤ f) : ∏ i, f i = 1 ↔ f = 1 := by
-  simpa only [(one_le_prod hf).not_gt_iff_eq, hf.not_gt_iff_eq]
-    using (one_lt_prod_iff_of_one_le hf).not
-
-@[to_additive]
-lemma prod_eq_one_iff_of_le_one (hf : f ≤ 1) : ∏ i, f i = 1 ↔ f = 1 := by
-  simpa only [(prod_le_one hf).not_gt_iff_eq, hf.not_gt_iff_eq, eq_comm]
-    using (prod_lt_one_iff_of_le_one hf).not
-
 end OrderedCancelCommMonoid
+
+
 end Fintype
 
 namespace WithTop
