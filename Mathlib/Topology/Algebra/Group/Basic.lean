@@ -1303,7 +1303,7 @@ end ContinuousSMul
 
 section ContinuousConstSMul
 
-variable [TopologicalSpace α] [Group α] [ContinuousConstSMul α α] {s t : Set α}
+variable [TopologicalSpace X] [Group X] [ContinuousConstSMul X X] {s t : Set X}
 
 @[to_additive]
 theorem IsOpen.mul_left : IsOpen t → IsOpen (s * t) :=
@@ -1324,14 +1324,14 @@ theorem subset_interior_mul : interior s * interior t ⊆ interior (s * t) :=
 #align subset_interior_add subset_interior_add
 
 @[to_additive]
-theorem singleton_mul_mem_nhds (a : α) {b : α} (h : s ∈ 𝓝 b) : {a} * s ∈ 𝓝 (a * b) := by
+theorem singleton_mul_mem_nhds (a : X) {b : X} (h : s ∈ 𝓝 b) : {a} * s ∈ 𝓝 (a * b) := by
   have := smul_mem_nhds a h
   rwa [← singleton_smul] at this
 #align singleton_mul_mem_nhds singleton_mul_mem_nhds
 #align singleton_add_mem_nhds singleton_add_mem_nhds
 
 @[to_additive]
-theorem singleton_mul_mem_nhds_of_nhds_one (a : α) (h : s ∈ 𝓝 (1 : α)) : {a} * s ∈ 𝓝 a := by
+theorem singleton_mul_mem_nhds_of_nhds_one (a : X) (h : s ∈ 𝓝 (1 : X)) : {a} * s ∈ 𝓝 a := by
   simpa only [mul_one] using singleton_mul_mem_nhds a h
 #align singleton_mul_mem_nhds_of_nhds_one singleton_mul_mem_nhds_of_nhds_one
 #align singleton_add_mem_nhds_of_nhds_zero singleton_add_mem_nhds_of_nhds_zero
@@ -1340,7 +1340,7 @@ end ContinuousConstSMul
 
 section ContinuousConstSMulOp
 
-variable [TopologicalSpace α] [Group α] [ContinuousConstSMul αᵐᵒᵖ α] {s t : Set α}
+variable [TopologicalSpace X] [Group X] [ContinuousConstSMul Xᵐᵒᵖ X] {s t : Set X}
 
 @[to_additive]
 theorem IsOpen.mul_right (hs : IsOpen s) : IsOpen (s * t) := by
@@ -1362,14 +1362,14 @@ theorem subset_interior_mul' : interior s * interior t ⊆ interior (s * t) :=
 #align subset_interior_add' subset_interior_add'
 
 @[to_additive]
-theorem mul_singleton_mem_nhds (a : α) {b : α} (h : s ∈ 𝓝 b) : s * {a} ∈ 𝓝 (b * a) := by
+theorem mul_singleton_mem_nhds (a : X) {b : X} (h : s ∈ 𝓝 b) : s * {a} ∈ 𝓝 (b * a) := by
   simp only [← iUnion_op_smul_set, mem_singleton_iff, iUnion_iUnion_eq_left]
   exact smul_mem_nhds _ h
 #align mul_singleton_mem_nhds mul_singleton_mem_nhds
 #align add_singleton_mem_nhds add_singleton_mem_nhds
 
 @[to_additive]
-theorem mul_singleton_mem_nhds_of_nhds_one (a : α) (h : s ∈ 𝓝 (1 : α)) : s * {a} ∈ 𝓝 a := by
+theorem mul_singleton_mem_nhds_of_nhds_one (a : X) (h : s ∈ 𝓝 (1 : X)) : s * {a} ∈ 𝓝 a := by
   simpa only [one_mul] using mul_singleton_mem_nhds a h
 #align mul_singleton_mem_nhds_of_nhds_one mul_singleton_mem_nhds_of_nhds_one
 #align add_singleton_mem_nhds_of_nhds_zero add_singleton_mem_nhds_of_nhds_zero
@@ -1378,7 +1378,7 @@ end ContinuousConstSMulOp
 
 section TopologicalGroup
 
-variable [TopologicalSpace α] [Group α] [TopologicalGroup α] {s t : Set α}
+variable [TopologicalSpace X] [Group X] [TopologicalGroup X] {s t : Set X}
 
 @[to_additive]
 theorem IsOpen.div_left (ht : IsOpen t) : IsOpen (s / t) := by
@@ -1413,7 +1413,7 @@ theorem subset_interior_div : interior s / interior t ⊆ interior (s / t) :=
 #align subset_interior_sub subset_interior_sub
 
 @[to_additive]
-theorem IsOpen.mul_closure (hs : IsOpen s) (t : Set α) : s * closure t = s * t := by
+theorem IsOpen.mul_closure (hs : IsOpen s) (t : Set X) : s * closure t = s * t := by
   refine' (mul_subset_iff.2 fun a ha b hb => _).antisymm (mul_subset_mul_left subset_closure)
   rw [mem_closure_iff] at hb
   have hbU : b ∈ s⁻¹ * {a * b} := ⟨a⁻¹, a * b, Set.inv_mem_inv.2 ha, rfl, inv_mul_cancel_left _ _⟩
@@ -1423,20 +1423,20 @@ theorem IsOpen.mul_closure (hs : IsOpen s) (t : Set α) : s * closure t = s * t 
 #align is_open.add_closure IsOpen.add_closure
 
 @[to_additive]
-theorem IsOpen.closure_mul (ht : IsOpen t) (s : Set α) : closure s * t = s * t := by
+theorem IsOpen.closure_mul (ht : IsOpen t) (s : Set X) : closure s * t = s * t := by
   rw [← inv_inv (closure s * t), mul_inv_rev, inv_closure, ht.inv.mul_closure, mul_inv_rev, inv_inv,
     inv_inv]
 #align is_open.closure_mul IsOpen.closure_mul
 #align is_open.closure_add IsOpen.closure_add
 
 @[to_additive]
-theorem IsOpen.div_closure (hs : IsOpen s) (t : Set α) : s / closure t = s / t := by
+theorem IsOpen.div_closure (hs : IsOpen s) (t : Set X) : s / closure t = s / t := by
   simp_rw [div_eq_mul_inv, inv_closure, hs.mul_closure]
 #align is_open.div_closure IsOpen.div_closure
 #align is_open.sub_closure IsOpen.sub_closure
 
 @[to_additive]
-theorem IsOpen.closure_div (ht : IsOpen t) (s : Set α) : closure s / t = s / t := by
+theorem IsOpen.closure_div (ht : IsOpen t) (s : Set X) : closure s / t = s / t := by
   simp_rw [div_eq_mul_inv, ht.inv.closure_mul]
 #align is_open.closure_div IsOpen.closure_div
 #align is_open.closure_sub IsOpen.closure_sub
@@ -1452,8 +1452,8 @@ theorem IsClosed.mul_right_of_isCompact (ht : IsClosed t) (hs : IsCompact s) :
   exact IsClosed.smul_left_of_isCompact ht (hs.image continuous_op)
 
 @[to_additive]
-theorem QuotientGroup.isClosedMap_coe {H : Subgroup α} (hH : IsCompact (H : Set α)) :
-    IsClosedMap ((↑) : α → α ⧸ H) := by
+theorem QuotientGroup.isClosedMap_coe {H : Subgroup X} (hH : IsCompact (H : Set X)) :
+    IsClosedMap ((↑) : X → X ⧸ H) := by
   intro t ht
   rw [← quotientMap_quotient_mk'.isClosed_preimage]
   convert ht.mul_right_of_isCompact hH
@@ -1837,10 +1837,10 @@ namespace Units
 
 open MulOpposite (continuous_op continuous_unop)
 
-variable [Monoid α] [TopologicalSpace α] [Monoid β] [TopologicalSpace β]
+variable [Monoid X] [TopologicalSpace X] [Monoid β] [TopologicalSpace β]
 
 @[to_additive]
-instance [ContinuousMul α] : TopologicalGroup αˣ where
+instance [ContinuousMul X] : TopologicalGroup Xˣ where
   continuous_inv := Units.continuous_iff.2 <| ⟨continuous_coe_inv, continuous_val⟩
 
 /-- The topological group isomorphism between the units of a product of two monoids, and the product
@@ -1848,10 +1848,10 @@ of the units of each monoid. -/
 @[to_additive
   "The topological group isomorphism between the additive units of a product of two
   additive monoids, and the product of the additive units of each additive monoid."]
-def Homeomorph.prodUnits : (α × β)ˣ ≃ₜ αˣ × βˣ where
+def Homeomorph.prodUnits : (X × β)ˣ ≃ₜ Xˣ × βˣ where
   continuous_toFun :=
-    (continuous_fst.units_map (MonoidHom.fst α β)).prod_mk
-      (continuous_snd.units_map (MonoidHom.snd α β))
+    (continuous_fst.units_map (MonoidHom.fst X β)).prod_mk
+      (continuous_snd.units_map (MonoidHom.snd X β))
   continuous_invFun :=
     Units.continuous_iff.2
       ⟨continuous_val.fst'.prod_mk continuous_val.snd',
@@ -1900,41 +1900,41 @@ end LatticeOps
 /-!
 ### Lattice of group topologies
 
-We define a type class `GroupTopology α` which endows a group `α` with a topology such that all
+We define a type class `GroupTopology X` which endows a group `X` with a topology such that all
 group operations are continuous.
 
-Group topologies on a fixed group `α` are ordered, by reverse inclusion. They form a complete
+Group topologies on a fixed group `X` are ordered, by reverse inclusion. They form a complete
 lattice, with `⊥` the discrete topology and `⊤` the indiscrete topology.
 
-Any function `f : α → β` induces `coinduced f : TopologicalSpace α → GroupTopology β`.
+Any function `f : X → β` induces `coinduced f : TopologicalSpace X → GroupTopology β`.
 
-The additive version `AddGroupTopology α` and corresponding results are provided as well.
+The additive version `AddGroupTopology X` and corresponding results are provided as well.
 -/
 
 
-/-- A group topology on a group `α` is a topology for which multiplication and inversion
+/-- A group topology on a group `X` is a topology for which multiplication and inversion
 are continuous. -/
-structure GroupTopology (α : Type u) [Group α] extends TopologicalSpace α, TopologicalGroup α :
+structure GroupTopology (X : Type u) [Group X] extends TopologicalSpace X, TopologicalGroup X :
   Type u
 #align group_topology GroupTopology
 
-/-- An additive group topology on an additive group `α` is a topology for which addition and
+/-- An additive group topology on an additive group `X` is a topology for which addition and
   negation are continuous. -/
-structure AddGroupTopology (α : Type u) [AddGroup α] extends TopologicalSpace α,
-  TopologicalAddGroup α : Type u
+structure AddGroupTopology (X : Type u) [AddGroup X] extends TopologicalSpace X,
+  TopologicalAddGroup X : Type u
 #align add_group_topology AddGroupTopology
 
 attribute [to_additive] GroupTopology
 
 namespace GroupTopology
 
-variable [Group α]
+variable [Group X]
 
 /-- A version of the global `continuous_mul` suitable for dot notation. -/
 @[to_additive "A version of the global `continuous_add` suitable for dot notation."]
-theorem continuous_mul' (g : GroupTopology α) :
+theorem continuous_mul' (g : GroupTopology X) :
     haveI := g.toTopologicalSpace
-    Continuous fun p : α × α => p.1 * p.2 := by
+    Continuous fun p : X × X => p.1 * p.2 := by
   letI := g.toTopologicalSpace
   haveI := g.toTopologicalGroup
   exact continuous_mul
@@ -1943,9 +1943,9 @@ theorem continuous_mul' (g : GroupTopology α) :
 
 /-- A version of the global `continuous_inv` suitable for dot notation. -/
 @[to_additive "A version of the global `continuous_neg` suitable for dot notation."]
-theorem continuous_inv' (g : GroupTopology α) :
+theorem continuous_inv' (g : GroupTopology X) :
     haveI := g.toTopologicalSpace
-    Continuous (Inv.inv : α → α) := by
+    Continuous (Inv.inv : X → X) := by
   letI := g.toTopologicalSpace
   haveI := g.toTopologicalGroup
   exact continuous_inv
@@ -1954,7 +1954,7 @@ theorem continuous_inv' (g : GroupTopology α) :
 
 @[to_additive]
 theorem toTopologicalSpace_injective :
-    Function.Injective (toTopologicalSpace : GroupTopology α → TopologicalSpace α) :=
+    Function.Injective (toTopologicalSpace : GroupTopology X → TopologicalSpace X) :=
   fun f g h => by
     cases f
     cases g
@@ -1963,7 +1963,7 @@ theorem toTopologicalSpace_injective :
 #align add_group_topology.to_topological_space_injective AddGroupTopology.toTopologicalSpace_injective
 
 @[to_additive (attr := ext)]
-theorem ext' {f g : GroupTopology α} (h : f.IsOpen = g.IsOpen) : f = g :=
+theorem ext' {f g : GroupTopology X} (h : f.IsOpen = g.IsOpen) : f = g :=
   toTopologicalSpace_injective <| TopologicalSpace.ext h
 #align group_topology.ext' GroupTopology.ext'
 #align add_group_topology.ext' AddGroupTopology.ext'
@@ -1973,83 +1973,83 @@ in `t` (`t` is finer than `s`). -/
 @[to_additive
   "The ordering on group topologies on the group `γ`. `t ≤ s` if every set open in `s`
   is also open in `t` (`t` is finer than `s`)."]
-instance : PartialOrder (GroupTopology α) :=
+instance : PartialOrder (GroupTopology X) :=
   PartialOrder.lift toTopologicalSpace toTopologicalSpace_injective
 
 @[to_additive (attr := simp)]
-theorem toTopologicalSpace_le {x y : GroupTopology α} :
+theorem toTopologicalSpace_le {x y : GroupTopology X} :
     x.toTopologicalSpace ≤ y.toTopologicalSpace ↔ x ≤ y :=
   Iff.rfl
 #align group_topology.to_topological_space_le GroupTopology.toTopologicalSpace_le
 #align add_group_topology.to_topological_space_le AddGroupTopology.toTopologicalSpace_le
 
 @[to_additive]
-instance : Top (GroupTopology α) :=
-  let _t : TopologicalSpace α := ⊤
+instance : Top (GroupTopology X) :=
+  let _t : TopologicalSpace X := ⊤
   ⟨{  continuous_mul := continuous_top
       continuous_inv := continuous_top }⟩
 
 @[to_additive (attr := simp)]
-theorem toTopologicalSpace_top : (⊤ : GroupTopology α).toTopologicalSpace = ⊤ :=
+theorem toTopologicalSpace_top : (⊤ : GroupTopology X).toTopologicalSpace = ⊤ :=
   rfl
 #align group_topology.to_topological_space_top GroupTopology.toTopologicalSpace_top
 #align add_group_topology.to_topological_space_top AddGroupTopology.toTopologicalSpace_top
 
 @[to_additive]
-instance : Bot (GroupTopology α) :=
-  let _t : TopologicalSpace α := ⊥
+instance : Bot (GroupTopology X) :=
+  let _t : TopologicalSpace X := ⊥
   ⟨{  continuous_mul := by
-        haveI := discreteTopology_bot α
+        haveI := discreteTopology_bot X
         continuity
       continuous_inv := continuous_bot }⟩
 
 @[to_additive (attr := simp)]
-theorem toTopologicalSpace_bot : (⊥ : GroupTopology α).toTopologicalSpace = ⊥ :=
+theorem toTopologicalSpace_bot : (⊥ : GroupTopology X).toTopologicalSpace = ⊥ :=
   rfl
 #align group_topology.to_topological_space_bot GroupTopology.toTopologicalSpace_bot
 #align add_group_topology.to_topological_space_bot AddGroupTopology.toTopologicalSpace_bot
 
 @[to_additive]
-instance : BoundedOrder (GroupTopology α) where
+instance : BoundedOrder (GroupTopology X) where
   top := ⊤
   le_top x := show x.toTopologicalSpace ≤ ⊤ from le_top
   bot := ⊥
   bot_le x := show ⊥ ≤ x.toTopologicalSpace from bot_le
 
 @[to_additive]
-instance : Inf (GroupTopology α) where inf x y := ⟨x.1 ⊓ y.1, topologicalGroup_inf x.2 y.2⟩
+instance : Inf (GroupTopology X) where inf x y := ⟨x.1 ⊓ y.1, topologicalGroup_inf x.2 y.2⟩
 
 @[to_additive (attr := simp)]
-theorem toTopologicalSpace_inf (x y : GroupTopology α) :
+theorem toTopologicalSpace_inf (x y : GroupTopology X) :
     (x ⊓ y).toTopologicalSpace = x.toTopologicalSpace ⊓ y.toTopologicalSpace :=
   rfl
 #align group_topology.to_topological_space_inf GroupTopology.toTopologicalSpace_inf
 #align add_group_topology.to_topological_space_inf AddGroupTopology.toTopologicalSpace_inf
 
 @[to_additive]
-instance : SemilatticeInf (GroupTopology α) :=
+instance : SemilatticeInf (GroupTopology X) :=
   toTopologicalSpace_injective.semilatticeInf _ toTopologicalSpace_inf
 
 @[to_additive]
-instance : Inhabited (GroupTopology α) :=
+instance : Inhabited (GroupTopology X) :=
   ⟨⊤⟩
 
 local notation "cont" => @Continuous _ _
 
 /-- Infimum of a collection of group topologies. -/
 @[to_additive "Infimum of a collection of additive group topologies"]
-instance : InfSet (GroupTopology α) where
+instance : InfSet (GroupTopology X) where
   sInf S :=
     ⟨sInf (toTopologicalSpace '' S), topologicalGroup_sInf <| ball_image_iff.2 fun t _ => t.2⟩
 
 @[to_additive (attr := simp)]
-theorem toTopologicalSpace_sInf (s : Set (GroupTopology α)) :
+theorem toTopologicalSpace_sInf (s : Set (GroupTopology X)) :
     (sInf s).toTopologicalSpace = sInf (toTopologicalSpace '' s) := rfl
 #align group_topology.to_topological_space_Inf GroupTopology.toTopologicalSpace_sInf
 #align add_group_topology.to_topological_space_Inf AddGroupTopology.toTopologicalSpace_sInf
 
 @[to_additive (attr := simp)]
-theorem toTopologicalSpace_iInf {ι} (s : ι → GroupTopology α) :
+theorem toTopologicalSpace_iInf {ι} (s : ι → GroupTopology X) :
     (⨅ i, s i).toTopologicalSpace = ⨅ i, (s i).toTopologicalSpace :=
   congr_arg sInf (range_comp _ _).symm
 #align group_topology.to_topological_space_infi GroupTopology.toTopologicalSpace_iInf
@@ -2072,37 +2072,37 @@ topologies contained in the intersection of `s` and `t`. -/
 
   The supremum of two group topologies `s` and `t` is the infimum of the family of all group
   topologies contained in the intersection of `s` and `t`."]
-instance : CompleteSemilatticeInf (GroupTopology α) :=
-  { inferInstanceAs (InfSet (GroupTopology α)),
-    inferInstanceAs (PartialOrder (GroupTopology α)) with
+instance : CompleteSemilatticeInf (GroupTopology X) :=
+  { inferInstanceAs (InfSet (GroupTopology X)),
+    inferInstanceAs (PartialOrder (GroupTopology X)) with
     sInf_le := fun S a haS => toTopologicalSpace_le.1 <| sInf_le ⟨a, haS, rfl⟩
     le_sInf := by
       intro S a hab
-      apply (inferInstanceAs (CompleteLattice (TopologicalSpace α))).le_sInf
+      apply (inferInstanceAs (CompleteLattice (TopologicalSpace X))).le_sInf
       rintro _ ⟨b, hbS, rfl⟩
       exact hab b hbS }
 
 @[to_additive]
-instance : CompleteLattice (GroupTopology α) :=
-  { inferInstanceAs (BoundedOrder (GroupTopology α)),
-    inferInstanceAs (SemilatticeInf (GroupTopology α)),
+instance : CompleteLattice (GroupTopology X) :=
+  { inferInstanceAs (BoundedOrder (GroupTopology X)),
+    inferInstanceAs (SemilatticeInf (GroupTopology X)),
     completeLatticeOfCompleteSemilatticeInf _ with
     inf := (· ⊓ ·)
     top := ⊤
     bot := ⊥ }
 
-/-- Given `f : α → β` and a topology on `α`, the coinduced group topology on `β` is the finest
+/-- Given `f : X → β` and a topology on `X`, the coinduced group topology on `β` is the finest
 topology such that `f` is continuous and `β` is a topological group. -/
 @[to_additive
-  "Given `f : α → β` and a topology on `α`, the coinduced additive group topology on `β`
+  "Given `f : X → β` and a topology on `X`, the coinduced additive group topology on `β`
   is the finest topology such that `f` is continuous and `β` is a topological additive group."]
-def coinduced {α β : Type*} [t : TopologicalSpace α] [Group β] (f : α → β) : GroupTopology β :=
+def coinduced {X β : Type*} [t : TopologicalSpace X] [Group β] (f : X → β) : GroupTopology β :=
   sInf { b : GroupTopology β | TopologicalSpace.coinduced f t ≤ b.toTopologicalSpace }
 #align group_topology.coinduced GroupTopology.coinduced
 #align add_group_topology.coinduced AddGroupTopology.coinduced
 
 @[to_additive]
-theorem coinduced_continuous {α β : Type*} [t : TopologicalSpace α] [Group β] (f : α → β) :
+theorem coinduced_continuous {X β : Type*} [t : TopologicalSpace X] [Group β] (f : X → β) :
     Continuous[t, (coinduced f).toTopologicalSpace] f := by
   rw [continuous_sInf_rng]
   rintro _ ⟨t', ht', rfl⟩
