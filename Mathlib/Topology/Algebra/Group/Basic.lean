@@ -38,7 +38,7 @@ open Classical Set Filter TopologicalSpace Function Topology Pointwise MulOpposi
 
 universe u v w x
 
-variable {α : Type u} {β : Type v} {G : Type w} {H : Type x}
+variable {α : Type u} {X : Type u} {β : Type v} {G : Type w} {H : Type x}
 
 section ContinuousMulGroup
 
@@ -227,13 +227,13 @@ that the limit is nonzero, use `Tendsto.inv'`. -/
 @[to_additive
   "If a function converges to a value in an additive topological group, then its
   negation converges to the negation of this value."]
-theorem Filter.Tendsto.inv {f : α → G} {l : Filter α} {y : G} (h : Tendsto f l (𝓝 y)) :
+theorem Filter.Tendsto.inv {f : X → G} {l : Filter X} {y : G} (h : Tendsto f l (𝓝 y)) :
     Tendsto (fun x => (f x)⁻¹) l (𝓝 y⁻¹) :=
   (continuous_inv.tendsto y).comp h
 #align filter.tendsto.inv Filter.Tendsto.inv
 #align filter.tendsto.neg Filter.Tendsto.neg
 
-variable [TopologicalSpace α] {f : α → G} {s : Set α} {x : α}
+variable [TopologicalSpace X] {f : X → G} {s : Set X} {x : X}
 
 @[to_additive (attr := continuity)]
 theorem Continuous.inv (hf : Continuous f) : Continuous fun x => (f x)⁻¹ :=
@@ -480,8 +480,8 @@ theorem TopologicalGroup.continuous_conj' [ContinuousInv G] (h : G) :
 
 end Conj
 
-variable [TopologicalSpace G] [Group G] [TopologicalGroup G] [TopologicalSpace α] {f : α → G}
-  {s : Set α} {x : α}
+variable [TopologicalSpace G] [Group G] [TopologicalGroup G] [TopologicalSpace X] {f : X → G}
+  {s : Set X} {x : X}
 
 section Zpow
 
@@ -503,7 +503,7 @@ instance AddGroup.continuousSMul_int {A} [AddGroup A] [TopologicalSpace A]
 #align add_group.has_continuous_smul_int AddGroup.continuousSMul_int
 
 @[to_additive (attr := continuity)]
-theorem Continuous.zpow {f : α → G} (h : Continuous f) (z : ℤ) : Continuous fun b => f b ^ z :=
+theorem Continuous.zpow {f : X → G} (h : Continuous f) (z : ℤ) : Continuous fun b => f b ^ z :=
   (continuous_zpow z).comp h
 #align continuous.zpow Continuous.zpow
 #align continuous.zsmul Continuous.zsmul
@@ -521,28 +521,28 @@ theorem continuousAt_zpow (x : G) (z : ℤ) : ContinuousAt (fun x => x ^ z) x :=
 #align continuous_at_zsmul continuousAt_zsmul
 
 @[to_additive]
-theorem Filter.Tendsto.zpow {α} {l : Filter α} {f : α → G} {x : G} (hf : Tendsto f l (𝓝 x))
+theorem Filter.Tendsto.zpow {X} {l : Filter X} {f : X → G} {x : G} (hf : Tendsto f l (𝓝 x))
     (z : ℤ) : Tendsto (fun x => f x ^ z) l (𝓝 (x ^ z)) :=
   (continuousAt_zpow _ _).tendsto.comp hf
 #align filter.tendsto.zpow Filter.Tendsto.zpow
 #align filter.tendsto.zsmul Filter.Tendsto.zsmul
 
 @[to_additive]
-theorem ContinuousWithinAt.zpow {f : α → G} {x : α} {s : Set α} (hf : ContinuousWithinAt f s x)
+theorem ContinuousWithinAt.zpow {f : X → G} {x : X} {s : Set X} (hf : ContinuousWithinAt f s x)
     (z : ℤ) : ContinuousWithinAt (fun x => f x ^ z) s x :=
   Filter.Tendsto.zpow hf z
 #align continuous_within_at.zpow ContinuousWithinAt.zpow
 #align continuous_within_at.zsmul ContinuousWithinAt.zsmul
 
 @[to_additive]
-theorem ContinuousAt.zpow {f : α → G} {x : α} (hf : ContinuousAt f x) (z : ℤ) :
+theorem ContinuousAt.zpow {f : X → G} {x : X} (hf : ContinuousAt f x) (z : ℤ) :
     ContinuousAt (fun x => f x ^ z) x :=
   Filter.Tendsto.zpow hf z
 #align continuous_at.zpow ContinuousAt.zpow
 #align continuous_at.zsmul ContinuousAt.zsmul
 
 @[to_additive]
-theorem ContinuousOn.zpow {f : α → G} {s : Set α} (hf : ContinuousOn f s) (z : ℤ) :
+theorem ContinuousOn.zpow {f : X → G} {s : Set X} (hf : ContinuousOn f s) (z : ℤ) :
     ContinuousOn (fun x => f x ^ z) s := fun x hx => (hf x hx).zpow z
 #align continuous_on.zpow ContinuousOn.zpow
 #align continuous_on.zsmul ContinuousOn.zsmul
@@ -617,12 +617,12 @@ instance Pi.topologicalGroup {C : β → Type*} [∀ b, TopologicalSpace (C b)] 
 open MulOpposite
 
 @[to_additive]
-instance [Inv α] [ContinuousInv α] : ContinuousInv αᵐᵒᵖ :=
+instance [Inv X] [ContinuousInv X] : ContinuousInv Xᵐᵒᵖ :=
   opHomeomorph.symm.inducing.continuousInv unop_inv
 
-/-- If multiplication is continuous in `α`, then it also is in `αᵐᵒᵖ`. -/
-@[to_additive "If addition is continuous in `α`, then it also is in `αᵃᵒᵖ`."]
-instance [Group α] [TopologicalGroup α] : TopologicalGroup αᵐᵒᵖ where
+/-- If multiplication is continuous in `X`, then it also is in `Xᵐᵒᵖ`. -/
+@[to_additive "If addition is continuous in `X`, then it also is in `Xᵃᵒᵖ`."]
+instance [Group X] [TopologicalGroup X] : TopologicalGroup Xᵐᵒᵖ where
 
 variable (G)
 
@@ -1079,27 +1079,27 @@ section ContinuousDiv
 variable [TopologicalSpace G] [Div G] [ContinuousDiv G]
 
 @[to_additive sub]
-theorem Filter.Tendsto.div' {f g : α → G} {l : Filter α} {a b : G} (hf : Tendsto f l (𝓝 a))
+theorem Filter.Tendsto.div' {f g : X → G} {l : Filter X} {a b : G} (hf : Tendsto f l (𝓝 a))
     (hg : Tendsto g l (𝓝 b)) : Tendsto (fun x => f x / g x) l (𝓝 (a / b)) :=
   (continuous_div'.tendsto (a, b)).comp (hf.prod_mk_nhds hg)
 #align filter.tendsto.div' Filter.Tendsto.div'
 #align filter.tendsto.sub Filter.Tendsto.sub
 
 @[to_additive const_sub]
-theorem Filter.Tendsto.const_div' (b : G) {c : G} {f : α → G} {l : Filter α}
-    (h : Tendsto f l (𝓝 c)) : Tendsto (fun k : α => b / f k) l (𝓝 (b / c)) :=
+theorem Filter.Tendsto.const_div' (b : G) {c : G} {f : X → G} {l : Filter X}
+    (h : Tendsto f l (𝓝 c)) : Tendsto (fun k : X => b / f k) l (𝓝 (b / c)) :=
   tendsto_const_nhds.div' h
 #align filter.tendsto.const_div' Filter.Tendsto.const_div'
 #align filter.tendsto.const_sub Filter.Tendsto.const_sub
 
 @[to_additive sub_const]
-theorem Filter.Tendsto.div_const' {c : G} {f : α → G} {l : Filter α} (h : Tendsto f l (𝓝 c))
-    (b : G) : Tendsto (fun k : α => f k / b) l (𝓝 (c / b)) :=
+theorem Filter.Tendsto.div_const' {c : G} {f : X → G} {l : Filter X} (h : Tendsto f l (𝓝 c))
+    (b : G) : Tendsto (fun k : X => f k / b) l (𝓝 (c / b)) :=
   h.div' tendsto_const_nhds
 #align filter.tendsto.div_const' Filter.Tendsto.div_const'
 #align filter.tendsto.sub_const Filter.Tendsto.sub_const
 
-variable [TopologicalSpace α] {f g : α → G} {s : Set α} {x : α}
+variable [TopologicalSpace X] {f g : X → G} {s : Set X} {x : X}
 
 @[to_additive (attr := continuity) sub]
 theorem Continuous.div' (hf : Continuous f) (hg : Continuous g) : Continuous fun x => f x / g x :=
@@ -1120,7 +1120,7 @@ theorem continuous_div_right' (a : G) : Continuous fun b : G => b / a :=
 #align continuous_sub_right continuous_sub_right
 
 @[to_additive sub]
-theorem ContinuousAt.div' {f g : α → G} {x : α} (hf : ContinuousAt f x) (hg : ContinuousAt g x) :
+theorem ContinuousAt.div' {f g : X → G} {x : X} (hf : ContinuousAt f x) (hg : ContinuousAt g x) :
     ContinuousAt (fun x => f x / g x) x :=
   Filter.Tendsto.div' hf hg
 #align continuous_at.div' ContinuousAt.div'
@@ -1190,9 +1190,9 @@ theorem isClosedMap_div_right (a : G) : IsClosedMap fun x => x / a :=
 #align is_closed_map_sub_right isClosedMap_sub_right
 
 @[to_additive]
-theorem tendsto_div_nhds_one_iff {α : Type*} {l : Filter α} {x : G} {u : α → G} :
+theorem tendsto_div_nhds_one_iff {X : Type*} {l : Filter X} {x : G} {u : X → G} :
     Tendsto (fun n => u n / x) l (𝓝 1) ↔ Tendsto u l (𝓝 x) :=
-  haveI A : Tendsto (fun _ : α => x) l (𝓝 x) := tendsto_const_nhds
+  haveI A : Tendsto (fun _ : X => x) l (𝓝 x) := tendsto_const_nhds
   ⟨fun h => by simpa using h.mul A, fun h => by simpa using h.div' A⟩
 #align tendsto_div_nhds_one_iff tendsto_div_nhds_one_iff
 #align tendsto_sub_nhds_zero_iff tendsto_sub_nhds_zero_iff
