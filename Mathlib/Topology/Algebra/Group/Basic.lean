@@ -38,7 +38,7 @@ open Classical Set Filter TopologicalSpace Function Topology Pointwise MulOpposi
 
 universe u v w x
 
-variable {α : Type u} {X : Type u} {β : Type v} {G : Type w} {H : Type x}
+variable {α : Type u} {X : Type u} {Y : Type v} {G : Type w} {H : Type x}
 
 section ContinuousMulGroup
 
@@ -608,7 +608,7 @@ instance [TopologicalSpace H] [Group H] [TopologicalGroup H] : TopologicalGroup 
   continuous_inv := continuous_inv.prod_map continuous_inv
 
 @[to_additive]
-instance Pi.topologicalGroup {C : β → Type*} [∀ b, TopologicalSpace (C b)] [∀ b, Group (C b)]
+instance Pi.topologicalGroup {C : Y → Type*} [∀ b, TopologicalSpace (C b)] [∀ b, Group (C b)]
     [∀ b, TopologicalGroup (C b)] : TopologicalGroup (∀ b, C b) where
   continuous_inv := continuous_pi fun i => (continuous_apply i).inv
 #align pi.topological_group Pi.topologicalGroup
@@ -1216,8 +1216,8 @@ with continuous addition/multiplication. See also `Submonoid.top_closure_mul_sel
 
 section ContinuousConstSMul
 
-variable [TopologicalSpace β] [Group α] [MulAction α β] [ContinuousConstSMul α β] {s : Set α}
-  {t : Set β}
+variable [TopologicalSpace Y] [Group α] [MulAction α Y] [ContinuousConstSMul α Y] {s : Set α}
+  {t : Set Y}
 
 @[to_additive]
 theorem IsOpen.smul_left (ht : IsOpen t) : IsOpen (s • t) := by
@@ -1233,7 +1233,7 @@ theorem subset_interior_smul_right : s • interior t ⊆ interior (s • t) :=
 #align subset_interior_vadd_right subset_interior_vadd_right
 
 @[to_additive]
-theorem smul_mem_nhds (a : α) {x : β} (ht : t ∈ 𝓝 x) : a • t ∈ 𝓝 (a • x) := by
+theorem smul_mem_nhds (a : α) {x : Y} (ht : t ∈ 𝓝 x) : a • t ∈ 𝓝 (a • x) := by
   rcases mem_nhds_iff.1 ht with ⟨u, ut, u_open, hu⟩
   exact mem_nhds_iff.2 ⟨a • u, smul_set_mono ut, u_open.smul a, smul_mem_smul_set hu⟩
 #align smul_mem_nhds smul_mem_nhds
@@ -1251,8 +1251,8 @@ end ContinuousConstSMul
 
 section ContinuousSMul
 
-variable [TopologicalSpace X] [TopologicalSpace β] [Group X] [MulAction X β] [ContinuousInv X]
-  [ContinuousSMul X β] {s : Set X} {t : Set β}
+variable [TopologicalSpace X] [TopologicalSpace Y] [Group X] [MulAction X Y] [ContinuousInv X]
+  [ContinuousSMul X Y] {s : Set X} {t : Set Y}
 
 @[to_additive]
 theorem IsClosed.smul_left_of_isCompact (ht : IsClosed t) (hs : IsCompact s) :
@@ -1291,8 +1291,8 @@ interesting fact is that these two assumptions are verified in the case of a `No
 
 @[to_additive]
 theorem MulAction.isClosedMap_quotient [CompactSpace X] :
-    letI := orbitRel X β
-    IsClosedMap (Quotient.mk' : β → Quotient (orbitRel X β)) := by
+    letI := orbitRel X Y
+    IsClosedMap (Quotient.mk' : Y → Quotient (orbitRel X Y)) := by
   intro t ht
   rw [← quotientMap_quotient_mk'.isClosed_preimage, MulAction.quotient_preimage_image_eq_union_mul]
   convert ht.smul_left_of_isCompact (isCompact_univ (X := X))
@@ -1837,7 +1837,7 @@ namespace Units
 
 open MulOpposite (continuous_op continuous_unop)
 
-variable [Monoid X] [TopologicalSpace X] [Monoid β] [TopologicalSpace β]
+variable [Monoid X] [TopologicalSpace X] [Monoid Y] [TopologicalSpace Y]
 
 @[to_additive]
 instance [ContinuousMul X] : TopologicalGroup Xˣ where
@@ -1848,10 +1848,10 @@ of the units of each monoid. -/
 @[to_additive
   "The topological group isomorphism between the additive units of a product of two
   additive monoids, and the product of the additive units of each additive monoid."]
-def Homeomorph.prodUnits : (X × β)ˣ ≃ₜ Xˣ × βˣ where
+def Homeomorph.prodUnits : (X × Y)ˣ ≃ₜ Xˣ × Yˣ where
   continuous_toFun :=
-    (continuous_fst.units_map (MonoidHom.fst X β)).prod_mk
-      (continuous_snd.units_map (MonoidHom.snd X β))
+    (continuous_fst.units_map (MonoidHom.fst X Y)).prod_mk
+      (continuous_snd.units_map (MonoidHom.snd X Y))
   continuous_invFun :=
     Units.continuous_iff.2
       ⟨continuous_val.fst'.prod_mk continuous_val.snd',
@@ -1906,7 +1906,7 @@ group operations are continuous.
 Group topologies on a fixed group `X` are ordered, by reverse inclusion. They form a complete
 lattice, with `⊥` the discrete topology and `⊤` the indiscrete topology.
 
-Any function `f : X → β` induces `coinduced f : TopologicalSpace X → GroupTopology β`.
+Any function `f : X → Y` induces `coinduced f : TopologicalSpace X → GroupTopology Y`.
 
 The additive version `AddGroupTopology X` and corresponding results are provided as well.
 -/
@@ -2091,18 +2091,18 @@ instance : CompleteLattice (GroupTopology X) :=
     top := ⊤
     bot := ⊥ }
 
-/-- Given `f : X → β` and a topology on `X`, the coinduced group topology on `β` is the finest
-topology such that `f` is continuous and `β` is a topological group. -/
+/-- Given `f : X → Y` and a topology on `X`, the coinduced group topology on `Y` is the finest
+topology such that `f` is continuous and `Y` is a topological group. -/
 @[to_additive
-  "Given `f : X → β` and a topology on `X`, the coinduced additive group topology on `β`
-  is the finest topology such that `f` is continuous and `β` is a topological additive group."]
-def coinduced {X β : Type*} [t : TopologicalSpace X] [Group β] (f : X → β) : GroupTopology β :=
-  sInf { b : GroupTopology β | TopologicalSpace.coinduced f t ≤ b.toTopologicalSpace }
+  "Given `f : X → Y` and a topology on `X`, the coinduced additive group topology on `Y`
+  is the finest topology such that `f` is continuous and `Y` is a topological additive group."]
+def coinduced {X Y : Type*} [t : TopologicalSpace X] [Group Y] (f : X → Y) : GroupTopology Y :=
+  sInf { b : GroupTopology Y | TopologicalSpace.coinduced f t ≤ b.toTopologicalSpace }
 #align group_topology.coinduced GroupTopology.coinduced
 #align add_group_topology.coinduced AddGroupTopology.coinduced
 
 @[to_additive]
-theorem coinduced_continuous {X β : Type*} [t : TopologicalSpace X] [Group β] (f : X → β) :
+theorem coinduced_continuous {X Y : Type*} [t : TopologicalSpace X] [Group Y] (f : X → Y) :
     Continuous[t, (coinduced f).toTopologicalSpace] f := by
   rw [continuous_sInf_rng]
   rintro _ ⟨t', ht', rfl⟩
