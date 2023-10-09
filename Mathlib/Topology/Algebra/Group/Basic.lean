@@ -1233,7 +1233,7 @@ theorem subset_interior_smul_right : s • interior t ⊆ interior (s • t) :=
 #align subset_interior_vadd_right subset_interior_vadd_right
 
 @[to_additive]
-theorem smul_mem_nhds (a : α) {x : Y} (ht : t ∈ 𝓝 x) : a • t ∈ 𝓝 (a • x) := by
+theorem smul_mem_nhds (a : α) {y : Y} (ht : t ∈ 𝓝 y) : a • t ∈ 𝓝 (a • y) := by
   rcases mem_nhds_iff.1 ht with ⟨u, ut, u_open, hu⟩
   exact mem_nhds_iff.2 ⟨a • u, smul_set_mono ut, u_open.smul a, smul_mem_smul_set hu⟩
 #align smul_mem_nhds smul_mem_nhds
