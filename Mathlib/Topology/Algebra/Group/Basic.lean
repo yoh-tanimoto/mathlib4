@@ -1251,8 +1251,8 @@ end ContinuousConstSMul
 
 section ContinuousSMul
 
-variable [TopologicalSpace α] [TopologicalSpace β] [Group α] [MulAction α β] [ContinuousInv α]
-  [ContinuousSMul α β] {s : Set α} {t : Set β}
+variable [TopologicalSpace X] [TopologicalSpace β] [Group X] [MulAction X β] [ContinuousInv X]
+  [ContinuousSMul X β] {s : Set X} {t : Set β}
 
 @[to_additive]
 theorem IsClosed.smul_left_of_isCompact (ht : IsClosed t) (hs : IsCompact s) :
@@ -1290,12 +1290,12 @@ interesting fact is that these two assumptions are verified in the case of a `No
 `IsClosed.vadd_right_of_isCompact`. -/
 
 @[to_additive]
-theorem MulAction.isClosedMap_quotient [CompactSpace α] :
-    letI := orbitRel α β
-    IsClosedMap (Quotient.mk' : β → Quotient (orbitRel α β)) := by
+theorem MulAction.isClosedMap_quotient [CompactSpace X] :
+    letI := orbitRel X β
+    IsClosedMap (Quotient.mk' : β → Quotient (orbitRel X β)) := by
   intro t ht
   rw [← quotientMap_quotient_mk'.isClosed_preimage, MulAction.quotient_preimage_image_eq_union_mul]
-  convert ht.smul_left_of_isCompact (isCompact_univ (X := α))
+  convert ht.smul_left_of_isCompact (isCompact_univ (X := X))
   rw [← biUnion_univ, ← iUnion_smul_left_image]
   rfl
 
