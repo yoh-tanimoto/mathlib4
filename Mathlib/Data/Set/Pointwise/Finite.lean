@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Johan Commelin, Floris van Doorn
 -/
 import Mathlib.Data.Set.Finite
+import Mathlib.Data.Set.Pointwise.Basic
 import Mathlib.Data.Set.Pointwise.SMul
 
 #align_import data.set.pointwise.finite from "leanprover-community/mathlib"@"c941bb9426d62e266612b6d99e6c9fc93e7a1d07"
@@ -50,6 +51,12 @@ theorem Finite.mul : s.Finite → t.Finite → (s * t).Finite :=
   Finite.image2 _
 #align set.finite.mul Set.Finite.mul
 #align set.finite.add Set.Finite.add
+
+@[to_additive]
+lemma Finite.pow (hs : s.Finite) (n : ℕ) : (s ^ n).Finite := by
+  induction' n with n hn
+  · exact Set.finite_one
+  · exact hs.mul hn
 
 /-- Multiplication preserves finiteness. -/
 @[to_additive "Addition preserves finiteness."]
