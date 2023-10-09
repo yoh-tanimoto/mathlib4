@@ -38,7 +38,7 @@ open Classical Set Filter TopologicalSpace Function Topology Pointwise MulOpposi
 
 universe u v w x
 
-variable {α : Type u} {X : Type u} {Y : Type v} {G : Type w} {H : Type x}
+variable {X : Type u} {Y : Type v} {G : Type w} {H : Type x}
 
 section ContinuousMulGroup
 
@@ -1216,7 +1216,7 @@ with continuous addition/multiplication. See also `Submonoid.top_closure_mul_sel
 
 section ContinuousConstSMul
 
-variable [TopologicalSpace Y] [Group α] [MulAction α Y] [ContinuousConstSMul α Y] {s : Set α}
+variable [TopologicalSpace Y] [Group G] [MulAction G Y] [ContinuousConstSMul G Y] {s : Set G}
   {t : Set Y}
 
 @[to_additive]
@@ -1233,13 +1233,13 @@ theorem subset_interior_smul_right : s • interior t ⊆ interior (s • t) :=
 #align subset_interior_vadd_right subset_interior_vadd_right
 
 @[to_additive]
-theorem smul_mem_nhds (a : α) {y : Y} (ht : t ∈ 𝓝 y) : a • t ∈ 𝓝 (a • y) := by
+theorem smul_mem_nhds (a : G) {y : Y} (ht : t ∈ 𝓝 y) : a • t ∈ 𝓝 (a • y) := by
   rcases mem_nhds_iff.1 ht with ⟨u, ut, u_open, hu⟩
   exact mem_nhds_iff.2 ⟨a • u, smul_set_mono ut, u_open.smul a, smul_mem_smul_set hu⟩
 #align smul_mem_nhds smul_mem_nhds
 #align vadd_mem_nhds vadd_mem_nhds
 
-variable [TopologicalSpace α]
+variable [TopologicalSpace G]
 
 @[to_additive]
 theorem subset_interior_smul : interior s • interior t ⊆ interior (s • t) :=
