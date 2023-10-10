@@ -1580,9 +1580,9 @@ open Topology
 
 section Continuous
 
-variable {X : Type*} {Y : Type*} {γ : Type*} {δ : Type*}
+variable {X : Type*} {Y : Type*} {Z : Type*}
 
-variable [TopologicalSpace X] [TopologicalSpace Y] [TopologicalSpace γ]
+variable [TopologicalSpace X] [TopologicalSpace Y] [TopologicalSpace Z]
 
 open TopologicalSpace
 
@@ -1670,27 +1670,27 @@ theorem continuous_id : Continuous (id : X → X) :=
 @[continuity]
 theorem continuous_id' : Continuous (fun (x : X) => x) := continuous_id
 
-theorem Continuous.comp {g : Y → γ} {f : X → Y} (hg : Continuous g) (hf : Continuous f) :
+theorem Continuous.comp {g : Y → Z} {f : X → Y} (hg : Continuous g) (hf : Continuous f) :
     Continuous (g ∘ f) :=
   continuous_def.2 fun _ h => (h.preimage hg).preimage hf
 #align continuous.comp Continuous.comp
 
 -- This is needed due to reducibility issues with the `continuity` tactic.
 @[continuity]
-theorem Continuous.comp' {g : Y → γ} {f : X → Y} (hg : Continuous g) (hf : Continuous f) :
+theorem Continuous.comp' {g : Y → Z} {f : X → Y} (hg : Continuous g) (hf : Continuous f) :
     Continuous (fun x => g (f x)) := hg.comp hf
 
 theorem Continuous.iterate {f : X → X} (h : Continuous f) (n : ℕ) : Continuous f^[n] :=
   Nat.recOn n continuous_id fun _ ihn => ihn.comp h
 #align continuous.iterate Continuous.iterate
 
-nonrec theorem ContinuousAt.comp {g : Y → γ} {f : X → Y} {x : X} (hg : ContinuousAt g (f x))
+nonrec theorem ContinuousAt.comp {g : Y → Z} {f : X → Y} {x : X} (hg : ContinuousAt g (f x))
     (hf : ContinuousAt f x) : ContinuousAt (g ∘ f) x :=
   hg.comp hf
 #align continuous_at.comp ContinuousAt.comp
 
 /-- See note [comp_of_eq lemmas] -/
-theorem ContinuousAt.comp_of_eq {g : Y → γ} {f : X → Y} {x : X} {y : Y} (hg : ContinuousAt g y)
+theorem ContinuousAt.comp_of_eq {g : Y → Z} {f : X → Y} {x : X} {y : Y} (hg : ContinuousAt g y)
     (hf : ContinuousAt f x) (hy : f x = y) : ContinuousAt (g ∘ f) x := by subst hy; exact hg.comp hf
 #align continuous_at.comp_of_eq ContinuousAt.comp_of_eq
 
@@ -1824,7 +1824,7 @@ theorem Set.MapsTo.closure_left {s : Set X} {t : Set Y} {f : X → Y} (h : MapsT
 
 section DenseRange
 
-variable {κ ι : Type*} (f : κ → Y) (g : Y → γ)
+variable (f : κ → Y) (g : Y → Z)
 
 /-- `f : ι → Y` has dense range if its range (image) is a dense subset of Y. -/
 def DenseRange := Dense (range f)
@@ -1882,7 +1882,7 @@ theorem DenseRange.dense_of_mapsTo {f : X → Y} (hf' : DenseRange f) (hf : Cont
 
 /-- Composition of a continuous map with dense range and a function with dense range has dense
 range. -/
-theorem DenseRange.comp {g : Y → γ} {f : κ → Y} (hg : DenseRange g) (hf : DenseRange f)
+theorem DenseRange.comp {g : Y → Z} {f : κ → Y} (hg : DenseRange g) (hf : DenseRange f)
     (cg : Continuous g) : DenseRange (g ∘ f) := by
   rw [DenseRange, range_comp]
   exact hg.dense_image cg hf
