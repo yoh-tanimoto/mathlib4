@@ -994,7 +994,7 @@ theorem tendsto_sum_nat_add [T2Space α] (f : ℕ → α) :
       rw [sub_eq_iff_eq_add, add_comm, sum_add_tsum_nat_add i hf]
     have h₁ : Tendsto (fun _ : ℕ => ∑' i, f i) atTop (𝓝 (∑' i, f i)) := tendsto_const_nhds
     simpa only [h₀, sub_self] using Tendsto.sub h₁ hf.hasSum.tendsto_sum_nat
-  · convert tendsto_const_nhds (α := α) (β := ℕ) (a := 0) (f := atTop)
+  · convert tendsto_const_nhds (X := α) (Y := ℕ) (x := 0) (f := atTop)
     rename_i i
     rw [← summable_nat_add_iff i] at hf
     exact tsum_eq_zero_of_not_summable hf
@@ -1144,7 +1144,7 @@ theorem tendsto_tsum_compl_atTop_zero (f : β → α) :
     rw [sum_image]
     intro i _ j _ hij
     exact Subtype.ext hij
-  · convert tendsto_const_nhds (α := α) (β := Finset β) (f := atTop) (a := 0)
+  · convert tendsto_const_nhds (X := α) (Y := Finset β) (f := atTop) (x := 0)
     apply tsum_eq_zero_of_not_summable
     rwa [Finset.summable_compl_iff]
 #align tendsto_tsum_compl_at_top_zero tendsto_tsum_compl_atTop_zero
