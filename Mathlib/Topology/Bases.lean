@@ -125,41 +125,41 @@ theorem isTopologicalBasis_of_subbasis {s : Set (Set X)} (hs : t = generateFrom 
 /-- If a family of open sets `s` is such that every open neighbourhood contains some
 member of `s`, then `s` is a topological basis. -/
 theorem isTopologicalBasis_of_open_of_nhds {s : Set (Set X)} (h_open : ∀ u ∈ s, IsOpen u)
-    (h_nhds : ∀ (a : X) (u : Set X), a ∈ u → IsOpen u → ∃ v ∈ s, a ∈ v ∧ v ⊆ u) :
+    (h_nhds : ∀ (x : X) (u : Set X), x ∈ u → IsOpen u → ∃ v ∈ s, x ∈ v ∧ v ⊆ u) :
     IsTopologicalBasis s := by
   refine'
     ⟨fun t₁ ht₁ t₂ ht₂ x hx => h_nhds _ _ hx (IsOpen.inter (h_open _ ht₁) (h_open _ ht₂)), _, _⟩
-  · refine' sUnion_eq_univ_iff.2 fun a => _
-    rcases h_nhds a univ trivial isOpen_univ with ⟨u, h₁, h₂, -⟩
+  · refine' sUnion_eq_univ_iff.2 fun x => _
+    rcases h_nhds x univ trivial isOpen_univ with ⟨u, h₁, h₂, -⟩
     exact ⟨u, h₁, h₂⟩
   · refine' (le_generateFrom h_open).antisymm fun u hu => _
-    refine' (@isOpen_iff_nhds X (generateFrom s) u).mpr fun a ha => _
-    rcases h_nhds a u ha hu with ⟨v, hvs, hav, hvu⟩
+    refine' (@isOpen_iff_nhds X (generateFrom s) u).mpr fun x hx => _
+    rcases h_nhds x u hx hu with ⟨v, hvs, hav, hvu⟩
     rw [nhds_generateFrom]
     exact iInf₂_le_of_le v ⟨hav, hvs⟩ (le_principal_iff.2 hvu)
 #align topological_space.is_topological_basis_of_open_of_nhds TopologicalSpace.isTopologicalBasis_of_open_of_nhds
 
-/-- A set `s` is in the neighbourhood of `a` iff there is some basis set `t`, which
-contains `a` and is itself contained in `s`. -/
-theorem IsTopologicalBasis.mem_nhds_iff {a : X} {s : Set X} {b : Set (Set X)}
-    (hb : IsTopologicalBasis b) : s ∈ 𝓝 a ↔ ∃ t ∈ b, a ∈ t ∧ t ⊆ s := by
-  change s ∈ (𝓝 a).sets ↔ ∃ t ∈ b, a ∈ t ∧ t ⊆ s
+/-- A set `s` is in the neighbourhood of `x` iff there is some basis set `t`, which
+contains `x` and is itself contained in `s`. -/
+theorem IsTopologicalBasis.mem_nhds_iff {x : X} {s : Set X} {b : Set (Set X)}
+    (hb : IsTopologicalBasis b) : s ∈ 𝓝 x ↔ ∃ t ∈ b, x ∈ t ∧ t ⊆ s := by
+  change s ∈ (𝓝 x).sets ↔ ∃ t ∈ b, x ∈ t ∧ t ⊆ s
   rw [hb.eq_generateFrom, nhds_generateFrom, biInf_sets_eq]
   · simp [and_assoc, and_left_comm]
   · rintro s ⟨hs₁, hs₂⟩ t ⟨ht₁, ht₂⟩
     let ⟨u, hu₁, hu₂, hu₃⟩ := hb.1 _ hs₂ _ ht₂ _ ⟨hs₁, ht₁⟩
     exact ⟨u, ⟨hu₂, hu₁⟩, le_principal_iff.2 (hu₃.trans (inter_subset_left _ _)),
       le_principal_iff.2 (hu₃.trans (inter_subset_right _ _))⟩
-  · rcases eq_univ_iff_forall.1 hb.sUnion_eq a with ⟨i, h1, h2⟩
+  · rcases eq_univ_iff_forall.1 hb.sUnion_eq x with ⟨i, h1, h2⟩
     exact ⟨i, h2, h1⟩
 #align topological_space.is_topological_basis.mem_nhds_iff TopologicalSpace.IsTopologicalBasis.mem_nhds_iff
 
 theorem IsTopologicalBasis.isOpen_iff {s : Set X} {b : Set (Set X)} (hb : IsTopologicalBasis b) :
-    IsOpen s ↔ ∀ a ∈ s, ∃ t ∈ b, a ∈ t ∧ t ⊆ s := by simp [isOpen_iff_mem_nhds, hb.mem_nhds_iff]
+    IsOpen s ↔ ∀ x ∈ s, ∃ t ∈ b, x ∈ t ∧ t ⊆ s := by simp [isOpen_iff_mem_nhds, hb.mem_nhds_iff]
 #align topological_space.is_topological_basis.is_open_iff TopologicalSpace.IsTopologicalBasis.isOpen_iff
 
-theorem IsTopologicalBasis.nhds_hasBasis {b : Set (Set X)} (hb : IsTopologicalBasis b) {a : X} :
-    (𝓝 a).HasBasis (fun t : Set X => t ∈ b ∧ a ∈ t) fun t => t :=
+theorem IsTopologicalBasis.nhds_hasBasis {b : Set (Set X)} (hb : IsTopologicalBasis b) {x : X} :
+    (𝓝 x).HasBasis (fun t : Set X => t ∈ b ∧ x ∈ t) fun t => t :=
   ⟨fun s => hb.mem_nhds_iff.trans <| by simp only [and_assoc]⟩
 #align topological_space.is_topological_basis.nhds_has_basis TopologicalSpace.IsTopologicalBasis.nhds_hasBasis
 
@@ -169,22 +169,22 @@ protected theorem IsTopologicalBasis.isOpen {s : Set X} {b : Set (Set X)}
   exact .basic s hs
 #align topological_space.is_topological_basis.is_open TopologicalSpace.IsTopologicalBasis.isOpen
 
-protected theorem IsTopologicalBasis.mem_nhds {a : X} {s : Set X} {b : Set (Set X)}
-    (hb : IsTopologicalBasis b) (hs : s ∈ b) (ha : a ∈ s) : s ∈ 𝓝 a :=
-  (hb.isOpen hs).mem_nhds ha
+protected theorem IsTopologicalBasis.mem_nhds {x : X} {s : Set X} {b : Set (Set X)}
+    (hb : IsTopologicalBasis b) (hs : s ∈ b) (hx : x ∈ s) : s ∈ 𝓝 x :=
+  (hb.isOpen hs).mem_nhds hx
 #align topological_space.is_topological_basis.mem_nhds TopologicalSpace.IsTopologicalBasis.mem_nhds
 
 theorem IsTopologicalBasis.exists_subset_of_mem_open {b : Set (Set X)} (hb : IsTopologicalBasis b)
-    {a : X} {u : Set X} (au : a ∈ u) (ou : IsOpen u) : ∃ v ∈ b, a ∈ v ∧ v ⊆ u :=
-  hb.mem_nhds_iff.1 <| IsOpen.mem_nhds ou au
+    {x : X} {u : Set X} (hu : x ∈ u) (ou : IsOpen u) : ∃ v ∈ b, x ∈ v ∧ v ⊆ u :=
+  hb.mem_nhds_iff.1 <| IsOpen.mem_nhds ou hu
 #align topological_space.is_topological_basis.exists_subset_of_mem_open TopologicalSpace.IsTopologicalBasis.exists_subset_of_mem_open
 
 /-- Any open set is the union of the basis sets contained in it. -/
 theorem IsTopologicalBasis.open_eq_sUnion' {B : Set (Set X)} (hB : IsTopologicalBasis B) {u : Set X}
     (ou : IsOpen u) : u = ⋃₀ { s ∈ B | s ⊆ u } :=
-  ext fun _a =>
-    ⟨fun ha =>
-      let ⟨b, hb, ab, bu⟩ := hB.exists_subset_of_mem_open ha ou
+  ext fun _x =>
+    ⟨fun hx =>
+      let ⟨b, hb, ab, bu⟩ := hB.exists_subset_of_mem_open hx ou
       ⟨b, ⟨hb, bu⟩, ab⟩,
       fun ⟨_b, ⟨_, bu⟩, ab⟩ => bu ab⟩
 #align topological_space.is_topological_basis.open_eq_sUnion' TopologicalSpace.IsTopologicalBasis.open_eq_sUnion'
@@ -217,9 +217,9 @@ lemma IsTopologicalBasis.eq_of_forall_subset_iff {t : Set X} (hB : IsTopological
   rw [hB.open_eq_sUnion' hs, hB.open_eq_sUnion' ht]
   exact congr_arg _ (Set.ext λ U ↦ and_congr_right $ h _)
 
-/-- A point `a` is in the closure of `s` iff all basis sets containing `a` intersect `s`. -/
+/-- A point `x` is in the closure of `s` iff all basis sets containing `x` intersect `s`. -/
 theorem IsTopologicalBasis.mem_closure_iff {b : Set (Set X)} (hb : IsTopologicalBasis b) {s : Set X}
-    {a : X} : a ∈ closure s ↔ ∀ o ∈ b, a ∈ o → (o ∩ s).Nonempty :=
+    {x : X} : x ∈ closure s ↔ ∀ o ∈ b, x ∈ o → (o ∩ s).Nonempty :=
   (mem_closure_iff_nhds_basis' hb.nhds_hasBasis).trans <| by simp only [and_imp]
 #align topological_space.is_topological_basis.mem_closure_iff TopologicalSpace.IsTopologicalBasis.mem_closure_iff
 
@@ -227,7 +227,7 @@ theorem IsTopologicalBasis.mem_closure_iff {b : Set (Set X)} (hb : IsTopological
 theorem IsTopologicalBasis.dense_iff {b : Set (Set X)} (hb : IsTopologicalBasis b) {s : Set X} :
     Dense s ↔ ∀ o ∈ b, Set.Nonempty o → (o ∩ s).Nonempty := by
   simp only [Dense, hb.mem_closure_iff]
-  exact ⟨fun h o hb ⟨a, ha⟩ => h a o hb ha, fun h a o hb ha => h o hb ⟨a, ha⟩⟩
+  exact ⟨fun h o hb ⟨x, hx⟩ => h x o hb hx, fun h x o hb hx => h o hb ⟨x, hx⟩⟩
 #align topological_space.is_topological_basis.dense_iff TopologicalSpace.IsTopologicalBasis.dense_iff
 
 theorem IsTopologicalBasis.isOpenMap_iff {Y} [TopologicalSpace Y] {B : Set (Set X)}
@@ -266,12 +266,12 @@ protected theorem IsTopologicalBasis.inducing {Y} [TopologicalSpace Y] {f : X �
   · rintro _ ⟨V, hV, rfl⟩
     rw [hf.isOpen_iff]
     refine' ⟨V, h.isOpen hV, rfl⟩
-  · intro a U ha hU
+  · intro x U hx hU
     rw [hf.isOpen_iff] at hU
     obtain ⟨V, hV, rfl⟩ := hU
     obtain ⟨S, hS, rfl⟩ := h.open_eq_sUnion hV
-    obtain ⟨W, hW, ha⟩ := ha
-    refine' ⟨f ⁻¹' W, ⟨_, hS hW, rfl⟩, ha, Set.preimage_mono <| Set.subset_sUnion_of_mem hW⟩
+    obtain ⟨W, hW, hx⟩ := hx
+    refine' ⟨f ⁻¹' W, ⟨_, hS hW, rfl⟩, hx, Set.preimage_mono <| Set.subset_sUnion_of_mem hW⟩
 #align topological_space.is_topological_basis.inducing TopologicalSpace.IsTopologicalBasis.inducing
 
 theorem isTopologicalBasis_of_cover {ι} {U : ι → Set X} (Uo : ∀ i, IsOpen (U i))
@@ -281,10 +281,10 @@ theorem isTopologicalBasis_of_cover {ι} {U : ι → Set X} (Uo : ∀ i, IsOpen 
   · simp only [mem_iUnion, mem_image] at hu
     rcases hu with ⟨i, s, sb, rfl⟩
     exact (Uo i).isOpenMap_subtype_val _ ((hb i).isOpen sb)
-  · intro a u ha uo
-    rcases iUnion_eq_univ_iff.1 Uc a with ⟨i, hi⟩
-    lift a to ↥(U i) using hi
-    rcases(hb i).exists_subset_of_mem_open ha (uo.preimage continuous_subtype_val) with
+  · intro x u hx uo
+    rcases iUnion_eq_univ_iff.1 Uc x with ⟨i, hi⟩
+    lift x to ↥(U i) using hi
+    rcases(hb i).exists_subset_of_mem_open hx (uo.preimage continuous_subtype_val) with
       ⟨v, hvb, hav, hvu⟩
     exact ⟨(↑) '' v, mem_iUnion.2 ⟨i, mem_image_of_mem _ hvb⟩, mem_image_of_mem _ hav,
       image_subset_iff.2 hvu⟩
@@ -533,12 +533,12 @@ theorem isTopologicalBasis_pi {ι : Type*} {X : ι → Type*} [∀ i, Topologica
     apply isOpen_set_pi F.finite_toSet
     intro i hi
     exact (cond i).isOpen (h1 i hi)
-  · intro a U ha hU
+  · intro x U hx hU
     obtain ⟨I, t, hta, htU⟩ : ∃ (I : Finset ι) (t : ∀ i : ι, Set (X i)),
-        (∀ i, t i ∈ 𝓝 (a i)) ∧ Set.pi (↑I) t ⊆ U := by
+        (∀ i, t i ∈ 𝓝 (x i)) ∧ Set.pi (↑I) t ⊆ U := by
       rw [← Filter.mem_pi', ← nhds_pi]
-      exact hU.mem_nhds ha
-    have : ∀ i, ∃ V ∈ T i, a i ∈ V ∧ V ⊆ t i := fun i => (cond i).mem_nhds_iff.1 (hta i)
+      exact hU.mem_nhds hx
+    have : ∀ i, ∃ V ∈ T i, x i ∈ V ∧ V ⊆ t i := fun i => (cond i).mem_nhds_iff.1 (hta i)
     choose V hVT haV hVt using this
     exact ⟨_, ⟨V, I, fun i _ => hVT i, rfl⟩, fun i _ => haV i, (pi_mono fun i _ => hVt i).trans htU⟩
 #align is_topological_basis_pi isTopologicalBasis_pi
@@ -621,8 +621,8 @@ variable (X : Type u) [t : TopologicalSpace X]
 /-- A first-countable space is one in which every point has a
   countable neighborhood basis. -/
 class FirstCountableTopology : Prop where
-  /-- The filter `𝓝 a` is countably generated for all points `a`. -/
-  nhds_generated_countable : ∀ a : X, (𝓝 a).IsCountablyGenerated
+  /-- The filter `𝓝 x` is countably generated for all points `x`. -/
+  nhds_generated_countable : ∀ x : X, (𝓝 x).IsCountablyGenerated
 #align topological_space.first_countable_topology TopologicalSpace.FirstCountableTopology
 
 attribute [instance] FirstCountableTopology.nhds_generated_countable
