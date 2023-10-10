@@ -406,7 +406,7 @@ theorem _root_.IsClosed.isClopenable [TopologicalSpace α] [PolishSpace α] {s :
   · rw [← f.induced_symm]
     exact f.symm.polishSpace_induced
   · rw [isOpen_coinduced, isOpen_sum_iff]
-    convert And.intro (isOpen_univ (α := s)) (isOpen_empty (α := (sᶜ : Set α)))
+    convert And.intro (isOpen_univ (X := s)) (isOpen_empty (X := (sᶜ : Set α)))
       <;> ext ⟨x, hx⟩ <;> simpa using hx
 #align is_closed.is_clopenable IsClosed.isClopenable
 
