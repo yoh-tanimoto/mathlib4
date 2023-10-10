@@ -38,7 +38,7 @@ open Classical Set Filter TopologicalSpace Function Topology Pointwise MulOpposi
 
 universe u v w x
 
-variable {X : Type u} {Y : Type v} {G : Type w} {H : Type x}
+variable {X : Type*} {Y : Type*} {G : Type*} {H : Type*}
 
 section ContinuousMulGroup
 
@@ -404,7 +404,7 @@ theorem continuousInv_inf {t₁ t₂ : TopologicalSpace G} (h₁ : @ContinuousIn
 end LatticeOps
 
 @[to_additive]
-theorem Inducing.continuousInv {G H : Type*} [Inv G] [Inv H] [TopologicalSpace G]
+theorem Inducing.continuousInv [Inv G] [Inv H] [TopologicalSpace G]
     [TopologicalSpace H] [ContinuousInv H] {f : G → H} (hf : Inducing f)
     (hf_inv : ∀ x, f x⁻¹ = (f x)⁻¹) : ContinuousInv G :=
   ⟨hf.continuous_iff.2 <| by simpa only [(· ∘ ·), hf_inv] using hf.continuous.inv⟩
@@ -744,7 +744,7 @@ theorem DenseRange.topologicalClosure_map_subgroup [Group H] [TopologicalSpace H
 
 /-- The topological closure of a normal subgroup is normal.-/
 @[to_additive "The topological closure of a normal additive subgroup is normal."]
-theorem Subgroup.is_normal_topologicalClosure {G : Type*} [TopologicalSpace G] [Group G]
+theorem Subgroup.is_normal_topologicalClosure [TopologicalSpace G] [Group G]
     [TopologicalGroup G] (N : Subgroup G) [N.Normal] : (Subgroup.topologicalClosure N).Normal where
   conj_mem n hn g := by
     apply map_mem_closure (TopologicalGroup.continuous_conj g) hn
@@ -766,7 +766,7 @@ theorem mul_mem_connectedComponent_one {G : Type*} [TopologicalSpace G] [MulOneC
 #align add_mem_connected_component_zero add_mem_connectedComponent_zero
 
 @[to_additive]
-theorem inv_mem_connectedComponent_one {G : Type*} [TopologicalSpace G] [Group G]
+theorem inv_mem_connectedComponent_one [TopologicalSpace G] [Group G]
     [TopologicalGroup G] {g : G} (hg : g ∈ connectedComponent (1 : G)) :
     g⁻¹ ∈ connectedComponent (1 : G) := by
   rw [← inv_one]
@@ -884,7 +884,7 @@ theorem continuous_of_continuousAt_one₂ {H M : Type*} [CommMonoid M] [Topologi
   simp only [map_one, mul_one, MonoidHom.one_apply]
 
 @[to_additive]
-theorem TopologicalGroup.ext {G : Type*} [Group G] {t t' : TopologicalSpace G}
+theorem TopologicalGroup.ext [Group G] {t t' : TopologicalSpace G}
     (tg : @TopologicalGroup G t _) (tg' : @TopologicalGroup G t' _)
     (h : @nhds G t 1 = @nhds G t' 1) : t = t' :=
   eq_of_nhds_eq_nhds fun x => by
@@ -893,7 +893,7 @@ theorem TopologicalGroup.ext {G : Type*} [Group G] {t t' : TopologicalSpace G}
 #align topological_add_group.ext TopologicalAddGroup.ext
 
 @[to_additive]
-theorem TopologicalGroup.ext_iff {G : Type*} [Group G] {t t' : TopologicalSpace G}
+theorem TopologicalGroup.ext_iff [Group G] {t t' : TopologicalSpace G}
     (tg : @TopologicalGroup G t _) (tg' : @TopologicalGroup G t' _) :
     t = t' ↔ @nhds G t 1 = @nhds G t' 1 :=
   ⟨fun h => h ▸ rfl, tg.ext tg'⟩
@@ -901,7 +901,7 @@ theorem TopologicalGroup.ext_iff {G : Type*} [Group G] {t t' : TopologicalSpace 
 #align topological_add_group.ext_iff TopologicalAddGroup.ext_iff
 
 @[to_additive]
-theorem ContinuousInv.of_nhds_one {G : Type*} [Group G] [TopologicalSpace G]
+theorem ContinuousInv.of_nhds_one [Group G] [TopologicalSpace G]
     (hinv : Tendsto (fun x : G => x⁻¹) (𝓝 1) (𝓝 1))
     (hleft : ∀ x₀ : G, 𝓝 x₀ = map (fun x : G => x₀ * x) (𝓝 1))
     (hconj : ∀ x₀ : G, Tendsto (fun x : G => x₀ * x * x₀⁻¹) (𝓝 1) (𝓝 1)) : ContinuousInv G := by
@@ -1190,7 +1190,7 @@ theorem isClosedMap_div_right (a : G) : IsClosedMap fun x => x / a :=
 #align is_closed_map_sub_right isClosedMap_sub_right
 
 @[to_additive]
-theorem tendsto_div_nhds_one_iff {X : Type*} {l : Filter X} {x : G} {u : X → G} :
+theorem tendsto_div_nhds_one_iff {l : Filter X} {x : G} {u : X → G} :
     Tendsto (fun n => u n / x) l (𝓝 1) ↔ Tendsto u l (𝓝 x) :=
   haveI A : Tendsto (fun _ : X => x) l (𝓝 x) := tendsto_const_nhds
   ⟨fun h => by simpa using h.mul A, fun h => by simpa using h.div' A⟩
@@ -2096,13 +2096,13 @@ topology such that `f` is continuous and `Y` is a topological group. -/
 @[to_additive
   "Given `f : X → Y` and a topology on `X`, the coinduced additive group topology on `Y`
   is the finest topology such that `f` is continuous and `Y` is a topological additive group."]
-def coinduced {X Y : Type*} [t : TopologicalSpace X] [Group Y] (f : X → Y) : GroupTopology Y :=
+def coinduced {X : Type*} [t : TopologicalSpace X] [Group Y] (f : X → Y) : GroupTopology Y :=
   sInf { b : GroupTopology Y | TopologicalSpace.coinduced f t ≤ b.toTopologicalSpace }
 #align group_topology.coinduced GroupTopology.coinduced
 #align add_group_topology.coinduced AddGroupTopology.coinduced
 
 @[to_additive]
-theorem coinduced_continuous {X Y : Type*} [t : TopologicalSpace X] [Group Y] (f : X → Y) :
+theorem coinduced_continuous [t : TopologicalSpace X] [Group Y] (f : X → Y) :
     Continuous[t, (coinduced f).toTopologicalSpace] f := by
   rw [continuous_sInf_rng]
   rintro _ ⟨t', ht', rfl⟩
