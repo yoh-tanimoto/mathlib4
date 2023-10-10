@@ -290,7 +290,7 @@ def interior (s : Set X) : Set X :=
 #align interior interior
 
 -- porting note: use `∃ t, t ⊆ s ∧ _` instead of `∃ t ⊆ s, _`
-theorem mem_interior {s : Set X} {x : X} : x ∈ interior s ↔ ∃ t, t ⊆ s ∧ IsOpen t ∧ x ∈ t := by
+theorem mem_interior {s : Set X} : x ∈ interior s ↔ ∃ t, t ⊆ s ∧ IsOpen t ∧ x ∈ t := by
   simp only [interior, mem_sUnion, mem_setOf_eq, and_assoc, and_left_comm]
 #align mem_interior mem_interiorₓ
 
@@ -466,7 +466,7 @@ theorem IsClosed.closure_subset_iff {s t : Set X} (h₁ : IsClosed t) : closure 
   ⟨Subset.trans subset_closure, fun h => closure_minimal h h₁⟩
 #align is_closed.closure_subset_iff IsClosed.closure_subset_iff
 
-theorem IsClosed.mem_iff_closure_subset {s : Set X} (hs : IsClosed s) {x : X} :
+theorem IsClosed.mem_iff_closure_subset {s : Set X} (hs : IsClosed s) :
     x ∈ s ↔ closure ({x} : Set X) ⊆ s :=
   (hs.closure_subset_iff.trans Set.singleton_subset_iff).symm
 #align is_closed.mem_iff_closure_subset IsClosed.mem_iff_closure_subset
@@ -573,7 +573,7 @@ theorem closure_compl {s : Set X} : closure sᶜ = (interior s)ᶜ := by
   simp [closure_eq_compl_interior_compl]
 #align closure_compl closure_compl
 
-theorem mem_closure_iff {s : Set X} {x : X} :
+theorem mem_closure_iff {s : Set X} :
     x ∈ closure s ↔ ∀ o, IsOpen o → x ∈ o → (o ∩ s).Nonempty :=
   ⟨fun h o oo xo =>
     by_contradiction fun os =>
@@ -684,7 +684,7 @@ theorem Dense.mono {s₁ s₂ : Set X} (h : s₁ ⊆ s₂) (hd : Dense s₁) : D
 #align dense.mono Dense.mono
 
 /-- Complement to a singleton is dense if and only if the singleton is not an open set. -/
-theorem dense_compl_singleton_iff_not_open {x : X} :
+theorem dense_compl_singleton_iff_not_open :
     Dense ({x}ᶜ : Set X) ↔ ¬IsOpen ({x} : Set X) := by
   constructor
   · intro hd ho
@@ -895,49 +895,49 @@ theorem nhds_le_of_le {f x} {s : Set X} (h : x ∈ s) (o : IsOpen s) (sf : 𝓟 
 #align nhds_le_of_le nhds_le_of_le
 
 -- porting note: use `∃ t, t ⊆ s ∧ _` instead of `∃ t ⊆ s, _`
-theorem mem_nhds_iff {x : X} {s : Set X} : s ∈ 𝓝 x ↔ ∃ t, t ⊆ s ∧ IsOpen t ∧ x ∈ t :=
+theorem mem_nhds_iff {s : Set X} : s ∈ 𝓝 x ↔ ∃ t, t ⊆ s ∧ IsOpen t ∧ x ∈ t :=
   (nhds_basis_opens x).mem_iff.trans <| exists_congr <| fun _ =>
     ⟨fun h => ⟨h.2, h.1.2, h.1.1⟩, fun h => ⟨⟨h.2.2, h.2.1⟩, h.1⟩⟩
 #align mem_nhds_iff mem_nhds_iffₓ
 
 /-- A predicate is true in a neighborhood of `x` iff it is true for all the points in an open set
 containing `x`. -/
-theorem eventually_nhds_iff {x : X} {p : X → Prop} :
+theorem eventually_nhds_iff {p : X → Prop} :
     (∀ᶠ x' in 𝓝 x, p x') ↔ ∃ t : Set X, (∀ x ∈ t, p x) ∧ IsOpen t ∧ x ∈ t :=
   mem_nhds_iff.trans <| by simp only [subset_def, exists_prop, mem_setOf_eq]
 #align eventually_nhds_iff eventually_nhds_iff
 
-theorem mem_interior_iff_mem_nhds {s : Set X} {x : X} : x ∈ interior s ↔ s ∈ 𝓝 x :=
+theorem mem_interior_iff_mem_nhds {s : Set X} : x ∈ interior s ↔ s ∈ 𝓝 x :=
   mem_interior.trans mem_nhds_iff.symm
 #align mem_interior_iff_mem_nhds mem_interior_iff_mem_nhds
 
-theorem map_nhds {x : X} {f : X → Y} :
+theorem map_nhds {f : X → Y} :
     map f (𝓝 x) = ⨅ s ∈ { s : Set X | x ∈ s ∧ IsOpen s }, 𝓟 (image f s) :=
   ((nhds_basis_opens x).map f).eq_biInf
 #align map_nhds map_nhds
 
-theorem mem_of_mem_nhds {x : X} {s : Set X} : s ∈ 𝓝 x → x ∈ s := fun H =>
+theorem mem_of_mem_nhds {s : Set X} : s ∈ 𝓝 x → x ∈ s := fun H =>
   let ⟨_t, ht, _, hs⟩ := mem_nhds_iff.1 H; ht hs
 #align mem_of_mem_nhds mem_of_mem_nhds
 
 /-- If a predicate is true in a neighborhood of `x`, then it is true for `x`. -/
-theorem Filter.Eventually.self_of_nhds {p : X → Prop} {x : X} (h : ∀ᶠ y in 𝓝 x, p y) : p x :=
+theorem Filter.Eventually.self_of_nhds {p : X → Prop} (h : ∀ᶠ y in 𝓝 x, p y) : p x :=
   mem_of_mem_nhds h
 #align filter.eventually.self_of_nhds Filter.Eventually.self_of_nhds
 
-theorem IsOpen.mem_nhds {x : X} {s : Set X} (hs : IsOpen s) (hx : x ∈ s) : s ∈ 𝓝 x :=
+theorem IsOpen.mem_nhds {s : Set X} (hs : IsOpen s) (hx : x ∈ s) : s ∈ 𝓝 x :=
   mem_nhds_iff.2 ⟨s, Subset.refl _, hs, hx⟩
 #align is_open.mem_nhds IsOpen.mem_nhds
 
-protected theorem IsOpen.mem_nhds_iff {x : X} {s : Set X} (hs : IsOpen s) : s ∈ 𝓝 x ↔ x ∈ s :=
+protected theorem IsOpen.mem_nhds_iff {s : Set X} (hs : IsOpen s) : s ∈ 𝓝 x ↔ x ∈ s :=
   ⟨mem_of_mem_nhds, fun hx => mem_nhds_iff.2 ⟨s, Subset.rfl, hs, hx⟩⟩
 #align is_open.mem_nhds_iff IsOpen.mem_nhds_iff
 
-theorem IsClosed.compl_mem_nhds {x : X} {s : Set X} (hs : IsClosed s) (hx : x ∉ s) : sᶜ ∈ 𝓝 x :=
+theorem IsClosed.compl_mem_nhds {s : Set X} (hs : IsClosed s) (hx : x ∉ s) : sᶜ ∈ 𝓝 x :=
   hs.isOpen_compl.mem_nhds (mem_compl hx)
 #align is_closed.compl_mem_nhds IsClosed.compl_mem_nhds
 
-theorem IsOpen.eventually_mem {x : X} {s : Set X} (hs : IsOpen s) (hx : x ∈ s) :
+theorem IsOpen.eventually_mem {s : Set X} (hs : IsOpen s) (hx : x ∈ s) :
     ∀ᶠ y in 𝓝 x, y ∈ s :=
   IsOpen.mem_nhds hs hx
 #align is_open.eventually_mem IsOpen.eventually_mem
@@ -966,14 +966,14 @@ theorem exists_open_set_nhds' {s U : Set X} (h : U ∈ ⨆ x ∈ s, 𝓝 x) :
 
 /-- If a predicate is true in a neighbourhood of `x`, then for `y` sufficiently close
 to `x` this predicate is true in a neighbourhood of `y`. -/
-theorem Filter.Eventually.eventually_nhds {p : X → Prop} {x : X} (h : ∀ᶠ y in 𝓝 x, p y) :
+theorem Filter.Eventually.eventually_nhds {p : X → Prop} (h : ∀ᶠ y in 𝓝 x, p y) :
     ∀ᶠ y in 𝓝 x, ∀ᶠ x in 𝓝 y, p x :=
   let ⟨t, htp, hto, hx⟩ := eventually_nhds_iff.1 h
   eventually_nhds_iff.2 ⟨t, fun _x hx => eventually_nhds_iff.2 ⟨t, htp, hto, hx⟩, hto, hx⟩
 #align filter.eventually.eventually_nhds Filter.Eventually.eventually_nhds
 
 @[simp]
-theorem eventually_eventually_nhds {p : X → Prop} {x : X} :
+theorem eventually_eventually_nhds {p : X → Prop} :
     (∀ᶠ y in 𝓝 x, ∀ᶠ x in 𝓝 y, p x) ↔ ∀ᶠ x' in 𝓝 x, p x' :=
   ⟨fun h => h.self_of_nhds, fun h => h.eventually_nhds⟩
 #align eventually_eventually_nhds eventually_eventually_nhds
