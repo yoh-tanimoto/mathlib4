@@ -1824,7 +1824,7 @@ theorem Set.MapsTo.closure_left {s : Set X} {t : Set Y} {f : X → Y} (h : MapsT
 
 section DenseRange
 
-variable (f : κ → Y) (g : Y → Z)
+variable (f : X → Y) (g : Y → Z)
 
 /-- `f : ι → Y` has dense range if its range (image) is a dense subset of Y. -/
 def DenseRange := Dense (range f)
@@ -1882,22 +1882,22 @@ theorem DenseRange.dense_of_mapsTo {f : X → Y} (hf' : DenseRange f) (hf : Cont
 
 /-- Composition of a continuous map with dense range and a function with dense range has dense
 range. -/
-theorem DenseRange.comp {g : Y → Z} {f : κ → Y} (hg : DenseRange g) (hf : DenseRange f)
+theorem DenseRange.comp {g : Y → Z} {f : X → Y} (hg : DenseRange g) (hf : DenseRange f)
     (cg : Continuous g) : DenseRange (g ∘ f) := by
   rw [DenseRange, range_comp]
   exact hg.dense_image cg hf
 #align dense_range.comp DenseRange.comp
 
-nonrec theorem DenseRange.nonempty_iff (hf : DenseRange f) : Nonempty κ ↔ Nonempty Y :=
+nonrec theorem DenseRange.nonempty_iff (hf : DenseRange f) : Nonempty X ↔ Nonempty Y :=
   range_nonempty_iff_nonempty.symm.trans hf.nonempty_iff
 #align dense_range.nonempty_iff DenseRange.nonempty_iff
 
-theorem DenseRange.nonempty [h : Nonempty Y] (hf : DenseRange f) : Nonempty κ :=
+theorem DenseRange.nonempty [h : Nonempty Y] (hf : DenseRange f) : Nonempty X :=
   hf.nonempty_iff.mpr h
 #align dense_range.nonempty DenseRange.nonempty
 
 /-- Given a function `f : X → Y` with dense range and `b : Y`, returns some `a : X`. -/
-def DenseRange.some (hf : DenseRange f) (b : Y) : κ :=
+def DenseRange.some (hf : DenseRange f) (b : Y) : X :=
   Classical.choice <| hf.nonempty_iff.mpr ⟨b⟩
 #align dense_range.some DenseRange.some
 
@@ -1906,7 +1906,7 @@ nonrec theorem DenseRange.exists_mem_open (hf : DenseRange f) {s : Set Y} (ho : 
   exists_range_iff.1 <| hf.exists_mem_open ho hs
 #align dense_range.exists_mem_open DenseRange.exists_mem_open
 
-theorem DenseRange.mem_nhds {f : κ → Y} (h : DenseRange f) {b : Y} {U : Set Y} (U_in : U ∈ 𝓝 b) :
+theorem DenseRange.mem_nhds {f : X → Y} (h : DenseRange f) {b : Y} {U : Set Y} (U_in : U ∈ 𝓝 b) :
     ∃ a, f a ∈ U :=
   let ⟨a, ha⟩ := h.exists_mem_open isOpen_interior ⟨b, mem_interior_iff_mem_nhds.2 U_in⟩
   ⟨a, interior_subset ha⟩
