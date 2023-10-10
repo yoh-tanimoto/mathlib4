@@ -1350,7 +1350,7 @@ theorem mem_closure_iff_nhds {s : Set X} {a : X} : a ∈ closure s ↔ ∀ t ∈
   mem_closure_iff_clusterPt.trans clusterPt_principal_iff
 #align mem_closure_iff_nhds mem_closure_iff_nhds
 
-theorem mem_closure_iff_nhds' {s : Set X} {a : X} : a ∈ closure s ↔ ∀ t ∈ 𝓝 a, ∃ y : s, ↑y ∈ t := by
+theorem mem_closure_iff_nhds' {s : Set X} {a : X} : a ∈ closure s ↔ ∀ t ∈ 𝓝 a, ∃ x : s, ↑x ∈ t := by
   simp only [mem_closure_iff_nhds, Set.inter_nonempty_iff_exists_right, SetCoe.exists, exists_prop]
 #align mem_closure_iff_nhds' mem_closure_iff_nhds'
 
