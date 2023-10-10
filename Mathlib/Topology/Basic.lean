@@ -1482,33 +1482,33 @@ theorem Filter.Frequently.mem_of_closed {a : X} {s : Set X} (h : ∃ᶠ x in �
 #align filter.frequently.mem_of_closed Filter.Frequently.mem_of_closed
 
 theorem IsClosed.mem_of_frequently_of_tendsto {f : Y → X} {b : Filter Y} {a : X} {s : Set X}
-    (hs : IsClosed s) (h : ∃ᶠ x in b, f x ∈ s) (hf : Tendsto f b (𝓝 a)) : a ∈ s :=
+    (hs : IsClosed s) (h : ∃ᶠ y in b, f y ∈ s) (hf : Tendsto f b (𝓝 a)) : a ∈ s :=
   (hf.frequently <| show ∃ᶠ x in b, (fun y => y ∈ s) (f x) from h).mem_of_closed hs
 #align is_closed.mem_of_frequently_of_tendsto IsClosed.mem_of_frequently_of_tendsto
 
 theorem IsClosed.mem_of_tendsto {f : Y → X} {b : Filter Y} {a : X} {s : Set X} [NeBot b]
-    (hs : IsClosed s) (hf : Tendsto f b (𝓝 a)) (h : ∀ᶠ x in b, f x ∈ s) : a ∈ s :=
+    (hs : IsClosed s) (hf : Tendsto f b (𝓝 a)) (h : ∀ᶠ y in b, f y ∈ s) : a ∈ s :=
   hs.mem_of_frequently_of_tendsto h.frequently hf
 #align is_closed.mem_of_tendsto IsClosed.mem_of_tendsto
 
 theorem mem_closure_of_frequently_of_tendsto {f : Y → X} {b : Filter Y} {a : X} {s : Set X}
-    (h : ∃ᶠ x in b, f x ∈ s) (hf : Tendsto f b (𝓝 a)) : a ∈ closure s :=
+    (h : ∃ᶠ y in b, f y ∈ s) (hf : Tendsto f b (𝓝 a)) : a ∈ closure s :=
   (hf.frequently h).mem_closure
 #align mem_closure_of_frequently_of_tendsto mem_closure_of_frequently_of_tendsto
 
 theorem mem_closure_of_tendsto {f : Y → X} {b : Filter Y} {a : X} {s : Set X} [NeBot b]
-    (hf : Tendsto f b (𝓝 a)) (h : ∀ᶠ x in b, f x ∈ s) : a ∈ closure s :=
+    (hf : Tendsto f b (𝓝 a)) (h : ∀ᶠ y in b, f y ∈ s) : a ∈ closure s :=
   mem_closure_of_frequently_of_tendsto h.frequently hf
 #align mem_closure_of_tendsto mem_closure_of_tendsto
 
 /-- Suppose that `f` sends the complement to `s` to a single point `a`, and `l` is some filter.
 Then `f` tends to `a` along `l` restricted to `s` if and only if it tends to `a` along `l`. -/
 theorem tendsto_inf_principal_nhds_iff_of_forall_eq {f : Y → X} {l : Filter Y} {s : Set Y} {a : X}
-    (h : ∀ (x) (_ : x ∉ s), f x = a) : Tendsto f (l ⊓ 𝓟 s) (𝓝 a) ↔ Tendsto f l (𝓝 a) := by
+    (h : ∀ (y) (_ : y ∉ s), f y = a) : Tendsto f (l ⊓ 𝓟 s) (𝓝 a) ↔ Tendsto f l (𝓝 a) := by
   rw [tendsto_iff_comap, tendsto_iff_comap]
   replace h : 𝓟 sᶜ ≤ comap f (𝓝 a)
-  · rintro U ⟨t, ht, htU⟩ x hx
-    have : f x ∈ t := (h x hx).symm ▸ mem_of_mem_nhds ht
+  · rintro U ⟨t, ht, htU⟩ y hy
+    have : f y ∈ t := (h y hy).symm ▸ mem_of_mem_nhds ht
     exact htU this
   refine' ⟨fun h' => _, le_trans inf_le_left⟩
   have := sup_le h' h
