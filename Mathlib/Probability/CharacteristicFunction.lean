@@ -6,7 +6,27 @@ Authors: Rémy Degenne
 import Mathlib.Analysis.Fourier.FourierTransform
 import Mathlib.Probability.Notation
 
-set_option relaxedAutoImplicit false
+/-!
+# Characteristic function of a measure
+
+## Main definitions
+
+* `FooBar`
+
+## Main statements
+
+* `fooBar_unique`
+
+## Notation
+
+
+
+## Implementation details
+
+
+
+-/
+
 
 open MeasureTheory ComplexConjugate Complex
 
