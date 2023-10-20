@@ -92,6 +92,13 @@ lemma card_filter_succ_piFinset_eq {α} {n: ℕ} (p : (Fin n → α) → Prop) [
   exact Finset.card_product S (Finset.filter p (Fintype.piFinset fun _ ↦ S))
 
 
+lemma AlgEquiv_invFun_apply {R α β : Type} [CommSemiring R] [Semiring α] [Semiring β] [Algebra R α] [Algebra R β]
+    (e : α ≃ₐ[R] β) (x : α) : x = (e).symm ((e) x) := by
+  simp only [AlgEquiv.symm_apply_apply]
+  -- rw [AlgEquiv.toEquiv_eq_coe, Equiv.invFun_as_coe, @Equiv.eq_symm_apply]
+  -- exact rfl
+
+
 end find_home
 
 
@@ -124,11 +131,6 @@ lemma schwartz_zippel (F : Type) [CommRing F] [IsDomain F] [DecidableEq F] (n : 
     intros p p_nonzero S
     -- We can then consider p to be a polynomial over MvPolynomials in one fewer variables
     set p' : Polynomial (MvPolynomial (Fin n) F) := MvPolynomial.finSuccEquiv F n p with hp'
-    -- TODO remove p from context now by reexpressing everthing in terms of p'?
-    -- have : p = (MvPolynomial.finSuccEquiv F n).invFun p' := by
-    --   rw [hp']
-    --   simp?
-    --   exact (MvPolynomial.finSuccEquiv_symm_apply_apply F n p).symm
     -- since p is not identically zero, there is some i such that p_i' is not identically zero
     -- take the largest such i
     set i := p'.natDegree with hi
@@ -142,6 +144,12 @@ lemma schwartz_zippel (F : Type) [CommRing F] [IsDomain F] [DecidableEq F] (n : 
       exact Iff.mpr (AddEquivClass.map_ne_zero_iff (MvPolynomial.finSuccEquiv F n)) p_nonzero
     -- We use the inductive hypothesis on p_i'
     replace ih := ih p_i' h1 S
+
+    -- -- TODO remove p from context now by reexpressing everthing in terms of p'?
+    -- have fsdoifj : p = (MvPolynomial.finSuccEquiv F n).symm p' := by
+    --   apply AlgEquiv_invFun_apply
+    -- simp only [fsdoifj] at p
+
     -- We then split the set of possible zeros into a union of two cases:
     -- In the first case, p_i' evaluates to 0.
     have h_first_half :
