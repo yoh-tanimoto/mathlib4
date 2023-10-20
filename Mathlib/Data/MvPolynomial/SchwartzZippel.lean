@@ -68,12 +68,12 @@ lemma MvPolynomial.support_nonempty_iff {F σ} [CommSemiring F] (p : MvPolynomia
   rw [ne_eq, ←MvPolynomial.support_eq_empty, Finset.nonempty_iff_ne_empty]
 
 
-lemma card_filter_piFinset_eq' {α} {n: ℕ} (p : (Fin (n) → α) → Prop) [DecidablePred p]
+lemma card_filter_piFinset_eq' {α} {n: ℕ} (p : (Fin n → α) → Prop) [DecidablePred p]
   (S: Finset α) :
-    Finset.card (Finset.filter (fun r ↦ p (r ∘ Fin.succ)) (Fintype.piFinset (fun _ => S)))
+    Finset.card (Finset.filter (fun r ↦ p (r ∘ Fin.succ)) (Fintype.piFinset fun _ => S))
     =
     Finset.card
-      (S ×ˢ Finset.filter p (Fintype.piFinset (fun _ => S))) := by
+      (S ×ˢ Finset.filter p (Fintype.piFinset fun _ => S)) := by
   rw [←Finset.card_map ((Equiv.piFinSucc n α).toEmbedding)]
   congr
   ext ⟨x, f⟩
@@ -81,13 +81,13 @@ lemma card_filter_piFinset_eq' {α} {n: ℕ} (p : (Fin (n) → α) → Prop) [De
     Equiv.piFinSucc_symm_apply, Fin.cons_mem_piFinset_iff]
   tauto
 
-lemma card_filter_succ_piFinset_eq {α} {n: ℕ} (p : (Fin (n) → α) → Prop) [DecidablePred p]
+lemma card_filter_succ_piFinset_eq {α} {n: ℕ} (p : (Fin n → α) → Prop) [DecidablePred p]
   (S: Finset α) :
-    Finset.card (Finset.filter (fun r ↦ p (r ∘ Fin.succ)) (Fintype.piFinset (fun _ => S)))
+    Finset.card (Finset.filter (fun r ↦ p (r ∘ Fin.succ)) (Fintype.piFinset fun _ => S))
     =
     S.card *
     Finset.card
-      (Finset.filter p (Fintype.piFinset (fun _ => S))) := by
+      (Finset.filter p (Fintype.piFinset fun _ => S)) := by
   rw [card_filter_piFinset_eq']
   exact Finset.card_product S (Finset.filter p (Fintype.piFinset fun _ ↦ S))
 
@@ -102,9 +102,9 @@ probability that `p` evaluates to zero at points drawn at random from some finit
 field is bounded by the degree of `p` over `|S|`. This version presents this lemma in terms of
 -/
 lemma schwartz_zippel (F : Type) [CommRing F] [IsDomain F] [DecidableEq F] (n : ℕ)
-  (p : MvPolynomial (Fin (n)) F) (hp : p ≠ 0) (S : Finset F) :
-  (Finset.filter (fun f => MvPolynomial.eval f p = 0) (function_finset (Fin (n)) S)).card * S.card
-    ≤ (p.totalDegree) * S.card ^ (n) := by
+    (p : MvPolynomial (Fin n) F) (hp : p ≠ 0) (S : Finset F) :
+    (Finset.filter (fun f => MvPolynomial.eval f p = 0) (function_finset (Fin n) S)).card * S.card
+      ≤ (p.totalDegree) * S.card ^ n := by
   -- Following the wikipedia proof
   -- I don't think that the wikipedia proof technique of starting at n=1 is necessary, so I start at n = 0
   revert p hp S
@@ -182,7 +182,7 @@ lemma schwartz_zippel (F : Type) [CommRing F] [IsDomain F] [DecidableEq F] (n : 
       rw [←Finset.card_map (Equiv.toEmbedding (Equiv.piFinSucc n F)), Finset.map_filter,
         Finset.card_eq_sum_ones, Finset.sum_finset_product_right _
             (s := (Finset.filter (fun r ↦ (MvPolynomial.eval (r)) p_i' ≠ 0)
-              (function_finset (Fin (n)) S)))
+              (function_finset (Fin n) S)))
             (t := fun r => Finset.filter (fun f => (MvPolynomial.eval ((Equiv.piFinSucc n F).invFun (f, r))) p = 0) S)] -- Note that ((Equiv.piFinSucc n F).invFun (f, r)) can be more simply written with Fin.cons
       · unfold function_finset
         simp_rw [←Finset.card_eq_sum_ones]
