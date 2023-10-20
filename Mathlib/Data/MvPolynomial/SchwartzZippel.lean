@@ -1,5 +1,8 @@
-
-
+/-
+Copyright (c) 2023 Bolton Bailey. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Bolton Bailey
+-/
 import Mathlib.Data.MvPolynomial.Equiv
 import Mathlib.Data.Polynomial.RingDivision
 import Mathlib.Data.Fin.Tuple.Basic
@@ -8,11 +11,12 @@ import Mathlib.Data.Fin.Tuple.Basic
 # The Schwartz-Zippel lemma
 
 This file contains a proof of the
-[Schwartz-Zippel](https://en.wikipedia.org/wiki/Schwartz%E2%80%93Zippel_lemma) lemma. This lemma tells us that the probability of a nonzero multivariable polynomial over a finite field being zero at a random point is bounded by the degree of the polynomial and the size of the field, or more generally, that a nonzero multivariable polynomial over any field has a low probability of being zero when evaluated at points drawn at random from some finite subset of the field. This lemma is useful as a probabilistic polynomial identity test.
+[Schwartz-Zippel](https://en.wikipedia.org/wiki/Schwartz%E2%80%93Zippel_lemma) lemma.
+This lemma tells us that the probability that a nonzero multivariable polynomial over a ??? evaluates to zero at a random point is bounded by the degree of the polynomial over the size of the field, or more generally, that a nonzero multivariable polynomial over any ??? has a low probability of being zero when evaluated at points drawn at random from some finite subset of the field. This lemma is useful as a probabilistic polynomial identity test.
 
 ## TODO
 
-* Generalize to subset of the field being different for each variable
+* Generalize to subset of the ring being different for each variable
 * Reexpress in terms of probabilities.
 * Write a tactic to apply this lemma to a given polynomial
 
@@ -50,7 +54,8 @@ lemma Fin.cons_mem_piFinset_iff {F} {n : ℕ} (a : (Fin n → F)) (b: F) (S : Fi
       exact ha11 j
 
 
--- Not sure what to do here. Presumably we don't want these lemmas
+-- REVIEWERS: Not sure what to do here.
+-- Presumably we don't want these lemmas, but the proof below is more complicated without them
 lemma and_or_and_not_iff (p q : Prop) : ((p ∧ q) ∨ (p ∧ ¬ q)) ↔ p := by
   tauto
 
@@ -62,33 +67,6 @@ lemma MvPolynomial.support_nonempty_iff {F σ} [CommSemiring F] (p : MvPolynomia
     (MvPolynomial.support p).Nonempty ↔ p ≠ 0 := by
   rw [ne_eq, ←MvPolynomial.support_eq_empty, Finset.nonempty_iff_ne_empty]
 
--- #7206
-lemma MvPolynomial.totalDegree_coeff_finSuccEquiv_add_le {F} [CommSemiring F] (n i : ℕ)
-  (p : MvPolynomial (Fin (Nat.succ n)) F)
-  (hi : (Polynomial.coeff ((MvPolynomial.finSuccEquiv F n) p) i) ≠ 0) :
-    MvPolynomial.totalDegree (Polynomial.coeff ((MvPolynomial.finSuccEquiv F n) p) i) + i
-      ≤ MvPolynomial.totalDegree p := by
-  have hp'_sup : (Polynomial.coeff ((MvPolynomial.finSuccEquiv F n) p) i).support.Nonempty := by
-    rw [MvPolynomial.support_nonempty_iff]
-    exact hi
-  -- Let σ be a monomial index of (Polynomial.coeff ((MvPolynomial.finSuccEquiv F n) p) i) of
-  -- maximal total degree
-  have ⟨σ, hσ1, hσ2⟩ := Finset.exists_mem_eq_sup (MvPolynomial.support _) hp'_sup
-                          (fun s => Finsupp.sum s fun _ e => e)
-  -- Then cons i σ is a monomial index of p with total degree equal to the desired bound
-  let σ' : Fin (n+1) →₀ ℕ := Finsupp.cons i σ
-  convert MvPolynomial.le_totalDegree (p := p) (s := σ') _
-  · rw [MvPolynomial.totalDegree, hσ2, Finsupp.sum_cons, add_comm]
-  · rw [←MvPolynomial.support_coeff_finSuccEquiv]
-    exact hσ1
-
-/-- MvPolynomials over an empty type of variables are always constant -/
--- PRd as #7208
-lemma MvPolynomial.eq_C_of_empty {F σ} [CommSemiring F] [IsEmpty σ]
-  (p : MvPolynomial σ F) : p = C (p.coeff 0) := by
-  ext m
-  rw [Subsingleton.eq_zero m]
-  simp
 
 lemma card_filter_piFinset_eq' {α} {n: ℕ} (p : (Fin (n) → α) → Prop) [DecidablePred p]
   (S: Finset α) :
@@ -134,8 +112,7 @@ lemma schwartz_zippel (F : Type) [CommRing F] [IsDomain F] [DecidableEq F] (n : 
   | zero =>
     intros p hp S
     -- Because p is a polynomial over the (empty) type Fin 0 of variables, it is constant
-    -- have p_const := MvPolynomial.eq_C_of_empty p
-    rw [MvPolynomial.eq_C_of_empty p] at *
+    rw [MvPolynomial.eq_C_of_isEmpty p] at *
     simp only [Nat.zero_eq, MvPolynomial.eval_C, Fin.forall_fin_zero_pi, Finset.filter_const,
       MvPolynomial.totalDegree_C, pow_zero, mul_one, nonpos_iff_eq_zero, mul_eq_zero,
       Finset.card_eq_zero, ite_eq_right_iff, function_finset]
@@ -179,7 +156,7 @@ lemma schwartz_zippel (F : Type) [CommRing F] [IsDomain F] [DecidableEq F] (n : 
       _ ≤ (MvPolynomial.totalDegree p_i') * (Finset.card S) ^ n := by
         convert ih
         rw [mul_comm]
-        convert card_filter_piFinset_eq ((fun f ↦ (MvPolynomial.eval (f)) p_i' = 0)) S
+        convert card_filter_succ_piFinset_eq ((fun f ↦ (MvPolynomial.eval (f)) p_i' = 0)) S
         -- rw [mul_comm, ←Finset.card_product, eq_comm]
         -- unfold function_finset
         -- rw [eq_comm]
