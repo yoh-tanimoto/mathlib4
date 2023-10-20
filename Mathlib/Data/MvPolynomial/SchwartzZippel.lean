@@ -310,7 +310,9 @@ lemma schwartz_zippel (F : Type) [CommRing F] [IsDomain F] [DecidableEq F] (n : 
         apply Finset.monotone_filter_right
         rw [Pi.le_def]
         intro i
-        aesop
+        rename_i inst inst_1 inst_2 i_1
+        simp_all only [ne_eq, MvPolynomial.finSuccEquiv_apply, MvPolynomial.coe_eval₂Hom, Polynomial.coeff_natDegree,
+          Polynomial.leadingCoeff_eq_zero, ge_iff_le, not_and, not_not, le_Prop_eq, and_imp, implies_true]
       _ ≤ ((MvPolynomial.totalDegree p - i) * (Finset.card S) ^ n
           +
           (i) * (Finset.card S) ^ n
