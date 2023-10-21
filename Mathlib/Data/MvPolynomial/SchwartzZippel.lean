@@ -103,7 +103,9 @@ probability that `p` evaluates to zero at points drawn at random from some finit
 -/
 lemma schwartz_zippel (F : Type) [CommRing F] [IsDomain F] [DecidableEq F] (n : ℕ)
     (p : MvPolynomial (Fin n) F) (hp : p ≠ 0) (S : Finset F) :
-    (Finset.filter (fun f => MvPolynomial.eval f p = 0) (((fun A S => Fintype.piFinset (fun _ => S))) (Fin n) S)).card * S.card
+    (Finset.filter
+      (fun f => MvPolynomial.eval f p = 0)
+      (Fintype.piFinset (fun _ => S))).card * S.card
       ≤ (p.totalDegree) * S.card ^ n := by
   -- Following the wikipedia proof
   -- I don't think that the wikipedia proof technique of starting at n=1 is necessary, so I start at n = 0
@@ -149,7 +151,7 @@ lemma schwartz_zippel (F : Type) [CommRing F] [IsDomain F] [DecidableEq F] (n : 
       Finset.card
         (Finset.filter
           (fun r ↦ MvPolynomial.eval (r ∘ Fin.succ) p_i' = 0)
-          (((fun A S => Fintype.piFinset (fun _ => S))) (Fin (Nat.succ n)) S))
+          (((Fintype.piFinset (fun _ => S)))))
       ≤
       (MvPolynomial.totalDegree p - i) * (Finset.card S) ^ n := by
       -- In this case, we bound the size of the set via the inductive hypothesis
@@ -166,7 +168,7 @@ lemma schwartz_zippel (F : Type) [CommRing F] [IsDomain F] [DecidableEq F] (n : 
       Finset.card
           (Finset.filter
             (fun r ↦ MvPolynomial.eval r p = 0 ∧ MvPolynomial.eval (r ∘ Fin.succ) p_i' ≠ 0)
-            ((fun A S => Fintype.piFinset (fun _ => S)) (Fin (Nat.succ n)) S))
+            ((Fintype.piFinset (fun _ => S))))
       ≤
       (i) * (Finset.card S) ^ n := by
       clear h_first_half
@@ -178,7 +180,7 @@ lemma schwartz_zippel (F : Type) [CommRing F] [IsDomain F] [DecidableEq F] (n : 
       rw [←Finset.card_map (Equiv.toEmbedding (Equiv.piFinSucc n F)), Finset.map_filter,
         Finset.card_eq_sum_ones, Finset.sum_finset_product_right _
             (s := (Finset.filter (fun r ↦ (MvPolynomial.eval (r)) p_i' ≠ 0)
-              ((fun A S => Fintype.piFinset (fun _ => S)) (Fin n) S)))
+              (Fintype.piFinset (fun _ => S))))
             (t := fun r => Finset.filter (fun f => (MvPolynomial.eval ((Equiv.piFinSucc n F).invFun (f, r))) p = 0) S)] -- Note that ((Equiv.piFinSucc n F).invFun (f, r)) can be more simply written with Fin.cons
       · simp_rw [←Finset.card_eq_sum_ones]
         apply le_trans (Finset.sum_le_sum (g := fun _ => i) _)
@@ -263,19 +265,19 @@ lemma schwartz_zippel (F : Type) [CommRing F] [IsDomain F] [DecidableEq F] (n : 
       Finset.card
         (Finset.filter
           (fun r ↦ MvPolynomial.eval r p = 0)
-          ((fun A S => Fintype.piFinset (fun _ => S)) (Fin (Nat.succ n)) S))
+          (Fintype.piFinset (fun _ => S)))
       * Finset.card S
       =
       -- Pr [A ∩ B] + Pr [A ∩ Bᶜ]
       (Finset.card
         (Finset.filter
           (fun r ↦ MvPolynomial.eval r p = 0 ∧ MvPolynomial.eval (r ∘ Fin.succ) p_i' = 0)
-          ((fun A S => Fintype.piFinset (fun _ => S)) (Fin (Nat.succ n)) S))
+          (Fintype.piFinset (fun _ => S)))
       +
       Finset.card
         (Finset.filter
           (fun r ↦ MvPolynomial.eval r p = 0 ∧ MvPolynomial.eval (r ∘ Fin.succ) p_i' ≠ 0)
-          ((fun A S => Fintype.piFinset (fun _ => S)) (Fin (Nat.succ n)) S))
+          (Fintype.piFinset (fun _ => S)))
       )
       * Finset.card S := by
         congr
@@ -290,12 +292,12 @@ lemma schwartz_zippel (F : Type) [CommRing F] [IsDomain F] [DecidableEq F] (n : 
       _ ≤ (Finset.card
         (Finset.filter
           (fun r ↦ MvPolynomial.eval (r ∘ Fin.succ) p_i' = 0)
-          ((fun A S => Fintype.piFinset (fun _ => S)) (Fin (Nat.succ n)) S))
+          (Fintype.piFinset (fun _ => S)))
       +
       Finset.card
         (Finset.filter
           (fun r ↦ MvPolynomial.eval r p = 0 ∧ MvPolynomial.eval (r ∘ Fin.succ) p_i' ≠ 0)
-          ((fun A S => Fintype.piFinset (fun _ => S)) (Fin (Nat.succ n)) S))
+          (Fintype.piFinset (fun _ => S)))
       )
       * Finset.card S := by
         apply Nat.mul_le_mul_right
