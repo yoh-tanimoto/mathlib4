@@ -104,13 +104,13 @@ end find_home
 
 
 /--
-The **Schwartz-Zippel lemma**: For a nonzero multivariable polynomial `p`nover a field, the
+The **Schwartz-Zippel lemma**: For a nonzero multivariable polynomial `p` over a ???, the
 probability that `p` evaluates to zero at points drawn at random from some finite subset `S` of the
-field is bounded by the degree of `p` over `|S|`. This version presents this lemma in terms of
+??? is bounded by the degree of `p` over `|S|`. This version presents this lemma in terms of
 -/
 lemma schwartz_zippel (F : Type) [CommRing F] [IsDomain F] [DecidableEq F] (n : ℕ)
     (p : MvPolynomial (Fin n) F) (hp : p ≠ 0) (S : Finset F) :
-    (Finset.filter (fun f => MvPolynomial.eval f p = 0) (function_finset (Fin n) S)).card * S.card
+    (Finset.filter (fun f => MvPolynomial.eval f p = 0) ((function_finset) (Fin n) S)).card * S.card
       ≤ (p.totalDegree) * S.card ^ n := by
   -- Following the wikipedia proof
   -- I don't think that the wikipedia proof technique of starting at n=1 is necessary, so I start at n = 0
@@ -161,17 +161,12 @@ lemma schwartz_zippel (F : Type) [CommRing F] [IsDomain F] [DecidableEq F] (n : 
       (MvPolynomial.totalDegree p - i) * (Finset.card S) ^ n := by
       -- In this case, we bound the size of the set via the inductive hypothesis
       calc
-      _ ≤ (MvPolynomial.totalDegree p_i') * (Finset.card S) ^ n := by
-        convert ih
-        rw [mul_comm]
-        convert card_filter_succ_piFinset_eq ((fun f ↦ (MvPolynomial.eval (f)) p_i' = 0)) S
-        -- rw [mul_comm, ←Finset.card_product, eq_comm]
-        -- unfold function_finset
-        -- rw [eq_comm]
-        -- rw [←card_filter_piFinset_eq]
-      _ ≤ _ := by
-        apply Nat.mul_le_mul_right
-        exact Nat.le_sub_of_add_le h0
+        _ ≤ (MvPolynomial.totalDegree p_i') * (Finset.card S) ^ n := by
+          convert ih
+          rw [mul_comm]
+          convert card_filter_succ_piFinset_eq ((fun f ↦ (MvPolynomial.eval (f)) p_i' = 0)) S
+        _ ≤ _ := by
+          exact Nat.mul_le_mul_right (Finset.card S ^ n) (Nat.le_sub_of_add_le h0)
     save
     -- In the second case p_i' does not evaluate to zero.
     have h_second_half :
@@ -267,11 +262,11 @@ lemma schwartz_zippel (F : Type) [CommRing F] [IsDomain F] [DecidableEq F] (n : 
           simp only [Fin.cons_mem_piFinset_iff]
           constructor
           · simp [hab1, hab2]
-          · exact { left := hab3, right := hab1' }
+          · exact ⟨hab3, hab1'⟩
 
 
     -- Putting these results together, we take a union bound over these two cases to finish the
-    -- induction
+    -- proof
     calc
       -- Pr[A]
       Finset.card
