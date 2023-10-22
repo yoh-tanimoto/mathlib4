@@ -284,7 +284,6 @@ lemma schwartz_zippel (F : Type) [CommRing F] [IsDomain F] [DecidableEq F] (n : 
         rw [←Finset.card_union_add_card_inter]
         rw [Finset.filter_union_right]
         -- todo note filter_or is the symm of this. Golf that proof.
-        -- Also if filter and exists, maybe so should filter_inter_right
         rw [←Finset.filter_and]
         simp only [ne_eq, and_or_and_not_iff, and_and_and_not_iff]
         simp only [Finset.filter_False, Finset.card_empty, add_zero]
