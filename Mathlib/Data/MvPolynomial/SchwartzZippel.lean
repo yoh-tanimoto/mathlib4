@@ -40,7 +40,7 @@ lemma MvPolynomial.support_nonempty_iff {F σ} [CommSemiring F] (p : MvPolynomia
     (MvPolynomial.support p).Nonempty ↔ p ≠ 0 := by
   rw [ne_eq, ←MvPolynomial.support_eq_empty, Finset.nonempty_iff_ne_empty]
 
-
+-- https://github.com/leanprover-community/mathlib4/pull/7898
 lemma Finset.card_filter_piFinset_eq' {n : ℕ} {α : Fin (n + 1) → Type*}
     (p : ((i : Fin n) → α i.succ) → Prop) [DecidablePred p]
     (S : (i : Fin (n + 1)) → Finset (α i)) :
@@ -53,6 +53,7 @@ lemma Finset.card_filter_piFinset_eq' {n : ℕ} {α : Fin (n + 1) → Type*}
       Fin.forall_fin_succ, and_imp, mem_map_equiv, mem_filter, mem_product]
   tauto
 
+-- https://github.com/leanprover-community/mathlib4/pull/7898
 @[simp]
 lemma Finset.card_filter_succ_piFinset_eq {n : ℕ} {α : Fin (n + 1) → Type*}
     (p : ((i : Fin n) → α i.succ) → Prop) [DecidablePred p]
