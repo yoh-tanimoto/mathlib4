@@ -26,26 +26,6 @@ open BigOperators
 
 section find_home
 
--- #6605
-@[simp]
-lemma Fin.cons_mem_piFinset_iff {F} {n : ℕ} (a : (Fin n → F)) (b: F) (S : Finset F) :
-    Fin.cons b a ∈ Fintype.piFinset (fun _ => S)
-    ↔
-    a ∈ Fintype.piFinset (fun _ => S)
-    ∧
-    b ∈ S := by
-  simp only [Fintype.mem_piFinset]
-  constructor
-  · intros ha_1
-    constructor
-    · exact fun a_1 ↦ ha_1 (succ a_1)
-    · exact ha_1 0
-  · intro ⟨ha11, ha12⟩ a1
-    rcases Fin.eq_zero_or_eq_succ a1 with rfl | ⟨j, rfl⟩
-    · rwa [cons_zero]
-    · rw [cons_succ]
-      exact ha11 j
-
 
 -- REVIEWERS: Not sure what to do here.
 -- Presumably we don't want these lemmas, but the proof below is more complicated without them
@@ -70,10 +50,12 @@ lemma card_filter_piFinset_eq' {α} {n: ℕ} (p : (Fin n → α) → Prop) [Deci
   rw [←Finset.card_map ((Equiv.piFinSucc n α).toEmbedding)]
   congr
   ext ⟨x, f⟩
-  simp only [Fintype.mem_piFinset, Finset.mem_product, Finset.mem_filter, Finset.mem_map_equiv,
-    Equiv.piFinSucc_symm_apply, Fin.cons_mem_piFinset_iff]
+  simp only [Fintype.mem_piFinset, Fin.forall_fin_succ, and_imp, Finset.mem_map_equiv,
+    Equiv.piFinSucc_symm_apply, Finset.mem_filter, Fin.cons_zero, Fin.cons_succ, Finset.mem_product]
   tauto
 
+
+@[simp]
 lemma card_filter_succ_piFinset_eq {α} {n: ℕ} (p : (Fin n → α) → Prop) [DecidablePred p]
   (S: Finset α) :
     Finset.card (Finset.filter (fun r ↦ p (r ∘ Fin.succ)) (Fintype.piFinset fun _ => S))
@@ -83,6 +65,7 @@ lemma card_filter_succ_piFinset_eq {α} {n: ℕ} (p : (Fin n → α) → Prop) [
       (Finset.filter p (Fintype.piFinset fun _ => S)) := by
   rw [card_filter_piFinset_eq']
   exact Finset.card_product S (Finset.filter p (Fintype.piFinset fun _ ↦ S))
+
 
 
 lemma AlgEquiv_invFun_apply {R α β : Type} [CommSemiring R] [Semiring α] [Semiring β] [Algebra R α] [Algebra R β]
@@ -252,7 +235,8 @@ lemma schwartz_zippel (F : Type) [CommRing F] [IsDomain F] [DecidableEq F] (n : 
         · intro hab
           rcases hab with ⟨⟨hab1, hab1'⟩, hab2, hab3⟩
           rw [←Fintype.mem_piFinset]
-          simp only [Fin.cons_mem_piFinset_iff]
+          simp only [Fintype.mem_piFinset]
+          simp_rw [Fin.forall_fin_succ]
           constructor
           · simp [hab1, hab2]
           · exact ⟨hab3, hab1'⟩
