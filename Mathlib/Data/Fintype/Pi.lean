@@ -136,7 +136,7 @@ lemma Fin.snoc_mem_piFinset_snoc_iff {n : ℕ} {α : Fin (n + 1) → Type*}
     Fin.snoc xs x ∈ Fintype.piFinset (Fin.snoc Sᵢ Sₙ) ↔ xs ∈ Fintype.piFinset Sᵢ ∧ x ∈ Sₙ := by
   simp_rw [Fin.mem_piFinset_succ_iff', init_snoc, snoc_last]
 
-lemma card_filter_piFinset_eq' {α} {n: ℕ} (p : ((i : Fin n) → α) → Prop) [DecidablePred p]
+lemma Finset.card_filter_piFinset_eq' {α} {n: ℕ} (p : ((i : Fin n) → α) → Prop) [DecidablePred p]
     (S: Finset α) :
     Finset.card (Finset.filter (fun r ↦ p (r ∘ Fin.succ)) (Fintype.piFinset fun _ => S))
       = Finset.card (S ×ˢ Finset.filter p (Fintype.piFinset fun _ => S)) := by
@@ -148,7 +148,7 @@ lemma card_filter_piFinset_eq' {α} {n: ℕ} (p : ((i : Fin n) → α) → Prop)
   tauto
 
 @[simp]
-lemma card_filter_succ_piFinset_eq {α} {n: ℕ} (p : (Fin n → α) → Prop) [DecidablePred p]
+lemma Finset.card_filter_succ_piFinset_eq {α} {n: ℕ} (p : (Fin n → α) → Prop) [DecidablePred p]
     (S: Finset α) :
     Finset.card (Finset.filter (fun r ↦ p (r ∘ Fin.succ)) (Fintype.piFinset fun _ => S))
      = S.card * Finset.card (Finset.filter p (Fintype.piFinset fun _ => S)) := by
