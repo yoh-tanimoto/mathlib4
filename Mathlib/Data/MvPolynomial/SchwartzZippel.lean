@@ -16,8 +16,11 @@ This lemma tells us that the probability that a nonzero multivariable polynomial
 
 ## TODO
 
-* Generalize to subset of the ring being different for each variable
+* Generalize to noncommutative rings? Is that even possible?
+* Generalize to subset of the ring being different for each variable.
+  * What does the theorem say in thic case?
 * Reexpress in terms of probabilities.
+* Then generalize to polynomials over arbitrary variable types
 * Write a tactic to apply this lemma to a given polynomial
 
 -/
