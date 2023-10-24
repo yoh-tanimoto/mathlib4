@@ -140,7 +140,7 @@ lemma schwartz_zippel (F : Type) [CommRing F] [IsDomain F] [DecidableEq F] (n : 
         _ ≤ (MvPolynomial.totalDegree p_i') * (Finset.card S) ^ n := by
           convert ih
           rw [mul_comm]
-          convert Finset.card_filter_succ_piFinset_eq ((fun f ↦ (MvPolynomial.eval (f)) p_i' = 0)) S
+          convert Finset.card_filter_succ_piFinset_eq ((fun f ↦ (MvPolynomial.eval (f)) p_i' = 0)) (fun _ => S)
         _ ≤ _ := by
           exact Nat.mul_le_mul_right (Finset.card S ^ n) (Nat.le_sub_of_add_le h0)
     save
