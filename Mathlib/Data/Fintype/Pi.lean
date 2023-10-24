@@ -136,8 +136,8 @@ lemma Fin.snoc_mem_piFinset_snoc_iff {n : ℕ} {α : Fin (n + 1) → Type*}
     Fin.snoc xs x ∈ Fintype.piFinset (Fin.snoc Sᵢ Sₙ) ↔ xs ∈ Fintype.piFinset Sᵢ ∧ x ∈ Sₙ := by
   simp_rw [Fin.mem_piFinset_succ_iff', init_snoc, snoc_last]
 
--- TODO make dependent
-lemma Finset.card_filter_piFinset_eq' {n : ℕ} {α : Fin (n + 1) → Type*} (p : ((i : Fin n) → α i.succ) → Prop) [DecidablePred p]
+lemma Finset.card_filter_piFinset_eq' {n : ℕ} {α : Fin (n + 1) → Type*}
+    (p : ((i : Fin n) → α i.succ) → Prop) [DecidablePred p]
     (S : (i : Fin (n + 1)) → Finset (α i)) :
     Finset.card (Finset.filter (fun r ↦ p (fun x ↦ r $ Fin.succ x)) (Fintype.piFinset S))
       = Finset.card ((S 0) ×ˢ Finset.filter p (Fintype.piFinset (fun x => S $ Fin.succ x))) := by
@@ -149,7 +149,8 @@ lemma Finset.card_filter_piFinset_eq' {n : ℕ} {α : Fin (n + 1) → Type*} (p 
   tauto
 
 @[simp]
-lemma Finset.card_filter_succ_piFinset_eq {n : ℕ} {α : Fin (n + 1) → Type*} (p : ((i : Fin n) → α i.succ) → Prop) [DecidablePred p]
+lemma Finset.card_filter_succ_piFinset_eq {n : ℕ} {α : Fin (n + 1) → Type*}
+    (p : ((i : Fin n) → α i.succ) → Prop) [DecidablePred p]
     (S : (i : Fin (n + 1)) → Finset (α i)) :
     Finset.card (Finset.filter (fun r ↦ p (fun x ↦ r $ Fin.succ x)) (Fintype.piFinset S))
      = (S 0).card * Finset.card (Finset.filter p (Fintype.piFinset (fun x => S $ Fin.succ x))) := by
