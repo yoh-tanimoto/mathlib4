@@ -75,6 +75,12 @@ end find_home
 
 -- Following the wikipedia proof (induction starting at n = 0)
 
+-- -- TODO remove p from context now by reexpressing everthing in terms of p'?
+-- have p_eq : p = (MvPolynomial.finSuccEquiv F n).symm p' := by
+--   apply AlgEquiv_invFun_apply
+
+-- TODO remove tsub from proof
+
 /--
 The **Schwartz-Zippel lemma**: For a nonzero multivariable polynomial `p` over an integral domain,
 the probability that `p` evaluates to zero at points drawn at random from some finite subset `S` of
@@ -117,11 +123,6 @@ lemma schwartz_zippel (F : Type) [CommRing F] [IsDomain F] [DecidableEq F] (n : 
       exact Iff.mpr (AddEquivClass.map_ne_zero_iff (MvPolynomial.finSuccEquiv F n)) p_nonzero
     -- We use the inductive hypothesis on p_i'
     replace ih := ih p_i' h1 S
-
-    -- -- TODO remove p from context now by reexpressing everthing in terms of p'?
-    -- have fsdoifj : p = (MvPolynomial.finSuccEquiv F n).symm p' := by
-    --   apply AlgEquiv_invFun_apply
-    -- simp only [AlgEquiv.symm_apply_apply] at p
 
     -- We then split the set of possible zeros into a union of two cases:
     -- In the first case, p_i' evaluates to 0.
@@ -206,35 +207,19 @@ lemma schwartz_zippel (F : Type) [CommRing F] [IsDomain F] [DecidableEq F] (n : 
           simp only [←hp_r, and_true]
           intro hpr_zero
           contrapose! hr2
-          rw [←hp'] at *
-          rw [hpr_zero] at this
-          rw [Polynomial.natDegree_zero] at this
-          rw [←hi, ←this]
+          -- rw [←hp'] at *
+          -- rw [hpr_zero] at this
+          -- rw [Polynomial.natDegree_zero] at this
+          rw [←hi, ←this, hpr_zero, Polynomial.natDegree_zero]
           have hp_r0 : p_r.coeff 0 = 0 := by simp [hpr_zero]
           rw [←hp_r0]
           rw [Polynomial.coeff_map]
-      · simp only [Equiv.piFinSucc_symm_apply, Finset.mem_map_equiv, Fintype.mem_piFinset,
-          Function.comp_apply, Prod.forall, Finset.mem_filter, Equiv.invFun_as_coe]
-        intros a b
-        constructor
-        · intro hfr
-          rcases hfr with ⟨hfr1, hfr2, hfr3⟩
-          constructor
-          · constructor
-            · intro n'
-              refine hfr1 (Fin.succ n')
-            · exact hfr3
-          · constructor
-            · refine hfr1 0
-            · exact hfr2
-        · intro hab
-          rcases hab with ⟨⟨hab1, hab1'⟩, hab2, hab3⟩
-          rw [←Fintype.mem_piFinset]
-          simp only [Fintype.mem_piFinset]
-          simp_rw [Fin.forall_fin_succ]
-          constructor
-          · simp [hab1, hab2]
-          · exact ⟨hab3, hab1'⟩
+      · simp? [Fin.forall_fin_succ] says simp only [Polynomial.coeff_natDegree,
+          MvPolynomial.finSuccEquiv_apply, MvPolynomial.coe_eval₂Hom, ne_eq,
+          Equiv.piFinSucc_symm_apply, Finset.mem_map_equiv, Fintype.mem_piFinset,
+          Fin.forall_fin_succ, Fin.cons_zero, Fin.cons_succ, Function.comp_apply, and_imp,
+          Prod.forall, not_and, not_not, Finset.mem_filter, Equiv.invFun_as_coe]
+        tauto
 
 
     -- Putting these results together, we take a union bound over these two cases to finish the
