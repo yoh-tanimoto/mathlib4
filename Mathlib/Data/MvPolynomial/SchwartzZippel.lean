@@ -12,7 +12,12 @@ import Mathlib.Data.Fin.Tuple.Basic
 
 This file contains a proof of the
 [Schwartz-Zippel](https://en.wikipedia.org/wiki/Schwartz%E2%80%93Zippel_lemma) lemma.
-This lemma tells us that the probability that a nonzero multivariable polynomial over an integral domain evaluates to zero at a random point is bounded by the degree of the polynomial over the size of the field, or more generally, that a nonzero multivariable polynomial over any integral domain has a low probability of being zero when evaluated at points drawn at random from some finite subset of the field. This lemma is useful as a probabilistic polynomial identity test.
+
+This lemma tells us that the probability that a nonzero multivariable polynomial over an integral
+domain evaluates to zero at a random point is bounded by the degree of the polynomial over the size
+of the field, or more generally, that a nonzero multivariable polynomial over any integral domain
+has a low probability of being zero when evaluated at points drawn at random from some finite subset
+of the field. This lemma is useful as a probabilistic polynomial identity test.
 
 ## TODO
 
@@ -66,16 +71,6 @@ lemma Finset.card_filter_succ_piFinset_eq {n : ℕ} {α : Fin (n + 1) → Type*}
   rw [card_filter_piFinset_eq']
   exact Finset.card_product (S 0) (Finset.filter p (Fintype.piFinset (fun x ↦ S $ Fin.succ x)))
 
-
-
-
-lemma AlgEquiv_invFun_apply {R α β : Type} [CommSemiring R] [Semiring α] [Semiring β] [Algebra R α] [Algebra R β]
-    (e : α ≃ₐ[R] β) (x : α) : x = (e).symm ((e) x) := by
-  simp only [AlgEquiv.symm_apply_apply]
-  -- rw [AlgEquiv.toEquiv_eq_coe, Equiv.invFun_as_coe, @Equiv.eq_symm_apply]
-  -- exact rfl
-
-
 end find_home
 
 
@@ -127,7 +122,7 @@ lemma schwartz_zippel (F : Type) [CommRing F] [IsDomain F] [DecidableEq F] (n : 
     -- -- TODO remove p from context now by reexpressing everthing in terms of p'?
     -- have fsdoifj : p = (MvPolynomial.finSuccEquiv F n).symm p' := by
     --   apply AlgEquiv_invFun_apply
-    -- simp only [fsdoifj] at p
+    -- simp only [AlgEquiv.symm_apply_apply] at p
 
     -- We then split the set of possible zeros into a union of two cases:
     -- In the first case, p_i' evaluates to 0.
@@ -143,7 +138,8 @@ lemma schwartz_zippel (F : Type) [CommRing F] [IsDomain F] [DecidableEq F] (n : 
         _ ≤ (MvPolynomial.totalDegree p_i') * (Finset.card S) ^ n := by
           convert ih
           rw [mul_comm]
-          convert Finset.card_filter_succ_piFinset_eq ((fun f ↦ (MvPolynomial.eval (f)) p_i' = 0)) (fun _ => S)
+          convert Finset.card_filter_succ_piFinset_eq
+                    ((fun f ↦ (MvPolynomial.eval (f)) p_i' = 0)) (fun _ => S)
         _ ≤ _ := by
           exact Nat.mul_le_mul_right (Finset.card S ^ n) (Nat.le_sub_of_add_le h0)
     save
@@ -165,7 +161,8 @@ lemma schwartz_zippel (F : Type) [CommRing F] [IsDomain F] [DecidableEq F] (n : 
         Finset.card_eq_sum_ones, Finset.sum_finset_product_right _
             (s := (Finset.filter (fun r ↦ (MvPolynomial.eval (r)) p_i' ≠ 0)
               (Fintype.piFinset (fun _ => S))))
-            (t := fun r => Finset.filter (fun f => (MvPolynomial.eval ((Equiv.piFinSucc n F).invFun (f, r))) p = 0) S)] -- Note that ((Equiv.piFinSucc n F).invFun (f, r)) can be more simply written with Fin.cons
+            (t := fun r => Finset.filter
+                    (fun f => (MvPolynomial.eval ((Equiv.piFinSucc n F).invFun (f, r))) p = 0) S)] -- Note that ((Equiv.piFinSucc n F).invFun (f, r)) can be more simply written with Fin.cons
       · simp_rw [←Finset.card_eq_sum_ones]
         apply le_trans (Finset.sum_le_sum (g := fun _ => i) _)
         · rw [Finset.sum_const, smul_eq_mul, mul_comm]
@@ -215,13 +212,9 @@ lemma schwartz_zippel (F : Type) [CommRing F] [IsDomain F] [DecidableEq F] (n : 
           have hp_r0 : p_r.coeff 0 = 0 := by simp [hpr_zero]
           rw [←hp_r0]
           rw [Polynomial.coeff_map]
-      · -- Note Polynomial.coeff_natDegree, MvPolynomial.finSuccEquiv_apply, MvPolynomial.coe_eval₂Hom, are triggering but I don't want them
-        simp only [
-          Equiv.piFinSucc_symm_apply, Finset.mem_map_equiv, Fintype.mem_piFinset, Function.comp_apply,
-          Prod.forall, Finset.mem_filter, Equiv.invFun_as_coe]
+      · simp only [Equiv.piFinSucc_symm_apply, Finset.mem_map_equiv, Fintype.mem_piFinset,
+          Function.comp_apply, Prod.forall, Finset.mem_filter, Equiv.invFun_as_coe]
         intros a b
-        -- TODO write unfold_projs tactic in Lean 4
-
         constructor
         · intro hfr
           rcases hfr with ⟨hfr1, hfr2, hfr3⟩
@@ -291,8 +284,9 @@ lemma schwartz_zippel (F : Type) [CommRing F] [IsDomain F] [DecidableEq F] (n : 
         rw [Pi.le_def]
         intro i
         rename_i inst inst_1 inst_2 i_1
-        simp_all only [ne_eq, MvPolynomial.finSuccEquiv_apply, MvPolynomial.coe_eval₂Hom, Polynomial.coeff_natDegree,
-          Polynomial.leadingCoeff_eq_zero, ge_iff_le, not_and, not_not, le_Prop_eq, and_imp, implies_true]
+        simp_all only [ne_eq, MvPolynomial.finSuccEquiv_apply, MvPolynomial.coe_eval₂Hom,
+          Polynomial.coeff_natDegree, Polynomial.leadingCoeff_eq_zero, ge_iff_le, not_and, not_not,
+          le_Prop_eq, and_imp, implies_true]
       _ ≤ ((MvPolynomial.totalDegree p - i) * (Finset.card S) ^ n
           +
           (i) * (Finset.card S) ^ n
