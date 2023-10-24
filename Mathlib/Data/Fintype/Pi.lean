@@ -137,21 +137,21 @@ lemma Fin.snoc_mem_piFinset_snoc_iff {n : ℕ} {α : Fin (n + 1) → Type*}
   simp_rw [Fin.mem_piFinset_succ_iff', init_snoc, snoc_last]
 
 -- TODO make dependent
-lemma Finset.card_filter_piFinset_eq' {n : ℕ} {α} (p : ((i : Fin n) → α) → Prop) [DecidablePred p]
-    (S : Finset α) :
-    Finset.card (Finset.filter (fun r ↦ (p (fun x ↦ r $ Fin.succ x))) (Fintype.piFinset fun _ ↦ S))
-      = Finset.card (S ×ˢ Finset.filter p (Fintype.piFinset fun _ ↦ S)) := by
-  rw [←Finset.card_map ((Equiv.piFinSucc n α).toEmbedding)]
+lemma Finset.card_filter_piFinset_eq' {n : ℕ} {α : Fin (n + 1) → Type*} (p : ((i : Fin n) → α i.succ) → Prop) [DecidablePred p]
+    (S : (i : Fin (n + 1)) → Finset (α i)) :
+    Finset.card (Finset.filter (fun r ↦ p (fun x ↦ r $ Fin.succ x)) (Fintype.piFinset S))
+      = Finset.card ((S 0) ×ˢ Finset.filter p (Fintype.piFinset (fun x => S $ Fin.succ x))) := by
+  rw [←Finset.card_map ((Equiv.piFinSuccAboveEquiv α 0).toEmbedding)]
   congr
   ext ⟨x, f⟩
-  simp only [Fintype.mem_piFinset, Fin.forall_fin_succ, and_imp, Finset.mem_map_equiv,
-    Equiv.piFinSucc_symm_apply, Finset.mem_filter, Fin.cons_zero, Fin.cons_succ, Finset.mem_product]
+  simp? [Fin.forall_fin_succ] says simp only [Fin.zero_succAbove, Fintype.mem_piFinset,
+      Fin.forall_fin_succ, and_imp, mem_map_equiv, mem_filter, mem_product]
   tauto
 
 @[simp]
-lemma Finset.card_filter_succ_piFinset_eq {n : ℕ} {α} (p : (Fin n → α) → Prop) [DecidablePred p]
-    (S : Finset α) :
-    Finset.card (Finset.filter (fun r ↦ p (fun x ↦ r $ Fin.succ x)) (Fintype.piFinset fun _ ↦ S))
-     = S.card * Finset.card (Finset.filter p (Fintype.piFinset fun _ ↦ S)) := by
+lemma Finset.card_filter_succ_piFinset_eq {n : ℕ} {α : Fin (n + 1) → Type*} (p : ((i : Fin n) → α i.succ) → Prop) [DecidablePred p]
+    (S : (i : Fin (n + 1)) → Finset (α i)) :
+    Finset.card (Finset.filter (fun r ↦ p (fun x ↦ r $ Fin.succ x)) (Fintype.piFinset S))
+     = (S 0).card * Finset.card (Finset.filter p (Fintype.piFinset (fun x => S $ Fin.succ x))) := by
   rw [card_filter_piFinset_eq']
-  exact Finset.card_product S (Finset.filter p (Fintype.piFinset fun _ ↦ S))
+  exact Finset.card_product (S 0) (Finset.filter p (Fintype.piFinset (fun x => S $ Fin.succ x)))
