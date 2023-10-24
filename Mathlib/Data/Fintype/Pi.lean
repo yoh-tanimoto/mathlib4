@@ -160,6 +160,7 @@ lemma Finset.card_filter_succ_piFinset_eq {n : ℕ} {α : Fin (n + 1) → Type*}
 lemma Finset.card_filter_succ_piFinset_eq' {n : ℕ} {α}
     (p : ((Fin n) → α) → Prop) [DecidablePred p]
     (S : (i : Fin (n + 1)) → Finset α) :
-    Finset.card (Finset.filter (fun r ↦ p (fun x ↦ r $ Fin.succ x)) (Fintype.piFinset S))
+    Finset.card (Finset.filter (fun r ↦ p (r ∘ Fin.succ)) (Fintype.piFinset S))
      = (S 0).card * Finset.card (Finset.filter p (Fintype.piFinset (fun x ↦ S $ Fin.succ x))) := by
+  unfold Function.comp
   rw [Finset.card_filter_succ_piFinset_eq]
