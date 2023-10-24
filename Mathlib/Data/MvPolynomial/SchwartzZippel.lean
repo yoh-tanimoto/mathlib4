@@ -73,12 +73,13 @@ lemma Finset.card_filter_succ_piFinset_eq {n : ℕ} {α : Fin (n + 1) → Type*}
 
 end find_home
 
-
+-- Following the wikipedia proof (induction starting at n = 0)
 
 /--
-The **Schwartz-Zippel lemma**: For a nonzero multivariable polynomial `p` over an integral domain, the
-probability that `p` evaluates to zero at points drawn at random from some finite subset `S` of the
-integral domain is bounded by the degree of `p` over `|S|`. This version presents this lemma in terms of
+The **Schwartz-Zippel lemma**: For a nonzero multivariable polynomial `p` over an integral domain,
+the probability that `p` evaluates to zero at points drawn at random from some finite subset `S` of
+the integral domain is bounded by the degree of `p` over `|S|`. This version presents this lemma in
+terms of `Finset`s
 -/
 lemma schwartz_zippel (F : Type) [CommRing F] [IsDomain F] [DecidableEq F] (n : ℕ)
     (p : MvPolynomial (Fin n) F) (hp : p ≠ 0) (S : Finset F) :
@@ -86,8 +87,6 @@ lemma schwartz_zippel (F : Type) [CommRing F] [IsDomain F] [DecidableEq F] (n : 
       (fun f => MvPolynomial.eval f p = 0)
       (Fintype.piFinset (fun _ => S))).card * S.card
       ≤ (p.totalDegree) * S.card ^ n := by
-  -- Following the wikipedia proof
-  -- I don't think that the wikipedia proof technique of starting at n=1 is necessary, so I start at n = 0
   revert p hp S
   induction n with
   | zero =>
@@ -161,8 +160,10 @@ lemma schwartz_zippel (F : Type) [CommRing F] [IsDomain F] [DecidableEq F] (n : 
         Finset.card_eq_sum_ones, Finset.sum_finset_product_right _
             (s := (Finset.filter (fun r ↦ (MvPolynomial.eval (r)) p_i' ≠ 0)
               (Fintype.piFinset (fun _ => S))))
+            -- Note that ((Equiv.piFinSucc n F).invFun (f, r))
+            -- can be more simply written with Fin.cons
             (t := fun r => Finset.filter
-                    (fun f => (MvPolynomial.eval ((Equiv.piFinSucc n F).invFun (f, r))) p = 0) S)] -- Note that ((Equiv.piFinSucc n F).invFun (f, r)) can be more simply written with Fin.cons
+                    (fun f => (MvPolynomial.eval ((Equiv.piFinSucc n F).invFun (f, r))) p = 0) S)]
       · simp_rw [←Finset.card_eq_sum_ones]
         apply le_trans (Finset.sum_le_sum (g := fun _ => i) _)
         · rw [Finset.sum_const, smul_eq_mul, mul_comm]
