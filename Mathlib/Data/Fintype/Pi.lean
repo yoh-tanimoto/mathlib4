@@ -6,6 +6,8 @@ Authors: Mario Carneiro
 import Mathlib.Data.Fintype.Basic
 import Mathlib.Data.Fin.Tuple.Basic
 import Mathlib.Data.Finset.Pi
+import Mathlib.Data.Finset.Prod
+import Mathlib.Logic.Equiv.Fin
 
 #align_import data.fintype.pi from "leanprover-community/mathlib"@"9003f28797c0664a49e4179487267c494477d853"
 
@@ -133,3 +135,28 @@ lemma Fin.snoc_mem_piFinset_snoc_iff {n : ℕ} {α : Fin (n + 1) → Type*}
     (Sᵢ : (i : Fin n) → Finset (α i.castSucc)) (Sₙ : Finset (α <| .last n)) :
     Fin.snoc xs x ∈ Fintype.piFinset (Fin.snoc Sᵢ Sₙ) ↔ xs ∈ Fintype.piFinset Sᵢ ∧ x ∈ Sₙ := by
   simp_rw [Fin.mem_piFinset_succ_iff', init_snoc, snoc_last]
+
+lemma card_filter_piFinset_eq' {α} {n: ℕ} (p : ((i : Fin n) → α) → Prop) [DecidablePred p]
+    (S: Finset α) :
+    Finset.card (Finset.filter (fun r ↦ p (r ∘ Fin.succ)) (Fintype.piFinset fun _ => S))
+    =
+    Finset.card
+      (S ×ˢ Finset.filter p (Fintype.piFinset fun _ => S)) := by
+  rw [←Finset.card_map ((Equiv.piFinSucc n α).toEmbedding)]
+  congr
+  ext ⟨x, f⟩
+  simp only [Fintype.mem_piFinset, Fin.forall_fin_succ, and_imp, Finset.mem_map_equiv,
+    Equiv.piFinSucc_symm_apply, Finset.mem_filter, Fin.cons_zero, Fin.cons_succ, Finset.mem_product]
+  tauto
+
+
+@[simp]
+lemma card_filter_succ_piFinset_eq {α} {n: ℕ} (p : (Fin n → α) → Prop) [DecidablePred p]
+    (S: Finset α) :
+    Finset.card (Finset.filter (fun r ↦ p (r ∘ Fin.succ)) (Fintype.piFinset fun _ => S))
+    =
+    S.card *
+    Finset.card
+      (Finset.filter p (Fintype.piFinset fun _ => S)) := by
+  rw [card_filter_piFinset_eq']
+  exact Finset.card_product S (Finset.filter p (Fintype.piFinset fun _ ↦ S))
