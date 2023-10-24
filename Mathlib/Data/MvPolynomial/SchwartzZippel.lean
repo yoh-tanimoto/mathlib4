@@ -12,7 +12,7 @@ import Mathlib.Data.Fin.Tuple.Basic
 
 This file contains a proof of the
 [Schwartz-Zippel](https://en.wikipedia.org/wiki/Schwartz%E2%80%93Zippel_lemma) lemma.
-This lemma tells us that the probability that a nonzero multivariable polynomial over a integral domain evaluates to zero at a random point is bounded by the degree of the polynomial over the size of the field, or more generally, that a nonzero multivariable polynomial over any integral domain has a low probability of being zero when evaluated at points drawn at random from some finite subset of the field. This lemma is useful as a probabilistic polynomial identity test.
+This lemma tells us that the probability that a nonzero multivariable polynomial over an integral domain evaluates to zero at a random point is bounded by the degree of the polynomial over the size of the field, or more generally, that a nonzero multivariable polynomial over any integral domain has a low probability of being zero when evaluated at points drawn at random from some finite subset of the field. This lemma is useful as a probabilistic polynomial identity test.
 
 ## TODO
 
@@ -78,7 +78,7 @@ end find_home
 
 
 /--
-The **Schwartz-Zippel lemma**: For a nonzero multivariable polynomial `p` over a integral domain, the
+The **Schwartz-Zippel lemma**: For a nonzero multivariable polynomial `p` over an integral domain, the
 probability that `p` evaluates to zero at points drawn at random from some finite subset `S` of the
 integral domain is bounded by the degree of `p` over `|S|`. This version presents this lemma in terms of
 -/
