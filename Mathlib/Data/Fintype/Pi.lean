@@ -137,7 +137,7 @@ lemma Fin.snoc_mem_piFinset_snoc_iff {n : ℕ} {α : Fin (n + 1) → Type*}
   simp_rw [Fin.mem_piFinset_succ_iff', init_snoc, snoc_last]
 
 -- TODO Generalize from `succ` to `succAbove`. Requires `Fin.forall_fin_succAbove`.
-lemma Finset.card_filter_piFinset_eq' {n : ℕ} {α : Fin (n + 1) → Type*}
+lemma Finset.map_piFinSuccAboveEquiv_filter_piFinset {n : ℕ} {α : Fin (n + 1) → Type*}
     (p : ((i : Fin n) → α i.succ) → Prop) [DecidablePred p]
     (S : (i : Fin (n + 1)) → Finset (α i)) :
     Finset.map
@@ -155,7 +155,8 @@ lemma Finset.card_filter_succ_piFinset_eq {n : ℕ} {α : Fin (n + 1) → Type*}
     (S : (i : Fin (n + 1)) → Finset (α i)) :
     Finset.card (Finset.filter (fun r ↦ p (fun x ↦ r $ Fin.succ x)) (Fintype.piFinset S))
      = (S 0).card * Finset.card (Finset.filter p (Fintype.piFinset (fun x ↦ S $ Fin.succ x))) := by
-  rw [←Finset.card_map ((Equiv.piFinSuccAboveEquiv α 0).toEmbedding), card_filter_piFinset_eq']
+  rw [←Finset.card_map ((Equiv.piFinSuccAboveEquiv α 0).toEmbedding),
+    map_piFinSuccAboveEquiv_filter_piFinset]
   exact Finset.card_product (S 0) (Finset.filter p (Fintype.piFinset (fun x ↦ S $ Fin.succ x)))
 
 @[simp]
