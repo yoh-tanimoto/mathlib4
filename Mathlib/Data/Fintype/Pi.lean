@@ -165,4 +165,4 @@ lemma Finset.card_filter_succ_piFinset_eq {n : ℕ} {α : Fin (n + 1) → Type*}
     = (S 0).card * ((Fintype.piFinset fun x ↦ S <| Fin.succ x).filter p).card := by
   rw [←Finset.card_map ((Equiv.piFinSuccAboveEquiv α 0).toEmbedding),
     map_piFinSuccAboveEquiv_filter_piFinset]
-  exact Finset.card_product (S 0) ((Fintype.piFinset (fun x ↦ S $ Fin.succ x)).filter p )
+  exact Finset.card_product (S 0) ((Fintype.piFinset (fun x ↦ S <| Fin.succ x)).filter p )
