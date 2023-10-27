@@ -140,10 +140,9 @@ lemma Fin.snoc_mem_piFinset_snoc_iff {n : ℕ} {α : Fin (n + 1) → Type*}
 lemma Finset.map_piFinSuccAboveEquiv_filter_piFinset {n : ℕ} {α : Fin (n + 1) → Type*}
     (p : ((i : Fin n) → α i.succ) → Prop) [DecidablePred p]
     (S : (i : Fin (n + 1)) → Finset (α i)) :
-    Finset.map
+    ((Fintype.piFinset S).filter fun r ↦ p (fun x ↦ r <| Fin.succ x)).map
       ((Equiv.piFinSuccAboveEquiv α 0).toEmbedding)
-      (Finset.filter (fun r ↦ p (fun x ↦ r $ Fin.succ x)) (Fintype.piFinset S))
-      = ((S 0) ×ˢ Finset.filter p (Fintype.piFinset (fun x ↦ S $ Fin.succ x))) := by
+    = S 0 ×ˢ (Fintype.piFinset (fun x ↦ S <| Fin.succ x)).filter p := by
   congr
   ext ⟨x, f⟩
   simp? [Fin.forall_fin_succ] says simp only [Fin.zero_succAbove, Fintype.mem_piFinset,
@@ -153,10 +152,9 @@ lemma Finset.map_piFinSuccAboveEquiv_filter_piFinset {n : ℕ} {α : Fin (n + 1)
 lemma Finset.filter_piFinset_eq_map_piFinSuccAboveEquiv_symm {n : ℕ} {α : Fin (n + 1) → Type*}
     (p : ((i : Fin n) → α i.succ) → Prop) [DecidablePred p]
     (S : (i : Fin (n + 1)) → Finset (α i)) :
-    ((Fintype.piFinset S).filter (fun r ↦ p (fun x ↦ r $ Fin.succ x)) )
-      = Finset.map
-        ((Equiv.piFinSuccAboveEquiv α 0).symm.toEmbedding)
-        ((S 0) ×ˢ Finset.filter p (Fintype.piFinset (fun x ↦ S $ Fin.succ x))) := by
+    ((Fintype.piFinset S).filter (fun r ↦ p (fun x ↦ r <| Fin.succ x)))
+    = ((S 0) ×ˢ (Fintype.piFinset (fun x ↦ S <| Fin.succ x)).filter p).map
+        ((Equiv.piFinSuccAboveEquiv α 0).symm.toEmbedding) := by
   rw [← Finset.map_piFinSuccAboveEquiv_filter_piFinset, Finset.map_map,
     Function.Embedding.equiv_toEmbedding_trans_symm_toEmbedding, map_refl]
 
@@ -164,7 +162,7 @@ lemma Finset.card_filter_succ_piFinset_eq {n : ℕ} {α : Fin (n + 1) → Type*}
     (p : ((i : Fin n) → α i.succ) → Prop) [DecidablePred p]
     (S : (i : Fin (n + 1)) → Finset (α i)) :
     ((Fintype.piFinset S).filter fun r ↦ p (fun x ↦ r <| Fin.succ x)).card
-     = (S 0).card * ((Fintype.piFinset fun x ↦ S <| Fin.succ x).filter p).card := by
+    = (S 0).card * ((Fintype.piFinset fun x ↦ S <| Fin.succ x).filter p).card := by
   rw [←Finset.card_map ((Equiv.piFinSuccAboveEquiv α 0).toEmbedding),
     map_piFinSuccAboveEquiv_filter_piFinset]
-  exact Finset.card_product (S 0) (Finset.filter p (Fintype.piFinset (fun x ↦ S $ Fin.succ x)))
+  exact Finset.card_product (S 0) ((Fintype.piFinset (fun x ↦ S $ Fin.succ x)).filter p )
