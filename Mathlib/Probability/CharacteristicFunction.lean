@@ -72,12 +72,7 @@ variable {E : Type*} [MeasurableSpace E]
 noncomputable
 def charFun [Inner ℝ E] (μ : Measure E) (t : E) : ℂ := ∫ x, exp (⟪t, x⟫ • I) ∂μ
 
-variable {μ : Measure E} [NormedAddCommGroup E] [InnerProductSpace ℝ E]
-
-@[simp]
-lemma charFun_zero (μ : Measure E) [IsProbabilityMeasure μ] : charFun μ 0 = 1 := by
-  simp only [charFun, inner_zero_left, zero_smul, exp_zero, integral_const, measure_univ,
-    ENNReal.one_toReal, one_smul]
+variable [NormedAddCommGroup E] [InnerProductSpace ℝ E]
 
 lemma charFun_eq_fourierIntegral (μ : Measure E) (t : E) :
     charFun μ t = VectorFourier.fourierIntegral probFourierChar μ sesqFormOfInner
@@ -86,15 +81,20 @@ lemma charFun_eq_fourierIntegral (μ : Measure E) (t : E) :
   simp only [real_smul, smul_eq_mul, mul_one]
   congr
 
-lemma norm_charFun_le_one (μ : Measure E) [IsProbabilityMeasure μ] (t : E) : ‖charFun μ t‖ ≤ 1 := by
-  rw [charFun_eq_fourierIntegral]
-  refine (VectorFourier.norm_fourierIntegral_le_integral_norm _ _ _ _ _).trans_eq ?_
-  simp only [CstarRing.norm_one, integral_const, smul_eq_mul, mul_one, measure_univ,
-    ENNReal.one_toReal]
+@[simp]
+lemma charFun_zero (μ : Measure E) [IsProbabilityMeasure μ] : charFun μ 0 = 1 := by
+  simp only [charFun, inner_zero_left, zero_smul, exp_zero, integral_const, measure_univ,
+    ENNReal.one_toReal, one_smul]
 
 lemma charFun_neg (μ : Measure E) (t : E) : charFun μ (-t) = conj (charFun μ t) := by
   simp_rw [charFun, inner_neg_left, ← integral_conj]
   congr with x : 1
   sorry
+
+lemma norm_charFun_le_one (μ : Measure E) [IsProbabilityMeasure μ] (t : E) : ‖charFun μ t‖ ≤ 1 := by
+  rw [charFun_eq_fourierIntegral]
+  refine (VectorFourier.norm_fourierIntegral_le_integral_norm _ _ _ _ _).trans_eq ?_
+  simp only [CstarRing.norm_one, integral_const, smul_eq_mul, mul_one, measure_univ,
+    ENNReal.one_toReal]
 
 end ProbabilityTheory
