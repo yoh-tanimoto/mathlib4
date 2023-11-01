@@ -734,6 +734,7 @@ import Mathlib.Analysis.NormedSpace.CompactOperator
 import Mathlib.Analysis.NormedSpace.Complemented
 import Mathlib.Analysis.NormedSpace.Completion
 import Mathlib.Analysis.NormedSpace.ConformalLinearMap
+import Mathlib.Analysis.NormedSpace.Connected
 import Mathlib.Analysis.NormedSpace.ContinuousAffineMap
 import Mathlib.Analysis.NormedSpace.ContinuousLinearMap
 import Mathlib.Analysis.NormedSpace.Dual
@@ -1498,7 +1499,9 @@ import Mathlib.Data.List.Dedup
 import Mathlib.Data.List.Defs
 import Mathlib.Data.List.Destutter
 import Mathlib.Data.List.Duplicate
+import Mathlib.Data.List.EditDistance.Bounds
 import Mathlib.Data.List.EditDistance.Defs
+import Mathlib.Data.List.EditDistance.Estimator
 import Mathlib.Data.List.FinRange
 import Mathlib.Data.List.Forall2
 import Mathlib.Data.List.Func
@@ -2113,6 +2116,7 @@ import Mathlib.Init.Propext
 import Mathlib.Init.Quot
 import Mathlib.Init.Set
 import Mathlib.Init.ZeroOne
+import Mathlib.Lean.CoreM
 import Mathlib.Lean.Data.NameMap
 import Mathlib.Lean.Elab.Tactic.Basic
 import Mathlib.Lean.EnvExtension
@@ -2393,7 +2397,8 @@ import Mathlib.MeasureTheory.Group.AddCircle
 import Mathlib.MeasureTheory.Group.Arithmetic
 import Mathlib.MeasureTheory.Group.FundamentalDomain
 import Mathlib.MeasureTheory.Group.GeometryOfNumbers
-import Mathlib.MeasureTheory.Group.Integration
+import Mathlib.MeasureTheory.Group.Integral
+import Mathlib.MeasureTheory.Group.LIntegral
 import Mathlib.MeasureTheory.Group.LpAction
 import Mathlib.MeasureTheory.Group.MeasurableEquiv
 import Mathlib.MeasureTheory.Group.Measure
@@ -2407,6 +2412,7 @@ import Mathlib.MeasureTheory.Integral.CircleTransform
 import Mathlib.MeasureTheory.Integral.DivergenceTheorem
 import Mathlib.MeasureTheory.Integral.ExpDecay
 import Mathlib.MeasureTheory.Integral.FundThmCalculus
+import Mathlib.MeasureTheory.Integral.Indicator
 import Mathlib.MeasureTheory.Integral.IntegrableOn
 import Mathlib.MeasureTheory.Integral.IntegralEqImproper
 import Mathlib.MeasureTheory.Integral.IntervalAverage
@@ -2531,6 +2537,7 @@ import Mathlib.NumberTheory.Multiplicity
 import Mathlib.NumberTheory.NumberField.Basic
 import Mathlib.NumberTheory.NumberField.CanonicalEmbedding
 import Mathlib.NumberTheory.NumberField.ClassNumber
+import Mathlib.NumberTheory.NumberField.Discriminant
 import Mathlib.NumberTheory.NumberField.Embeddings
 import Mathlib.NumberTheory.NumberField.Norm
 import Mathlib.NumberTheory.NumberField.Units
@@ -2594,6 +2601,7 @@ import Mathlib.Order.Compare
 import Mathlib.Order.CompleteBooleanAlgebra
 import Mathlib.Order.CompleteLattice
 import Mathlib.Order.CompleteLatticeIntervals
+import Mathlib.Order.CompletePartialOrder
 import Mathlib.Order.Concept
 import Mathlib.Order.ConditionallyCompleteLattice.Basic
 import Mathlib.Order.ConditionallyCompleteLattice.Finset
@@ -2604,6 +2612,7 @@ import Mathlib.Order.Cover
 import Mathlib.Order.Directed
 import Mathlib.Order.Disjoint
 import Mathlib.Order.Disjointed
+import Mathlib.Order.Estimator
 import Mathlib.Order.Extension.Linear
 import Mathlib.Order.Extension.Well
 import Mathlib.Order.Filter.Archimedean
@@ -2686,6 +2695,7 @@ import Mathlib.Order.SuccPred.IntervalSucc
 import Mathlib.Order.SuccPred.Limit
 import Mathlib.Order.SuccPred.LinearLocallyFinite
 import Mathlib.Order.SuccPred.Relation
+import Mathlib.Order.SupClosed
 import Mathlib.Order.SupIndep
 import Mathlib.Order.SymmDiff
 import Mathlib.Order.Synonym
@@ -2986,6 +2996,7 @@ import Mathlib.Tactic.CategoryTheory.Coherence
 import Mathlib.Tactic.CategoryTheory.Elementwise
 import Mathlib.Tactic.CategoryTheory.Reassoc
 import Mathlib.Tactic.CategoryTheory.Slice
+import Mathlib.Tactic.Change
 import Mathlib.Tactic.Choose
 import Mathlib.Tactic.Classical
 import Mathlib.Tactic.Clear!
@@ -2995,6 +3006,7 @@ import Mathlib.Tactic.Coe
 import Mathlib.Tactic.Common
 import Mathlib.Tactic.ComputeDegree
 import Mathlib.Tactic.Congr!
+import Mathlib.Tactic.Congrm
 import Mathlib.Tactic.Constructor
 import Mathlib.Tactic.Continuity
 import Mathlib.Tactic.Continuity.Init
@@ -3118,6 +3130,7 @@ import Mathlib.Tactic.SudoSetOption
 import Mathlib.Tactic.SwapVar
 import Mathlib.Tactic.TFAE
 import Mathlib.Tactic.Tauto
+import Mathlib.Tactic.TermCongr
 import Mathlib.Tactic.ToAdditive
 import Mathlib.Tactic.ToExpr
 import Mathlib.Tactic.ToLevel
@@ -3191,6 +3204,7 @@ import Mathlib.Topology.Algebra.Order.Rolle
 import Mathlib.Topology.Algebra.Order.T5
 import Mathlib.Topology.Algebra.Order.UpperLower
 import Mathlib.Topology.Algebra.Polynomial
+import Mathlib.Topology.Algebra.ProperConstSMul
 import Mathlib.Topology.Algebra.Ring.Basic
 import Mathlib.Topology.Algebra.Ring.Ideal
 import Mathlib.Topology.Algebra.Semigroup
@@ -3263,6 +3277,8 @@ import Mathlib.Topology.Covering
 import Mathlib.Topology.DenseEmbedding
 import Mathlib.Topology.DiscreteQuotient
 import Mathlib.Topology.DiscreteSubset
+import Mathlib.Topology.EMetricSpace.Basic
+import Mathlib.Topology.EMetricSpace.Paracompact
 import Mathlib.Topology.ExtendFrom
 import Mathlib.Topology.ExtremallyDisconnected
 import Mathlib.Topology.FiberBundle.Basic
@@ -3318,8 +3334,6 @@ import Mathlib.Topology.MetricSpace.Completion
 import Mathlib.Topology.MetricSpace.Contracting
 import Mathlib.Topology.MetricSpace.Dilation
 import Mathlib.Topology.MetricSpace.DilationEquiv
-import Mathlib.Topology.MetricSpace.EMetricParacompact
-import Mathlib.Topology.MetricSpace.EMetricSpace
 import Mathlib.Topology.MetricSpace.Equicontinuity
 import Mathlib.Topology.MetricSpace.Gluing
 import Mathlib.Topology.MetricSpace.GromovHausdorff
