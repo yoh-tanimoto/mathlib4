@@ -265,7 +265,7 @@ theorem norm_def (f : Lp E p μ) : ‖f‖ = ENNReal.toReal (snorm f p μ) :=
 #align measure_theory.Lp.norm_def MeasureTheory.Lp.norm_def
 
 theorem nnnorm_def (f : Lp E p μ) : ‖f‖₊ = ENNReal.toNNReal (snorm f p μ) :=
-  Subtype.eta _ _
+  rfl
 #align measure_theory.Lp.nnnorm_def MeasureTheory.Lp.nnnorm_def
 
 @[simp, norm_cast]
@@ -297,6 +297,9 @@ theorem edist_def (f g : Lp E p μ) : edist f g = snorm (⇑f - ⇑g) p μ :=
 protected theorem edist_dist (f g : Lp E p μ) : edist f g = .ofReal (dist f g) := by
   rw [edist_def, dist_def, ← snorm_congr_ae (coeFn_sub _ _),
     ENNReal.ofReal_toReal (snorm_ne_top (f - g))]
+
+protected theorem dist_edist (f g : Lp E p μ) : dist f g = (edist f g).toReal :=
+  MeasureTheory.Lp.dist_def ..
 
 @[simp]
 theorem edist_toLp_toLp (f g : α → E) (hf : Memℒp f p μ) (hg : Memℒp g p μ) :
@@ -958,80 +961,6 @@ def compMeasurePreservingₗ (f : α → β) (hf : MeasurePreserving f μ μb) :
   map_smul' c g := by rcases g with ⟨⟨_⟩, _⟩; rfl
 
 /-- `MeasureTheory.Lp.compMeasurePreserving` as a linear isometry. -/
-@[simps!]
-def compMeasurePreservingₗᵢ [Fact (1 ≤ p)] (f : α → β) (hf : MeasurePreserving f μ μb) :
-    Lp E p μb →ₗᵢ[𝕜] Lp E p μ where
-  toLinearMap := compMeasurePreservingₗ 𝕜 f hf
-  norm_map' := (norm_compMeasurePreserving · hf)
-
-end Lp
-
-end MeasureTheory
-
-namespace Lp
-
-/-! ### Composition with a measure preserving function -/
-
-variable {β : Type _} [MeasurableSpace β] {μb : MeasureTheory.Measure β} {f : α → β}
-
-/-- Composition of an `L^p` function with a measure preserving function is an `L^p` function. -/
-def compMeasurePreserving (f : α → β) (hf : MeasurePreserving f μ μb) :
-    Lp E p μb →+ Lp E p μ where
-  toFun g := ⟨g.1.compMeasurePreserving f hf, g.1.compMeasurePreserving_mem_Lp g.2 hf⟩
-  map_zero' := rfl
-  map_add' := by rintro ⟨⟨_⟩, _⟩ ⟨⟨_⟩, _⟩; rfl
-
-@[simp]
-theorem compMeasurePreserving_val (g : Lp E p μb) (hf : MeasurePreserving f μ μb) :
-    (compMeasurePreserving f hf g).1 = g.1.compMeasurePreserving f hf :=
-  rfl
-
-theorem coeFn_compMeasurePreserving (g : Lp E p μb) (hf : MeasurePreserving f μ μb) :
-    compMeasurePreserving f hf g =ᵐ[μ] g ∘ f :=
-  g.1.coeFn_compMeasurePreserving hf
-
-theorem compMeasurePreserving_id_apply (f : Lp E p μ) :
-    compMeasurePreserving id measurePreserving_id f = f := by
-  rcases f with ⟨⟨_⟩, _⟩; rfl
-
-@[simp]
-theorem compMeasurePreserving_id :
-    compMeasurePreserving id measurePreserving_id = AddMonoidHom.id (Lp E p μ) :=
-  FunLike.ext _ _ compMeasurePreserving_id_apply
-
-@[simp]
-theorem compMeasurePreserving_compMeasurePreserving
-     {γ : Type _} [MeasurableSpace γ] {μc : MeasureTheory.Measure γ} {g : β → γ}
-     (hf : MeasurePreserving f μ μb) (hg : MeasurePreserving g μb μc) (h : Lp E p μc) :
-     compMeasurePreserving f hf (compMeasurePreserving g hg h) =
-       compMeasurePreserving (g ∘ f) (hg.comp hf) h := by
-  rcases h with ⟨⟨_⟩, _⟩; rfl
-
-@[simp]
-theorem norm_compMeasurePreserving (g : Lp E p μb) (hf : MeasurePreserving f μ μb) :
-    ‖compMeasurePreserving f hf g‖ = ‖g‖ :=
-  congr_arg ENNReal.toReal <| g.1.snorm_compMeasurePreserving hf
-
-theorem compMeasurePreserving_isometry [Fact (1 ≤ p)] (hf : MeasurePreserving f μ μb) :
-    Isometry (compMeasurePreserving f hf : Lp E p μb → Lp E p μ) :=
-  AddMonoidHomClass.isometry_of_norm _ (norm_compMeasurePreserving · hf)
-
-theorem indicatorConstLp_compMeasurePreserving {s : Set β} (hs : MeasurableSet s) (hμ : μb s ≠ ∞)
-    (hf : MeasurePreserving f μ μb) (c : E) :
-    compMeasurePreserving f hf (indicatorConstLp p hs hμ c) =
-      indicatorConstLp p (hf.measurable hs) ((hf.measure_preimage hs).symm ▸ hμ) c := by
-  apply Subtype.eq
-  simp only [compMeasurePreserving_val, indicatorConstLp, Memℒp.toLp_val,
-    AEEqFun.compMeasurePreserving_mk, (· ∘ ·), ← Set.indicator_comp_right]
-
-variable (𝕜 : Type _) [NormedRing 𝕜] [Module 𝕜 E] [BoundedSMul 𝕜 E]
-
-@[simps]
-def compMeasurePreservingₗ (f : α → β) (hf : MeasurePreserving f μ μb) :
-    Lp E p μb →ₗ[𝕜] Lp E p μ where
-  __ := compMeasurePreserving f hf
-  map_smul' c g := by rcases g with ⟨⟨_⟩, _⟩; rfl
-
 @[simps!]
 def compMeasurePreservingₗᵢ [Fact (1 ≤ p)] (f : α → β) (hf : MeasurePreserving f μ μb) :
     Lp E p μb →ₗᵢ[𝕜] Lp E p μ where
