@@ -731,7 +731,7 @@ lemma sub_div_of_dvd (h1 : 0 < k) (h2 : k ∣ n) : m - n / k = (k * m - n) / k :
   simp only [hx,←Nat.mul_sub_left_distrib,Nat.mul_div_right,h1]
 
 lemma div_add_div_of_dvd {l : ℕ} (hn : 0 < n) (hd : 0 < l) (h1 : n ∣ m) (h2 : l ∣ k) :
-  m / n + k / l = (m * l + n * k) / (n * l) := by
+    m / n + k / l = (m * l + n * k) / (n * l) := by
   cases' h1 with n hn
   cases' h2 with m hm
   rw [hn,hm,mul_assoc,mul_comm n l,← mul_assoc,←mul_assoc,← mul_add]
