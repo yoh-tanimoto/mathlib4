@@ -78,7 +78,7 @@ theorem div_lt_iff_of_dvd_of_pos {x y z : ℤ}(h1 :0 < y) (h2 : y ∣  x): x / y
 
 theorem le_div_iff_of_dvd_of_pos {x y z : ℤ} (h1 :0 < z) (h2 : z ∣ y): x ≤ y / z ↔ z * x ≤  y := by
   rcases h2 with ⟨a,ha⟩
-  simp only [ha,ne_eq, _root_.ne_of_gt,gt_iff_lt, h1, _root_.mul_le_mul_left, ne_eq, not_false_eq_true,
+  simp only [ha,ne_eq,_root_.ne_of_gt,gt_iff_lt,h1,_root_.mul_le_mul_left,ne_eq,not_false_eq_true,
       Int.mul_ediv_cancel_left]
 
 theorem lt_div_iff_of_dvd_of_pos {x y z : ℤ} (h1 :0 < z) (h2 : z ∣ y): x < y / z ↔ z * x <  y := by
@@ -86,24 +86,24 @@ theorem lt_div_iff_of_dvd_of_pos {x y z : ℤ} (h1 :0 < z) (h2 : z ∣ y): x < y
   simp only [ha,ne_eq, _root_.ne_of_gt,gt_iff_lt, h1, mul_lt_mul_left, ne_eq, not_false_eq_true,
       Int.mul_ediv_cancel_left]
 
-lemma div_le_div_iff_of_dvd_of_pos {x y z t : ℤ} (h1 : 0 < y) (h2 : 0 < t) (h3 : y ∣ x) (h4 : t ∣ z):
-    x / y ≤  z / t ↔ t * x ≤ z * y := by
+lemma div_le_div_iff_of_dvd_of_pos {x y z t : ℤ} (h1 : 0 < y) (h2 : 0 < t) (h3 : y ∣ x)
+    (h4 : t ∣ z) : x / y ≤  z / t ↔ t * x ≤ z * y := by
   cases' h3 with a ha
   cases' h4 with b hb
   rw [ha,hb]
   rw [mul_ediv_cancel_left,mul_ediv_cancel_left,mul_assoc,mul_comm b y]
-  . simp only [gt_iff_lt, h2, _root_.mul_le_mul_left, h1]
-  . exact Int.ne_of_gt h2
-  . exact Int.ne_of_gt h1
+  · simp only [gt_iff_lt, h2, _root_.mul_le_mul_left, h1]
+  · exact Int.ne_of_gt h2
+  · exact Int.ne_of_gt h1
 
-lemma div_lt_div_iff_of_dvd_of_pos {x y z t : ℤ} (h1 : 0 < y) (h2 : 0 < t) (h3 : y ∣ x) (h4 : t ∣ z):
-    x / y <  z / t ↔ t * x < z * y := by
+lemma div_lt_div_iff_of_dvd_of_pos {x y z t : ℤ} (h1 : 0 < y) (h2 : 0 < t) (h3 : y ∣ x)
+    (h4 : t ∣ z) : x / y <  z / t ↔ t * x < z * y := by
   cases' h3 with a ha
   cases' h4 with b hb
   rw [ha,hb]
   rw [mul_ediv_cancel_left,mul_ediv_cancel_left,mul_assoc,mul_comm b y]
-  . simp only [gt_iff_lt, h2, _root_.mul_lt_mul_left, h1]
-  . exact Int.ne_of_gt h2
-  . exact Int.ne_of_gt h1
+  · simp only [gt_iff_lt, h2, _root_.mul_lt_mul_left, h1]
+  · exact Int.ne_of_gt h2
+  · exact Int.ne_of_gt h1
 
 end Int

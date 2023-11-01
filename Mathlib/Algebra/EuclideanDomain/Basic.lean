@@ -358,27 +358,28 @@ theorem mul_div_mul_comm_of_dvd_dvd {a b c d : R} (hac : c ∣ a) (hbd : d ∣ b
     mul_div_cancel_left _ (mul_ne_zero hc0 hd0)]
 #align euclidean_domain.mul_div_mul_comm_of_dvd_dvd EuclideanDomain.mul_div_mul_comm_of_dvd_dvd
 
-lemma div_add_of_dvd {x y z : R} (h1 : y ≠ 0) (h2 : y ∣ x) : x / y + z = (x + y * z) / y := by
+theorem div_add_of_dvd {x y z : R} (h1 : y ≠ 0) (h2 : y ∣ x) : x / y + z = (x + y * z) / y := by
   apply eq_div_of_mul_eq_right h1
   rw [mul_add]
   rw [EuclideanDomain.mul_div_cancel' h1 h2]
 
-lemma div_sub_of_dvd {x y z : R} (h1 : y ≠ 0) (h2 : y ∣ x) : x / y - z = (x - y * z) / y := by
+theorem div_sub_of_dvd {x y z : R} (h1 : y ≠ 0) (h2 : y ∣ x) : x / y - z = (x - y * z) / y := by
   apply eq_div_of_mul_eq_right h1
   rw [mul_sub]
   rw [EuclideanDomain.mul_div_cancel' h1 h2]
 
-lemma add_div_of_dvd {x y z : R} (h1 : z ≠ 0) (h2 : z ∣ y) : x + y / z = (z * x + y) / z := by
+theorem add_div_of_dvd {x y z : R} (h1 : z ≠ 0) (h2 : z ∣ y) : x + y / z = (z * x + y) / z := by
   apply eq_div_of_mul_eq_right h1
   rw [mul_add]
   rw [EuclideanDomain.mul_div_cancel' h1 h2]
 
-lemma sub_div_of_dvd {x y z : R} (h1 : z ≠ 0) (h2 : z ∣ y) : x - y / z = (z * x - y) / z:= by
+theorem sub_div_of_dvd {x y z : R} (h1 : z ≠ 0) (h2 : z ∣ y) : x - y / z = (z * x - y) / z:= by
   apply eq_div_of_mul_eq_right h1
   rw [mul_sub]
   rw [EuclideanDomain.mul_div_cancel' h1 h2]
 
-lemma div_div {x y z : R} (h1 : y ≠ 0) (h2 : z ≠ 0) (h3 : y ∣ x) (h4 : z ∣ (x / y)) : x / y / z = x / (y * z) := by
+theorem div_div {x y z : R} (h1 : y ≠ 0) (h2 : z ≠ 0) (h3 : y ∣ x) (h4 : z ∣ (x / y)) :
+    x / y / z = x / (y * z) := by
   cases' h3 with a ha
   cases' h4 with b hb
   rw [hb,mul_comm,EuclideanDomain.mul_div_cancel]
@@ -387,7 +388,8 @@ lemma div_div {x y z : R} (h1 : y ≠ 0) (h2 : z ≠ 0) (h3 : y ∣ x) (h4 : z �
   any_goals assumption
   use b
 
-lemma div_add_div_of_dvd {x y z t : R} (h1 : y ≠ 0) (h2 : t ≠ 0) (h3 : y ∣ x) (h4 : t ∣ z) :  x / y + z / t = (t * x + y * z) / (t * y):= by
+theorem div_add_div_of_dvd {x y z t : R} (h1 : y ≠ 0) (h2 : t ≠ 0) (h3 : y ∣ x) (h4 : t ∣ z) :
+    x / y + z / t = (t * x + y * z) / (t * y):= by
   cases' h3 with r hr
   cases' h4 with s hs
   simp [hr,hs]
@@ -397,7 +399,7 @@ lemma div_add_div_of_dvd {x y z t : R} (h1 : y ≠ 0) (h2 : t ≠ 0) (h3 : y ∣
   push_neg
   exact ⟨h2,h1⟩
 
-lemma div_sub_div_of_dvd {x y z t : R} (h1 : y ≠ 0) (h2 : t ≠ 0) (h3 : y ∣ x) (h4 : t ∣ z) :
+theorem div_sub_div_of_dvd {x y z t : R} (h1 : y ≠ 0) (h2 : t ≠ 0) (h3 : y ∣ x) (h4 : t ∣ z) :
     x / y - z / t = (t * x - y * z) / (t * y):= by
   cases' h3 with r hr
   cases' h4 with s hs
@@ -408,23 +410,23 @@ lemma div_sub_div_of_dvd {x y z t : R} (h1 : y ≠ 0) (h2 : t ≠ 0) (h3 : y ∣
   push_neg
   exact ⟨h2,h1⟩
 
-lemma div_eq_iff_eq_mul_of_dvd {x y z : R} (h1 : y ≠ 0) (h2 : y ∣ x) :
+theorem div_eq_iff_eq_mul_of_dvd {x y z : R} (h1 : y ≠ 0) (h2 : y ∣ x) :
     x / y = z  ↔ x = y * z := by
   cases' h2 with a ha
   rw [ha,EuclideanDomain.mul_div_cancel_left]
   simp only [mul_eq_mul_left_iff, mul_eq_zero, h1, or_self, or_false]
   exact h1
 
-lemma eq_div_iff_mul_eq_of_dvd {x y z : R} (h1 : z ≠ 0) (h2 : z ∣ y) :
+theorem eq_div_iff_mul_eq_of_dvd {x y z : R} (h1 : z ≠ 0) (h2 : z ∣ y) :
     x = y / z  ↔ z * x = y  := by
   rw [eq_comm,EuclideanDomain.div_eq_iff_eq_mul_of_dvd h1 h2,eq_comm]
 
-lemma div_eq_div_iff_mul_eq_mul_of_dvd {x y z t : R} (h1 : y ≠ 0) (h2 : t ≠ 0)
+theorem div_eq_div_iff_mul_eq_mul_of_dvd {x y z t : R} (h1 : y ≠ 0) (h2 : t ≠ 0)
     (h3 : y ∣ x) (h4 : t ∣ z): x / y = z / t ↔ t * x = y * z := by
   rw [EuclideanDomain.div_eq_iff_eq_mul_of_dvd,← EuclideanDomain.mul_div_assoc]
   rw [EuclideanDomain.eq_div_iff_mul_eq_of_dvd]
   any_goals assumption
-  . cases' h4 with a ha
+  · cases' h4 with a ha
     use y * a
     rw [ha,mul_comm,mul_assoc,mul_comm y a]
 
