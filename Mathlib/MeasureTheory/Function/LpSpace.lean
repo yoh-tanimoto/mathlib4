@@ -803,10 +803,7 @@ theorem memℒp_add_of_disjoint {f g : α → E} (h : Disjoint (support f) (supp
 /-- The indicator of a disjoint union of two sets is the sum of the indicators of the sets. -/
 theorem indicatorConstLp_disjoint_union {s t : Set α} (hs : MeasurableSet s) (ht : MeasurableSet t)
     (hμs : μ s ≠ ∞) (hμt : μ t ≠ ∞) (hst : s ∩ t = ∅) (c : E) :
-    indicatorConstLp p (hs.union ht)
-        ((measure_union_le s t).trans_lt
-            (lt_top_iff_ne_top.mpr (ENNReal.add_ne_top.mpr ⟨hμs, hμt⟩))).ne
-        c =
+    indicatorConstLp p (hs.union ht) (measure_union_ne_top hμs hμt) c =
       indicatorConstLp p hs hμs c + indicatorConstLp p ht hμt c := by
   ext1
   refine' indicatorConstLp_coeFn.trans (EventuallyEq.trans _ (Lp.coeFn_add _ _).symm)
@@ -1459,7 +1456,7 @@ private theorem snorm'_sum_norm_sub_le_tsum_of_cauchy_snorm' {f : ℕ → α →
     fun n => funext fun x => by simp
   rw [hgf_norm_diff]
   refine' (snorm'_sum_le (fun i _ => ((hf (i + 1)).sub (hf i)).norm) hp1).trans _
-  simp_rw [← Pi.sub_apply, snorm'_norm]
+  simp_rw [snorm'_norm]
   refine' (Finset.sum_le_sum _).trans (sum_le_tsum _ (fun m _ => zero_le _) ENNReal.summable)
   exact fun m _ => (h_cau m (m + 1) m (Nat.le_succ m) (le_refl m)).le
 
