@@ -6,6 +6,7 @@ Authors: Xavier Roblot
 import Mathlib.RingTheory.Discriminant
 import Mathlib.Algebra.Module.Zlattice
 import Mathlib.MeasureTheory.Group.GeometryOfNumbers
+import Mathlib.MeasureTheory.Measure.Lebesgue.VolumeOfBalls
 import Mathlib.NumberTheory.NumberField.Embeddings
 
 #align_import number_theory.number_field.canonical_embedding from "leanprover-community/mathlib"@"60da01b41bbe4206f05d34fd70c8dd7498717a30"
@@ -573,6 +574,15 @@ theorem convexBodySum_convex : Convex ℝ (convexBodySum K B) := by
     simp_rw [Prod.smul_fst, Prod.smul_snd, Pi.smul_apply, smul_eq_mul, Complex.real_smul, norm_mul,
       Complex.norm_real, Real.norm_of_nonneg h, ← Finset.mul_sum]
     exact le_of_eq (by ring)
+
+/-- The fudge factor that appears in the formula for the volume of `convexBodyLt`. -/
+noncomputable abbrev convexBodySumFactor : ℝ≥0∞ :=
+  2 ^ (card {w : InfinitePlace K // IsReal w}) *
+    (NNReal.pi / 2) ^ (card {w : InfinitePlace K // IsComplex w}) / (finrank ℚ K).factorial
+
+theorem convexBodySum_volume :
+    volume (convexBodySum K B) = (convexBodySumFactor K) * (.ofReal B) ^ (finrank ℚ K) := by
+  sorry
 
 end convexBodySum
 
