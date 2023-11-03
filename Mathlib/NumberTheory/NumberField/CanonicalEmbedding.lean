@@ -530,6 +530,8 @@ section convexBodySum
 
 open ENNReal BigOperators Classical MeasureTheory Fintype
 
+open scoped Real
+
 variable [NumberField K] (B : ℝ)
 
 variable {K}
@@ -541,6 +543,10 @@ theorem convexBodySumFun_nonneg (x : E K) :
   refine add_nonneg ?_ ?_
   · exact Finset.sum_nonneg (fun _ _ => norm_nonneg _)
   · exact mul_nonneg zero_le_two (Finset.sum_nonneg (fun _ _ => norm_nonneg _))
+
+theorem convexBodySumFun_neg (x : E K) :
+    convexBodySumFun (- x) = convexBodySumFun x := by
+  simp_rw [convexBodySumFun, Prod.fst_neg, Prod.snd_neg, Pi.neg_apply, norm_neg]
 
 theorem convexBodySumFun_add_le (x y : E K) :
     convexBodySumFun (x + y) ≤ convexBodySumFun x + convexBodySumFun y := by
@@ -560,11 +566,16 @@ theorem convexBodySumFun_smul (c : ℝ) (x : E K) :
 
 theorem convexBodySumFun_eq_zero_iff (x : E K) :
     convexBodySumFun x = 0 ↔ x = 0 := by
-  refine ⟨?_, ?_⟩
-  ·
-    sorry
-  · intro h
-    simp only [convexBodySumFun, h, Prod.fst_zero, Pi.zero_apply, norm_zero, Finset.sum_const_zero,
+  refine ⟨fun h => ?_, fun h => ?_⟩
+  · rw [add_eq_zero_iff' (Finset.sum_nonneg fun _ _ => norm_nonneg _) (mul_nonneg zero_le_two
+      (Finset.sum_nonneg fun _ _ => norm_nonneg _)), Finset.mul_sum,
+      Finset.sum_eq_zero_iff_of_nonneg (fun _ _ => mul_nonneg zero_le_two (norm_nonneg _)),
+      Finset.sum_eq_zero_iff_of_nonneg (fun _ _ => norm_nonneg _)] at h
+    ext : 2
+    · exact norm_eq_zero.mp (h.1 _ (Finset.mem_univ _))
+    · exact norm_eq_zero.mp ((smul_eq_zero_iff_eq' two_ne_zero (α := ℝ)).mp
+        (h.2 _ (Finset.mem_univ _)))
+  · simp only [convexBodySumFun, h, Prod.fst_zero, Pi.zero_apply, norm_zero, Finset.sum_const_zero,
       Prod.snd_zero, mul_zero, add_zero]
 
 variable (K)
@@ -591,7 +602,7 @@ theorem convexBodySum_mem {x : K} :
 
 theorem convexBodySum_symmetric (x : E K) (hx : x ∈ (convexBodySum K B)) :
     -x ∈ (convexBodySum K B) := by
-  simp_rw [Set.mem_setOf_eq, convexBodySumFun, Prod.fst_neg, Prod.snd_neg, Pi.neg_apply, norm_neg]
+  rw [Set.mem_setOf, convexBodySumFun_neg]
   exact hx
 
 theorem convexBodySum_convex : Convex ℝ (convexBodySum K B) := by
@@ -601,8 +612,8 @@ theorem convexBodySum_convex : Convex ℝ (convexBodySum K B) := by
 
 /-- The fudge factor that appears in the formula for the volume of `convexBodyLt`. -/
 noncomputable abbrev convexBodySumFactor : ℝ≥0∞ :=
-  2 ^ (card {w : InfinitePlace K // IsReal w}) *
-    (NNReal.pi / 2) ^ (card {w : InfinitePlace K // IsComplex w}) / (finrank ℚ K).factorial
+  ENNReal.ofReal ((2:ℝ) ^ (card {w : InfinitePlace K // IsReal w}) *
+    (π / 2) ^ (card {w : InfinitePlace K // IsComplex w}) / (finrank ℚ K).factorial)
 
 open MeasureTheory MeasureTheory.Measure
 
@@ -617,15 +628,15 @@ theorem convexBodySum_volume (hB : 0 ≤ B) :
         Real.norm_eq_abs B, Complex.norm_eq_abs B, Complex.abs_ofReal, abs_eq_self.mpr hB,
         ← Finset.mul_sum, ← mul_assoc, mul_comm (2:ℝ), mul_assoc, ← mul_add, inv_mul_le_iff sorry,
         mul_one]
-    · sorry
+    · rw [abs_pow, ofReal_pow (abs_nonneg _), abs_eq_self.mpr hB, mixedEmbedding.finrank]
     · exact this.symm
-  rw [measure_le_one_eq_integral_div_gamma (g := fun x : (E K) =>  ∑ i, ‖x.1 i‖ + 2 * ∑ j, ‖x.2 j‖)
-    volume (by simp) (by simp) ?_ ?_ ?_ zero_lt_one]
-  · sorry
-  · exact fun x y => convexBodySumFun_add_le x y
-  · sorry
-  · sorry
-
+  rw [measure_le_one_eq_integral_div_gamma (g := fun x : (E K) => convexBodySumFun x)
+    volume ((convexBodySumFun_eq_zero_iff 0).mpr rfl) convexBodySumFun_neg convexBodySumFun_add_le
+    (fun hx => (convexBodySumFun_eq_zero_iff _).mp hx)
+    (fun r x => le_of_eq (convexBodySumFun_smul r x)) zero_lt_one]
+  rw [ENNReal.ofReal_eq_ofReal_iff]
+  sorry
+  
 end convexBodySum
 
 section minkowski
