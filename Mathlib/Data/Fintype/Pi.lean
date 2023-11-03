@@ -136,18 +136,27 @@ lemma Fin.snoc_mem_piFinset_snoc_iff {n : ℕ} {α : Fin (n + 1) → Type*}
     Fin.snoc xs x ∈ Fintype.piFinset (Fin.snoc Sᵢ Sₙ) ↔ xs ∈ Fintype.piFinset Sᵢ ∧ x ∈ Sₙ := by
   simp_rw [Fin.mem_piFinset_succ_iff', init_snoc, snoc_last]
 
--- TODO Generalize from `succ` to `succAbove` using `Fin.forall_iff_succAbove`.
+lemma Finset.map_piFinSuccAboveEquiv_filter_piFinset_succAbove {n : ℕ} (k : Fin (n + 1))
+    {α : Fin (n + 1) → Type*}
+    (p : ((i : Fin n) → α (Fin.succAbove k i)) → Prop) [DecidablePred p]
+    (S : (i : Fin (n + 1)) → Finset (α i)) :
+    ((Fintype.piFinset S).filter fun r ↦ p (fun x ↦ r <| Fin.succAbove k x)).map
+      ((Equiv.piFinSuccAboveEquiv α k).toEmbedding)
+    = S k ×ˢ (Fintype.piFinset (fun x ↦ S <| Fin.succAbove k x)).filter p := by
+  congr
+  ext ⟨x, f⟩
+  simp? [Fin.forall_iff_succAbove k] says simp only [Fintype.mem_piFinset,
+      Fin.forall_iff_succAbove k, and_imp, mem_map_equiv, Equiv.piFinSuccAboveEquiv_symm_apply,
+      mem_filter, Fin.insertNth_apply_same, Fin.insertNth_apply_succAbove, mem_product]
+  tauto
+
 lemma Finset.map_piFinSuccAboveEquiv_filter_piFinset {n : ℕ} {α : Fin (n + 1) → Type*}
     (p : ((i : Fin n) → α i.succ) → Prop) [DecidablePred p]
     (S : (i : Fin (n + 1)) → Finset (α i)) :
     ((Fintype.piFinset S).filter fun r ↦ p (fun x ↦ r <| Fin.succ x)).map
       ((Equiv.piFinSuccAboveEquiv α 0).toEmbedding)
-    = S 0 ×ˢ (Fintype.piFinset (fun x ↦ S <| Fin.succ x)).filter p := by
-  congr
-  ext ⟨x, f⟩
-  simp? [Fin.forall_fin_succ] says simp only [Fin.zero_succAbove, Fintype.mem_piFinset,
-      Fin.forall_fin_succ, and_imp, mem_map_equiv, mem_filter, mem_product]
-  tauto
+    = S 0 ×ˢ (Fintype.piFinset (fun x ↦ S <| Fin.succ x)).filter p :=
+  Finset.map_piFinSuccAboveEquiv_filter_piFinset_succAbove 0 p S
 
 lemma Finset.filter_piFinset_eq_map_piFinSuccAboveEquiv_symm {n : ℕ} {α : Fin (n + 1) → Type*}
     (p : ((i : Fin n) → α i.succ) → Prop) [DecidablePred p]
