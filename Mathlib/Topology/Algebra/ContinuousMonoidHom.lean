@@ -513,6 +513,7 @@ example {α : Type*} {β : Type*} [inst : TopologicalSpace α] [inst_1 : Compact
     intro c
     rw [← Filter.tendsto_iff_comap, ← Filter.tendsto_id', tendsto_iff_tendstoUniformly]
     rw [ContinuousMap.tendsto_compactOpen_iff_forall]
+    sorry
     -- simp?
 
   have hf : Continuous f := sorry
@@ -563,7 +564,7 @@ theorem mythm {X Y : Type*} [TopologicalSpace X] [Group X]
       rw [← key]
       exact isClosed_singleton.preimage hg
   have h9 : IsCompact S'
-  · refine' arzeli_ascoli S' h4 _
+  · refine' arzela_ascoli S' h4 _
     rw [equicontinuous_iff_range] at h ⊢
     have key1 : Set.range (fun f : {f : X →* Y | f '' U ⊆ V} ↦ (f : X → Y)) = S''
     · ext f
@@ -582,7 +583,7 @@ theorem mythm {X Y : Type*} [TopologicalSpace X] [Group X]
         exact ⟨⟨f, hf⟩, rfl⟩
     convert h <;> exact key2.trans key1.symm
   have h6 : IsCompact S
-  · exact (inducing_toContinuousMap X Y).isCompact_iff.mp h9
+  · exact (inducing_toContinuousMap X Y).isCompact_iff.mpr h9
   have hS : (interior S).Nonempty
   · let T := toContinuousMap ⁻¹' ContinuousMap.CompactOpen.gen U (interior V)
     have h1 : T ⊆ S := fun f hf x hx => interior_subset (hf hx)
