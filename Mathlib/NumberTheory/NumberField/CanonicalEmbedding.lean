@@ -3,11 +3,11 @@ Copyright (c) 2022 Xavier Roblot. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Xavier Roblot
 -/
-import Mathlib.RingTheory.Discriminant
 import Mathlib.Algebra.Module.Zlattice
 import Mathlib.MeasureTheory.Group.GeometryOfNumbers
 import Mathlib.MeasureTheory.Measure.Lebesgue.VolumeOfBalls
 import Mathlib.NumberTheory.NumberField.Embeddings
+import Mathlib.RingTheory.Discriminant
 
 #align_import number_theory.number_field.canonical_embedding from "leanprover-community/mathlib"@"60da01b41bbe4206f05d34fd70c8dd7498717a30"
 
@@ -612,8 +612,8 @@ theorem convexBodySum_convex : Convex ℝ (convexBodySum K B) := by
 
 /-- The fudge factor that appears in the formula for the volume of `convexBodyLt`. -/
 noncomputable abbrev convexBodySumFactor : ℝ≥0∞ :=
-  ENNReal.ofReal ((2:ℝ) ^ (card {w : InfinitePlace K // IsReal w}) *
-    (π / 2) ^ (card {w : InfinitePlace K // IsComplex w}) / (finrank ℚ K).factorial)
+  (2:ℝ≥0∞) ^ (card {w : InfinitePlace K // IsReal w}) *
+    (NNReal.pi / 2) ^ (card {w : InfinitePlace K // IsComplex w}) / (finrank ℚ K).factorial
 
 open MeasureTheory MeasureTheory.Measure
 
@@ -634,9 +634,13 @@ theorem convexBodySum_volume (hB : 0 ≤ B) :
     volume ((convexBodySumFun_eq_zero_iff 0).mpr rfl) convexBodySumFun_neg convexBodySumFun_add_le
     (fun hx => (convexBodySumFun_eq_zero_iff _).mp hx)
     (fun r x => le_of_eq (convexBodySumFun_smul r x)) zero_lt_one]
-  rw [ENNReal.ofReal_eq_ofReal_iff]
-  sorry
+  simp_rw [mixedEmbedding.finrank, div_one, Real.Gamma_nat_eq_factorial, ofReal_div_of_pos sorry,
+    Real.rpow_one, ofReal_coe_nat]
+  congr!
   
+
+  sorry
+
 end convexBodySum
 
 section minkowski
@@ -661,8 +665,6 @@ theorem minkowskiBound_lt_top : minkowskiBound K < ⊤ := by
 
 variable {f : InfinitePlace K → ℝ≥0}
 
-instance : IsAddHaarMeasure (volume : Measure (E K)) := prod.instIsAddHaarMeasure volume volume
-
 /-- Assume that `f : InfinitePlace K → ℝ≥0` is such that
 `minkowskiBound K < volume (convexBodyLt K f)` where `convexBodyLt K f` is the set of
 points `x` such that `‖x w‖ < f w` for all infinite places `w` (see `convexBodyLt_volume` for
@@ -684,14 +686,14 @@ theorem exists_ne_zero_mem_ringOfIntegers_lt (h : minkowskiBound K < volume (con
 
 theorem exists_ne_zero_mem_ringOfIntegers_of_norm_le {B : ℝ}
     (h : (minkowskiBound K) < volume (convexBodySum K B)) :
-    ∃ (a : 𝓞 K), a ≠ 0 ∧ |Algebra.norm ℚ (a:K)| ≤ ((finrank ℚ K : ℝ)⁻¹ * B) ^ (finrank ℚ K) := by
+    ∃ (a : 𝓞 K), a ≠ 0 ∧ |Algebra.norm ℚ (a:K)| ≤ (B / (finrank ℚ K)) ^ (finrank ℚ K) := by
   have hB : 0 ≤ B := by
     contrapose! h
     rw [convexBodySum_empty K h, measure_empty]
     exact zero_le (minkowskiBound K)
   -- Some inequalities that will be useful later on
   have h1 : 0 < (finrank ℚ K : ℝ)⁻¹ := inv_pos.mpr (Nat.cast_pos.mpr finrank_pos)
-  have h2 : 0 ≤ (finrank ℚ K : ℝ)⁻¹ * B := mul_nonneg (le_of_lt h1) hB
+  have h2 : 0 ≤ B / (finrank ℚ K) := div_nonneg hB (Nat.cast_nonneg _)
   have h_fund := Zspan.isAddFundamentalDomain (latticeBasis K) volume
   have : Countable (Submodule.span ℤ (Set.range (latticeBasis K))).toAddSubgroup := by
     change Countable (Submodule.span ℤ (Set.range (latticeBasis K)): Set (E K))
@@ -704,10 +706,10 @@ theorem exists_ne_zero_mem_ringOfIntegers_of_norm_le {B : ℝ}
   · rw [ne_eq, AddSubgroup.mk_eq_zero_iff, map_eq_zero, ← ne_eq] at h_nzr
     exact Subtype.ne_of_val_ne h_nzr
   · rw [← rpow_nat_cast, ← rpow_le_rpow_iff (by simp only [Rat.cast_abs, abs_nonneg])
-    (rpow_nonneg_of_nonneg h2 _) h1, ← rpow_mul h2, mul_inv_cancel (Nat.cast_ne_zero.mpr
-    (ne_of_gt finrank_pos)), rpow_one, ← inv_mul_le_iff h1]
+      (rpow_nonneg_of_nonneg h2 _) h1, ← rpow_mul h2,  mul_inv_cancel (Nat.cast_ne_zero.mpr
+      (ne_of_gt finrank_pos)), rpow_one, le_div_iff' (Nat.cast_pos.mpr finrank_pos)]
     refine le_trans ?_ ((convexBodySum_mem K B).mp h_mem)
-    rw [inv_mul_le_iff h1, ← sum_mult_eq, Nat.cast_sum]
+    rw [← le_div_iff' (Nat.cast_pos.mpr finrank_pos), ← sum_mult_eq, Nat.cast_sum]
     refine le_trans ?_ (geom_mean_le_arith_mean Finset.univ _ _ (fun _ _ => Nat.cast_nonneg _)
       ?_ (fun _ _ => AbsoluteValue.nonneg _ _))
     · simp_rw [← prod_eq_abs_norm, rpow_nat_cast]
