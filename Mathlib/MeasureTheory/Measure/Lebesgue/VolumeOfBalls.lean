@@ -71,6 +71,31 @@ theorem Complex.integral_rpow_mul_exp_neg_rpow {p q : ℝ} (hp : 1 ≤ p) (hq : 
       · ring
       · linarith
 
+theorem Complex.integral_rpow_mul_exp_neg_mul_rpow {p q b : ℝ} (hp : 1 ≤ p) (hq : - 2 < q)
+    (hb : 0 < b) :
+    ∫ x : ℂ, ‖x‖ ^ q * rexp (- b * ‖x‖ ^ p) = (2 * π / p) * Real.Gamma ((q + 2) / p) := by
+  calc
+    _ = ∫ x in Ioi (0:ℝ) ×ˢ Ioo (-π) π, x.1 * (|x.1| ^ q * rexp (- b * |x.1| ^ p)) := by
+      rw [← Complex.integral_comp_polarCoord_symm, polarCoord_target]
+      simp_rw [Complex.norm_eq_abs, Complex.polardCoord_symm_abs, smul_eq_mul]
+    _ = (∫ x in Ioi (0:ℝ), x * |x| ^ q * rexp (- b * |x| ^ p)) * ∫ _ in Ioo (-π) π, 1 := by
+      rw [← set_integral_prod_mul, volume_eq_prod]
+      simp_rw [mul_one]
+      congr! 2; ring
+    _ = 2 * π * ∫ x in Ioi (0:ℝ), x * |x| ^ q * rexp (- b * |x| ^ p) := by
+      simp_rw [integral_const, Measure.restrict_apply MeasurableSet.univ, Set.univ_inter,
+        volume_Ioo, sub_neg_eq_add, ← two_mul, ENNReal.toReal_ofReal (by positivity : 0 ≤ 2 * π),
+        smul_eq_mul, mul_one, mul_comm]
+    _ = 2 * π * ∫ x in Ioi (0:ℝ), x ^ (q + 1) * rexp (-b * x ^ p) := by
+      congr 1
+      refine set_integral_congr measurableSet_Ioi (fun x hx => ?_)
+      rw [abs_eq_self.mpr (le_of_lt (by exact hx)), rpow_add hx, rpow_one]
+      ring
+    _ = (2 * Real.pi / p) * Real.Gamma ((q + 2) / p) := by
+      rw [_root_.integral_rpow_mul_exp_neg_mul_rpow (by linarith), add_assoc, one_add_one_eq_two]
+      · ring
+      · linarith
+
 theorem Complex.integral_exp_neg_rpow {p : ℝ} (hp : 1 ≤ p) :
     ∫ x : ℂ, rexp (- ‖x‖ ^ p) = π * Real.Gamma (2 / p + 1) := by
   convert (integral_rpow_mul_exp_neg_rpow hp (by linarith : (-2:ℝ) < 0)) using 1
