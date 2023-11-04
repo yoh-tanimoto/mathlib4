@@ -185,9 +185,9 @@ instance [NumberField K] :  Nontrivial (E K) := by
 protected theorem finrank [NumberField K] : finrank ℝ (E K) = finrank ℚ K := by
   classical
   rw [finrank_prod, finrank_pi, finrank_pi_fintype, Complex.finrank_real_complex, Finset.sum_const,
-    Finset.card_univ, ← card_real_embeddings, Algebra.id.smul_eq_mul, mul_comm,
-    ← card_complex_embeddings, ← NumberField.Embeddings.card K ℂ, Fintype.card_subtype_compl,
-    Nat.add_sub_of_le (Fintype.card_subtype_le _)]
+    Finset.card_univ, ← NrRealPlaces, ← NrComplexPlaces, ← card_real_embeddings,
+    Algebra.id.smul_eq_mul, mul_comm, ← card_complex_embeddings, ← NumberField.Embeddings.card K ℂ,
+    Fintype.card_subtype_compl, Nat.add_sub_of_le (Fintype.card_subtype_le _)]
 
 theorem _root_.NumberField.mixedEmbedding_injective [NumberField K] :
     Function.Injective (NumberField.mixedEmbedding K) := by
@@ -336,16 +336,16 @@ variable (K)
 
 /-- The matrix that gives the representation on `stdBasis` of the image by `commMap` of an
 element `x` of `(K →+* ℂ) → ℂ` fixed by the map `x_φ ↦ conj x_(conjugate φ)`,
-see `stdBasis_repr_eq_matrix_to_stdBasis_mul`. -/
-def matrix_to_stdBasis : Matrix (index K) (index K) ℂ :=
+see `stdBasis_repr_eq_matrixToStdBasis_mul`. -/
+def matrixToStdBasis : Matrix (index K) (index K) ℂ :=
   fromBlocks (diagonal fun _ => 1) 0 0 <| reindex (Equiv.prodComm _ _) (Equiv.prodComm _ _)
     (blockDiagonal (fun _ => (2 : ℂ)⁻¹ • !![1, 1; - I, I]))
 
-theorem det_matrix_to_stdBasis :
-    (matrix_to_stdBasis K).det = (2⁻¹ * I) ^ Fintype.card {w : InfinitePlace K // IsComplex w} :=
+theorem det_matrixToStdBasis :
+    (matrixToStdBasis K).det = (2⁻¹ * I) ^ NrComplexPlaces K :=
   calc
   _ = ∏ k : { w : InfinitePlace K // IsComplex w }, det ((2 : ℂ)⁻¹ • !![1, 1; -I, I]) := by
-      rw [matrix_to_stdBasis, det_fromBlocks_zero₂₁, det_diagonal, Finset.prod_const_one, one_mul,
+      rw [matrixToStdBasis, det_fromBlocks_zero₂₁, det_diagonal, Finset.prod_const_one, one_mul,
           det_reindex_self, det_blockDiagonal]
   _ = ∏ k : { w : InfinitePlace K // IsComplex w }, (2⁻¹ * Complex.I) := by
       refine Finset.prod_congr (Eq.refl _) (fun _ _ => ?_)
@@ -354,13 +354,13 @@ theorem det_matrix_to_stdBasis :
       rw [Finset.prod_const, Fintype.card]
 
 /-- Let `x : (K →+* ℂ) → ℂ` such that `x_φ = conj x_(conj φ)` for all `φ : K →+* ℂ`, then the
-representation of `comMap K x` on `stdBasis` is given (up to reindexing) by the product of
-`matrix_to_stdBasis` by `x`. -/
-theorem stdBasis_repr_eq_matrix_to_stdBasis_mul (x : (K →+* ℂ) → ℂ)
+representation of `commMap K x` on `stdBasis` is given (up to reindexing) by the product of
+`matrixToStdBasis` by `x`. -/
+theorem stdBasis_repr_eq_matrixToStdBasis_mul (x : (K →+* ℂ) → ℂ)
     (hx : ∀ φ, conj (x φ) = x (ComplexEmbedding.conjugate φ)) (c : index K) :
     ((stdBasis K).repr (commMap K x) c : ℂ) =
-      (mulVec (matrix_to_stdBasis K) (x ∘ (indexEquiv K))) c := by
-  simp_rw [commMap, matrix_to_stdBasis, LinearMap.coe_mk, AddHom.coe_mk,
+      (mulVec (matrixToStdBasis K) (x ∘ (indexEquiv K))) c := by
+  simp_rw [commMap, matrixToStdBasis, LinearMap.coe_mk, AddHom.coe_mk,
     mulVec, dotProduct, Function.comp_apply, index, Fintype.sum_sum_type,
     diagonal_one, reindex_apply, ← Finset.univ_product_univ, Finset.sum_product,
     indexEquiv_apply_ofIsReal, Fin.sum_univ_two, indexEquiv_apply_ofIsComplex_fst,
@@ -410,8 +410,8 @@ noncomputable def latticeBasis [NumberField K] :
     refine basisOfLinearIndependentOfCardEqFinrank this ?_
     rw [← finrank_eq_card_chooseBasisIndex, RingOfIntegers.rank, finrank_prod, finrank_pi,
       finrank_pi_fintype, Complex.finrank_real_complex, Finset.sum_const, Finset.card_univ,
-      ← card_real_embeddings, Algebra.id.smul_eq_mul, mul_comm, ← card_complex_embeddings,
-      ← NumberField.Embeddings.card K ℂ, Fintype.card_subtype_compl,
+      ← NrRealPlaces, ← NrComplexPlaces, ← card_real_embeddings, Algebra.id.smul_eq_mul, mul_comm,
+      ← card_complex_embeddings, ← NumberField.Embeddings.card K ℂ, Fintype.card_subtype_compl,
       Nat.add_sub_of_le (Fintype.card_subtype_le _)]
 
 @[simp]
@@ -469,8 +469,7 @@ instance : IsAddHaarMeasure (volume : Measure (E K)) := prod.instIsAddHaarMeasur
 
 /-- The fudge factor that appears in the formula for the volume of `convexBodyLt`. -/
 noncomputable abbrev convexBodyLtFactor : ℝ≥0∞ :=
-  (2 : ℝ≥0∞) ^ card {w : InfinitePlace K // IsReal w} *
-    (NNReal.pi : ℝ≥0∞) ^ card {w : InfinitePlace K // IsComplex w}
+  (2 : ℝ≥0∞) ^ NrRealPlaces K * (NNReal.pi : ℝ≥0∞) ^ NrComplexPlaces K
 
 theorem convexBodyLtFactor_pos : 0 < (convexBodyLtFactor K) := by
   refine mul_pos (NeZero.ne _) (ENNReal.pow_ne_zero ?_ _)
@@ -489,10 +488,8 @@ theorem convexBodyLt_volume :
     _ = (∏ x : {w // InfinitePlace.IsReal w}, ENNReal.ofReal (2 * (f x.val))) *
           ∏ x : {w // InfinitePlace.IsComplex w}, pi * ENNReal.ofReal (f x.val) ^ 2 := by
       simp_rw [volume_eq_prod, prod_prod, volume_pi, pi_pi, Real.volume_ball, Complex.volume_ball]
-    _ = (↑2 ^ card {w : InfinitePlace K // InfinitePlace.IsReal w} *
-          (∏ x : {w // InfinitePlace.IsReal w}, ENNReal.ofReal (f x.val))) *
-          (↑pi ^ card {w : InfinitePlace K // IsComplex w} *
-          (∏ x : {w // IsComplex w}, ENNReal.ofReal (f x.val) ^ 2)) := by
+    _ = (↑2 ^ NrRealPlaces K * (∏ x : {w // InfinitePlace.IsReal w}, ENNReal.ofReal (f x.val))) *
+          (↑pi ^ NrComplexPlaces K * (∏ x : {w // IsComplex w}, ENNReal.ofReal (f x.val) ^ 2)) := by
       simp_rw [ofReal_mul (by norm_num : 0 ≤ (2 : ℝ)), Finset.prod_mul_distrib, Finset.prod_const,
         Finset.card_univ, ofReal_ofNat]
     _ = (convexBodyLtFactor K) * ((∏ x : {w // InfinitePlace.IsReal w}, ENNReal.ofReal (f x.val)) *
@@ -612,8 +609,7 @@ theorem convexBodySum_convex : Convex ℝ (convexBodySum K B) := by
 
 /-- The fudge factor that appears in the formula for the volume of `convexBodyLt`. -/
 noncomputable abbrev convexBodySumFactor : ℝ≥0∞ :=
-  (2:ℝ≥0∞) ^ (card {w : InfinitePlace K // IsReal w}) *
-    (NNReal.pi / 2) ^ (card {w : InfinitePlace K // IsComplex w}) / (finrank ℚ K).factorial
+  (2:ℝ≥0∞) ^ NrRealPlaces K * (NNReal.pi / 2) ^ NrComplexPlaces K / (finrank ℚ K).factorial
 
 open MeasureTheory MeasureTheory.Measure
 
@@ -636,9 +632,11 @@ theorem convexBodySum_volume (hB : 0 ≤ B) :
     (fun r x => le_of_eq (convexBodySumFun_smul r x)) zero_lt_one]
   simp_rw [mixedEmbedding.finrank, div_one, Real.Gamma_nat_eq_factorial, ofReal_div_of_pos sorry,
     Real.rpow_one, ofReal_coe_nat]
-  congr!
-  
-
+  suffices ∫ x : E K, rexp (-convexBodySumFun x) =
+      (2:ℝ) ^ NrRealPlaces K * (π / 2) ^ NrComplexPlaces K by
+    rw [this, convexBodySumFactor, ofReal_mul (by positivity), ofReal_pow zero_le_two,
+      ofReal_pow (by positivity), ofReal_div_of_pos zero_lt_two, ofReal_ofNat, ← NNReal.coe_real_pi,
+      ofReal_coe_nnreal, coe_pow, coe_div two_ne_zero, coe_ofNat]
   sorry
 
 end convexBodySum
@@ -664,6 +662,8 @@ theorem minkowskiBound_lt_top : minkowskiBound K < ⊤ := by
   · exact ne_of_lt (ENNReal.pow_lt_top (lt_top_iff_ne_top.mpr ENNReal.two_ne_top) _)
 
 variable {f : InfinitePlace K → ℝ≥0}
+
+instance : IsAddHaarMeasure (volume : Measure (E K)) := prod.instIsAddHaarMeasure volume volume
 
 /-- Assume that `f : InfinitePlace K → ℝ≥0` is such that
 `minkowskiBound K < volume (convexBodyLt K f)` where `convexBodyLt K f` is the set of
