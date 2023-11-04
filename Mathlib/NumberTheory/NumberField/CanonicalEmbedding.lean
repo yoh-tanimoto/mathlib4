@@ -637,8 +637,14 @@ theorem convexBodySum_volume (hB : 0 ≤ B) :
     rw [this, convexBodySumFactor, ofReal_mul (by positivity), ofReal_pow zero_le_two,
       ofReal_pow (by positivity), ofReal_div_of_pos zero_lt_two, ofReal_ofNat, ← NNReal.coe_real_pi,
       ofReal_coe_nnreal, coe_pow, coe_div two_ne_zero, coe_ofNat]
-  sorry
-
+  calc
+    _ = (∫ x : {w : InfinitePlace K // IsReal w} → ℝ, ∏ w, Real.exp (- ‖x w‖)) *
+          (∫ x : {w : InfinitePlace K // IsComplex w} → ℂ, ∏ w, Real.exp (- 2 * ‖x w‖)) := ?_
+    _ = (2:ℝ) ^ NrRealPlaces K * (π / 2) ^ NrComplexPlaces K := ?_
+  · simp_rw [convexBodySumFun, neg_add, ← neg_mul, Finset.mul_sum, ← Finset.sum_neg_distrib,
+      Real.exp_add, Real.exp_sum, ← integral_prod_mul, volume_eq_prod]
+  · rw [integral_finset_prod_eq_pow  (fun x => Real.exp (- ‖x‖))]
+    sorry
 end convexBodySum
 
 section minkowski
