@@ -9,6 +9,8 @@ import Mathlib.MeasureTheory.Measure.Lebesgue.VolumeOfBalls
 import Mathlib.NumberTheory.NumberField.Embeddings
 import Mathlib.RingTheory.Discriminant
 
+import Mathlib.Sandbox
+
 #align_import number_theory.number_field.canonical_embedding from "leanprover-community/mathlib"@"60da01b41bbe4206f05d34fd70c8dd7498717a30"
 
 /-!
@@ -467,6 +469,12 @@ variable [NumberField K]
 
 instance : IsAddHaarMeasure (volume : Measure (E K)) := prod.instIsAddHaarMeasure volume volume
 
+instance : NoAtoms (volume : Measure (E K)) := by
+  obtain ⟨w⟩ := (inferInstance : Nonempty (InfinitePlace K))
+  by_cases hw : IsReal w
+  · exact @prod_noAtoms_fst _ _ _ _ volume volume _ (pi_noAtoms ⟨w, hw⟩)
+  · exact @prod_noAtoms_snd _ _ _ _ volume volume _ (pi_noAtoms ⟨w, not_isReal_iff_isComplex.mp hw⟩)
+
 /-- The fudge factor that appears in the formula for the volume of `convexBodyLt`. -/
 noncomputable abbrev convexBodyLtFactor : ℝ≥0∞ :=
   (2 : ℝ≥0∞) ^ NrRealPlaces K * (NNReal.pi : ℝ≥0∞) ^ NrComplexPlaces K
@@ -533,6 +541,8 @@ variable [NumberField K] (B : ℝ)
 
 variable {K}
 
+/-- The function that sends `x : ({w // IsReal w} → ℝ) × ({w // IsComplex w} → ℂ)` to
+  `∑ w, ‖x.1 w‖ + 2 * ∑ w, ‖x.2 w‖`. It defines a norm and it used to define `convexBodySum`. -/
 noncomputable abbrev convexBodySumFun (x : E K) := ∑ w, ‖x.1 w‖ + 2 * ∑ w, ‖x.2 w‖
 
 theorem convexBodySumFun_nonneg (x : E K) :
@@ -581,12 +591,17 @@ variable (K)
   `∑ w real, ‖x w‖ + 2 * ∑ w complex, ‖x w‖ ≤ B`. -/
 abbrev convexBodySum : Set (E K)  := { x | convexBodySumFun x ≤ B }
 
-theorem convexBodySum_empty {B} (h : B < 0) : convexBodySum K B = ∅ := by
-  ext x
-  refine ⟨fun hx => ?_, fun h => h.elim⟩
-  rw [Set.mem_setOf] at hx
-  have : 0 ≤ convexBodySumFun x := convexBodySumFun_nonneg x
-  linarith
+theorem convexBodySum_volume_eq_zero {B} (hB : B ≤ 0) : volume (convexBodySum K B) = 0 := by
+  obtain hB | hB := lt_or_eq_of_le hB
+  · suffices convexBodySum K B = ∅ by rw [this, measure_empty]
+    ext x
+    refine ⟨fun hx => ?_, fun h => h.elim⟩
+    rw [Set.mem_setOf] at hx
+    linarith [convexBodySumFun_nonneg x]
+  · suffices convexBodySum K B = { 0 } by rw [this, measure_singleton]
+    ext
+    rw [convexBodySum, Set.mem_setOf_eq, Set.mem_singleton_iff, hB, ← convexBodySumFun_eq_zero_iff]
+    exact (convexBodySumFun_nonneg _).le_iff_eq
 
 theorem convexBodySum_mem {x : K} :
     mixedEmbedding K x ∈ (convexBodySum K B) ↔
@@ -611,44 +626,56 @@ theorem convexBodySum_convex : Convex ℝ (convexBodySum K B) := by
 noncomputable abbrev convexBodySumFactor : ℝ≥0∞ :=
   (2:ℝ≥0∞) ^ NrRealPlaces K * (NNReal.pi / 2) ^ NrComplexPlaces K / (finrank ℚ K).factorial
 
-open MeasureTheory MeasureTheory.Measure
+open MeasureTheory MeasureTheory.Measure Real
 
-theorem convexBodySum_volume (hB : 0 ≤ B) :
+theorem convexBodySum_volume :
     volume (convexBodySum K B) = (convexBodySumFactor K) * (.ofReal B) ^ (finrank ℚ K) := by
-  suffices volume (convexBodySum K 1) = (convexBodySumFactor K) by
-    rw [mul_comm]
-    convert addHaar_smul volume B (convexBodySum K 1)
-    · simp_rw [← Set.preimage_smul_inv₀ sorry, Set.preimage_setOf_eq, convexBodySumFun,
-        Prod.smul_fst, Prod.smul_snd,
-        Pi.smul_apply, Complex.real_smul, smul_eq_mul, norm_mul, Complex.ofReal_inv, norm_inv,
-        Real.norm_eq_abs B, Complex.norm_eq_abs B, Complex.abs_ofReal, abs_eq_self.mpr hB,
-        ← Finset.mul_sum, ← mul_assoc, mul_comm (2:ℝ), mul_assoc, ← mul_add, inv_mul_le_iff sorry,
-        mul_one]
-    · rw [abs_pow, ofReal_pow (abs_nonneg _), abs_eq_self.mpr hB, mixedEmbedding.finrank]
-    · exact this.symm
-  rw [measure_le_one_eq_integral_div_gamma (g := fun x : (E K) => convexBodySumFun x)
-    volume ((convexBodySumFun_eq_zero_iff 0).mpr rfl) convexBodySumFun_neg convexBodySumFun_add_le
-    (fun hx => (convexBodySumFun_eq_zero_iff _).mp hx)
-    (fun r x => le_of_eq (convexBodySumFun_smul r x)) zero_lt_one]
-  simp_rw [mixedEmbedding.finrank, div_one, Real.Gamma_nat_eq_factorial, ofReal_div_of_pos sorry,
-    Real.rpow_one, ofReal_coe_nat]
-  suffices ∫ x : E K, rexp (-convexBodySumFun x) =
-      (2:ℝ) ^ NrRealPlaces K * (π / 2) ^ NrComplexPlaces K by
-    rw [this, convexBodySumFactor, ofReal_mul (by positivity), ofReal_pow zero_le_two,
-      ofReal_pow (by positivity), ofReal_div_of_pos zero_lt_two, ofReal_ofNat, ← NNReal.coe_real_pi,
-      ofReal_coe_nnreal, coe_pow, coe_div two_ne_zero, coe_ofNat]
-  calc
-    _ = (∫ x : {w : InfinitePlace K // IsReal w} → ℝ, ∏ w, Real.exp (- ‖x w‖)) *
-          (∫ x : {w : InfinitePlace K // IsComplex w} → ℂ, ∏ w, Real.exp (- 2 * ‖x w‖)) := ?_
-    _ = (2:ℝ) ^ NrRealPlaces K * (π / 2) ^ NrComplexPlaces K := ?_
-  · simp_rw [convexBodySumFun, neg_add, ← neg_mul, Finset.mul_sum, ← Finset.sum_neg_distrib,
-      Real.exp_add, Real.exp_sum, ← integral_prod_mul, volume_eq_prod]
-  · rw [integral_finset_prod_eq_pow _ (fun x => Real.exp (- ‖x‖)), integral_finset_prod_eq_pow _
-      (fun x => Real.exp (- 2 * ‖x‖))]
-    simp_rw [Real.norm_eq_abs]
-    rw [integral_comp_abs (f := fun x => Real.exp (- x))]
-    
-    sorry
+  obtain hB | hB := le_or_lt B 0
+  · rw [convexBodySum_volume_eq_zero K hB, ofReal_eq_zero.mpr hB, zero_pow, mul_zero]
+    exact finrank_pos
+  · suffices volume (convexBodySum K 1) = (convexBodySumFactor K) by
+      rw [mul_comm]
+      convert addHaar_smul volume B (convexBodySum K 1)
+      · simp_rw [← Set.preimage_smul_inv₀ (ne_of_gt hB), Set.preimage_setOf_eq, convexBodySumFun,
+          Prod.smul_fst, Prod.smul_snd, Pi.smul_apply, Complex.real_smul, smul_eq_mul, norm_mul,
+          Complex.ofReal_inv, norm_inv, norm_eq_abs B, Complex.norm_eq_abs B, Complex.abs_ofReal,
+          abs_eq_self.mpr (le_of_lt hB), ← Finset.mul_sum, ← mul_assoc, mul_comm (2:ℝ), mul_assoc,
+          ← mul_add, inv_mul_le_iff hB, mul_one]
+      · rw [abs_pow, ofReal_pow (abs_nonneg _), abs_eq_self.mpr (le_of_lt hB),
+          mixedEmbedding.finrank]
+      · exact this.symm
+    rw [measure_le_one_eq_integral_div_gamma (g := fun x : (E K) => convexBodySumFun x)
+      volume ((convexBodySumFun_eq_zero_iff 0).mpr rfl) convexBodySumFun_neg convexBodySumFun_add_le
+      (fun hx => (convexBodySumFun_eq_zero_iff _).mp hx)
+      (fun r x => le_of_eq (convexBodySumFun_smul r x)) zero_lt_one]
+    simp_rw [mixedEmbedding.finrank, div_one, Gamma_nat_eq_factorial, ofReal_div_of_pos
+      (Nat.cast_pos.mpr (Nat.factorial_pos _)), Real.rpow_one, ofReal_coe_nat]
+    suffices ∫ x : E K, exp (-convexBodySumFun x) =
+        (2:ℝ) ^ NrRealPlaces K * (π / 2) ^ NrComplexPlaces K by
+      rw [this, convexBodySumFactor, ofReal_mul (by positivity), ofReal_pow zero_le_two,
+        ofReal_pow (by positivity), ofReal_div_of_pos zero_lt_two, ofReal_ofNat,
+        ← NNReal.coe_real_pi, ofReal_coe_nnreal, coe_pow, coe_div two_ne_zero, coe_ofNat]
+    calc
+      _ = (∫ x : {w : InfinitePlace K // IsReal w} → ℝ, ∏ w, exp (- ‖x w‖)) *
+              (∫ x : {w : InfinitePlace K // IsComplex w} → ℂ, ∏ w, exp (- 2 * ‖x w‖)) := by
+        simp_rw [convexBodySumFun, neg_add, ← neg_mul, Finset.mul_sum, ← Finset.sum_neg_distrib,
+          exp_add, exp_sum, ← integral_prod_mul, volume_eq_prod]
+      _ = (∫ x : ℝ, exp (-|x|)) ^ NrRealPlaces K *
+              (∫ x : ℂ, Real.exp (-2 * ‖x‖)) ^ NrComplexPlaces K := by
+        rw [integral_finset_prod_eq_pow _ (fun x => exp (- ‖x‖)), integral_finset_prod_eq_pow _
+          (fun x => exp (- 2 * ‖x‖))]
+        simp_rw [norm_eq_abs]
+      _ =  (2 * Gamma (1 / 1 + 1)) ^ NrRealPlaces K *
+              (π * (2:ℝ) ^ (-(2:ℝ) / 1) * Gamma (2 / 1 + 1)) ^ NrComplexPlaces K := by
+        rw [integral_comp_abs (f := fun x => exp (- x)), ← integral_exp_neg_rpow zero_lt_one,
+          ← Complex.integral_exp_neg_mul_rpow le_rfl zero_lt_two]
+        simp_rw [Real.rpow_one]
+      _ = (2:ℝ) ^ NrRealPlaces K * (π / 2) ^ NrComplexPlaces K := by
+        simp_rw [div_one, one_add_one_eq_two, Gamma_add_one two_ne_zero, Gamma_two, mul_one,
+          mul_assoc, ← Real.rpow_add_one two_ne_zero, show (-2:ℝ) + 1 = -1 by norm_num,
+          Real.rpow_neg_one]
+        rfl
+
 end convexBodySum
 
 section minkowski
@@ -699,7 +726,7 @@ theorem exists_ne_zero_mem_ringOfIntegers_of_norm_le {B : ℝ}
     ∃ (a : 𝓞 K), a ≠ 0 ∧ |Algebra.norm ℚ (a:K)| ≤ (B / (finrank ℚ K)) ^ (finrank ℚ K) := by
   have hB : 0 ≤ B := by
     contrapose! h
-    rw [convexBodySum_empty K h, measure_empty]
+    rw [convexBodySum_volume_eq_zero K (le_of_lt h)]
     exact zero_le (minkowskiBound K)
   -- Some inequalities that will be useful later on
   have h1 : 0 < (finrank ℚ K : ℝ)⁻¹ := inv_pos.mpr (Nat.cast_pos.mpr finrank_pos)
