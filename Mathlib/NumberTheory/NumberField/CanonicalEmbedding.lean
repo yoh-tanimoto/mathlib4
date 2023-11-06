@@ -470,8 +470,9 @@ instance : IsAddHaarMeasure (volume : Measure (E K)) := prod.instIsAddHaarMeasur
 instance : NoAtoms (volume : Measure (E K)) := by
   obtain ⟨w⟩ := (inferInstance : Nonempty (InfinitePlace K))
   by_cases hw : IsReal w
-  · exact @prod_noAtoms_fst _ _ _ _ volume volume _ (pi_noAtoms ⟨w, hw⟩)
-  · exact @prod_noAtoms_snd _ _ _ _ volume volume _ (pi_noAtoms ⟨w, not_isReal_iff_isComplex.mp hw⟩)
+  exact @prod.instNoAtoms_fst _ _ _ _ volume volume _ (pi_noAtoms ⟨w, hw⟩)
+  · exact @prod.instNoAtoms_snd _ _ _ _ volume volume _
+      (pi_noAtoms ⟨w, not_isReal_iff_isComplex.mp hw⟩)
 
 /-- The fudge factor that appears in the formula for the volume of `convexBodyLt`. -/
 noncomputable abbrev convexBodyLtFactor : ℝ≥0∞ :=

@@ -24,7 +24,9 @@ local macro_rules | `($x ^ $y) => `(HPow.hPow $x $y) -- Porting note: See issue 
 
 namespace NumberField
 
-open Classical NumberField Matrix NumberField.InfinitePlace
+open Classical NumberField Matrix NumberField.InfinitePlace FiniteDimensional
+
+open scoped Real
 
 variable (K : Type*) [Field K] [NumberField K]
 
@@ -79,6 +81,21 @@ theorem _root_.NumberField.mixedEmbedding.volume_fundamentalDomain_latticeBasis 
     latticeBasis_apply, ← commMap_canonical_eq_mixed, Complex.ofReal_eq_coe,
     stdBasis_repr_eq_matrixToStdBasis_mul K _ (fun _ => rfl)]
   rfl
+
+example (p : (Set ℝ) → Prop) : (∀ ε, 0 < ε → p (Set.Ioi ε)) → p (Set.Ici 0) := by
+  
+  sorry
+
+example :
+    ∃ (a : 𝓞 K), a ≠ 0 ∧
+    |Algebra.norm ℚ (a:K)| ≤
+      Real.sqrt |discr K| * (finrank ℚ K).factorial / (finrank ℚ K) ^ (finrank ℚ K) /
+        (2 ^ NrRealPlaces K * π ^ NrComplexPlaces K) := by
+  let C := Real.sqrt |discr K| * (finrank ℚ K).factorial / (finrank ℚ K) ^ (finrank ℚ K) /
+        (2 ^ NrRealPlaces K * π ^ NrComplexPlaces K)
+  suffices ∀ ε : ℝ, 0 < ε → ∃ (a : 𝓞 K), a ≠ 0 ∧ |Algebra.norm ℚ (a:K)| ≤ C * (1 + ε) by
+    sorry
+  sorry
 
 end NumberField
 
