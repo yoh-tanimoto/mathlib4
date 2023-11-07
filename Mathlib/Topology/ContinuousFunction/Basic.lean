@@ -515,3 +515,12 @@ theorem toContinuousMap_comp_symm : (f : C(α, β)).comp (f.symm : C(β, α)) = 
 #align homeomorph.to_continuous_map_comp_symm Homeomorph.toContinuousMap_comp_symm
 
 end Homeomorph
+
+open Lean Elab Tactic
+
+elab "done" : tactic => do
+  let gs ← getUnsolvedGoals
+  if gs.isEmpty then
+    logInfo "Goals accomplished 🎉"
+  else
+    Term.reportUnsolvedGoals gs
