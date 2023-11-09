@@ -448,7 +448,9 @@ lemma apply_inr (h : l.idxFun i = Sum.inr e) : l x i = x e := by simp [apply_def
 means that `l` is monochromatic with regard to `C`. -/
 def IsMono (C : (ι → α) → κ) (l : Subspace η α ι) : Prop := ∃ c, ∀ x, C (l x) = c
 
-/-- The **extended Hales-Jewett theorem**: For any finite types `η`, `α` and `κ`, there exists a finite type `ι` such that whenever the hypercube `ι → α` is `κ`-colored, there is a monochromatic combinatorial subspace of dimension `η`. -/
+/-- The **extended Hales-Jewett theorem**: For any finite types `η`, `α` and `κ`, there exists a
+finite type `ι` such that whenever the hypercube `ι → α` is `κ`-colored, there is a monochromatic
+combinatorial subspace of dimension `η`. -/
 theorem exists_mono_in_high_dimension (α κ η) [Fintype α] [Fintype κ] [Fintype η] :
     ∃ (ι : Type) (_ : Fintype ι), ∀ C : (ι → α) → κ, ∃ l : Subspace η α ι, l.IsMono C := by
   obtain ⟨ι, _, hι⟩ := Line.exists_mono_in_high_dimension (η → α) κ
@@ -468,7 +470,7 @@ theorem exists_mono_in_high_dimension (α κ η) [Fintype α] [Fintype κ] [Fint
 /-- A variant of the extended Hales-Jewett theorem `exists_mono_in_high_dimension` where the
 returned type is some `Fin n` instead of a general fintype. -/
 theorem exists_mono_in_high_dimension_fin (α κ η) [Fintype α] [Fintype κ] [Fintype η] :
-  ∃ n, ∀ C : (Fin n → α) → κ, ∃ l : Subspace η α (Fin n), l.IsMono C := by
+    ∃ n, ∀ C : (Fin n → α) → κ, ∃ l : Subspace η α (Fin n), l.IsMono C := by
   obtain ⟨ι, ιfin, hι⟩ := exists_mono_in_high_dimension α κ η
   refine ⟨Fintype.card ι, fun C ↦ ?_⟩
   specialize hι fun v ↦ C (v ∘ (Fintype.equivFin _).symm)
