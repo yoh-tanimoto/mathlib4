@@ -22,3 +22,11 @@ instance (priority := 100) small_of_fintype (α : Type v) [Fintype α] : Small.{
   rw [small_congr (Fintype.equivFin α)]
   infer_instance
 #align small_of_fintype small_of_fintype
+
+variable {α : Type v} [Fintype α]
+
+noncomputable instance Shrink.instFintype [Small.{w} α] : Fintype (Shrink.{w} α) :=
+  Fintype.ofEquiv _ $ equivShrink _
+
+@[simp] lemma Fintype.card_shrink [Small.{w} α] : Fintype.card (Shrink.{w} α) = Fintype.card α :=
+  Fintype.card_congr (equivShrink _).symm
