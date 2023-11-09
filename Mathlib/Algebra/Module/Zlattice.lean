@@ -9,6 +9,8 @@ import Mathlib.MeasureTheory.Group.Measure
 import Mathlib.MeasureTheory.Measure.Lebesgue.EqHaar
 import Mathlib.RingTheory.Localization.Module
 
+import Mathlib.Sandbox
+
 #align_import algebra.module.zlattice from "leanprover-community/mathlib"@"a3e83f0fa4391c8740f7d773a7a9b74e311ae2a3"
 
 /-!
@@ -285,6 +287,10 @@ theorem quotientEquiv.symm_apply [Fintype ι] (x : fundamentalDomain b) :
   rw [Equiv.symm_apply_eq, quotientEquiv_apply_mk b ↑x, Subtype.ext_iff, fractRestrict_apply]
   exact (fract_eq_self.mpr x.prop).symm
 
+example : DiscreteTopology (span ℤ (Set.range b)) := by
+  refine discreteTopology_of_open_singleton_zero ?_
+  sorry
+
 end NormedLatticeField
 
 section Real
@@ -316,6 +322,12 @@ protected theorem isAddFundamentalDomain [Finite ι] [MeasurableSpace E] [OpensM
   exact IsAddFundamentalDomain.mk' (nullMeasurableSet (fundamentalDomain_measurableSet b))
     fun x => exist_unique_vadd_mem_fundamentalDomain b x
 #align zspan.is_add_fundamental_domain Zspan.isAddFundamentalDomain
+
+theorem measure_fundamentalDomain_ne_zero [Finite ι] [MeasurableSpace E] [BorelSpace E]
+    {μ : Measure E} [Measure.IsAddHaarMeasure μ] (hμ : μ ≠ 0) :
+    μ (fundamentalDomain b) ≠ 0 := by
+  convert (Zspan.isAddFundamentalDomain b μ).measure_ne_zero (fundamentalDomain b) hμ
+  exact (by infer_instance : Countable (span ℤ (Set.range b)))
 
 theorem measure_fundamentalDomain [Fintype ι] [DecidableEq ι] [MeasurableSpace E] (μ : Measure E)
     [BorelSpace E] [Measure.IsAddHaarMeasure μ] (b₀ : Basis ι ℝ E) :

@@ -474,6 +474,8 @@ instance : NoAtoms (volume : Measure (E K)) := by
   · exact @prod.instNoAtoms_snd _ _ _ _ volume volume _
       (pi_noAtoms ⟨w, not_isReal_iff_isComplex.mp hw⟩)
 
+instance : NeZero (volume : Measure (E K)) := Measure.instNeZeroMeasureInstZero _
+
 /-- The fudge factor that appears in the formula for the volume of `convexBodyLt`. -/
 noncomputable abbrev convexBodyLtFactor : ℝ≥0∞ :=
   (2 : ℝ≥0∞) ^ NrRealPlaces K * (NNReal.pi : ℝ≥0∞) ^ NrComplexPlaces K
@@ -621,6 +623,9 @@ theorem convexBodySum_convex : Convex ℝ (convexBodySum K B) := by
   convert le_of_eq (convexBodySumFun_smul c x)
   exact (abs_eq_self.mpr h).symm
 
+theorem convexBodySum_compact : IsCompact (convexBodySum K B) := by
+  sorry
+
 /-- The fudge factor that appears in the formula for the volume of `convexBodyLt`. -/
 noncomputable abbrev convexBodySumFactor : ℝ≥0∞ :=
   (2:ℝ≥0∞) ^ NrRealPlaces K * (NNReal.pi / 2) ^ NrComplexPlaces K / (finrank ℚ K).factorial
@@ -697,9 +702,12 @@ theorem minkowskiBound_lt_top : minkowskiBound K < ⊤ := by
   · exact ne_of_lt (fundamentalDomain_isBounded (latticeBasis K)).measure_lt_top
   · exact ne_of_lt (ENNReal.pow_lt_top (lt_top_iff_ne_top.mpr ENNReal.two_ne_top) _)
 
-variable {f : InfinitePlace K → ℝ≥0}
+theorem minkowskiBound_ne_zero : minkowskiBound K ≠ 0 := by
+  refine mul_ne_zero ?_ ?_
+  · exact Zspan.measure_fundamentalDomain_ne_zero (latticeBasis K) (NeZero.ne volume)
+  · exact ENNReal.pow_ne_zero two_ne_zero _
 
-instance : IsAddHaarMeasure (volume : Measure (E K)) := prod.instIsAddHaarMeasure volume volume
+variable {f : InfinitePlace K → ℝ≥0}
 
 /-- Assume that `f : InfinitePlace K → ℝ≥0` is such that
 `minkowskiBound K < volume (convexBodyLt K f)` where `convexBodyLt K f` is the set of
@@ -721,12 +729,12 @@ theorem exists_ne_zero_mem_ringOfIntegers_lt (h : minkowskiBound K < volume (con
   exact Subtype.ne_of_val_ne h_nzr
 
 theorem exists_ne_zero_mem_ringOfIntegers_of_norm_le {B : ℝ}
-    (h : (minkowskiBound K) < volume (convexBodySum K B)) :
+    (h : (minkowskiBound K) ≤ volume (convexBodySum K B)) :
     ∃ (a : 𝓞 K), a ≠ 0 ∧ |Algebra.norm ℚ (a:K)| ≤ (B / (finrank ℚ K)) ^ (finrank ℚ K) := by
   have hB : 0 ≤ B := by
     contrapose! h
     rw [convexBodySum_volume_eq_zero K (le_of_lt h)]
-    exact zero_le (minkowskiBound K)
+    sorry
   -- Some inequalities that will be useful later on
   have h1 : 0 < (finrank ℚ K : ℝ)⁻¹ := inv_pos.mpr (Nat.cast_pos.mpr finrank_pos)
   have h2 : 0 ≤ B / (finrank ℚ K) := div_nonneg hB (Nat.cast_nonneg _)
@@ -734,8 +742,13 @@ theorem exists_ne_zero_mem_ringOfIntegers_of_norm_le {B : ℝ}
   have : Countable (Submodule.span ℤ (Set.range (latticeBasis K))).toAddSubgroup := by
     change Countable (Submodule.span ℤ (Set.range (latticeBasis K)): Set (E K))
     infer_instance
-  obtain ⟨⟨x, hx⟩, h_nzr, h_mem⟩ := exists_ne_zero_mem_lattice_of_measure_mul_two_pow_lt_measure
-    h_fund (convexBodySum_symmetric K B) (convexBodySum_convex K B) h
+  have : DiscreteTopology (Submodule.span ℤ (Set.range (latticeBasis K))).toAddSubgroup := by
+    change DiscreteTopology  (Submodule.span ℤ (Set.range (latticeBasis K)): Set (E K))
+    sorry
+  have : volume (convexBodySum K B) ≠ 0 := sorry
+  obtain ⟨⟨x, hx⟩, h_nzr, h_mem⟩ := exists_ne_zero_mem_lattice_of_measure_mul_two_pow_le_measure
+      h_fund (convexBodySum_symmetric K B) (convexBodySum_convex K B)
+      (convexBodySum_compact K B) this h
   rw [Submodule.mem_toAddSubgroup, mem_span_latticeBasis] at hx
   obtain ⟨a, ha, rfl⟩ := hx
   refine ⟨⟨a, ha⟩, ?_, ?_⟩
