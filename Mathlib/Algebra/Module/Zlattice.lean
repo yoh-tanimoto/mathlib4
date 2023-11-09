@@ -5,7 +5,6 @@ Authors: Xavier Roblot
 -/
 import Mathlib.LinearAlgebra.FreeModule.PID
 import Mathlib.MeasureTheory.Group.FundamentalDomain
-import Mathlib.MeasureTheory.Group.Measure
 import Mathlib.MeasureTheory.Measure.Lebesgue.EqHaar
 import Mathlib.RingTheory.Localization.Module
 
@@ -315,7 +314,7 @@ example [Fintype ι] : DiscreteTopology (span ℤ (Set.range (Pi.basisFun ℝ ι
   rw [← norm_toNNReal]
   rw [Real.toNNReal_lt_toNNReal_iff]
   simp only [Real.norm_eq_abs, _root_.map_zero, Finsupp.coe_zero, Pi.zero_apply]
-  
+
 
 example [Fintype ι] : DiscreteTopology (span ℤ (Set.range b)) := by
   have t0 := continuous_equivFun_basis b
@@ -360,9 +359,9 @@ protected theorem isAddFundamentalDomain [Finite ι] [MeasurableSpace E] [OpensM
 #align zspan.is_add_fundamental_domain Zspan.isAddFundamentalDomain
 
 theorem measure_fundamentalDomain_ne_zero [Finite ι] [MeasurableSpace E] [BorelSpace E]
-    {μ : Measure E} [Measure.IsAddHaarMeasure μ] (hμ : μ ≠ 0) :
+    {μ : Measure E} [Measure.IsAddHaarMeasure μ] :
     μ (fundamentalDomain b) ≠ 0 := by
-  convert (Zspan.isAddFundamentalDomain b μ).measure_ne_zero (fundamentalDomain b) hμ
+  convert (Zspan.isAddFundamentalDomain b μ).measure_ne_zero (NeZero.ne μ)
   exact (by infer_instance : Countable (span ℤ (Set.range b)))
 
 theorem measure_fundamentalDomain [Fintype ι] [DecidableEq ι] [MeasurableSpace E] (μ : Measure E)
