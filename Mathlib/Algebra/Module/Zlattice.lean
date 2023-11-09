@@ -287,10 +287,6 @@ theorem quotientEquiv.symm_apply [Fintype ι] (x : fundamentalDomain b) :
   rw [Equiv.symm_apply_eq, quotientEquiv_apply_mk b ↑x, Subtype.ext_iff, fractRestrict_apply]
   exact (fract_eq_self.mpr x.prop).symm
 
-example : DiscreteTopology (span ℤ (Set.range b)) := by
-  refine discreteTopology_of_open_singleton_zero ?_
-  sorry
-
 end NormedLatticeField
 
 section Real
@@ -298,6 +294,46 @@ section Real
 variable [NormedAddCommGroup E] [NormedSpace ℝ E]
 
 variable (b : Basis ι ℝ E)
+
+-- Might just need add 𝕜 complete?
+example [Fintype ι] : DiscreteTopology (span ℤ (Set.range (Pi.basisFun ℝ ι))) := by
+  rw [discreteTopology_iff_open_singleton_zero]
+  rw [@isOpen_mk]
+  refine ⟨?_, ?_, ?_⟩
+  exact Metric.ball 0 (1/2)
+  exact Metric.isOpen_ball
+  ext x
+  simp [Pi.norm_def]
+  rw [← @Real.lt_toNNReal_iff_coe_lt]
+  simp only [bot_eq_zero', Real.toNNReal_pos, inv_pos, zero_lt_two, Finset.sup_lt_iff,
+    Finset.mem_univ, forall_true_left]
+  let b₀ := Basis.restrictScalars ℤ (Pi.basisFun ℝ ι)
+  have := b₀.ext_elem_iff (x := x) (y := 0)
+  rw [this]
+  refine forall_congr' ?_
+  intro i
+  rw [← norm_toNNReal]
+  rw [Real.toNNReal_lt_toNNReal_iff]
+  simp only [Real.norm_eq_abs, _root_.map_zero, Finsupp.coe_zero, Pi.zero_apply]
+  
+
+example [Fintype ι] : DiscreteTopology (span ℤ (Set.range b)) := by
+  have t0 := continuous_equivFun_basis b
+  let f := Set.MapsTo.restrict b.equivFun (span ℤ (Set.range b)) (span ℤ (Set.range (Pi.basisFun ℝ ι))) ?_
+  have : Continuous f := by refine Continuous.restrict ?refine_1 t0
+  convert DiscreteTopology.of_continuous_injective this ?_
+  · sorry
+  · refine Subtype.map_injective _ ?_
+    exact LinearEquiv.injective (Basis.equivFun b)
+  · intro a ha
+
+    simp only [Basis.equivFun_apply, SetLike.mem_coe]
+    rw [Basis.mem_span_iff_repr_mem]
+    intro i
+    simp
+    simp only [SetLike.mem_coe] at ha
+    sorry
+    -- define Basis.restrictScalars?
 
 @[measurability]
 theorem fundamentalDomain_measurableSet [MeasurableSpace E] [OpensMeasurableSpace E] [Finite ι] :

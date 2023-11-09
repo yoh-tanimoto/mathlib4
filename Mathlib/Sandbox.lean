@@ -14,3 +14,4 @@ theorem MeasureTheory.IsFundamentalDomain.measure_ne_zero
   rw [← measure_congr h.iUnion_smul_ae_eq]
   refine le_trans (measure_iUnion_le _) ?_
   simp_rw [measure_smul, hc, tsum_zero, le_refl]
+
