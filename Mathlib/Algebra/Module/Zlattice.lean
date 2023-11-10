@@ -290,49 +290,29 @@ end NormedLatticeField
 
 section Real
 
-variable [NormedAddCommGroup E] [NormedSpace ℝ E]
-
-variable (b : Basis ι ℝ E)
-
--- Might just need add 𝕜 complete?
-example [Fintype ι] : DiscreteTopology (span ℤ (Set.range (Pi.basisFun ℝ ι))) := by
-  rw [discreteTopology_iff_open_singleton_zero]
-  rw [@isOpen_mk]
-  refine ⟨?_, ?_, ?_⟩
-  exact Metric.ball 0 (1/2)
-  exact Metric.isOpen_ball
+theorem discreteTopology_pi_basisFun [Fintype ι] :
+    DiscreteTopology (span ℤ (Set.range (Pi.basisFun ℝ ι))) := by
+  refine discreteTopology_iff_open_singleton_zero.mpr ⟨Metric.ball 0 1, Metric.isOpen_ball, ?_⟩
   ext x
-  simp [Pi.norm_def]
-  rw [← @Real.lt_toNNReal_iff_coe_lt]
-  simp only [bot_eq_zero', Real.toNNReal_pos, inv_pos, zero_lt_two, Finset.sup_lt_iff,
-    Finset.mem_univ, forall_true_left]
-  let b₀ := Basis.restrictScalars ℤ (Pi.basisFun ℝ ι)
-  have := b₀.ext_elem_iff (x := x) (y := 0)
-  rw [this]
-  refine forall_congr' ?_
-  intro i
-  rw [← norm_toNNReal]
-  rw [Real.toNNReal_lt_toNNReal_iff]
-  simp only [Real.norm_eq_abs, _root_.map_zero, Finsupp.coe_zero, Pi.zero_apply]
+  rw [Set.mem_preimage, mem_ball_zero_iff, Set.mem_singleton_iff, Pi.norm_def,
+    ← Real.lt_toNNReal_iff_coe_lt, Finset.sup_lt_iff (by simp), Real.toNNReal_one, ← coe_eq_zero]
+  simp_rw [Finset.mem_univ, forall_true_left, Function.funext_iff, Pi.zero_apply]
+  refine forall_congr' (fun i => ?_)
+  rw [← norm_toNNReal, Real.toNNReal_lt_one, Real.norm_eq_abs]
+  rsuffices ⟨y, hy⟩ : ∃ (y : ℤ), (y : ℝ) = (x : ι → ℝ) i
+  · rw [← hy, ← Int.cast_abs, ← Int.cast_one,  Int.cast_lt, Int.abs_lt_one_iff, Int.cast_eq_zero]
+  exact ((Pi.basisFun ℝ ι).mem_span_iff_repr_mem ℤ x).mp (SetLike.coe_mem x) i
 
+variable [NormedAddCommGroup E] [NormedSpace ℝ E] (b : Basis ι ℝ E)
 
-example [Fintype ι] : DiscreteTopology (span ℤ (Set.range b)) := by
-  have t0 := continuous_equivFun_basis b
-  let f := Set.MapsTo.restrict b.equivFun (span ℤ (Set.range b)) (span ℤ (Set.range (Pi.basisFun ℝ ι))) ?_
-  have : Continuous f := by refine Continuous.restrict ?refine_1 t0
-  convert DiscreteTopology.of_continuous_injective this ?_
-  · sorry
-  · refine Subtype.map_injective _ ?_
-    exact LinearEquiv.injective (Basis.equivFun b)
-  · intro a ha
-
-    simp only [Basis.equivFun_apply, SetLike.mem_coe]
-    rw [Basis.mem_span_iff_repr_mem]
-    intro i
-    simp
-    simp only [SetLike.mem_coe] at ha
-    sorry
-    -- define Basis.restrictScalars?
+instance [Fintype ι] : DiscreteTopology (span ℤ (Set.range b)) := by
+  have h : Set.MapsTo b.equivFun (span ℤ (Set.range b)) (span ℤ (Set.range (Pi.basisFun ℝ ι))) := by
+    intro _ hx
+    rw [SetLike.mem_coe, Basis.mem_span_iff_repr_mem] at hx ⊢
+    exact fun i => hx i
+  convert DiscreteTopology.of_continuous_injective ((continuous_equivFun_basis b).restrict h) ?_
+  · exact discreteTopology_pi_basisFun
+  · refine Subtype.map_injective _ (Basis.equivFun b).injective
 
 @[measurability]
 theorem fundamentalDomain_measurableSet [MeasurableSpace E] [OpensMeasurableSpace E] [Finite ι] :
