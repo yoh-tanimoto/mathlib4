@@ -8,8 +8,6 @@ import Mathlib.MeasureTheory.Group.FundamentalDomain
 import Mathlib.MeasureTheory.Measure.Lebesgue.EqHaar
 import Mathlib.RingTheory.Localization.Module
 
-import Mathlib.Sandbox
-
 #align_import algebra.module.zlattice from "leanprover-community/mathlib"@"a3e83f0fa4391c8740f7d773a7a9b74e311ae2a3"
 
 /-!
