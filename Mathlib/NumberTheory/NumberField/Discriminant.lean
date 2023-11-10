@@ -82,18 +82,80 @@ theorem _root_.NumberField.mixedEmbedding.volume_fundamentalDomain_latticeBasis 
     stdBasis_repr_eq_matrixToStdBasis_mul K _ (fun _ => rfl)]
   rfl
 
-example (p : (Set ℝ) → Prop) : (∀ ε, 0 < ε → p (Set.Ioi ε)) → p (Set.Ici 0) := by
-  
-  sorry
+theorem toto :
+    ∃ (a : 𝓞 K), a ≠ 0 ∧
+      |Algebra.norm ℚ (a:K)| ≤ (2:ℝ) ^ (finrank ℚ K - NrRealPlaces K : ℤ)
+        * π⁻¹ ^ NrComplexPlaces K *
+          (finrank ℚ K).factorial * Real.sqrt |discr K| / (finrank ℚ K) ^ (finrank ℚ K)  := by
+
+  let B := ((minkowskiBound K).toReal * (convexBodySumFactor K).toReal⁻¹) ^ (1 / (finrank ℚ K : ℝ))
+  have : (minkowskiBound K) ≤ volume (convexBodySum K B) := by
+    refine le_of_eq ?_
+    rw [convexBodySum_volume, ← ENNReal.ofReal_pow, ← Real.rpow_nat_cast, ← Real.rpow_mul,
+      div_mul_cancel, Real.rpow_one, ← toReal_inv, ← toReal_mul, ofReal_toReal]
+    rw [mul_comm, mul_assoc, ENNReal.inv_mul_cancel, mul_one]
+
+  obtain ⟨x, h_nz, h_bd⟩ := exists_ne_zero_mem_ringOfIntegers_of_norm_le K this
+  refine ⟨x, h_nz, ?_⟩
+  convert h_bd
+  rw [div_pow B, ← Real.rpow_nat_cast B, ← Real.rpow_mul (by positivity), div_mul_cancel _
+    (Nat.cast_ne_zero.mpr <| ne_of_gt finrank_pos), Real.rpow_one, Nat.cast_pow]
+  congr 1
+  rw [eq_comm]
+  calc
+    _ = (2:ℝ)⁻¹ ^ NrComplexPlaces K * sqrt ‖discr K‖₊ * (2:ℝ) ^ finrank ℚ K *
+          ((2:ℝ) ^ NrRealPlaces K * (π / 2) ^ NrComplexPlaces K /
+          (Nat.factorial (finrank ℚ K)))⁻¹ := ?_
+    _ = (2:ℝ) ^ (finrank ℚ K - NrComplexPlaces K - NrRealPlaces K + NrComplexPlaces K : ℤ) *
+          Real.sqrt ‖discr K‖ * Nat.factorial (finrank ℚ K) * π⁻¹ ^ (NrComplexPlaces K) := ?_
+    _ = (2:ℝ) ^ (finrank ℚ K - NrRealPlaces K : ℤ) * π⁻¹ ^ NrComplexPlaces K *
+        (Nat.factorial (finrank ℚ K)) * Real.sqrt |discr K| := ?_
+  · simp_rw [minkowskiBound, convexBodySumFactor, volume_fundamentalDomain_latticeBasis, toReal_div,
+      toReal_mul, mixedEmbedding.finrank, toReal_pow, toReal_inv, coe_toReal, NNReal.coe_pow,
+      NNReal.coe_div, coe_real_pi, NNReal.coe_ofNat, toReal_ofNat, toReal_nat]
+  · simp_rw [inv_div, div_eq_mul_inv, mul_inv, ← zpow_neg_one, ← zpow_coe_nat, mul_zpow, ← zpow_mul,
+      neg_one_mul, mul_neg_one, neg_neg, Real.coe_sqrt, coe_nnnorm, sub_eq_add_neg, zpow_add₀ sorry]
+    ring
+  · rw [show (finrank ℚ K - NrComplexPlaces K - NrRealPlaces K + NrComplexPlaces K : ℤ) = finrank ℚ K -
+     NrRealPlaces K by ring, show ‖discr K‖ = |(discr K : ℝ)| by rfl]
+    ring
+
+
+
+#exit
+
+ 2 ^ (finrank ℚ K - NrComplexPlaces K - NrRealPlaces K + NrComplexPlaces K : ℤ) *
+  Real.sqrt ‖discr K‖ * Nat.factorial (finrank ℚ K) * π⁻¹ ^ (NrComplexPlaces K)
+
+
+#exit
+  simp_rw [minkowskiBound, volume_fundamentalDomain_latticeBasis, convexBodySumFactor,
+    mixedEmbedding.finrank, div_pow, toReal_div, toReal_mul, toReal_pow, toReal_inv, toReal_ofNat,
+    coe_toReal, Real.coe_sqrt, coe_nnnorm, NNReal.coe_div, NNReal.coe_pow, coe_real_pi,
+    NNReal.coe_ofNat, toReal_nat, ← Real.rpow_nat_cast, ← Real.rpow_mul sorry,
+    div_mul_cancel _ sorry, Real.rpow_one]
+
+
+
+
+
+#exit
+
+
+  simp only [div_pow, Nat.cast_pow, int_cast_abs, coe_toReal, Real.coe_sqrt, coe_nnnorm,
+    toReal_ofNat, ne_eq, one_div]
+  simp_rw [← Real.rpow_nat_cast, Real.div_rpow sorry sorry, ← Real.rpow_mul sorry, div_mul_cancel
+    _ sorry, Real.rpow_one, minkowskiBound, volume_fundamentalDomain_latticeBasis,
+    convexBodySumFactor, mixedEmbedding.finrank, toReal_mul]
+  ring_nf
 
 example :
     ∃ (a : 𝓞 K), a ≠ 0 ∧
     |Algebra.norm ℚ (a:K)| ≤
       Real.sqrt |discr K| * (finrank ℚ K).factorial / (finrank ℚ K) ^ (finrank ℚ K) /
         (2 ^ NrRealPlaces K * π ^ NrComplexPlaces K) := by
-  let C := Real.sqrt |discr K| * (finrank ℚ K).factorial / (finrank ℚ K) ^ (finrank ℚ K) /
-        (2 ^ NrRealPlaces K * π ^ NrComplexPlaces K)
-  suffices ∀ ε : ℝ, 0 < ε → ∃ (a : 𝓞 K), a ≠ 0 ∧ |Algebra.norm ℚ (a:K)| ≤ C * (1 + ε) by
+  let C :=
+
     sorry
   sorry
 
