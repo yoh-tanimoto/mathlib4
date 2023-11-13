@@ -661,6 +661,15 @@ theorem convexBodySum_compact : IsCompact (convexBodySum K B) := by
 noncomputable abbrev convexBodySumFactor : ℝ≥0∞ :=
   (2:ℝ≥0∞) ^ NrRealPlaces K * (NNReal.pi / 2) ^ NrComplexPlaces K / (finrank ℚ K).factorial
 
+theorem convexBodySumFactor_ne_zero : convexBodySumFactor K ≠ 0 := by
+  refine mul_ne_zero (mul_ne_zero (pow_ne_zero _ two_ne_zero) ?_) ?_
+  exact coe_ne_zero.mpr (pow_ne_zero _ (div_ne_zero NNReal.pi_ne_zero two_ne_zero))
+  exact ENNReal.inv_ne_zero.mpr (nat_ne_top _)
+
+theorem convexBodySumFactor_ne_top : convexBodySumFactor K ≠ ⊤ := by
+  refine (mul_ne_top (mul_ne_top (pow_ne_top two_ne_top) coe_ne_top) ?_)
+  exact inv_ne_top.mpr <| Nat.cast_ne_zero.mpr (Nat.factorial_ne_zero _)
+
 open MeasureTheory MeasureTheory.Measure Real
 
 theorem convexBodySum_volume :
