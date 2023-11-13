@@ -188,6 +188,14 @@ theorem discr_gt_one (h : 1 < finrank ℚ K) : 1 < |discr K| := by
     ← card_add_two_mul_card_eq_rank]
   exact Nat.le_add_left _ _
 
+example {A : Type*} [Field A] [CharZero A] [IsAlgClosed A] (N : ℕ) :
+    sorry := by
+  let S := { K : { K : Subfield A // FiniteDimensional ℚ K } |
+    (haveI : NumberField K := @NumberField.mk _ _ inferInstance K.prop; |discr K| ≤ N) }
+
+  sorry
+
+
 end NumberField
 
 namespace Rat
