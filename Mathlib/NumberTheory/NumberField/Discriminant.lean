@@ -189,10 +189,9 @@ theorem discr_gt_one (h : 1 < finrank ℚ K) : 1 < |discr K| := by
   exact Nat.le_add_left _ _
 
 example {A : Type*} [Field A] [CharZero A] [IsAlgClosed A] (N : ℕ) :
-    sorry := by
-  let S := { K : { K : Subfield A // FiniteDimensional ℚ K } |
-    (haveI : NumberField K := @NumberField.mk _ _ inferInstance K.prop; |discr K| ≤ N) }
-
+    {K : { K : Subfield A // FiniteDimensional ℚ K } |
+      letI :  NumberField K := @NumberField.mk _ _ inferInstance K.prop
+      |discr K| ≤ N }.Finite := by
   sorry
 
 
