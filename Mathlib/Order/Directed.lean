@@ -185,26 +185,6 @@ theorem exists_le_le [LE α] [IsDirected α (· ≥ ·)] (a b : α) : ∃ c, c �
   directed_of (· ≥ ·) a b
 #align exists_le_le exists_le_le
 
-theorem Monotone.directed_le [Preorder α] [IsDirected α (· ≤ ·)] [Preorder β]
-    {f : α → β} (hf : Monotone f) : Directed (· ≤ ·) f :=
-  directed_id.mono_comp hf
-#align monotone.directed_le Monotone.directed_le
-
-theorem Antitone.directed_ge [Preorder α] [IsDirected α (· ≤ ·)] [Preorder β]
-    {f : α → β} (hf : Antitone f) : Directed (· ≥ ·) f :=
-  directed_id.mono_comp hf
-#align antitone.directed_ge Antitone.directed_ge
-
-theorem Monotone.directed_ge [Preorder α] [IsDirected α (· ≥ ·)] [Preorder β]
-    {f : α → β} (hf : Monotone f) : Directed (· ≥ ·) f :=
-  directed_id.mono_comp hf.dual
-#align monotone.directed_ge Monotone.directed_ge
-
-theorem Antitone.directed_le [Preorder α] [IsDirected α (· ≥ ·)] [Preorder β]
-    {f : α → β} (hf : Antitone f) : Directed (· ≤ ·) f :=
-  directed_id.mono_comp hf.dual
-#align antitone.directed_le Antitone.directed_le
-
 instance OrderDual.isDirected_ge [LE α] [IsDirected α (· ≤ ·)] : IsDirected αᵒᵈ (· ≥ ·) := by
   assumption
 #align order_dual.is_directed_ge OrderDual.isDirected_ge
@@ -333,13 +313,13 @@ end Preorder
 -- see Note [lower instance priority]
 instance (priority := 100) SemilatticeSup.to_isDirected_le [SemilatticeSup α] :
     IsDirected α (· ≤ ·) :=
-  ⟨directed_of_sup fun _ _ ↦ id⟩
+  ⟨fun a b => ⟨a ⊔ b, le_sup_left, le_sup_right⟩⟩
 #align semilattice_sup.to_is_directed_le SemilatticeSup.to_isDirected_le
 
 -- see Note [lower instance priority]
 instance (priority := 100) SemilatticeInf.to_isDirected_ge [SemilatticeInf α] :
     IsDirected α (· ≥ ·) :=
-  ⟨directed_of_inf fun _ _ ↦ id⟩
+  ⟨fun a b => ⟨a ⊓ b, inf_le_left, inf_le_right⟩⟩
 #align semilattice_inf.to_is_directed_ge SemilatticeInf.to_isDirected_ge
 
 -- see Note [lower instance priority]
