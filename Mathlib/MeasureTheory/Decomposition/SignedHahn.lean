@@ -41,9 +41,9 @@ noncomputable section
 
 open scoped Classical BigOperators NNReal ENNReal MeasureTheory
 
-variable {α β : Type _} [MeasurableSpace α]
+variable {α β : Type*} [MeasurableSpace α]
 
-variable {M : Type _} [AddCommMonoid M] [TopologicalSpace M] [OrderedAddCommMonoid M]
+variable {M : Type*} [AddCommMonoid M] [TopologicalSpace M] [OrderedAddCommMonoid M]
 
 namespace MeasureTheory
 
@@ -290,9 +290,8 @@ theorem exists_subset_restrict_nonpos (hi : s i < 0) :
     have : Summable fun l => s (restrictNonposSeq s i l) :=
       HasSum.summable
         (s.m_iUnion (fun _ => restrictNonposSeq_measurableSet _) restrictNonposSeq_disjoint)
-    refine'
-      summable_of_nonneg_of_le (fun n => _) (fun n => _)
-        (Summable.comp_injective this Nat.succ_injective)
+    refine' .of_nonneg_of_le (fun n => _) (fun n => _)
+        (this.comp_injective Nat.succ_injective)
     · exact le_of_lt Nat.one_div_pos_of_nat
     · exact le_of_lt (restrictNonposSeq_lt n (hn' n))
   have h₃ : Tendsto (fun n => (bdd n : ℝ) + 1) atTop atTop := by
