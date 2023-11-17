@@ -652,10 +652,7 @@ theorem toMeasure_toOuterMeasure (m : OuterMeasure α) (h : ms ≤ m.caratheodor
   rfl
 #align measure_theory.to_measure_to_outer_measure MeasureTheory.toMeasure_toOuterMeasure
 
--- Porting note: A coercion is directly elaborated in Lean4, so the LHS is simplified by
--- `toMeasure_toOuterMeasure` even if this theorem has high priority.
--- Instead of this theorem, we give `simp` attr to `OuterMeasure.trim_eq`.
--- @[simp]
+@[simp]
 theorem toMeasure_apply (m : OuterMeasure α) (h : ms ≤ m.caratheodory) {s : Set α}
     (hs : MeasurableSet s) : m.toMeasure h s = m s :=
   m.trim_eq hs
@@ -683,7 +680,7 @@ theorem toOuterMeasure_toMeasure {μ : Measure α} :
   Measure.ext fun _s => μ.toOuterMeasure.trim_eq
 #align measure_theory.to_outer_measure_to_measure MeasureTheory.toOuterMeasure_toMeasure
 
--- @[simp] -- Porting note: simp can prove this
+@[simp]
 theorem boundedBy_measure (μ : Measure α) : OuterMeasure.boundedBy μ = μ.toOuterMeasure :=
   μ.toOuterMeasure.boundedBy_eq_self
 #align measure_theory.bounded_by_measure MeasureTheory.boundedBy_measure
@@ -876,8 +873,7 @@ instance instModule [Semiring R] [Module R ℝ≥0∞] [IsScalarTower R ℝ≥0�
     toOuterMeasure_injective smul_toOuterMeasure
 #align measure_theory.measure.module MeasureTheory.Measure.instModule
 
--- Porting note: A coercion is directly elaborated in Lean4, so the LHS is simplified by
--- `smul_toOuterMeasure` even if this theorem has high priority.
+-- Porting note: The LHS is simplified by `smul_apply`.
 -- Instead of this theorem, we give `simp` attr to `nnreal_smul_coe_apply`.
 -- @[simp]
 theorem coe_nnreal_smul_apply {_m : MeasurableSpace α} (c : ℝ≥0) (μ : Measure α) (s : Set α) :

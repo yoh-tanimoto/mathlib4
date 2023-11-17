@@ -121,7 +121,7 @@ def _root_.MeasureTheory.FiniteMeasure (Ω : Type*) [MeasurableSpace Ω] : Type 
 -- coercion instead of relying on `Subtype.val`.
 /-- Coercion from `MeasureTheory.FiniteMeasure Ω` to `MeasureTheory.Measure Ω`. -/
 @[coe]
-def toMeasure : FiniteMeasure Ω → Measure Ω := Subtype.val
+abbrev toMeasure : FiniteMeasure Ω → Measure Ω := Subtype.val
 
 /-- A finite measure can be interpreted as a measure. -/
 instance instCoe : Coe (FiniteMeasure Ω) (MeasureTheory.Measure Ω) where
@@ -271,7 +271,6 @@ instance {Ω : Type*} [MeasurableSpace Ω] : Module ℝ≥0 (FiniteMeasure Ω) :
 theorem coeFn_smul_apply [IsScalarTower R ℝ≥0 ℝ≥0] (c : R) (μ : FiniteMeasure Ω) (s : Set Ω) :
     (c • μ) s = c • μ s := by
   rw [coeFn_smul, Pi.smul_apply]
-  -- porting note: why doesn't `simp only` work in place of `rw` here?
 #align measure_theory.finite_measure.coe_fn_smul_apply MeasureTheory.FiniteMeasure.coeFn_smul_apply
 
 /-- Restrict a finite measure μ to a set A. -/
