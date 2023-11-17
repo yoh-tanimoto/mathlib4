@@ -51,7 +51,7 @@ theorem _root_.MeasureTheory.AEStronglyMeasurable.comp_snd_map_prod_id [Topologi
 
 theorem _root_.MeasureTheory.Integrable.comp_snd_map_prod_id [NormedAddCommGroup F] (hm : m ≤ mΩ)
     (hf : Integrable f μ) : Integrable (fun x : Ω × Ω => f x.2)
-      (@Measure.map Ω (Ω × Ω) (m.prod mΩ) mΩ (fun ω => (ω, ω)) μ) := by
+      (@Measure.map Ω (Ω × Ω) (m.prod mΩ) mΩ (fun ω => (id ω, id ω)) μ) := by
   rw [← integrable_comp_snd_map_prod_mk_iff (measurable_id'' hm)] at hf
   simp_rw [id.def] at hf ⊢
   exact hf
