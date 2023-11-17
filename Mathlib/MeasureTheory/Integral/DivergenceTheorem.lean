@@ -406,7 +406,8 @@ theorem integral_eq_of_hasDerivWithinAt_off_countable_of_le (f f' : ℝ → E) {
     _ = f b - f a := by
       simp only [Fin.sum_univ_one, e_symm]
       have : ∀ c : ℝ, const (Fin 0) c = isEmptyElim := fun c => Subsingleton.elim _ _
-      simp [this, volume_pi, Measure.pi_of_empty fun _ : Fin 0 => volume]
+      simp only [this, volume_pi, Measure.pi_of_empty fun _ : Fin 0 => volume]
+      simp
 #align measure_theory.integral_eq_of_has_deriv_within_at_off_countable_of_le MeasureTheory.integral_eq_of_hasDerivWithinAt_off_countable_of_le
 
 /-- **Fundamental theorem of calculus, part 2**. This version assumes that `f` is continuous on the
