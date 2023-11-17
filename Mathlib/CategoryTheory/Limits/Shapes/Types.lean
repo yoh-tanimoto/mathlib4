@@ -462,7 +462,7 @@ theorem coproductIso_ι_comp_hom {J : Type v} (F : J → TypeMax.{v, u}) (j : J)
 #align category_theory.limits.types.coproduct_iso_ι_comp_hom CategoryTheory.Limits.Types.coproductIso_ι_comp_hom
 
 theorem coproductIso_ι_comp_hom_apply' {J : Type u} (F : J → Type u) (j : J) (x : F j) :
-    (coproductIso F).hom (Sigma.ι F j x) = ⟨j, x⟩ :=
+    (coproductIso.{u, u} F).hom (Sigma.ι F j x) = ⟨j, x⟩ :=
   coproductIso_ι_comp_hom_apply _ _ _
 
 -- porting note: was @[elementwise (attr := simp)], but it produces a trivial lemma
@@ -477,7 +477,7 @@ section Small
 noncomputable def coproductEquiv {J : Type v} [Small.{u} J] (F : J → Type u) [HasCoproduct F] :
   ∐ F ≃ Σj, F j := calc
     ∐ F ≃ ∐ (F ∘ (equivShrink.{u} J).symm) := (Sigma.reindex _ _).symm.toEquiv
-    _ ≃ Σj, (F ∘ (equivShrink.{u} J).symm) j := (coproductIso _).toEquiv
+    _ ≃ Σj, (F ∘ (equivShrink.{u} J).symm) j := (coproductIso.{u, u} _).toEquiv
     _ ≃ Σj, F j := Equiv.sigmaCongrLeft _
 
 attribute [local instance] ConcreteCategory.funLike
