@@ -133,7 +133,7 @@ instance instFunLike : FunLike (ProbabilityMeasure Ω) (Set Ω) (fun _ => ℝ≥
     apply (ENNReal.toNNReal_eq_toNNReal_iff' _ _).mp (congr_fun h s) <;> exact measure_ne_top _ _
 
 lemma coeFn_eq_toNNReal_coeFn_toMeasure (ν : ProbabilityMeasure Ω) :
-  (ν : Set Ω → ℝ≥0) = fun s ↦ ((ν : Measure Ω) s).toNNReal := rfl
+    (ν : Set Ω → ℝ≥0) = fun s ↦ ((ν : Measure Ω) s).toNNReal := rfl
 #align measure_theory.probability_measure.coe_fn_eq_to_nnreal_coe_fn_to_measure MeasureTheory.ProbabilityMeasure.coeFn_eq_toNNReal_coeFn_toMeasure
 
 @[simp]
