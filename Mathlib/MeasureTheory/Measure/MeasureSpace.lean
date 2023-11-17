@@ -1559,14 +1559,12 @@ protected theorem smul [Monoid R] [DistribMulAction R ℝ≥0∞] [IsScalarTower
 
 protected lemma add (h1 : μ₁ ≪ ν) (h2 : μ₂ ≪ ν') : μ₁ + μ₂ ≪ ν + ν' := by
   intro s hs
-  simp only [← coe_toOuterMeasure, add_toOuterMeasure, OuterMeasure.coe_add, Pi.add_apply,
-    add_eq_zero] at hs ⊢
+  simp only [coe_add, Pi.add_apply, add_eq_zero] at hs ⊢
   exact ⟨h1 hs.1, h2 hs.2⟩
 
 lemma add_right (h1 : μ ≪ ν) (ν' : Measure α) : μ ≪ ν + ν' := by
   intro s hs
-  simp only [← coe_toOuterMeasure, add_toOuterMeasure, OuterMeasure.coe_add, Pi.add_apply,
-    add_eq_zero] at hs ⊢
+  simp only [coe_add, Pi.add_apply, add_eq_zero] at hs ⊢
   exact h1 hs.1
 
 end AbsolutelyContinuous
