@@ -188,11 +188,42 @@ theorem discr_gt_one (h : 1 < finrank ℚ K) : 1 < |discr K| := by
     ← card_add_two_mul_card_eq_rank]
   exact Nat.le_add_left _ _
 
-example {A : Type*} [Field A] [CharZero A] [IsAlgClosed A] (N : ℕ) :
-    {K : { K : Subfield A // FiniteDimensional ℚ K } |
-      letI :  NumberField K := @NumberField.mk _ _ inferInstance K.prop
-      |discr K| ≤ N }.Finite := by
+section Hermite
+
+open scoped Polynomial IntermediateField
+
+variable {A : Type*} [Field A] [CharZero A]
+
+theorem aux1 (S : Set { K : Subfield A // FiniteDimensional ℚ K }) (T : Set ℚ[X])
+    (hT : T.Finite) (h : ∀ K ∈ S, ∃ P ∈ T, ∃ a : A, Polynomial.aeval a P = 0 ∧
+    Subfield.toIntermediateField K sorry = ℚ⟮a⟯) :
+    S.Finite := by
   sorry
+
+variable {B : ℕ} (hB : minkowskiBound K < (convexBodyLtFactor K) * B)
+
+example {w : InfinitePlace K} (hw : IsReal w) :
+    ∃ a : 𝓞 K, (∀ z, z ≠ w → z a < 1 / 2) ∧ K = ℚ⟮(a:K)⟯ := by
+  let f : InfinitePlace K → ℝ≥0 := fun _ ↦ 1 / 2
+  have : ∀ z, z ≠ w → f z ≠ 0 := sorry
+  obtain ⟨g, h_geqf, h_gprod⟩ := adjust_f K B this
+  obtain ⟨a, h_anz, h_ale⟩ := exists_ne_zero_mem_ringOfIntegers_lt (f := g)
+    (by rw [convexBodyLt_volume]; convert hB; exact congr_arg ((↑): NNReal → ENNReal) h_gprod)
+  refine ⟨a, ?_, ?_⟩
+  sorry
+  
+
+example (N : ℕ) :
+    {K : { K : Subfield A // FiniteDimensional ℚ K } |
+      haveI :  NumberField K := @NumberField.mk _ _ inferInstance K.prop
+      |discr K| ≤ N }.Finite := by
+
+  sorry
+
+end Hermite
+
+#exit
+
 
 
 end NumberField
