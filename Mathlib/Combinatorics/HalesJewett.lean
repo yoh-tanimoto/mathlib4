@@ -67,12 +67,6 @@ combinatorial line, Ramsey theory, arithmetic progression
 
 -/
 
-section
-universe u
-variable {α : Type*} [Fintype α]
-
-end
-
 
 open Function
 open scoped BigOperators Classical
