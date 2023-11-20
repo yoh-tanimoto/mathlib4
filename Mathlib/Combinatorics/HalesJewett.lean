@@ -455,26 +455,22 @@ theorem exists_mono_in_high_dimension (α κ η) [Fintype α] [Fintype κ] [Fint
     ∃ (ι : Type) (_ : Fintype ι), ∀ C : (ι → α) → κ, ∃ l : Subspace η α ι, l.IsMono C := by
   obtain ⟨ι, _, hι⟩ := Line.exists_mono_in_high_dimension (η → α) κ
   refine ⟨ι × Shrink η, inferInstance, fun C ↦ ?_⟩
-  specialize hι (fun x ↦ C $ fun (i, e) ↦ x i $ (equivShrink.{0} η).symm e)
-  obtain ⟨l, c, lC⟩ := hι
-  refine ⟨⟨fun p ↦ (l.idxFun p.fst).elim (Sum.inr $ (equivShrink.{0} η).symm p.snd)
-    fun x ↦ Sum.inl (x $ (equivShrink.{0} η).symm p.snd), fun e ↦ ?_⟩, c, fun xs ↦ ?_⟩
+  obtain ⟨l, c, lC⟩ := hι fun x ↦ C <| fun (i, e) ↦ x i <| (equivShrink.{0} η).symm e
+  refine ⟨⟨fun p ↦ (l.idxFun p.fst).elim (Sum.inr <| (equivShrink.{0} η).symm p.snd)
+    fun x ↦ Sum.inl <| x <| (equivShrink.{0} η).symm p.snd, fun e ↦ ?_⟩, c, fun xs ↦ ?_⟩
   · obtain ⟨i, hi⟩ := l.proper
     use (i, equivShrink.{0} η e)
     simp [hi]
-  specialize lC xs
-  dsimp at lC
-  convert lC with ⟨i, e⟩
+  convert lC xs with ⟨i, e⟩
   cases hi : l.idxFun i <;> simp [hi]
 
-/-- A variant of the extended Hales-Jewett theorem `exists_mono_in_high_dimension` where the
+/-- A variant of the **extended Hales-Jewett theorem** `exists_mono_in_high_dimension` where the
 returned type is some `Fin n` instead of a general fintype. -/
 theorem exists_mono_in_high_dimension_fin (α κ η) [Fintype α] [Fintype κ] [Fintype η] :
     ∃ n, ∀ C : (Fin n → α) → κ, ∃ l : Subspace η α (Fin n), l.IsMono C := by
   obtain ⟨ι, ιfin, hι⟩ := exists_mono_in_high_dimension α κ η
   refine ⟨Fintype.card ι, fun C ↦ ?_⟩
-  specialize hι fun v ↦ C (v ∘ (Fintype.equivFin _).symm)
-  obtain ⟨l, c, cl⟩ := hι
+  obtain ⟨l, c, cl⟩ := hι fun v ↦ C (v ∘ (Fintype.equivFin _).symm)
   refine ⟨⟨l.idxFun ∘ (Fintype.equivFin _).symm, fun e ↦ ?_⟩, c, cl⟩
   obtain ⟨i, hi⟩ := l.proper e
   use Fintype.equivFin _ i
