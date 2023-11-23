@@ -8,6 +8,8 @@ import Mathlib.NumberTheory.NumberField.CanonicalEmbedding
 import Mathlib.NumberTheory.NumberField.Units
 import Mathlib.RingTheory.Localization.NormTrace
 
+import Mathlib.Sandbox
+
 /-!
 # Number field discriminant
 This file defines the discriminant of a number field.
@@ -203,7 +205,7 @@ theorem aux1 (S : Set { K : Subfield A // FiniteDimensional ℚ K }) (T : Set �
 variable {B : ℕ} (hB : minkowskiBound K < (convexBodyLtFactor K) * B)
 
 example {w : InfinitePlace K} (hw : IsReal w) :
-    ∃ a : 𝓞 K, (∀ z, z ≠ w → z a < 1 / 2) ∧ K = ℚ⟮(a:K)⟯ := by
+    ∃ a : 𝓞 K, (∀ z, z ≠ w → z a < 1 / 2) ∧ ℚ⟮(a:K)⟯ = ⊤ := by
   let f : InfinitePlace K → ℝ≥0 := fun _ ↦ 1 / 2
   have : ∀ z, z ≠ w → f z ≠ 0 := sorry
   obtain ⟨g, h_geqf, h_gprod⟩ := adjust_f K B this
@@ -211,7 +213,12 @@ example {w : InfinitePlace K} (hw : IsReal w) :
     (by rw [convexBodyLt_volume]; convert hB; exact congr_arg ((↑): NNReal → ENNReal) h_gprod)
   refine ⟨a, ?_, ?_⟩
   sorry
+  have hB : 1 < w a := sorry
+  have := aux2 ℚ ℂ (a:K)
+  rw [this]
+  contrapose! hB
   
+
 
 example (N : ℕ) :
     {K : { K : Subfield A // FiniteDimensional ℚ K } |
