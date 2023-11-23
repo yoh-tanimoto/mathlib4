@@ -34,6 +34,7 @@ variable {α β γ δ : Type*} [MeasurableSpace α] [MeasurableSpace β] [Measur
 namespace MeasureTheory
 
 open Measure Function Set
+open scoped BigOperators
 
 variable {μa : Measure α} {μb : Measure β} {μc : Measure γ} {μd : Measure δ}
 
@@ -162,16 +163,15 @@ then for some `x ∈ s` and `0 < m < n`, `f^[m] x ∈ s`. -/
 theorem exists_mem_image_mem_of_volume_lt_mul_volume (hf : MeasurePreserving f μ μ)
     (hs : MeasurableSet s) {n : ℕ} (hvol : μ (Set.univ : Set α) < n * μ s) :
     ∃ x ∈ s, ∃ m ∈ Set.Ioo 0 n, f^[m] x ∈ s := by
-  have A : ∀ m, MeasurableSet (f^[m] ⁻¹' s) := fun m => (hf.iterate m).measurable hs
-  have B : ∀ m, μ (f^[m] ⁻¹' s) = μ s := fun m => (hf.iterate m).measure_preimage hs
-  have : μ (Set.univ : Set α) < (Finset.range n).sum fun m => μ (f^[m] ⁻¹' s) := by
-    simpa only [B, nsmul_eq_mul, Finset.sum_const, Finset.card_range]
-  rcases exists_nonempty_inter_of_measure_univ_lt_sum_measure μ (fun m _ => A m) this with
-    ⟨i, hi, j, hj, hij, x, hxi, hxj⟩
+  have A : ∀ m, MeasurableSet (f^[m] ⁻¹' s) := fun m ↦ (hf.iterate m).measurable hs
+  have B : ∀ m, μ (f^[m] ⁻¹' s) = μ s := fun m ↦ (hf.iterate m).measure_preimage hs
+  have : μ (univ : Set α) < ∑ m in Finset.range n, μ (f^[m] ⁻¹' s) := by simpa [B]
+  obtain ⟨i, hi, j, hj, hij, x, hxi : f^[i] x ∈ s, hxj : f^[j] x ∈ s⟩ :
+      ∃ i < n, ∃ j < n, i ≠ j ∧ (f^[i] ⁻¹' s ∩ f^[j] ⁻¹' s).Nonempty := by
+    simpa using exists_nonempty_inter_of_measure_univ_lt_sum_measure μ (fun m _ ↦ A m) this
   wlog hlt : i < j generalizing i j
   · exact this j hj i hi hij.symm hxj hxi (hij.lt_or_lt.resolve_left hlt)
-  simp only [Set.mem_preimage, Finset.mem_range] at hi hj hxi hxj
-  refine' ⟨f^[i] x, hxi, j - i, ⟨tsub_pos_of_lt hlt, lt_of_le_of_lt (j.sub_le i) hj⟩, _⟩
+  refine ⟨f^[i] x, hxi, j - i, ⟨tsub_pos_of_lt hlt, lt_of_le_of_lt (j.sub_le i) hj⟩, ?_⟩
   rwa [← iterate_add_apply, tsub_add_cancel_of_le hlt.le]
 #align measure_theory.measure_preserving.exists_mem_image_mem_of_volume_lt_mul_volume MeasureTheory.MeasurePreserving.exists_mem_image_mem_of_volume_lt_mul_volume
 

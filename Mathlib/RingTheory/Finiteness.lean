@@ -589,8 +589,11 @@ theorem of_surjective [hM : Finite R M] (f : M →ₗ[R] N) (hf : Surjective f) 
 #align module.finite.of_surjective Module.Finite.of_surjective
 
 /-- The range of a linear map from a finite module is finite. -/
-instance range [Finite R M] (f : M →ₗ[R] N) : Finite R (LinearMap.range f) :=
-  of_surjective f.rangeRestrict fun ⟨_, y, hy⟩ => ⟨y, Subtype.ext hy⟩
+instance range {F : Type*} [SemilinearMapClass F (RingHom.id R) M N] [Finite R M] (f : F) :
+    Finite R (LinearMap.range f) :=
+  of_surjective
+    (LinearMap.rangeRestrict { toFun := f, map_add' := map_add f, map_smul' := map_smul f } )
+    fun ⟨_, y, hy⟩ => ⟨y, Subtype.ext hy⟩
 #align module.finite.range Module.Finite.range
 
 /-- Pushforwards of finite submodules are finite. -/
