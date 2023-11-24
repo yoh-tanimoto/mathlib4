@@ -122,7 +122,8 @@ theorem iso_isometry_of_normNoninc {V W : SemiNormedGrp} (i : V ≅ W) (h1 : i.h
   intro v
   apply le_antisymm (h1 v)
   calc
-    ‖v‖ = ‖i.inv (i.hom v)‖ := by rw [Iso.hom_inv_id_apply]
+    -- This used to be `rw`, but we need `erw` after leanprover/lean4#2644
+    ‖v‖ = ‖i.inv (i.hom v)‖ := by erw [Iso.hom_inv_id_apply]
     _ ≤ ‖i.hom v‖ := h2 _
 #align SemiNormedGroup.iso_isometry_of_norm_noninc SemiNormedGrp.iso_isometry_of_normNoninc
 
@@ -258,7 +259,8 @@ theorem iso_isometry {V W : SemiNormedGrp₁} (i : V ≅ W) : Isometry i.hom := 
   intro v
   apply le_antisymm (i.hom.2 v)
   calc
-    ‖v‖ = ‖i.inv (i.hom v)‖ := by rw [Iso.hom_inv_id_apply]
+    -- This used to be `rw`, but we need `erw` after leanprover/lean4#2644
+    ‖v‖ = ‖i.inv (i.hom v)‖ := by erw [Iso.hom_inv_id_apply]
     _ ≤ ‖i.hom v‖ := i.inv.2 _
 #align SemiNormedGroup₁.iso_isometry SemiNormedGrp₁.iso_isometry
 

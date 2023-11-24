@@ -24,8 +24,7 @@ instance (P Q : AddCommGrp) : AddCommGroup (P ⟶ Q) :=
 
 -- porting note: this lemma was not necessary in mathlib
 @[simp]
-lemma hom_add_apply {P Q : AddCommGrp} (f g : P ⟶ Q) (x : P) :
-  (f + g) x = f x + g x := rfl
+lemma hom_add_apply {P Q : AddCommGrp} (f g : P ⟶ Q) (x : P) : (f + g) x = f x + g x := rfl
 
 section
 

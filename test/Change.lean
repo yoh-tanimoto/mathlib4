@@ -1,7 +1,8 @@
 import Mathlib.Tactic.Change
-import Std.Tactic.GuardMsgs
+import Std.Tactic.GuardExpr
 
 set_option pp.unicode.fun true
+set_option autoImplicit true
 
 /--
 info: Try this: change 0 = 1

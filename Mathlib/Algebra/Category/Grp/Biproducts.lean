@@ -76,6 +76,9 @@ noncomputable def biprodIsoProd (G H : AddCommGrp.{u}) :
   IsLimit.conePointUniqueUpToIso (BinaryBiproduct.isLimit G H) (binaryProductLimitCone G H).isLimit
 #align AddCommGroup.biprod_iso_prod AddCommGrp.biprodIsoProd
 
+-- These lemmas have always been bad (#7657), but lean4#2644 made `simp` start noticing
+attribute [nolint simpNF] AddCommGrp.biprodIsoProd_hom_apply
+
 @[simp, elementwise]
 theorem biprodIsoProd_inv_comp_fst (G H : AddCommGrp.{u}) :
     (biprodIsoProd G H).inv ≫ biprod.fst = AddMonoidHom.fst G H :=
@@ -137,6 +140,9 @@ noncomputable def biproductIsoPi (f : J → AddCommGrp.{u}) :
     (⨁ f : AddCommGrp) ≅ AddCommGrp.of (∀ j, f j) :=
   IsLimit.conePointUniqueUpToIso (biproduct.isLimit f) (productLimitCone f).isLimit
 #align AddCommGroup.biproduct_iso_pi AddCommGrp.biproductIsoPi
+
+-- These lemmas have always been bad (#7657), but lean4#2644 made `simp` start noticing
+attribute [nolint simpNF] AddCommGrp.biproductIsoPi_hom_apply
 
 @[simp, elementwise]
 theorem biproductIsoPi_inv_comp_π (f : J → AddCommGrp.{u}) (j : J) :

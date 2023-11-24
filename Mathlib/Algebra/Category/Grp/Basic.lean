@@ -145,7 +145,7 @@ set_option linter.uppercaseLean3 false in
 /-- Typecheck an `AddMonoidHom` as a morphism in `AddGroup`. -/
 add_decl_doc AddGrp.ofHom
 
-@[to_additive (attr := simp)]
+@[to_additive]
 theorem ofHom_apply {X Y : Type _} [Group X] [Group Y] (f : X →* Y) (x : X) :
     (ofHom f) x = f x :=
   rfl
@@ -491,9 +491,7 @@ end CategoryTheory.Aut
 instance Grp.forget_reflects_isos : ReflectsIsomorphisms (forget Grp.{u}) where
   reflects {X Y} f _ := by
     let i := asIso ((forget Grp).map f)
-    let e : X ≃* Y := MulEquiv.mk i.toEquiv
-      -- Porting note: this would ideally be `by aesop`, as in `MonCat.forget_reflects_isos`
-      (MonoidHom.map_mul (show MonoidHom X Y from f))
+    let e : X ≃* Y := { i.toEquiv with map_mul' := by aesop }
     exact IsIso.of_iso e.toGrpIso
 set_option linter.uppercaseLean3 false in
 #align Group.forget_reflects_isos Grp.forget_reflects_isos
@@ -504,11 +502,29 @@ set_option linter.uppercaseLean3 false in
 instance CommGrp.forget_reflects_isos : ReflectsIsomorphisms (forget CommGrp.{u}) where
   reflects {X Y} f _ := by
     let i := asIso ((forget CommGrp).map f)
-    let e : X ≃* Y := MulEquiv.mk i.toEquiv
-      -- Porting note: this would ideally be `by aesop`, as in `MonCat.forget_reflects_isos`
-      (MonoidHom.map_mul (show MonoidHom X Y from f))
+    let e : X ≃* Y := { i.toEquiv with map_mul' := by aesop }
     exact IsIso.of_iso e.toCommGrpIso
 set_option linter.uppercaseLean3 false in
 #align CommGroup.forget_reflects_isos CommGrp.forget_reflects_isos
 set_option linter.uppercaseLean3 false in
 #align AddCommGroup.forget_reflects_isos AddCommGrp.forget_reflects_isos
+
+-- note: in the following definitions, there is a problem with `@[to_additive]`
+-- as the `Category` instance is not found on the additive variant
+-- this variant is then renamed with a `Aux` suffix
+
+/-- An alias for `Grp.{max u v}`, to deal around unification issues. -/
+@[to_additive (attr := nolint checkUnivs) GrpMaxAux
+  "An alias for `AddGrp.{max u v}`, to deal around unification issues."]
+abbrev GrpMax.{u1, u2} := Grp.{max u1 u2}
+/-- An alias for `AddGrp.{max u v}`, to deal around unification issues. -/
+@[nolint checkUnivs]
+abbrev AddGrpMax.{u1, u2} := AddGrp.{max u1 u2}
+
+/-- An alias for `CommGrp.{max u v}`, to deal around unification issues. -/
+@[to_additive (attr := nolint checkUnivs) AddCommGrpMaxAux
+  "An alias for `AddCommGrp.{max u v}`, to deal around unification issues."]
+abbrev CommGrpMax.{u1, u2} := CommGrp.{max u1 u2}
+/-- An alias for `AddCommGrp.{max u v}`, to deal around unification issues. -/
+@[nolint checkUnivs]
+abbrev AddCommGrpMax.{u1, u2} := AddCommGrp.{max u1 u2}

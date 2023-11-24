@@ -27,5 +27,5 @@ abbrev CondensedAb := Condensed.{u} AddCommGrp.{u+1}
 noncomputable instance CondensedAb.abelian :
     CategoryTheory.Abelian CondensedAb.{u} :=
   letI : PreservesLimits (forget AddCommGrp.{u+1}) :=
-    AddCommGrp.forgetPreservesLimits.{u+1, u+1}
+    AddCommGrp.forgetPreservesLimits.{u+1}
   CategoryTheory.sheafIsAbelian

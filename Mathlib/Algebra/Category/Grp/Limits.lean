@@ -29,13 +29,6 @@ noncomputable section
 
 variable {J : Type v} [SmallCategory J]
 
--- Porting note: typemax hack to fix universe complaints
-/-- An alias for `Grp.{max u v}`, to deal around unification issues. -/
-@[to_additive (attr := nolint checkUnivs)
-  "An alias for `AddGrp.{max u v}`, to deal around unification issues."]
-abbrev GrpMax.{u1, u2} := Grp.{max u1 u2}
-
-
 namespace Grp
 
 @[to_additive]
@@ -134,8 +127,8 @@ set_option linter.uppercaseLean3 false in
 
 /-- The category of groups has all limits. -/
 @[to_additive "The category of additive groups has all limits."]
-instance hasLimitsOfSize : HasLimitsOfSize.{v, v} GrpMax.{v, u}
-    where has_limits_of_shape J _ :=
+instance hasLimitsOfSize : HasLimitsOfSize.{v, v} GrpMax.{v, u} where
+  has_limits_of_shape J _ :=
     { has_limit :=
         -- Porting note: add this instance to help Lean unify universe levels
         fun F => letI : HasLimit (F ⋙ forget₂ GrpMax.{v, u} MonCat.{max v u}) :=
@@ -217,12 +210,6 @@ set_option linter.uppercaseLean3 false in
 #align AddGroup.forget_preserves_limits AddGrp.forgetPreservesLimits
 
 end Grp
-
--- Porting note: typemax hack to fix universe complaints
-/-- An alias for `CommGrp.{max u v}`, to deal around unification issues. -/
-@[to_additive (attr := nolint checkUnivs)
-  "An alias for `AddCommGrp.{max u v}`, to deal around unification issues."]
-abbrev CommGrpMax.{u1, u2} := CommGrp.{max u1 u2}
 
 namespace CommGrp
 
@@ -331,8 +318,8 @@ of groups.)
   (That is, the underlying group could have been computed instead as limits in the category
     of additive groups.)"]
 noncomputable instance forget₂GroupPreservesLimitsOfSize :
-    PreservesLimitsOfSize.{v, v} (forget₂ CommGrpMax.{v, u} GrpMax.{v, u})
-    where preservesLimitsOfShape {J 𝒥} := { preservesLimit := fun {F} => by infer_instance }
+    PreservesLimitsOfSize.{v, v} (forget₂ CommGrpMax.{v, u} GrpMax.{v, u}) where
+  preservesLimitsOfShape {J 𝒥} := { preservesLimit := fun {F} => by infer_instance }
 set_option linter.uppercaseLean3 false in
 #align CommGroup.forget₂_Group_preserves_limits_of_size CommGrp.forget₂GroupPreservesLimitsOfSize
 set_option linter.uppercaseLean3 false in
@@ -381,7 +368,7 @@ set_option linter.uppercaseLean3 false in
 /-- The forgetful functor from commutative groups to types preserves all limits. (That is, the
 underlying types could have been computed instead as limits in the category of types.)
 -/
-@[to_additive AddCommGrp.forgetPreservesLimits
+@[to_additive
   "The forgetful functor from additive commutative groups to types preserves all limits.
   (That is, the underlying types could have been computed instead as limits in the category of
   types.)"]
@@ -398,7 +385,11 @@ noncomputable instance forgetPreservesLimitsOfSize :
 set_option linter.uppercaseLean3 false in
 #align CommGroup.forget_preserves_limits_of_size CommGrp.forgetPreservesLimitsOfSize
 set_option linter.uppercaseLean3 false in
-#align AddCommGroup.forget_preserves_limits AddCommGrp.forgetPreservesLimits
+#align AddCommGroup.forget_preserves_limits AddCommGrp.forgetPreservesLimitsOfSize
+
+@[to_additive]
+noncomputable instance forgetPreservesLimits : PreservesLimits (forget CommGrp.{u}) :=
+  CommGrp.forgetPreservesLimitsOfSize.{u, u}
 
 -- Verify we can form limits indexed over smaller categories.
 example (f : ℕ → AddCommGrp) : HasProduct f := by infer_instance
@@ -473,5 +464,9 @@ def kernelIsoKerOver {G H : AddCommGrp.{u}} (f : G ⟶ H) :
   Over.isoMk (kernelIsoKer f)
 set_option linter.uppercaseLean3 false in
 #align AddCommGroup.kernel_iso_ker_over AddCommGrp.kernelIsoKerOver
+
+-- These lemmas have always been bad (#7657), but lean4#2644 made `simp` start noticing
+attribute [nolint simpNF] AddCommGrp.kernelIsoKerOver_inv_left_apply
+  AddCommGrp.kernelIsoKerOver_hom_left_apply_coe
 
 end AddCommGrp
