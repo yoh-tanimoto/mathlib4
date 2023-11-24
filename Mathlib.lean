@@ -2559,6 +2559,7 @@ import Mathlib.MeasureTheory.Integral.CircleTransform
 import Mathlib.MeasureTheory.Integral.DivergenceTheorem
 import Mathlib.MeasureTheory.Integral.ExpDecay
 import Mathlib.MeasureTheory.Integral.FundThmCalculus
+import Mathlib.MeasureTheory.Integral.Gamma
 import Mathlib.MeasureTheory.Integral.Indicator
 import Mathlib.MeasureTheory.Integral.IntegrableOn
 import Mathlib.MeasureTheory.Integral.IntegralEqImproper
@@ -2570,6 +2571,7 @@ import Mathlib.MeasureTheory.Integral.LebesgueNormedSpace
 import Mathlib.MeasureTheory.Integral.MeanInequalities
 import Mathlib.MeasureTheory.Integral.PeakFunction
 import Mathlib.MeasureTheory.Integral.Periodic
+import Mathlib.MeasureTheory.Integral.Pi
 import Mathlib.MeasureTheory.Integral.RieszMarkovKakutani
 import Mathlib.MeasureTheory.Integral.SetIntegral
 import Mathlib.MeasureTheory.Integral.SetToL1
