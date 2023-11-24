@@ -1,5 +1,5 @@
 import Mathlib.Topology.MetricSpace.HausdorffDimension
-import Mathlib.Analysis.NormedSpace.HahnBanach.ClosedComplemented
+import Mathlib.Analysis.NormedSpace.HahnBanach.Extension
 import Mathlib.Analysis.NormedSpace.Complemented
 
 open Set FiniteDimensional MeasureTheory Measure Metric
