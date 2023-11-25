@@ -190,9 +190,9 @@ theorem discr_gt_one (h : 1 < finrank ℚ K) : 2 < |discr K| := by
   rw [ ← _root_.div_lt_iff' (by positivity), show (72:ℝ) / 9 = 8 by norm_num]
   linarith [h₂]
 
-ection Hermite
+section Hermite
 
-open scoped Polynomial IntermediateField
+open scoped Polynomial IntermediateField BigOperators
 
 variable {A : Type*} [Field A] [CharZero A]
 
@@ -202,21 +202,66 @@ theorem aux1 (S : Set { K : Subfield A // FiniteDimensional ℚ K }) (T : Set �
     S.Finite := by
   sorry
 
-variable {B : ℕ} (hB : minkowskiBound K < (convexBodyLtFactor K) * B)
+variable {B : ℕ} (hB₁ : 1 ≤ B) (hB₂ : minkowskiBound K < (convexBodyLtFactor K) * B)
 
-example {w : InfinitePlace K} (hw : IsReal w) :
-    ∃ a : 𝓞 K, (∀ z, z ≠ w → z a < 1 / 2) ∧ ℚ⟮(a:K)⟯ = ⊤ := by
-  let f : InfinitePlace K → ℝ≥0 := fun _ ↦ 1 / 2
+theorem aux2 {w : InfinitePlace K} (hw : IsReal w) :
+    ∃ a : 𝓞 K, (∀ z :InfinitePlace K, z a < B) ∧ ℚ⟮(a:K)⟯ = ⊤ := by
+  let f : InfinitePlace K → ℝ≥0 := fun _ => 1
   have : ∀ z, z ≠ w → f z ≠ 0 := sorry
   obtain ⟨g, h_geqf, h_gprod⟩ := adjust_f K B this
   obtain ⟨a, h_anz, h_ale⟩ := exists_ne_zero_mem_ringOfIntegers_lt (f := g)
-    (by rw [convexBodyLt_volume]; convert hB; exact congr_arg ((↑): NNReal → ENNReal) h_gprod)
+    (by rw [convexBodyLt_volume]; convert hB₂; exact congr_arg ((↑): NNReal → ENNReal) h_gprod)
   refine ⟨a, ?_, ?_⟩
-  sorry
-  have hB : 1 < w a := sorry
-  have := aux2 ℚ ℂ (a:K)
-  rw [this]
-  contrapose! hB
+  · sorry
+  · let φ := w.embedding.toRatAlgHom
+    have hφ : w = InfinitePlace.mk φ.toRingHom := sorry
+    rw [Field.primitive_element_of_algHom_eval_ne ℚ ℂ (a:K) φ]
+    intro ψ hψ
+    let w' := InfinitePlace.mk ψ.toRingHom
+    have h1 : w ≠ w' := by
+      contrapose! hψ
+      suffices φ.toRingHom = ψ.toRingHom by
+        ext1 x
+        exact RingHom.congr_fun this x
+      rw [hφ] at hψ
+      rw [InfinitePlace.mk_eq_iff] at hψ
+      rw [ComplexEmbedding.isReal_iff.mp] at hψ
+      rwa [or_self] at hψ
+      refine InfinitePlace.isReal_of_mk_isReal ?_
+      rwa [← hφ]
+    
+    have h_gew : 1 ≤ w a := sorry
+    intro ψ hψ
+    let w' := InfinitePlace.mk ψ.toRingHom
+    by_contra h_eq
+    have h1 : w' ≠ w := by
+      by_cases hw' : IsReal w'
+      · contrapose! hψ
+        suffices φ.toRingHom = ψ.toRingHom by
+          ext1 x
+          exact RingHom.congr_fun this x
+        have t2 : w = InfinitePlace.mk φ.toRingHom := sorry
+        rw [t2] at hψ
+        rw [InfinitePlace.mk_eq_iff] at hψ
+        have t1 := congr_arg InfinitePlace.embedding hψ
+        rw [t2] at t1
+
+#exit
+        have := congr_arg InfinitePlace.mkReal.symm this
+#exit
+        have t1 := congr_arg InfinitePlace.embedding hψ
+        have t2 : w = InfinitePlace.mk φ.toRingHom := sorry
+        rw [t2] at t1
+        rw [NumberField.InfinitePlace.embedding_mk_eq_of_isReal hw] at this
+        sorry
+      ·
+        sorry
+    have h2 : w' a = w a := sorry
+    rw [← h2] at h_gew
+    have h3 := h_geqf w' h1
+    have h4 := h3 ▸ h_ale w'
+    rw [lt_iff_not_le] at h4
+    exact h4 h_gew
 
 
 
