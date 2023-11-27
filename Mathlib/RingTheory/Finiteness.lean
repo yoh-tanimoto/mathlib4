@@ -5,6 +5,7 @@ Authors: Johan Commelin
 -/
 import Mathlib.Algebra.Algebra.RestrictScalars
 import Mathlib.Algebra.Algebra.Subalgebra.Basic
+import Mathlib.LinearAlgebra.StdBasis
 import Mathlib.GroupTheory.Finiteness
 import Mathlib.RingTheory.Ideal.Operations
 
@@ -146,7 +147,7 @@ theorem fg_bot : (⊥ : Submodule R M).FG :=
 
 theorem _root_.Subalgebra.fg_bot_toSubmodule {R A : Type*} [CommSemiring R] [Semiring A]
     [Algebra R A] : (⊥ : Subalgebra R A).toSubmodule.FG :=
-  ⟨{1}, by simp [Algebra.toSubmodule_bot]⟩
+  ⟨{1}, by simp [Algebra.toSubmodule_bot, one_eq_span]⟩
 #align subalgebra.fg_bot_to_submodule Subalgebra.fg_bot_toSubmodule
 
 theorem fg_unit {R A : Type*} [CommSemiring R] [Semiring A] [Algebra R A] (I : (Submodule R A)ˣ) :
@@ -416,6 +417,27 @@ theorem fg_iff_compact (s : Submodule R M) : s.FG ↔ CompleteLattice.IsCompactE
       exact ⟨t, ssup⟩
 #align submodule.fg_iff_compact Submodule.fg_iff_compact
 
+open TensorProduct LinearMap in
+/-- Every `x : I ⊗ M` is the image of some `y : J ⊗ M`, where `J ≤ I` is finitely generated,
+under the tensor product of `J.inclusion ‹J ≤ I› : J → I` and the identity `M → M`. -/
+theorem exists_fg_le_eq_rTensor_inclusion {R M N : Type*} [CommRing R] [AddCommGroup M]
+    [AddCommGroup N] [Module R M] [Module R N] {I : Submodule R N} (x : I ⊗ M) :
+      ∃ (J : Submodule R N) (_ : J.FG) (hle : J ≤ I) (y : J ⊗ M),
+        x = rTensor M (J.inclusion hle) y := by
+  induction x using TensorProduct.induction_on with
+  | zero => exact ⟨⊥, fg_bot, zero_le _, 0, rfl⟩
+  | tmul i m => exact ⟨R ∙ i.val, fg_span_singleton i.val,
+      (span_singleton_le_iff_mem _ _).mpr i.property,
+      ⟨i.val, mem_span_singleton_self _⟩ ⊗ₜ[R] m, rfl⟩
+  | add x₁ x₂ ihx₁ ihx₂ =>
+    obtain ⟨J₁, hfg₁, hle₁, y₁, rfl⟩ := ihx₁
+    obtain ⟨J₂, hfg₂, hle₂, y₂, rfl⟩ := ihx₂
+    refine ⟨J₁ ⊔ J₂, hfg₁.sup hfg₂, sup_le hle₁ hle₂,
+      rTensor M (J₁.inclusion (le_sup_left : J₁ ≤ J₁ ⊔ J₂)) y₁ +
+        rTensor M (J₂.inclusion (le_sup_right : J₂ ≤ J₁ ⊔ J₂)) y₂, ?_⟩
+    rewrite [map_add, ← rTensor_comp_apply, ← rTensor_comp_apply]
+    rfl
+
 end Submodule
 
 namespace Submodule
@@ -550,9 +572,15 @@ theorem iff_addGroup_fg {G : Type*} [AddCommGroup G] : Module.Finite ℤ G ↔ A
 
 variable {R M N}
 
+/-- See also `Module.Finite.exists_fin'`. -/
 theorem exists_fin [Finite R M] : ∃ (n : ℕ) (s : Fin n → M), Submodule.span R (range s) = ⊤ :=
   Submodule.fg_iff_exists_fin_generating_family.mp out
 #align module.finite.exists_fin Module.Finite.exists_fin
+
+lemma exists_fin' (R M : Type*) [CommSemiring R] [AddCommMonoid M] [Module R M] [Finite R M] :
+    ∃ (n : ℕ) (f : (Fin n → R) →ₗ[R] M), Surjective f := by
+  have ⟨n, s, hs⟩ := exists_fin (R := R) (M := M)
+  exact ⟨n, piEquiv (Fin n) R M s, by simpa⟩
 
 theorem of_surjective [hM : Finite R M] (f : M →ₗ[R] N) (hf : Surjective f) : Finite R N :=
   ⟨by
@@ -631,8 +659,9 @@ end Finite
 end Module
 
 /-- Porting note: reminding Lean about this instance for Module.Finite.base_change -/
-local instance [CommSemiring R] [Semiring A] [Algebra R A] [AddCommMonoid M] [Module R M] :
-  Module A (TensorProduct R A M) :=
+noncomputable local instance
+    [CommSemiring R] [Semiring A] [Algebra R A] [AddCommMonoid M] [Module R M] :
+    Module A (TensorProduct R A M) :=
   haveI : SMulCommClass R A A := IsScalarTower.to_smulCommClass
   TensorProduct.leftModule
 
