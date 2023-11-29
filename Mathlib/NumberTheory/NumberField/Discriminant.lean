@@ -7,7 +7,6 @@ import Mathlib.Data.Real.Pi.Bounds
 import Mathlib.NumberTheory.NumberField.CanonicalEmbedding
 import Mathlib.NumberTheory.NumberField.Norm
 import Mathlib.RingTheory.Localization.NormTrace
-import Mathlib.Sandbox
 
 /-!
 # Number field discriminant
@@ -192,92 +191,203 @@ theorem discr_gt_one (h : 1 < finrank ℚ K) : 2 < |discr K| := by
 
 section Hermite
 
+#exit
+
 open scoped Polynomial IntermediateField BigOperators
 
-variable {A : Type*} [Field A] [CharZero A]
+variable (A : Type*) [Field A] [CharZero A]
 
-theorem aux1 (S : Set { K : Subfield A // FiniteDimensional ℚ K }) (T : Set ℚ[X])
-    (hT : T.Finite) (h : ∀ K ∈ S, ∃ P ∈ T, ∃ a : A, Polynomial.aeval a P = 0 ∧
-    Subfield.toIntermediateField K sorry = ℚ⟮a⟯) :
-    S.Finite := by
-  sorry
+-- theorem aux1 (S : Set { F : IntermediateField ℚ A // FiniteDimensional ℚ F }) {T : Set ℚ[X]}
+--     (hT : T.Finite) (h : ∀ F ∈ S, ∃ P ∈ T, ∃ a : A, a ∈ Polynomial.rootSet P A ∧ F = ℚ⟮a⟯) :
+--     S.Finite := by
+--   let R := ⋃ P ∈ T, Polynomial.rootSet P A
+--   have : Finite R := by
+--     rw [Set.finite_coe_iff]
+--     refine Set.Finite.biUnion hT ?_
+--     intro P _
+--     exact Polynomial.rootSet_finite P A
+--   let f : S → R := by
+--     intro K
+--     have : K.val ∈ S := by exact Subtype.mem K
+--     have ex := h K (Subtype.mem K)
+--     have hPS := ex.choose_spec.1
+--     let a := ex.choose_spec.2.choose
+--     have ha₁ := ex.choose_spec.2.choose_spec.1
+--     refine ⟨a, ?_⟩
+--     refine Set.mem_biUnion hPS ha₁
+--   have : Function.Injective f := by
+--     intro F F' hf
+--     have exF := h F (Subtype.mem F)
+--     have tF := exF.choose_spec.2.choose_spec.2
+--     have exF' := h F' (Subtype.mem F')
+--     have tF' := exF'.choose_spec.2.choose_spec.2
+--     have : exF.choose_spec.2.choose = exF'.choose_spec.2.choose := by
+--       rwa [Subtype.mk_eq_mk] at hf
+--     rwa [this, ← tF', Subtype.val_inj, Subtype.val_inj] at tF
+--   rw [← Set.finite_coe_iff]
+--   refine Finite.of_injective f this
 
-variable {B : ℕ} (hB₁ : 1 ≤ B) (hB₂ : minkowskiBound K < (convexBodyLtFactor K) * B)
-
-theorem aux2 {w : InfinitePlace K} (hw : IsReal w) :
-    ∃ a : 𝓞 K, (∀ z :InfinitePlace K, z a < B) ∧ ℚ⟮(a:K)⟯ = ⊤ := by
+theorem aux2 {B : ℝ≥0} (hB₂ : minkowskiBound K < (convexBodyLtFactor K) * B)
+    {w : InfinitePlace K} (hw : IsReal w) :
+    ∃ a : 𝓞 K, (∀ z :InfinitePlace K, z a ≤ max 1 B) ∧ ℚ⟮(a:K)⟯ = ⊤ := by
   let f : InfinitePlace K → ℝ≥0 := fun _ => 1
   have : ∀ z, z ≠ w → f z ≠ 0 := sorry
   obtain ⟨g, h_geqf, h_gprod⟩ := adjust_f K B this
   obtain ⟨a, h_anz, h_ale⟩ := exists_ne_zero_mem_ringOfIntegers_lt (f := g)
-    (by rw [convexBodyLt_volume]; convert hB₂; exact congr_arg ((↑): NNReal → ENNReal) h_gprod)
+    (by rw [convexBodyLt_volume]; convert hB₂)
+  have h_gew  : 1 ≤ w a := by
+    have h_nm : (1:ℝ) ≤ |(Algebra.norm ℚ) (a:K)| := by
+      rw [← Algebra.coe_norm_int, ← Int.cast_one, ← Int.cast_abs, Rat.cast_coe_int, Int.cast_le]
+      exact Int.one_le_abs (Algebra.norm_ne_zero_iff.mpr h_anz)
+    contrapose! h_nm
+    rw [← InfinitePlace.prod_eq_abs_norm]
+    have : (1:ℝ) = ∏ w : InfinitePlace K, 1 := by
+      simp only [Finset.prod_const_one]
+    rw [this]
+    refine Finset.prod_lt_prod_of_nonempty ?_ ?_ ?_
+    · intro w' _
+      refine pow_pos ?_ _
+      rw [InfinitePlace.pos_iff]
+      rwa [ne_eq, ZeroMemClass.coe_eq_zero]
+    · intro w' _
+      refine pow_lt_one ?_ ?_ ?_
+      exact map_nonneg _ _
+      by_cases hw' : w' = w
+      · rwa [hw']
+      · have := h_geqf w' hw' ▸ (h_ale w')
+        exact this
+      · rw [mult]; split_ifs; norm_num; exact two_ne_zero
+    exact Finset.univ_nonempty
   refine ⟨a, ?_, ?_⟩
   · sorry
   · let φ := w.embedding.toRatAlgHom
-    have hφ : w = InfinitePlace.mk φ.toRingHom := sorry
-    rw [Field.primitive_element_of_algHom_eval_ne ℚ ℂ (a:K) φ]
+    have hφ : w = InfinitePlace.mk φ.toRingHom := by
+      exact (InfinitePlace.mk_embedding w).symm
+    rw [Field.primitive_element_iff_algHom_eq_of_eval ℚ ℂ (a:K) φ]
     intro ψ hψ
     let w' := InfinitePlace.mk ψ.toRingHom
-    have h1 : w ≠ w' := by
-      contrapose! hψ
-      suffices φ.toRingHom = ψ.toRingHom by
-        ext1 x
-        exact RingHom.congr_fun this x
-      rw [hφ] at hψ
-      rw [InfinitePlace.mk_eq_iff] at hψ
-      rw [ComplexEmbedding.isReal_iff.mp] at hψ
-      rwa [or_self] at hψ
-      refine InfinitePlace.isReal_of_mk_isReal ?_
-      rwa [← hφ]
-    
-    have h_gew : 1 ≤ w a := sorry
-    intro ψ hψ
-    let w' := InfinitePlace.mk ψ.toRingHom
-    by_contra h_eq
-    have h1 : w' ≠ w := by
-      by_cases hw' : IsReal w'
-      · contrapose! hψ
-        suffices φ.toRingHom = ψ.toRingHom by
-          ext1 x
-          exact RingHom.congr_fun this x
-        have t2 : w = InfinitePlace.mk φ.toRingHom := sorry
-        rw [t2] at hψ
-        rw [InfinitePlace.mk_eq_iff] at hψ
-        have t1 := congr_arg InfinitePlace.embedding hψ
-        rw [t2] at t1
+    have h1 : w' a = w a := by
+      rw [← InfinitePlace.norm_embedding_eq w, show w' a = ‖ψ a‖ by rfl, ← hψ]
+      rfl
+    have h2 : w' = w := by
+      by_contra h2
+      have := h_geqf w' h2 ▸ (h_ale w')
+      rw [h1] at this
+      rw [lt_iff_not_le] at this
+      exact this h_gew
+    rw [hφ, eq_comm, InfinitePlace.mk_eq_iff] at h2
+    rw [ComplexEmbedding.isReal_iff.mp, or_self] at h2
+    exact congr_arg RingHom.toRatAlgHom h2
+    erw [← InfinitePlace.isReal_iff]
+    exact hw
 
-#exit
-        have := congr_arg InfinitePlace.mkReal.symm this
-#exit
-        have t1 := congr_arg InfinitePlace.embedding hψ
-        have t2 : w = InfinitePlace.mk φ.toRingHom := sorry
-        rw [t2] at t1
-        rw [NumberField.InfinitePlace.embedding_mk_eq_of_isReal hw] at this
-        sorry
-      ·
-        sorry
-    have h2 : w' a = w a := sorry
-    rw [← h2] at h_gew
-    have h3 := h_geqf w' h1
-    have h4 := h3 ▸ h_ale w'
-    rw [lt_iff_not_le] at h4
-    exact h4 h_gew
+variable (N : ℕ)
 
+theorem aux30 (hN : 2 ≤ N) (hK : |discr K| ≤ N) :
+    finrank ℚ K ≤ Real.log ((9 / 4 : ℝ) * N) / Real.log (3 * π / 4) := by
+  obtain h | h := lt_or_le 1 (finrank ℚ K)
+  · rw [_root_.le_div_iff', ← Real.exp_le_exp, ← Real.rpow_def_of_pos (by positivity), Real.exp_log
+      (by positivity), ← inv_mul_le_iff (by positivity), inv_div, Real.rpow_nat_cast]
+    · exact le_trans (abs_discr_ge K h) (Int.cast_le (α := ℝ).mpr hK)
+    · sorry
+  · have : finrank ℚ K = 1 := sorry
+    have : Nonempty (K ≃ₗ[ℚ] ℚ) := by
+      rw [@nonempty_linearEquiv_iff_finrank_eq, this, finrank_self]
+    obtain f := this
 
+    sorry
 
-
-example (N : ℕ) :
-    {K : { K : Subfield A // FiniteDimensional ℚ K } |
-      haveI :  NumberField K := @NumberField.mk _ _ inferInstance K.prop
-      |discr K| ≤ N }.Finite := by
-
+-- FIXME: make this more general
+theorem aux3 : ∃ D : ℕ, ∀ F ∈ {F : { F : IntermediateField ℚ A // FiniteDimensional ℚ F } |
+    haveI :  NumberField F := @NumberField.mk _ _ inferInstance F.prop
+    |discr F| ≤ N }, finrank ℚ F ≤ D := by
   sorry
 
+theorem aux4 : ∃ B : ℝ≥0, ∀ F ∈ {F : { F : IntermediateField ℚ A // FiniteDimensional ℚ F } |
+      haveI :  NumberField F := @NumberField.mk _ _ inferInstance F.prop
+      |discr F| ≤ N },
+    haveI :  NumberField F := @NumberField.mk _ _ inferInstance F.prop
+    minkowskiBound F < (convexBodyLtFactor F) * B := sorry
+
+example : {F : { F : IntermediateField ℚ A // FiniteDimensional ℚ F } |
+      haveI :  NumberField F := @NumberField.mk _ _ inferInstance F.prop
+      |discr F| ≤ N }.Finite := by
+  let S := { F : { F : IntermediateField ℚ A // FiniteDimensional ℚ F } |
+      haveI :  NumberField F := @NumberField.mk _ _ inferInstance F.prop
+      |discr F| ≤ N }
+  obtain ⟨D, hD⟩ := aux3 A N
+  have ex := aux4 A N
+  let B := ex.choose
+  have hB := ex.choose_spec
+  let C := Nat.ceil (max B 1 ^ D * D.choose (D / 2)) -- Use a sup?
+  let R := (⋃ (P : ℤ[X]) (_ : P.natDegree ≤ D ∧ ∀ i, P.coeff i ∈ Set.Icc (-C:ℤ) C),
+      ((P.map (algebraMap ℤ A)).roots.toFinset.toSet : Set A))
+  have hR : Finite R := by
+    rw [Set.finite_coe_iff]
+    refine Polynomial.bUnion_roots_finite _ _ <| Set.finite_Icc _ _
+  have h_gen : ∀ F ∈ S, ∃ α ∈ R, ℚ⟮α⟯ = F := by
+      intro F hF
+      have : NumberField F := @NumberField.mk _ _ inferInstance F.prop
+      by_cases hw : ∃ w : InfinitePlace F, IsReal w
+      · obtain ⟨w, hw⟩ := hw
+        have := aux2 F (hB F hF) hw
+        obtain ⟨α, hα⟩ := this
+        have h_minpoly  : minpoly ℚ (α:F.val) =
+              Polynomial.map (algebraMap ℤ ℚ) (minpoly ℤ (α:F.val)) := by
+          refine minpoly.isIntegrallyClosed_eq_field_fractions' (R := ℤ) (K := ℚ) (S := F.val) ?_
+          exact α.prop
+        refine ⟨?_, ?_, ?_⟩
+        use (α:F.val)
+        let P := minpoly ℤ (α:F.val)
+        rw [Set.mem_iUnion]
+        refine ⟨P, ?_⟩
+        rw [Set.mem_iUnion]
+        refine ⟨⟨?_, ?_⟩, ?_⟩
+        · have : Polynomial.natDegree (minpoly ℤ (α:F.val)) =
+              Polynomial.natDegree (minpoly ℚ (α:F.val)) := by
+            rw [h_minpoly]
+            refine (Polynomial.Monic.natDegree_map ?_ _).symm
+            refine minpoly.monic ?_
+            exact α.prop
+          rw [this]
+          refine le_trans (minpoly.natDegree_le _) ?_
+          exact hD F hF
+        · intro i
+          rw [Set.mem_Icc, ← abs_le, ← @Int.cast_le ℝ]
+          have := (InfinitePlace.le_iff_le _ _).mp hα.1
+          have := Embeddings.coeff_bdd_of_norm_le this i
+          refine (Eq.trans_le ?_ <| le_trans this ?_).trans (Nat.le_ceil _)
+          · rw [h_minpoly, Polynomial.coeff_map, eq_intCast, Int.norm_cast_rat, Int.norm_eq_abs,
+            Int.cast_abs]
+          · sorry
+        · refine Polynomial.mem_rootSet.mpr ⟨minpoly.ne_zero ?_, ?_⟩
+          · exact α.prop
+          · have := minpoly.aeval ℤ (α:A)
+            convert this
+            change P = minpoly ℤ (algebraMap F A (α:F.val))
+            refine (minpoly.algebraMap_eq ?_ _).symm
+            exact NoZeroSMulDivisors.algebraMap_injective _ A
+        · convert congr_arg IntermediateField.lift hα.2
+          · rw [IntermediateField.lift_adjoin, Set.image_singleton]
+          · exact (IntermediateField.lift_top _ _).symm
+      · sorry
+  rw [← Set.finite_coe_iff]
+  refine Finite.of_injective (β := R) ?_ ?_
+  · intro F
+    have ex := h_gen F F.prop
+    let a := ex.choose
+    have := ex.choose_spec.1
+    exact ⟨a, this⟩
+  · intro F F' hf
+    have exF := h_gen F F.prop
+    have tF := exF.choose_spec.2
+    have exF' := h_gen F' F'.prop
+    have tF' := exF'.choose_spec.2
+    have : exF.choose = exF'.choose := by
+      rwa [Subtype.mk_eq_mk] at hf
+    rwa [← this, tF, Subtype.val_inj, Subtype.val_inj] at tF'
+
 end Hermite
-
-#exit
-
-
 
 end NumberField
 
