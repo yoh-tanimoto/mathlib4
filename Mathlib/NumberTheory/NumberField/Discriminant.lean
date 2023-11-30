@@ -298,8 +298,8 @@ theorem aux2 {B : ℝ≥0} (hB₂ : minkowskiBound K < (convexBodyLtFactor K) * 
 
 variable (N : ℕ)
 
-theorem aux30 (hN : 2 ≤ N) (hK : |discr K| ≤ N) :
-    finrank ℚ K ≤ Real.log ((9 / 4 : ℝ) * N) / Real.log (3 * π / 4) := by
+theorem aux30 (hK : |discr K| ≤ N) :
+    finrank ℚ K ≤ max 1 (Real.log ((9 / 4 : ℝ) * N) / Real.log (3 * π / 4)) := by
   obtain h | h := lt_or_le 1 (finrank ℚ K)
   · rw [_root_.le_div_iff', ← Real.exp_le_exp, ← Real.rpow_def_of_pos (by positivity), Real.exp_log
       (by positivity), ← inv_mul_le_iff (by positivity), inv_div, Real.rpow_nat_cast]
