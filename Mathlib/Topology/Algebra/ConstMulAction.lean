@@ -41,7 +41,6 @@ Hausdorff, discrete group, properly discontinuous, quotient space
 
 set_option autoImplicit true
 
-
 open Topology Pointwise Filter Set TopologicalSpace
 
 /-- Class `ContinuousConstSMul Γ T` says that the scalar multiplication `(•) : Γ → T → T`

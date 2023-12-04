@@ -157,7 +157,7 @@ end SeminormedRing
 
 section NormedField
 
-variable [NormedField 𝕜] [AddCommGroup E] [Module 𝕜 E] {s t : Set E}
+variable [NormedDivisionRing 𝕜] [AddCommGroup E] [Module 𝕜 E] {s t : Set E}
 
 @[simp]
 theorem balancedCoreAux_empty : balancedCoreAux 𝕜 (∅ : Set E) = ∅ := by
@@ -202,12 +202,12 @@ theorem balancedCore_eq_iInter (hs : (0 : E) ∈ s) :
   exact balancedCore_subset_balancedCoreAux (balancedCore_zero_mem hs)
 #align balanced_core_eq_Inter balancedCore_eq_iInter
 
-theorem subset_balancedCore (ht : (0 : E) ∈ t) (hst : ∀ (a : 𝕜) (_ : ‖a‖ ≤ 1), a • s ⊆ t) :
+theorem subset_balancedCore (ht : (0 : E) ∈ t) (hst : ∀ a : 𝕜, ‖a‖ ≤ 1 → a • s ⊆ t) :
     s ⊆ balancedCore 𝕜 t := by
   rw [balancedCore_eq_iInter ht]
   refine' subset_iInter₂ fun a ha => _
-  rw [← smul_inv_smul₀ (norm_pos_iff.mp <| zero_lt_one.trans_le ha) s]
-  refine' smul_set_mono (hst _ _)
+  rw [subset_set_smul_iff₀ (norm_pos_iff.mp <| zero_lt_one.trans_le ha)]
+  apply hst
   rw [norm_inv]
   exact inv_le_one ha
 #align subset_balanced_core subset_balancedCore
@@ -221,7 +221,7 @@ end balancedHull
 
 section Topology
 
-variable [NontriviallyNormedField 𝕜] [AddCommGroup E] [Module 𝕜 E] [TopologicalSpace E]
+variable [NormedDivisionRing 𝕜] [AddCommGroup E] [Module 𝕜 E] [TopologicalSpace E]
   [ContinuousSMul 𝕜 E] {U : Set E}
 
 protected theorem IsClosed.balancedCore (hU : IsClosed U) : IsClosed (balancedCore 𝕜 U) := by
@@ -239,6 +239,9 @@ protected theorem IsClosed.balancedCore (hU : IsClosed U) : IsClosed (balancedCo
     exact isClosed_empty
 #align is_closed.balanced_core IsClosed.balancedCore
 
+-- We don't have a `NontriviallyNormedDivisionRing`, so we use a `NeBot` assumption instead
+variable [NeBot (𝓝[≠] (0 : 𝕜))]
+
 theorem balancedCore_mem_nhds_zero (hU : U ∈ 𝓝 (0 : E)) : balancedCore 𝕜 U ∈ 𝓝 (0 : E) := by
   -- Getting neighborhoods of the origin for `0 : 𝕜` and `0 : E`
   obtain ⟨r, V, hr, hV, hrVU⟩ : ∃ (r : ℝ) (V : Set E),
@@ -247,14 +250,15 @@ theorem balancedCore_mem_nhds_zero (hU : U ∈ 𝓝 (0 : E)) : balancedCore 𝕜
       continuous_smul.tendsto' (0, 0) _ (smul_zero _)
     simpa only [← Prod.exists', ← Prod.forall', ← and_imp, ← and_assoc, exists_prop] using
       h.basis_left (NormedAddCommGroup.nhds_zero_basis_norm_lt.prod_nhds (𝓝 _).basis_sets) U hU
-  rcases NormedField.exists_norm_lt 𝕜 hr with ⟨y, hy₀, hyr⟩
-  rw [norm_pos_iff] at hy₀
+  obtain ⟨y, hyr, hy₀⟩ : ∃ y : 𝕜, ‖y‖ < r ∧ y ≠ 0 :=
+    Filter.nonempty_of_mem <|
+      (nhdsWithin_hasBasis NormedAddCommGroup.nhds_zero_basis_norm_lt {0}ᶜ).mem_of_mem hr
   have : y • V ∈ 𝓝 (0 : E) := (set_smul_mem_nhds_zero_iff hy₀).mpr hV
   -- It remains to show that `y • V ⊆ balancedCore 𝕜 U`
   refine' Filter.mem_of_superset this (subset_balancedCore (mem_of_mem_nhds hU) fun a ha => _)
   rw [smul_smul]
   rintro _ ⟨z, hz, rfl⟩
-  refine' hrVU _ _ _ hz
+  refine hrVU _ _ ?_ hz
   rw [norm_mul, ← one_mul r]
   exact mul_lt_mul' ha hyr (norm_nonneg y) one_pos
 #align balanced_core_mem_nhds_zero balancedCore_mem_nhds_zero
