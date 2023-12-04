@@ -264,6 +264,14 @@ theorem _root_.Commute.list_prod_left (l : List M) (y : M) (h : ∀ x ∈ l, Com
 #align commute.list_prod_left Commute.list_prod_left
 #align add_commute.list_sum_left AddCommute.list_sum_left
 
+@[to_additive (attr := simp)]
+theorem prod_map_smul
+    [MulAction M N] [IsScalarTower M N N] [SMulCommClass M N N] (l : List N) (m : M) :
+    (l.map (m • ·)).prod = m ^ l.length • l.prod := by
+  induction l with
+  | nil => simp
+  | cons head tail ih => simp [ih, smul_mul_smul, pow_succ]
+
 @[to_additive sum_le_sum]
 theorem Forall₂.prod_le_prod' [Preorder M] [CovariantClass M M (Function.swap (· * ·)) (· ≤ ·)]
     [CovariantClass M M (· * ·) (· ≤ ·)] {l₁ l₂ : List M} (h : Forall₂ (· ≤ ·) l₁ l₂) :
