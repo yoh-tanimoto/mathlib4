@@ -290,7 +290,7 @@ section Real
 
 theorem discreteTopology_pi_basisFun [Fintype ι] :
     DiscreteTopology (span ℤ (Set.range (Pi.basisFun ℝ ι))) := by
-  refine discreteTopology_iff_open_singleton_zero.mpr ⟨Metric.ball 0 1, Metric.isOpen_ball, ?_⟩
+  refine discreteTopology_iff_isOpen_singleton_zero.mpr ⟨Metric.ball 0 1, Metric.isOpen_ball, ?_⟩
   ext x
   rw [Set.mem_preimage, mem_ball_zero_iff, Set.mem_singleton_iff, Pi.norm_def,
     ← Real.lt_toNNReal_iff_coe_lt, Finset.sup_lt_iff (by simp), Real.toNNReal_one, ← coe_eq_zero]

@@ -299,17 +299,18 @@ variable (N : ℕ)
 
 theorem aux30 (hK : |discr K| ≤ N) :
     finrank ℚ K ≤ max 1 (Real.log ((9 / 4 : ℝ) * N) / Real.log (3 * π / 4)) := by
-  obtain h | h := lt_or_le 1 (finrank ℚ K)
-  · rw [_root_.le_div_iff', ← Real.exp_le_exp, ← Real.rpow_def_of_pos (by positivity), Real.exp_log
-      (by positivity), ← inv_mul_le_iff (by positivity), inv_div, Real.rpow_nat_cast]
-    · exact le_trans (abs_discr_ge K h) (Int.cast_le (α := ℝ).mpr hK)
-    · sorry
-  · have : finrank ℚ K = 1 := sorry
-    have : Nonempty (K ≃ₗ[ℚ] ℚ) := by
-      rw [@nonempty_linearEquiv_iff_finrank_eq, this, finrank_self]
-    obtain f := this
-
-    sorry
+  by_cases hN : 1 ≤ N
+  · obtain h | h := lt_or_le 1 (finrank ℚ K)
+    · refine le_trans ?_ (le_max_right _ _)
+      rw [_root_.le_div_iff', ← Real.exp_le_exp, ← Real.rpow_def_of_pos (by positivity),
+        Real.exp_log (by positivity), ← inv_mul_le_iff (by positivity), inv_div, Real.rpow_nat_cast]
+      · exact le_trans (abs_discr_ge K h) (Int.cast_le (α := ℝ).mpr hK)
+      · sorry
+    · have : finrank ℚ K = 1 := sorry
+      have : Nonempty (K ≃ₗ[ℚ] ℚ) := by
+        rw [@nonempty_linearEquiv_iff_finrank_eq, this, finrank_self]
+      obtain f := this
+  · sorry
 
 -- FIXME: make this more general
 theorem aux3 : ∃ D : ℕ, ∀ F ∈ {F : { F : IntermediateField ℚ A // FiniteDimensional ℚ F } |
