@@ -277,12 +277,12 @@ theorem aux2 {B : ℝ≥0} (hB₂ : minkowskiBound K < (convexBodyLtFactor K) * 
   · let φ := w.embedding.toRatAlgHom
     have hφ : w = InfinitePlace.mk φ.toRingHom := by
       exact (InfinitePlace.mk_embedding w).symm
-    rw [Field.primitive_element_iff_algHom_eq_of_eval ℚ ℂ (a:K) φ]
+    rw [Field.primitive_element_iff_algHom_eq_of_eval ℚ ℂ ?_ (a:K) φ]
     intro ψ hψ
     let w' := InfinitePlace.mk ψ.toRingHom
     have h1 : w' a = w a := by
       rw [← InfinitePlace.norm_embedding_eq w, show w' a = ‖ψ a‖ by rfl, ← hψ]
-      rfl
+      sorry 
     have h2 : w' = w := by
       by_contra h2
       have := h_geqf w' h2 ▸ (h_ale w')
