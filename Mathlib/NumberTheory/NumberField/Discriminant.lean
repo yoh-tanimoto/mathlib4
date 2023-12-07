@@ -282,7 +282,7 @@ theorem aux2 {B : ℝ≥0} (hB₂ : minkowskiBound K < (convexBodyLtFactor K) * 
     let w' := InfinitePlace.mk ψ.toRingHom
     have h1 : w' a = w a := by
       rw [← InfinitePlace.norm_embedding_eq w, show w' a = ‖ψ a‖ by rfl, ← hψ]
-      sorry 
+      sorry
     have h2 : w' = w := by
       by_contra h2
       have := h_geqf w' h2 ▸ (h_ale w')
@@ -294,7 +294,7 @@ theorem aux2 {B : ℝ≥0} (hB₂ : minkowskiBound K < (convexBodyLtFactor K) * 
     exact congr_arg RingHom.toRatAlgHom h2
     erw [← InfinitePlace.isReal_iff]
     exact hw
-
+    exact fun x ↦ IsAlgClosed.splits_codomain (minpoly ℚ x)
 variable (N : ℕ)
 
 theorem aux30 (hK : |discr K| ≤ N) :
@@ -307,9 +307,10 @@ theorem aux30 (hK : |discr K| ≤ N) :
       · exact le_trans (abs_discr_ge K h) (Int.cast_le (α := ℝ).mpr hK)
       · sorry
     · have : finrank ℚ K = 1 := sorry
-      have : Nonempty (K ≃ₗ[ℚ] ℚ) := by
-        rw [@nonempty_linearEquiv_iff_finrank_eq, this, finrank_self]
-      obtain f := this
+      have : K ≃+* ℚ := by
+        let b := (finBasisOfFinrankEq ℚ K this).repr
+        sorry
+      sorry
   · sorry
 
 -- FIXME: make this more general
