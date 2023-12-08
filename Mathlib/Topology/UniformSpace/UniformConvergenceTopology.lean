@@ -386,11 +386,11 @@ protected theorem inf_eq {u₁ u₂ : UniformSpace γ} :
   cases i <;> rfl
 #align uniform_fun.inf_eq UniformFun.inf_eq
 
-/-- Post-composition by a uniform inducing is a uniform inducing for the
-uniform structures of uniform convergence.
+/-- Post-composition by a uniform inducing function is
+a uniform inducing function for the uniform structures of uniform convergence.
 
-More precisely, if `f : γ → β` is a uniform inducing, then `(f ∘ ·) : (α →ᵤ γ) → (α →ᵤ β)` is
-a uniform inducing. -/
+More precisely, if `f : γ → β` is uniform inducing,
+then `(f ∘ ·) : (α →ᵤ γ) → (α →ᵤ β)` is uniform inducing. -/
 protected theorem postcomp_uniformInducing [UniformSpace γ] {f : γ → β} (hf : UniformInducing f) :
     UniformInducing (ofFun ∘ (f ∘ ·) ∘ toFun : (α →ᵤ γ) → α →ᵤ β) :=
   ⟨((UniformFun.hasBasis_uniformity _ _).comap _).eq_of_same_basis <|
@@ -625,7 +625,7 @@ protected theorem hasBasis_uniformity_of_basis_aux₂ (h : DirectedOn (· ⊆ ·
       ((fun s : Set α => (UniformFun.uniformSpace s β).comap (s.restrict : (α →ᵤ β) → s →ᵤ β)) ⁻¹'o
         GE.ge)
       𝔖 :=
-  h.mono fun hst =>
+  h.mono fun _ _ hst =>
     ((UniformOnFun.hasBasis_uniformity_of_basis_aux₁ α β 𝔖 hb _).le_basis_iff
           (UniformOnFun.hasBasis_uniformity_of_basis_aux₁ α β 𝔖 hb _)).mpr
       fun V hV => ⟨V, hV, UniformOnFun.gen_mono hst subset_rfl⟩

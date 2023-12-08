@@ -112,7 +112,7 @@ theorem strongUniformity.uniformAddGroup [UniformSpace F] [UniformAddGroup F] (�
   letI : UniformSpace (E →SL[σ] F) := strongUniformity σ F 𝔖
   let φ : (E →SL[σ] F) →+ E →ᵤ[𝔖] F :=
     ⟨⟨(FunLike.coe : (E →SL[σ] F) → E →ᵤ[𝔖] F), rfl⟩, fun _ _ => rfl⟩
-  exact (strongUniformity.uniformEmbedding_coeFn _ _ _).toUniformInducing.uniformAddGroup φ
+  exact (strongUniformity.uniformEmbedding_coeFn _ _ _).uniformAddGroup φ
 #align continuous_linear_map.strong_uniformity.uniform_add_group ContinuousLinearMap.strongUniformity.uniformAddGroup
 
 theorem strongTopology.topologicalAddGroup [TopologicalSpace F] [TopologicalAddGroup F]

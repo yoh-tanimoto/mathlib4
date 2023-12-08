@@ -1202,10 +1202,9 @@ theorem eventually_or_distrib_right {f : Filter α} {p : α → Prop} {q : Prop}
   simp only [@or_comm _ q, eventually_or_distrib_left]
 #align filter.eventually_or_distrib_right Filter.eventually_or_distrib_right
 
-@[simp]
 theorem eventually_imp_distrib_left {f : Filter α} {p : Prop} {q : α → Prop} :
-    (∀ᶠ x in f, p → q x) ↔ p → ∀ᶠ x in f, q x := by
-  simp only [imp_iff_not_or, eventually_or_distrib_left]
+    (∀ᶠ x in f, p → q x) ↔ p → ∀ᶠ x in f, q x :=
+  eventually_all
 #align filter.eventually_imp_distrib_left Filter.eventually_imp_distrib_left
 
 @[simp]
@@ -2605,7 +2604,7 @@ theorem map_inf' {f g : Filter α} {m : α → β} {t : Set α} (htf : t ∈ f) 
 
 lemma disjoint_of_map {α β : Type*} {F G : Filter α} {f : α → β}
     (h : Disjoint (map f F) (map f G)) : Disjoint F G :=
-    disjoint_iff.mpr <| map_eq_bot_iff.mp <| le_bot_iff.mp <| trans map_inf_le (disjoint_iff.mp h)
+  disjoint_iff.mpr <| map_eq_bot_iff.mp <| le_bot_iff.mp <| trans map_inf_le (disjoint_iff.mp h)
 
 theorem disjoint_map {m : α → β} (hm : Injective m) {f₁ f₂ : Filter α} :
     Disjoint (map m f₁) (map m f₂) ↔ Disjoint f₁ f₂ := by
