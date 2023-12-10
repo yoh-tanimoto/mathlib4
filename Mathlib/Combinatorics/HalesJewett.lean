@@ -67,15 +67,6 @@ combinatorial line, Ramsey theory, arithmetic progression
 
 -/
 
-namespace Equiv
-variable {α β : Type*}
-
-protected lemma exists_congr {p : α → Prop} {q : β → Prop} (f : α ≃ β) (h : ∀ x, p x ↔ q (f x)) :
-    (∃ x, p x) ↔ ∃ y, q y :=
-  f.exists_congr_left.trans $ by simp [h]
-
-end Equiv
-
 
 open Function
 open scoped BigOperators Classical

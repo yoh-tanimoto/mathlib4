@@ -918,6 +918,10 @@ protected theorem exists_congr_left {α β} (f : α ≃ β) {p : α → Prop} :
   ⟨fun ⟨a, h⟩ => ⟨f a, by simpa using h⟩, fun ⟨b, h⟩ => ⟨_, h⟩⟩
 #align equiv.exists_congr_left Equiv.exists_congr_left
 
+protected lemma exists_congr {p : α → Prop} {q : β → Prop} (f : α ≃ β) (h : ∀ x, p x ↔ q (f x)) :
+    (∃ x, p x) ↔ ∃ y, q y :=
+  f.exists_congr_left.trans $ by simp [h]
+
 end Equiv
 
 namespace Quot
