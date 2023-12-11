@@ -265,8 +265,7 @@ theorem _root_.Commute.list_prod_left (l : List M) (y : M) (h : ∀ x ∈ l, Com
 #align add_commute.list_sum_left AddCommute.list_sum_left
 
 @[to_additive (attr := simp)]
-theorem prod_map_smul
-    [MulAction M N] [IsScalarTower M N N] [SMulCommClass M N N] (l : List N) (m : M) :
+theorem smul_prod [MulAction M N] [IsScalarTower M N N] [SMulCommClass M N N] (l : List N) (m : M) :
     (l.map (m • ·)).prod = m ^ l.length • l.prod := by
   induction l with
   | nil => simp

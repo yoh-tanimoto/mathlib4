@@ -1994,6 +1994,13 @@ theorem prod_int_mod (s : Finset α) (n : ℤ) (f : α → ℤ) :
   (Multiset.prod_int_mod _ _).trans <| by rw [Finset.prod, Multiset.map_map]; rfl
 #align finset.prod_int_mod Finset.prod_int_mod
 
+@[to_additive (attr := simp)]
+theorem smul_prod
+    [CommMonoid α] [Monoid β] [MulAction β α] [IsScalarTower β α α] [SMulCommClass β α α]
+    (s : Finset α) (b : β) :
+    ∏ x in s, b • x = b ^ card s • ∏ x in s, x := by
+  simp only [prod_eq_multiset_prod, card_def, s.val.smul_prod b, Multiset.map_id']
+
 end Finset
 
 namespace Fintype
