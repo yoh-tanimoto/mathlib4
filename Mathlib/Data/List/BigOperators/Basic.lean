@@ -269,7 +269,7 @@ theorem smul_prod [MulAction M N] [IsScalarTower M N N] [SMulCommClass M N N] (l
     m ^ l.length • l.prod = (l.map (m • ·)).prod := by
   induction l with
   | nil => simp
-  | cons head tail ih => simp [ih, smul_mul_smul, pow_succ]
+  | cons head tail ih => simp [← ih, smul_mul_smul, pow_succ]
 
 @[to_additive sum_le_sum]
 theorem Forall₂.prod_le_prod' [Preorder M] [CovariantClass M M (Function.swap (· * ·)) (· ≤ ·)]
