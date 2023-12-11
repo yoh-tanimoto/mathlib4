@@ -1998,7 +1998,7 @@ theorem prod_int_mod (s : Finset α) (n : ℤ) (f : α → ℤ) :
 theorem smul_prod
     [CommMonoid α] [Monoid β] [MulAction β α] [IsScalarTower β α α] [SMulCommClass β α α]
     (s : Finset α) (b : β) :
-    ∏ x in s, b • x = b ^ card s • ∏ x in s, x := by
+    b ^ card s • ∏ x in s, x = ∏ x in s, b • x := by
   simp only [prod_eq_multiset_prod, card_def, s.val.smul_prod b, Multiset.map_id']
 
 end Finset

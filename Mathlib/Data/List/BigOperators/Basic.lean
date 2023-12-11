@@ -266,7 +266,7 @@ theorem _root_.Commute.list_prod_left (l : List M) (y : M) (h : ∀ x ∈ l, Com
 
 @[to_additive (attr := simp)]
 theorem smul_prod [MulAction M N] [IsScalarTower M N N] [SMulCommClass M N N] (l : List N) (m : M) :
-    (l.map (m • ·)).prod = m ^ l.length • l.prod := by
+    m ^ l.length • l.prod = (l.map (m • ·)).prod := by
   induction l with
   | nil => simp
   | cons head tail ih => simp [ih, smul_mul_smul, pow_succ]
