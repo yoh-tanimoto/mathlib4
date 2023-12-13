@@ -153,7 +153,7 @@ lemma Finset.map_piFinSuccAboveEquiv_filter_piFinset_succAbove {n : ℕ} (k : Fi
 lemma Finset.map_piFinSuccAboveEquiv_filter_piFinset {n : ℕ} {α : Fin (n + 1) → Type*}
     (p : ((i : Fin n) → α i.succ) → Prop) [DecidablePred p]
     (S : (i : Fin (n + 1)) → Finset (α i)) :
-    ((Fintype.piFinset S).filter fun r ↦ p (fun x ↦ r <| Fin.succ x)).map
+    ((Fintype.piFinset S).filter fun r ↦ p (Fin.tail r)).map
       (Equiv.piFinSuccAboveEquiv α 0).toEmbedding
     = S 0 ×ˢ (Fintype.piFinset (fun x ↦ S <| Fin.succ x)).filter p :=
   Finset.map_piFinSuccAboveEquiv_filter_piFinset_succAbove 0 p S
