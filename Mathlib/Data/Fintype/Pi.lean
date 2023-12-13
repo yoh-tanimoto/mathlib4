@@ -155,14 +155,14 @@ lemma Finset.map_piFinSuccAboveEquiv_filter_piFinset {n : ℕ} {α : Fin (n + 1)
     (S : (i : Fin (n + 1)) → Finset (α i)) :
     ((Fintype.piFinset S).filter fun r ↦ p (Fin.tail r)).map
       (Equiv.piFinSuccAboveEquiv α 0).toEmbedding
-    = S 0 ×ˢ (Fintype.piFinset (fun x ↦ S <| Fin.succ x)).filter p :=
+    = S 0 ×ˢ (Fintype.piFinset (Fin.tail S)).filter p :=
   Finset.map_piFinSuccAboveEquiv_filter_piFinset_succAbove 0 p S
 
 lemma Finset.filter_piFinset_eq_map_piFinSuccAboveEquiv_symm {n : ℕ} {α : Fin (n + 1) → Type*}
     (p : ((i : Fin n) → α i.succ) → Prop) [DecidablePred p]
     (S : ∀ i, Finset (α i)) :
-    ((Fintype.piFinset S).filter fun r ↦ p (fun x ↦ r <| Fin.succ x))
-    = (S 0 ×ˢ (Fintype.piFinset fun x ↦ S <| Fin.succ x).filter p).map
+    ((Fintype.piFinset S).filter fun r ↦ p (Fin.tail r))
+    = (S 0 ×ˢ (Fintype.piFinset (Fin.tail S)).filter p).map
         (Equiv.piFinSuccAboveEquiv α 0).symm.toEmbedding := by
   rw [← Finset.map_piFinSuccAboveEquiv_filter_piFinset, Finset.map_map,
     Function.Embedding.equiv_toEmbedding_trans_symm_toEmbedding, map_refl]
@@ -170,8 +170,8 @@ lemma Finset.filter_piFinset_eq_map_piFinSuccAboveEquiv_symm {n : ℕ} {α : Fin
 lemma Finset.card_filter_succ_piFinset_eq {n : ℕ} {α : Fin (n + 1) → Type*}
     (p : ((i : Fin n) → α i.succ) → Prop) [DecidablePred p]
     (S : (i : Fin (n + 1)) → Finset (α i)) :
-    ((Fintype.piFinset S).filter fun r ↦ p (fun x ↦ r <| Fin.succ x)).card
-    = (S 0).card * ((Fintype.piFinset fun x ↦ S <| Fin.succ x).filter p).card := by
+    ((Fintype.piFinset S).filter fun r ↦ p (Fin.tail r)).card
+    = (S 0).card * ((Fintype.piFinset (Fin.tail S)).filter p).card := by
   rw [←Finset.card_map ((Equiv.piFinSuccAboveEquiv α 0).toEmbedding),
     map_piFinSuccAboveEquiv_filter_piFinset]
-  exact Finset.card_product (S 0) ((Fintype.piFinset (fun x ↦ S <| Fin.succ x)).filter p)
+  exact Finset.card_product (S 0) ((Fintype.piFinset (Fin.tail S)).filter p)
