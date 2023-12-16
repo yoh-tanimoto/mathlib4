@@ -762,12 +762,12 @@ lemma map_apply (ν : FiniteMeasure Ω) {f : Ω → Ω'} (f_mble : Measurable f)
 @[simp] lemma map_add {f : Ω → Ω'} (f_mble : Measurable f) (ν₁ ν₂ : FiniteMeasure Ω) :
     (ν₁ + ν₂).map f = ν₁.map f + ν₂.map f := by
   ext s s_mble
-  simp only [map_apply' _ f_mble.aemeasurable s_mble, coe_add]
+  simp only [map_apply' _ f_mble.aemeasurable s_mble, coe_add, Measure.add_apply]
 
 @[simp] lemma map_smul {f : Ω → Ω'} (c : ℝ≥0) (ν : FiniteMeasure Ω) :
     (c • ν).map f = c • (ν.map f) := by
-  ext s s_mble
-  simp [map_apply' _ f_mble.aemeasurable s_mble, coe_smul]
+  ext s _
+  simp [coe_smul]
 
 /-- The push-forward of a finite measure by a function between measurable spaces as a linear map. -/
 noncomputable def mapHom {f : Ω → Ω'} (f_mble : Measurable f) :
