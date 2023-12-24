@@ -102,7 +102,7 @@ private theorem image_gen {s : Set α} (_ : IsCompact s) {u : Set γ} (_ : IsOpe
 
 /-- C(-, γ) is a functor. -/
 theorem continuous_comp_left : Continuous (fun g => g.comp f : C(β, γ) → C(α, γ)) :=
-  continuous_generateFrom fun m ⟨s, hs, u, hu, hm⟩ => by
+  continuous_generateFrom_iff.2 fun m ⟨s, hs, u, hu, hm⟩ => by
     rw [hm, image_gen f hs hu]
     exact ContinuousMap.isOpen_gen (hs.image f.2) hu
 #align continuous_map.continuous_comp_left ContinuousMap.continuous_comp_left
@@ -111,7 +111,7 @@ theorem continuous_comp_left : Continuous (fun g => g.comp f : C(β, γ) → C(�
   locally compact. This is Prop. 9 of Chap. X, §3, №. 4 of Bourbaki's *Topologie Générale*. -/
 theorem continuous_comp' [LocallyCompactSpace β] :
     Continuous fun x : C(α, β) × C(β, γ) => x.2.comp x.1 :=
-  continuous_generateFrom
+  continuous_generateFrom_iff.2
     (by
       rintro M ⟨K, hK, U, hU, rfl⟩
       conv =>
@@ -311,7 +311,7 @@ theorem image_coev {y : β} (s : Set α) : coev α β y '' s = ({y} : Set β) ×
 
 -- The coevaluation map β → C(α, β × α) is continuous (always).
 theorem continuous_coev : Continuous (coev α β) :=
-  continuous_generateFrom <| by
+  continuous_generateFrom_iff.2 <| by
     rintro _ ⟨s, sc, u, uo, rfl⟩
     rw [isOpen_iff_forall_mem_open]
     intro y hy
