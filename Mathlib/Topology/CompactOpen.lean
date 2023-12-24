@@ -34,75 +34,48 @@ compact-open, curry, function space
 
 open Set
 
-open Topology
+open scoped Topology
 
 namespace ContinuousMap
 
 section CompactOpen
 
-variable {α : Type*} {β : Type*} {γ : Type*}
+variable {X : Type*} {Y : Type*} {Z : Type*}
+variable [TopologicalSpace X] [TopologicalSpace Y] [TopologicalSpace Z] {K : Set X} {U : Set Y}
 
-variable [TopologicalSpace α] [TopologicalSpace β] [TopologicalSpace γ]
-
-/-- A generating set for the compact-open topology (when `s` is compact and `u` is open). -/
-def CompactOpen.gen (s : Set α) (u : Set β) : Set C(α, β) :=
-  { f | f '' s ⊆ u }
-#align continuous_map.compact_open.gen ContinuousMap.CompactOpen.gen
-
-@[simp]
-theorem gen_empty (u : Set β) : CompactOpen.gen (∅ : Set α) u = Set.univ :=
-  Set.ext fun f => iff_true_intro ((congr_arg (· ⊆ u) (image_empty f)).mpr u.empty_subset)
-#align continuous_map.gen_empty ContinuousMap.gen_empty
-
-@[simp]
-theorem gen_univ (s : Set α) : CompactOpen.gen s (Set.univ : Set β) = Set.univ :=
-  Set.ext fun f => iff_true_intro (f '' s).subset_univ
-#align continuous_map.gen_univ ContinuousMap.gen_univ
-
-@[simp]
-theorem gen_inter (s : Set α) (u v : Set β) :
-    CompactOpen.gen s (u ∩ v) = CompactOpen.gen s u ∩ CompactOpen.gen s v :=
-  Set.ext fun _ => subset_inter_iff
-#align continuous_map.gen_inter ContinuousMap.gen_inter
-
-@[simp]
-theorem gen_union (s t : Set α) (u : Set β) :
-    CompactOpen.gen (s ∪ t) u = CompactOpen.gen s u ∩ CompactOpen.gen t u :=
-  Set.ext fun f => (iff_of_eq (congr_arg (· ⊆ u) (image_union f s t))).trans union_subset_iff
-#align continuous_map.gen_union ContinuousMap.gen_union
-
-theorem gen_empty_right {s : Set α} (h : s.Nonempty) : CompactOpen.gen s (∅ : Set β) = ∅ :=
-  eq_empty_of_forall_not_mem fun _ => (h.image _).not_subset_empty
-#align continuous_map.gen_empty_right ContinuousMap.gen_empty_right
+#noalign continuous_map.compact_open.gen
+#noalign continuous_map.gen_empty
+#noalign continuous_map.gen_univ
+#noalign continuous_map.gen_inter
+#noalign continuous_map.gen_union
+#noalign continuous_map.gen_empty_right
 
 -- The compact-open topology on the space of continuous maps α → β.
-instance compactOpen : TopologicalSpace C(α, β) :=
-  TopologicalSpace.generateFrom
-    { m | ∃ (s : Set α) (_ : IsCompact s) (u : Set β) (_ : IsOpen u), m = CompactOpen.gen s u }
+instance compactOpen : TopologicalSpace C(X, Y) :=
+  TopologicalSpace.generateFrom <|
+    Set.image2 (fun K U ↦ {f | MapsTo f K U}) {K | IsCompact K} {U | IsOpen U}
 #align continuous_map.compact_open ContinuousMap.compactOpen
 
 /-- Definition of `ContinuousMap.compactOpen` in terms of `Set.image2`. -/
-theorem compactOpen_eq : @compactOpen α β _ _ =
-    .generateFrom (Set.image2 CompactOpen.gen {s | IsCompact s} {t | IsOpen t}) :=
-  congr_arg TopologicalSpace.generateFrom <| Set.ext fun _ ↦ by simp [eq_comm]
+theorem compactOpen_eq : @compactOpen X Y _ _ =
+    .generateFrom (Set.image2 (fun K U ↦ {f | MapsTo f K U}) {K | IsCompact K} {t | IsOpen t}) :=
+  rfl
 
-protected theorem isOpen_gen {s : Set α} (hs : IsCompact s) {u : Set β} (hu : IsOpen u) :
-    IsOpen (CompactOpen.gen s u) :=
-  TopologicalSpace.GenerateOpen.basic _ (by dsimp [mem_setOf_eq]; tauto)
-#align continuous_map.is_open_gen ContinuousMap.isOpen_gen
+protected theorem isOpen_setOf_mapsTo (hK : IsCompact K) (hU : IsOpen U) :
+    IsOpen {f : C(X, Y) | MapsTo f K U} :=
+  TopologicalSpace.isOpen_generateFrom_of_mem <| mem_image2_of_mem hK hU
+#align continuous_map.is_open_gen ContinuousMap.isOpen_setOf_mapsTo
+
+lemma continuous_rng_iff {f : X → C(Y, Z)} :
+    Continuous f ↔ ∀ K, IsCompact K → ∀ U, IsOpen U → IsOpen {x | MapsTo (f x) K U} :=
+  continuous_generateFrom.trans _
 
 section Functorial
 
-variable (g : C(β, γ))
+variable (g : C(Y, Z))
 
-private theorem preimage_gen {s : Set α} {u : Set γ} :
-    ContinuousMap.comp g ⁻¹' CompactOpen.gen s u = CompactOpen.gen s (g ⁻¹' u) := by
-  ext ⟨f, _⟩
-  change g ∘ f '' s ⊆ u ↔ f '' s ⊆ g ⁻¹' u
-  rw [image_comp, image_subset_iff]
-
-/-- C(α, -) is a functor. -/
-theorem continuous_comp : Continuous (ContinuousMap.comp g : C(α, β) → C(α, γ)) :=
+/-- C(α, ·) is a functor. -/
+theorem continuous_comp : Continuous (ContinuousMap.comp g : C(X, Y) → C(X, Z)) :=
   continuous_generateFrom fun m ⟨s, hs, u, hu, hm⟩ => by
     rw [hm, preimage_gen g]; exact ContinuousMap.isOpen_gen hs (hu.preimage g.2)
 #align continuous_map.continuous_comp ContinuousMap.continuous_comp
