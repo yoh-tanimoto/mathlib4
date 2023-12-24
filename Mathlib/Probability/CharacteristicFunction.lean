@@ -54,7 +54,7 @@ theorem continuous_probFourierChar : Continuous probFourierChar :=
 
 variable {E : Type _} [NormedAddCommGroup E] [CompleteSpace E] [NormedSpace ℂ E]
 
-theorem vector_fourierIntegral_eq_integral_exp {V : Type _} [AddCommGroup V] [Module ℝ V]
+theorem fourierIntegral_probFourierChar_eq_integral_exp {V : Type _} [AddCommGroup V] [Module ℝ V]
     [MeasurableSpace V] {W : Type _} [AddCommGroup W] [Module ℝ W] (L : V →ₗ[ℝ] W →ₗ[ℝ] ℝ)
     (μ : Measure V) (f : V → E) (w : W) :
     VectorFourier.fourierIntegral probFourierChar μ L f w =
@@ -77,8 +77,8 @@ variable [NormedAddCommGroup E] [InnerProductSpace ℝ E]
 lemma charFun_eq_fourierIntegral (μ : Measure E) (t : E) :
     charFun μ t = VectorFourier.fourierIntegral probFourierChar μ sesqFormOfInner
       (fun _ ↦ (1 : ℂ)) t := by
-  rw [charFun, vector_fourierIntegral_eq_integral_exp]
-  simp only [real_smul, smul_eq_mul, mul_one]
+  simp only [charFun, fourierIntegral_probFourierChar_eq_integral_exp, real_smul, smul_eq_mul,
+    mul_one]
   congr
 
 @[simp]
@@ -87,9 +87,8 @@ lemma charFun_zero (μ : Measure E) [IsProbabilityMeasure μ] : charFun μ 0 = 1
     ENNReal.one_toReal, one_smul]
 
 lemma charFun_neg (μ : Measure E) (t : E) : charFun μ (-t) = conj (charFun μ t) := by
-  simp_rw [charFun, inner_neg_left, ← integral_conj]
-  congr with x : 1
-  sorry
+  simp [charFun, ← integral_conj, ← exp_conj, conj_ofReal]
+  -- todo: conj_ofReal should be simp
 
 lemma norm_charFun_le_one (μ : Measure E) [IsProbabilityMeasure μ] (t : E) : ‖charFun μ t‖ ≤ 1 := by
   rw [charFun_eq_fourierIntegral]
