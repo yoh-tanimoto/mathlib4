@@ -246,7 +246,7 @@ theorem prod_dvd_prod_of_le (h : s ≤ t) : s.prod ∣ t.prod := by
 #align multiset.prod_dvd_prod_of_le Multiset.prod_dvd_prod_of_le
 
 variable (s) in
-@[to_additive (attr := simp)]
+@[to_additive]
 theorem smul_prod [Monoid β] [MulAction β α] [IsScalarTower β α α] [SMulCommClass β α α] (b : β) :
     b ^ card s • s.prod = (s.map (b • ·)).prod :=
   Quot.induction_on s <| by simp
