@@ -256,6 +256,24 @@ theorem IsEquipartition.equivProduct_lt_card_partsEquiv (hP : P.IsEquipartition)
       P.parts.card * q ≤ r + Finset.card P.parts * q := by simp
       _ ≤ _ := b.le
 
+noncomputable def IsEquipartition.equivProduct2 (hP : P.IsEquipartition) :
+    { t : Finset α × ℕ // t.1 ∈ P.parts ∧ t.2 < t.1.card } ≃
+    { t : ℕ × ℕ // t.1 < P.parts.card ∧ t.1 + P.parts.card * t.2 < s.card } where
+  toFun t := by
+    obtain ⟨⟨p, q⟩, ⟨m, l⟩⟩ := t
+    exact ⟨⟨(hP.partsEquiv ⟨p, m⟩).1, q⟩, hP.equivProduct_sum_lt m l⟩
+  invFun t := by
+    obtain ⟨⟨r, q⟩, ⟨l, b⟩⟩ := t
+    dsimp only at l b
+    exact ⟨⟨hP.partsEquiv.symm ⟨r, mem_Ico.mpr ⟨r.zero_le, l⟩⟩, q⟩,
+      by simp only [coe_mem, true_and]; exact hP.equivProduct_lt_card_partsEquiv l b⟩
+  left_inv t := by
+    obtain ⟨t, ⟨m, l⟩⟩ := t
+    simp only [Subtype.coe_eta, Equiv.symm_apply_apply]
+  right_inv t := by
+    obtain ⟨t, ⟨l, b⟩⟩ := t
+    simp only [Subtype.coe_eta, Equiv.apply_symm_apply]
+
 /- An equipartition of a finset with `n` elements into `k` parts has
 a part-preserving equivalence with the residue classes of `Fin n` modulo `k`.
 noncomputable def IsEquipartition.partPreservingEquiv' (hP : P.IsEquipartition) :
