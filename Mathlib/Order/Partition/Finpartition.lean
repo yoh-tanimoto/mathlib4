@@ -478,6 +478,8 @@ theorem nonempty_of_mem_parts {a : Finset α} (ha : a ∈ P.parts) : a.Nonempty 
   nonempty_iff_ne_empty.2 <| P.ne_bot ha
 #align finpartition.nonempty_of_mem_parts Finpartition.nonempty_of_mem_parts
 
+lemma parts_nonempty_of_mem (ha : a ∈ s) : P.parts.Nonempty := P.parts_nonempty (by aesop)
+
 lemma eq_of_mem_parts (ht : t ∈ P.parts) (hu : u ∈ P.parts) (hat : a ∈ t) (hau : a ∈ u) : t = u :=
   P.disjoint.elim ht hu <| not_disjoint_iff.2 ⟨a, hat, hau⟩
 
@@ -498,6 +500,26 @@ def part (ha : a ∈ s) : Finset α := choose (hp := P.existsUnique_mem ha)
 theorem part_mem (ha : a ∈ s) : P.part ha ∈ P.parts := choose_mem _ _ _
 
 theorem mem_part (ha : a ∈ s) : a ∈ P.part ha := choose_property _ _ _
+
+noncomputable def halp : s ≃ { t : Finset α × ℕ // t.1 ∈ P.parts ∧ t.2 < t.1.card } where
+  toFun x := by
+    let p := P.part x.2
+    exact ⟨⟨p, p.equivFin ⟨x.1, P.mem_part x.2⟩⟩,
+      ⟨by dsimp only; exact P.part_mem x.2, by dsimp only; apply Fin.prop⟩⟩
+  invFun t := by
+    obtain ⟨⟨p, i⟩, ⟨m, l⟩⟩ := t
+    let x := p.equivFin.symm ⟨i, l⟩
+    exact ⟨x.1, mem_of_subset ((le_sup m).trans P.supParts.le) x.2⟩
+  left_inv x := by simp
+  right_inv t := by
+    obtain ⟨⟨p, i⟩, ⟨m, l⟩⟩ := t
+    dsimp only at m l
+    let x := p.equivFin.symm ⟨i, l⟩
+    have ξ : ↑x ∈ s := mem_of_subset ((le_sup m).trans P.supParts.le) x.2
+    have ξ' : P.part ξ = p := P.eq_of_mem_parts (P.part_mem _) m (P.mem_part _) x.2
+    simp only [ξ', id_eq, Subtype.mk.injEq, Prod.mk.injEq, true_and]
+    change (P.part ξ).equivFin _ = i
+    rw [ξ'] -- tactic 'rewrite' failed, motive is not type correct
 
 theorem biUnion_parts : P.parts.biUnion id = s :=
   (sup_eq_biUnion _ _).symm.trans P.supParts
@@ -546,6 +568,14 @@ theorem card_parts_le_card (P : Finpartition s) : P.parts.card ≤ s.card := by
   rw [← card_bot s]
   exact card_mono bot_le
 #align finpartition.card_parts_le_card Finpartition.card_parts_le_card
+
+/-- Note that this inequality still holds when `P` is empty. -/
+lemma card_mod_card_parts_le : s.card % P.parts.card ≤ P.parts.card := by
+  rcases P.parts.card.eq_zero_or_pos with h | h
+  · have h' := h
+    rw [Finset.card_eq_zero, parts_eq_empty_iff, bot_eq_empty, ← Finset.card_eq_zero] at h'
+    rw [h, h']; norm_num
+  · exact (Nat.mod_lt _ h).le
 
 variable [Fintype α]
 
