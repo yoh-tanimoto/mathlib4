@@ -499,6 +499,7 @@ theorem part_mem (ha : a ∈ s) : P.part ha ∈ P.parts := choose_mem _ _ _
 
 theorem mem_part (ha : a ∈ s) : a ∈ P.part ha := choose_property _ _ _
 
+/-- First equivalence in the `IsEquipartition.partPreservingEquiv` chain. -/
 noncomputable def equivProduct : s ≃ { t : Finset α × ℕ // t.1 ∈ P.parts ∧ t.2 < t.1.card } where
   toFun x := by
     let p := P.part x.2
@@ -520,6 +521,48 @@ noncomputable def equivProduct : s ≃ { t : Finset α × ℕ // t.1 ∈ P.parts
 
 theorem equivProduct_part_eq_part {b} (ha : a ∈ s) (hb : b ∈ s) : P.part ha = P.part hb ↔
     (P.equivProduct ⟨a, ha⟩).1.1 = (P.equivProduct ⟨b, hb⟩).1.1 := ⟨id, id⟩
+
+theorem equivProduct3_lt {n} (l : n < s.card) :
+    n % P.parts.card < P.parts.card ∧
+    n % P.parts.card + P.parts.card * (n / P.parts.card) < s.card := by
+  have y : 0 < P.parts.card := by
+    have z := n.zero_le.trans_lt l
+    rw [Finset.card_pos] at z ⊢
+    obtain ⟨_, m⟩ := z
+    have := P.part_mem m
+    use P.part m
+  exact ⟨Nat.mod_lt _ y, by rw [Nat.mod_add_div]; exact l⟩
+
+/-- Third equivalence in the `IsEquipartition.partPreservingEquiv` chain. -/
+def equivProduct3 :
+    { t : ℕ × ℕ // t.1 < P.parts.card ∧ t.1 + P.parts.card * t.2 < s.card } ≃
+    Fin s.card where
+  toFun := fun ⟨⟨r, q⟩, ⟨_, b⟩⟩ ↦ ⟨r + P.parts.card * q, b⟩
+  invFun := fun ⟨n, l⟩ ↦
+    ⟨⟨n % P.parts.card, n / P.parts.card⟩, equivProduct3_lt (P := P) l⟩
+  left_inv := fun ⟨⟨r, q⟩, ⟨a, b⟩⟩ ↦ by
+    simp only [Nat.add_mul_mod_self_left, Subtype.mk.injEq, Prod.mk.injEq]
+    have y : 0 < P.parts.card := r.zero_le.trans_lt a
+    constructor
+    · rw [Nat.mod_eq_iff_lt y.ne.symm]; exact a
+    · rw [Nat.add_mul_div_left _ _ y, (Nat.div_eq_zero_iff y).mpr a, zero_add]
+  right_inv := fun ⟨n, l⟩ ↦ by
+    aesop
+    rw [Nat.mod_add_div]
+
+theorem equivProduct3_part_eq_part {t u} :
+    t.1.1 = u.1.1 ↔ (equivProduct3 P t) % P.parts.card = (equivProduct3 P u) % P.parts.card := by
+  unfold equivProduct3
+  constructor <;> intro h
+  · aesop
+  · aesop_destruct_products
+    rename_i a _ b _ l1 _ l2 _ e
+    simp_all only [Equiv.coe_fn_mk, Nat.add_mul_mod_self_left]
+    have y : 0 < P.parts.card := a.zero_le.trans_lt l1
+    have a' : a % P.parts.card = a := by rw [Nat.mod_eq_iff_lt y.ne.symm]; exact l1
+    have b' : b % P.parts.card = b := by rw [Nat.mod_eq_iff_lt y.ne.symm]; exact l2
+    rw [a', b'] at e
+    exact e
 
 theorem biUnion_parts : P.parts.biUnion id = s :=
   (sup_eq_biUnion _ _).symm.trans P.supParts

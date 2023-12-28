@@ -42,7 +42,7 @@ theorem isEquipartition_iff_card_parts_eq_average :
 variable {P}
 
 lemma not_isEquipartition :
-    ¬P.IsEquipartition ↔ ∃ a ∈ P.parts, ∃ b ∈ P.parts, Finset.card b + 1 < Finset.card a :=
+    ¬P.IsEquipartition ↔ ∃ a ∈ P.parts, ∃ b ∈ P.parts, b.card + 1 < a.card :=
   Set.not_equitableOn
 
 theorem Set.Subsingleton.isEquipartition (h : (P.parts : Set (Finset α)).Subsingleton) :
@@ -253,34 +253,39 @@ theorem IsEquipartition.equivProduct_lt_card_partsEquiv (hP : P.IsEquipartition)
     exact absurd b g
   · rw [Nat.lt_add_one_iff, Nat.le_div_iff_mul_le y, mul_comm]
     calc
-      P.parts.card * q ≤ r + Finset.card P.parts * q := by simp
+      P.parts.card * q ≤ r + P.parts.card * q := by simp
       _ ≤ _ := b.le
 
+/-- Second equivalence in the `IsEquipartition.partPreservingEquiv` chain. -/
 noncomputable def IsEquipartition.equivProduct2 (hP : P.IsEquipartition) :
     { t : Finset α × ℕ // t.1 ∈ P.parts ∧ t.2 < t.1.card } ≃
     { t : ℕ × ℕ // t.1 < P.parts.card ∧ t.1 + P.parts.card * t.2 < s.card } where
-  toFun t := by
-    obtain ⟨⟨p, q⟩, ⟨m, l⟩⟩ := t
-    exact ⟨⟨(hP.partsEquiv ⟨p, m⟩).1, q⟩, hP.equivProduct_sum_lt m l⟩
-  invFun t := by
-    obtain ⟨⟨r, q⟩, ⟨l, b⟩⟩ := t
-    dsimp only at l b
-    exact ⟨⟨hP.partsEquiv.symm ⟨r, mem_Ico.mpr ⟨r.zero_le, l⟩⟩, q⟩,
+  toFun := fun ⟨⟨p, q⟩, ⟨m, l⟩⟩ ↦
+    ⟨⟨(hP.partsEquiv ⟨p, m⟩).1, q⟩, hP.equivProduct_sum_lt m l⟩
+  invFun := fun ⟨⟨r, q⟩, ⟨l, b⟩⟩ ↦
+    ⟨⟨hP.partsEquiv.symm ⟨r, mem_Ico.mpr ⟨r.zero_le, l⟩⟩, q⟩,
       by simp only [coe_mem, true_and]; exact hP.equivProduct_lt_card_partsEquiv l b⟩
-  left_inv t := by
-    obtain ⟨t, ⟨m, l⟩⟩ := t
-    simp only [Subtype.coe_eta, Equiv.symm_apply_apply]
-  right_inv t := by
-    obtain ⟨t, ⟨l, b⟩⟩ := t
-    simp only [Subtype.coe_eta, Equiv.apply_symm_apply]
+  left_inv := fun ⟨⟨p, q⟩, ⟨m, l⟩⟩ ↦ by aesop
+  right_inv := fun ⟨⟨r, q⟩, ⟨l, b⟩⟩ ↦ by aesop
 
-/- An equipartition of a finset with `n` elements into `k` parts has
-a part-preserving equivalence with the residue classes of `Fin n` modulo `k`.
-noncomputable def IsEquipartition.partPreservingEquiv' (hP : P.IsEquipartition) :
+theorem IsEquipartition.equivProduct2_part_eq_part (hP : P.IsEquipartition) {t u} :
+    t.1.1 = u.1.1 ↔ (hP.equivProduct2 t).1.1 = (hP.equivProduct2 u).1.1 := by
+  constructor
+  · intro; aesop_destruct_products; rename _ = _ => a; subst a; rfl
+  · intro a; simp only [equivProduct2, Equiv.coe_fn_mk] at a
+    aesop_destruct_products; rename _ = _ => a
+    rw [SetCoe.ext_iff, hP.partsEquiv.apply_eq_iff_eq, Subtype.mk_eq_mk] at a
+    exact a
+
+/-- An equipartition of a finset with `n` elements into `k` parts has
+a part-preserving equivalence with the residue classes of `Fin n` modulo `k`. -/
+noncomputable def IsEquipartition.partPreservingEquiv (hP : P.IsEquipartition) :
     { m : s ≃ Fin s.card //
-      ∀ a b, P.part a.2 = P.part b.2 ↔ m a % P.parts.card = m b % P.parts.card } := by
-  sorry
--/
+      ∀ a b, P.part a.2 = P.part b.2 ↔ m a % P.parts.card = m b % P.parts.card } where
+  val := (P.equivProduct.trans hP.equivProduct2).trans P.equivProduct3
+  property a b := by
+    rw [P.equivProduct_part_eq_part, hP.equivProduct2_part_eq_part, P.equivProduct3_part_eq_part]
+    rfl
 
 /-! ### Discrete and indiscrete finpartition -/
 
