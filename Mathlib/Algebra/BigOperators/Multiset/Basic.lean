@@ -249,7 +249,7 @@ variable (s) in
 @[to_additive]
 theorem smul_prod [Monoid β] [MulAction β α] [IsScalarTower β α α] [SMulCommClass β α α] (b : β) :
     b ^ card s • s.prod = (s.map (b • ·)).prod :=
-  Quot.induction_on s <| by simp
+  Quot.induction_on s <| by simp [List.smul_prod]
 
 end CommMonoid
 
