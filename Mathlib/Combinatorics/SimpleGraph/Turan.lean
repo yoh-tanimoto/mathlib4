@@ -148,9 +148,9 @@ theorem notAdj_equipartition : (notAdjFinpartition hmax).IsEquipartition := by
       exact fp.eq_of_mem_parts hl hs hw (small_eq ▸ this.mpr lsn)
     rw [G.card_edgeFinset_replaceVertex_of_adj ha]
     have large_le : large.card ≤ Fintype.card V := by
-      simpa using card_le_of_subset large.subset_univ
+      simpa using card_le_card large.subset_univ
     have small_le : small.card ≤ Fintype.card V := by
-      simpa using card_le_of_subset small.subset_univ
+      simpa using card_le_card small.subset_univ
     rw [degree_eq_fintype_card_sub_part_card, ← small_eq,
       degree_eq_fintype_card_sub_part_card, ← large_eq,
       Nat.add_sub_assoc (by rw [tsub_le_tsub_iff_left small_le]; linarith),
