@@ -10,12 +10,22 @@ import Mathlib.Tactic.Linarith
 /-!
 # Turán's theorem
 
-Pass
+In this file we prove Turán's theorem, the first important result of extremal graph theory,
+which states that the `r + 1`-cliquefree graph on `n` vertices with the most edges is the complete
+`r`-partite graph with part sizes as equal as possible.
+
+The proof performs "Zykov symmetrisation", which first shows (constructively, using `replaceVertex`)
+that non-adjacency is an equivalence relation in a maximal graph, so it must be
+complete multipartite with the parts being the equivalence classes. Then basic manipulations show
+that the graph is (isomorphic to) the Turán graph for the given parameters.
 
 ## Main declarations
 
-* 1NT - 2♣
-* 2♠ - 4♠
+* `G.IsTuranMaximal r`: predicate saying that `G` has the most number of edges for its number `n`
+  of vertices while still being `r + 1`-cliquefree.
+* `turanGraph n r`: the canonical `r + 1`-cliquefree Turán graph on `n` vertices.
+* `isTuranMaximalIsoTuranGraph`: isomorphism between `G` with `G.IsTuranMaximal r` and
+  `turanGraph n r`.
 -/
 
 
@@ -28,12 +38,26 @@ namespace SimpleGraph
 variable {V : Type u} [Fintype V] [DecidableEq V]
 variable (G : SimpleGraph V) [DecidableRel G.Adj] {s t u : V}
 
-theorem aux1 (hn : ¬G.Adj s t) (hd : G.degree t < G.degree s) :
+/-- An `r + 1`-cliquefree graph is `r`-Turán-maximal if any other `r + 1`-cliquefree graph on
+the same vertex set has the same or fewer number of edges. -/
+def IsTuranMaximal (r : ℕ) : Prop :=
+  G.CliqueFree (r + 1) ∧ ∀ (H : SimpleGraph V) [DecidableRel H.Adj],
+    H.CliqueFree (r + 1) → H.edgeFinset.card ≤ G.edgeFinset.card
+
+/-- The canonical `r + 1`-cliquefree Turán graph on `n` vertices. -/
+def turanGraph (n r : ℕ) : SimpleGraph (Fin n) where Adj v w := v % r ≠ w % r
+
+/-- First part of Zykov symmetrisation. If vertex `s` has larger degree than
+a non-adjacent other vertex `t`, `G.replaceVertex s t` has more edges than `G`. -/
+theorem card_lt_card_replaceVertex1 (hn : ¬G.Adj s t) (hd : G.degree t < G.degree s) :
     G.edgeFinset.card < (G.replaceVertex s t).edgeFinset.card := by
   rw [G.card_edgeFinset_replaceVertex_of_not_adj hn, add_tsub_assoc_of_le hd.le]
   exact Nat.lt_add_of_pos_right <| tsub_pos_iff_lt.mpr hd
 
-theorem aux2 (hst : ¬G.Adj s t) (hsu : ¬G.Adj s u) (htu : G.Adj t u)
+/-- Second part of Zykov symmetrisation. A witness to non-transitivity of non-adjacency
+where the involved vertices have the same degree can be used to generate
+(using `replaceVertex` only) a graph with more edges. -/
+theorem card_lt_card_replaceVertex2 (hst : ¬G.Adj s t) (hsu : ¬G.Adj s u) (htu : G.Adj t u)
     (hdt : G.degree s = G.degree t) (hdu : G.degree s = G.degree u) :
     G.edgeFinset.card < ((G.replaceVertex s t).replaceVertex s u).edgeFinset.card := by
   have ntu : t ≠ u := G.ne_of_adj htu
@@ -63,47 +87,49 @@ theorem aux2 (hst : ¬G.Adj s t) (hsu : ¬G.Adj s u) (htu : G.Adj t u)
   nth_rw 1 [de1, de2, hdu, ← dmp, add_tsub_assoc_of_le (by simp), add_tsub_cancel_left]
   linarith
 
-/-- An `r + 1`-cliquefree graph is `r`-Turán-maximal if any other `r + 1`-cliquefree graph on
-the same vertex set has the same or fewer number of edges. -/
-def IsTuranMaximal (r : ℕ) :=
-  G.CliqueFree (r + 1) ∧ ∀ (H : SimpleGraph V) [DecidableRel H.Adj],
-    H.CliqueFree (r + 1) → H.edgeFinset.card ≤ G.edgeFinset.card
+variable {r}
 
-variable {r : ℕ}
-
+/-- In a Turán-maximal graph, non-adjacency is transitive. -/
 theorem not_adj_transitive (hmax : G.IsTuranMaximal r) (hst : ¬G.Adj s t) (hsu : ¬G.Adj s u) :
     ¬G.Adj t u := by
   by_cases z : G.degree s = G.degree t ∧ G.degree s = G.degree u <;>
     (contrapose! hmax; unfold IsTuranMaximal; push_neg; intro cf)
   · use (G.replaceVertex s t).replaceVertex s u, inferInstance
     exact ⟨cliqueFree_of_replaceVertex_cliqueFree s u
-      (cliqueFree_of_replaceVertex_cliqueFree s t cf), aux2 _ hst hsu hmax z.1 z.2⟩
+      (cliqueFree_of_replaceVertex_cliqueFree s t cf),
+      card_lt_card_replaceVertex2 _ hst hsu hmax z.1 z.2⟩
   · rw [Decidable.not_and] at z
     cases' z with st su
     · cases' lt_or_gt_of_ne st with less more
       · use G.replaceVertex t s, inferInstance
         rw [adj_comm] at hst
-        exact ⟨cliqueFree_of_replaceVertex_cliqueFree t s cf, G.aux1 hst less⟩
+        exact ⟨cliqueFree_of_replaceVertex_cliqueFree t s cf,
+          G.card_lt_card_replaceVertex1 hst less⟩
       · use G.replaceVertex s t, inferInstance
-        exact ⟨cliqueFree_of_replaceVertex_cliqueFree s t cf, G.aux1 hst more⟩
+        exact ⟨cliqueFree_of_replaceVertex_cliqueFree s t cf,
+          G.card_lt_card_replaceVertex1 hst more⟩
     · cases' lt_or_gt_of_ne su with less more
       · use G.replaceVertex u s, inferInstance
         rw [adj_comm] at hsu
-        exact ⟨cliqueFree_of_replaceVertex_cliqueFree u s cf, G.aux1 hsu less⟩
+        exact ⟨cliqueFree_of_replaceVertex_cliqueFree u s cf,
+          G.card_lt_card_replaceVertex1 hsu less⟩
       · use G.replaceVertex s u, inferInstance
-        exact ⟨cliqueFree_of_replaceVertex_cliqueFree s u cf, G.aux1 hsu more⟩
+        exact ⟨cliqueFree_of_replaceVertex_cliqueFree s u cf,
+          G.card_lt_card_replaceVertex1 hsu more⟩
 
 variable {G} (hmax : G.IsTuranMaximal r)
 
-theorem notAdjEquivalence : Equivalence fun x y => ¬G.Adj x y where
+/-- In a Turán-maximal graph, non-adjacency is an equivalence relation. -/
+theorem notAdj_equivalence : Equivalence fun x y => ¬G.Adj x y where
   refl x := by simp
   symm xy := by simp [xy, adj_comm]
   trans xy yz := by
     rw [adj_comm] at xy
     exact G.not_adj_transitive hmax xy yz
 
-/-- In a Turán-maximal graph, non-adjacency is an equivalence relation. -/
-def notAdjSetoid : Setoid V := ⟨_, (notAdjEquivalence hmax)⟩
+/-- The non-adjacency setoid over the vertices of a Turán-maximal graph that exists
+because of `notAdj_equivalence`. Said graph is therefore a complete multipartite graph. -/
+def notAdjSetoid : Setoid V := ⟨_, (notAdj_equivalence hmax)⟩
 
 instance : DecidableRel (notAdjSetoid hmax).r :=
   inferInstanceAs <| DecidableRel fun v w => ¬G.Adj v w
@@ -124,6 +150,7 @@ theorem degree_eq_fintype_card_sub_part_card : G.degree s = Fintype.card V -
       convert (Finpartition.mem_part_ofSetoid_iff_rel).symm
       simp [notAdjSetoid]
 
+/-- The parts of a Turán-maximal graph form an equipartition. -/
 theorem notAdj_equipartition : (notAdjFinpartition hmax).IsEquipartition := by
   let fp := notAdjFinpartition hmax
   by_contra hn
@@ -175,6 +202,9 @@ theorem notAdj_card_parts_le : (notAdjFinpartition hmax).parts.card ≤ r := by
   rw [Finpartition.card_reprs] at ncf
   exact absurd (CliqueFree.mono (Nat.succ_le_of_lt h) hmax.1) ncf
 
+/-- There are `min n r` parts in a graph on `n` vertices satisfying `G.IsTuranMaximal r`.
+The `min` is necessary because `r` may be greater than `n`, in which case `G` is complete but
+still `r + 1`-cliquefree for having insufficiently many vertices. -/
 theorem notAdj_card_parts : (notAdjFinpartition hmax).parts.card = min (Fintype.card V) r := by
   let fp := notAdjFinpartition hmax
   apply le_antisymm (le_min fp.card_parts_le_card (notAdj_card_parts_le _))
@@ -203,9 +233,6 @@ theorem notAdj_card_parts : (notAdjFinpartition hmax).parts.card = min (Fintype.
     apply Finpartition.mem_part_ofSetoid_iff_rel.mp
     exact he ▸ fp.mem_part _
   contradiction
-
-/-- The canonical `r + 1`-cliquefree Turán graph on `n` vertices. -/
-def turanGraph (n r : ℕ) : SimpleGraph (Fin n) where Adj v w := v % r ≠ w % r
 
 /-- **Turán's theorem**. Any `r + 1`-cliquefree Turán-maximal graph on `n` vertices is
 isomorphic to `turanGraph n r`. -/
