@@ -387,21 +387,6 @@ def compRight {B : Type*} [CommGroup B] [TopologicalSpace B] [TopologicalGroup B
 
 variable (E)
 
-lemma ContinuousMap.CompactOpen.const_mem_gen {α β : Type*} [TopologicalSpace α]
-    [TopologicalSpace β] (S : Set α) {T : Set β} {b : β} (h : b ∈ T) :
-    ContinuousMap.const α b ∈ ContinuousMap.CompactOpen.gen S T :=
-  fun _ ⟨_, _, hf⟩ ↦ hf ▸ h
-
-lemma ContinuousMap.CompactOpen.gen_mono_left {α β : Type*} [TopologicalSpace α]
-    [TopologicalSpace β] {S1 S2 : Set α} (h : S1 ⊆ S2) (T : Set β) :
-    ContinuousMap.CompactOpen.gen S2 T ⊆ ContinuousMap.CompactOpen.gen S1 T :=
-  fun _ ↦ (Set.image_mono h).trans
-
-lemma ContinuousMap.CompactOpen.gen_mono_right {α β : Type*} [TopologicalSpace α]
-    [TopologicalSpace β] (S : Set α) {T1 T2 : Set β} (h : T1 ⊆ T2) :
-    ContinuousMap.CompactOpen.gen S T1 ⊆ ContinuousMap.CompactOpen.gen S T2 :=
-  fun _ hf ↦ Set.Subset.trans hf h
-
 -- better proof in tb_ascoli branch
 theorem arzela_ascoli {X Y : Type*} [TopologicalSpace X] [UniformSpace Y] [CompactSpace Y]
     (S : Set C(X, Y)) (hS1 : IsCompact (ContinuousMap.toFun '' S))
