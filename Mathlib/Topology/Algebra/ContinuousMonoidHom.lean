@@ -387,11 +387,22 @@ def compRight {B : Type*} [CommGroup B] [TopologicalSpace B] [TopologicalGroup B
 
 variable (E)
 
-lemma mylem {α β : Type*} [TopologicalSpace α] [TopologicalSpace β] (S : Set α) (T : Set β) (b : β) (h : b ∈ T) :
-    ContinuousMap.const α b ∈ ContinuousMap.CompactOpen.gen S T := by
-  rintro - ⟨-, -, rfl⟩
-  exact h
+lemma ContinuousMap.CompactOpen.const_mem_gen {α β : Type*} [TopologicalSpace α]
+    [TopologicalSpace β] (S : Set α) {T : Set β} {b : β} (h : b ∈ T) :
+    ContinuousMap.const α b ∈ ContinuousMap.CompactOpen.gen S T :=
+  fun _ ⟨_, _, hf⟩ ↦ hf ▸ h
 
+lemma ContinuousMap.CompactOpen.gen_mono_left {α β : Type*} [TopologicalSpace α]
+    [TopologicalSpace β] {S1 S2 : Set α} (h : S1 ⊆ S2) (T : Set β) :
+    ContinuousMap.CompactOpen.gen S2 T ⊆ ContinuousMap.CompactOpen.gen S1 T :=
+  fun _ ↦ (Set.image_mono h).trans
+
+lemma ContinuousMap.CompactOpen.gen_mono_right {α β : Type*} [TopologicalSpace α]
+    [TopologicalSpace β] (S : Set α) {T1 T2 : Set β} (h : T1 ⊆ T2) :
+    ContinuousMap.CompactOpen.gen S T1 ⊆ ContinuousMap.CompactOpen.gen S T2 :=
+  fun _ hf ↦ Set.Subset.trans hf h
+
+-- better proof in tb_ascoli branch
 theorem arzela_ascoli {X Y : Type*} [TopologicalSpace X] [UniformSpace Y] [CompactSpace Y]
     (S : Set C(X, Y)) (hS1 : IsCompact (ContinuousMap.toFun '' S))
     (hS2 : Equicontinuous ((↑) : S → X → Y)) :
@@ -435,77 +446,54 @@ theorem mythm {X Y : Type*} [TopologicalSpace X] [Group X]
     [TopologicalGroup X] [LocallyCompactSpace X]
     [UniformSpace Y] [CommGroup Y] [UniformGroup Y] [T2Space Y] [CompactSpace Y]
     (U : Set X) (V : Set Y)
-    (hUc : IsCompact U) (hVc : IsCompact V)
+    (hUc : IsCompact U) (hVc : IsCompact V) -- could weaken hVc to `IsClosed V`
     (hVo : V ∈ nhds (1 : Y))
     (h : EquicontinuousAt (fun f : {f : X →* Y | f '' U ⊆ V} ↦ (f : X → Y)) 1) :
     LocallyCompactSpace (ContinuousMonoidHom X Y) := by
-  replace h := equicontinuous_of_equicontinuousAt_one _ h
   apply TopologicalSpace.PositiveCompacts.locallyCompactSpace_of_group
+  let S0 : Set (X →* Y) := {f | f '' U ⊆ V}
   let S : Set (ContinuousMonoidHom X Y) := toContinuousMap ⁻¹' (ContinuousMap.CompactOpen.gen U V)
   let S' : Set C(X, Y) := toContinuousMap '' S
   let S'' : Set (X → Y) := ContinuousMap.toFun '' S'
-  have h2 : ∀ f : X → Y, f ∈ S'' ↔ f '' U ⊆ V ∧ ∀ x y, f (x * y) = f x * f y
-  · intro f
+  replace h : Equicontinuous ((↑) : S0 → X → Y) := equicontinuous_of_equicontinuousAt_one _ h
+  have h0 : S'' = (↑) '' S0
+  · ext f
     constructor
     · rintro ⟨-, ⟨f, hf, rfl⟩, rfl⟩
-      exact ⟨hf, map_mul f⟩
-    · rintro ⟨hf, hf₀⟩
-      suffices : Continuous f
-      · exact ⟨⟨f, this⟩, ⟨⟨MonoidHom.mk' f hf₀, this⟩, hf, rfl⟩, rfl⟩
-      exact h.continuous ⟨MonoidHom.mk' f hf₀, hf⟩
-  have h3 : S'' = (⋂ (x ∈ U), {f | f x ∈ V}) ∩ ⋂ (x : X) (y : X), {f | f (x * y) = f x * f y}
-  · simp only [Set.image_subset_iff] at h2
-    ext f
-    simp only [Set.mem_inter_iff, Set.mem_iInter]
-    exact h2 f
-  have h4 : IsClosed S''
-  · rw [h3]
-    apply IsClosed.inter
-    · apply isClosed_biInter
-      intros x hx
-      exact Set.singleton_pi' x (fun _ ↦ V) ▸ isClosed_set_pi (fun _ _ ↦ hVc.isClosed)
-    · apply isClosed_iInter
-      intro x
-      apply isClosed_iInter
-      intro y
-      let g : (X → Y) → Y := fun f ↦ (f (x * y))⁻¹ * (f x * f y)
-      have hg : Continuous g := by continuity
-      have key : g ⁻¹' {1} = {f | f (x * y) = f x * f y}
-      · ext f
-        exact inv_mul_eq_one
-      rw [← key]
-      exact isClosed_singleton.preimage hg
-  have h9 : IsCompact S'
-  · refine' arzela_ascoli S' h4.isCompact _
-    rw [equicontinuous_iff_range] at h ⊢
-    have key1 : Set.range (fun f : {f : X →* Y | f '' U ⊆ V} ↦ (f : X → Y)) = S''
-    · ext f
-      rw [h2]
-      constructor
-      · rintro ⟨⟨f, hf⟩, rfl⟩
-        exact ⟨hf, map_mul f⟩
-      · rintro ⟨hf, hf₀⟩
-        exact ⟨⟨MonoidHom.mk' f hf₀, hf⟩, rfl⟩
-    have key2 : Set.range (fun f : S' ↦ (f : X → Y)) = S''
-    · ext f
-      constructor
-      · rintro ⟨f, rfl⟩
-        exact ⟨f, f.2, rfl⟩
-      · rintro ⟨f, hf, rfl⟩
-        exact ⟨⟨f, hf⟩, rfl⟩
-    convert h <;> exact key2.trans key1.symm
-  have h6 : IsCompact S
-  · exact (inducing_toContinuousMap X Y).isCompact_iff.mpr h9
+      exact ⟨f, hf, rfl⟩
+    · rintro ⟨f, hf, rfl⟩
+      exact ⟨⟨f, h.continuous ⟨f, hf⟩⟩, ⟨⟨f, h.continuous ⟨f, hf⟩⟩, hf, rfl⟩, rfl⟩
+  replace h : Equicontinuous ((↑) : S' → X → Y)
+  · rw [equicontinuous_iff_range, ← Set.image_eq_range] at h ⊢
+    rwa [← h0] at h
   have hS : (interior S).Nonempty
   · let T := toContinuousMap ⁻¹' ContinuousMap.CompactOpen.gen U (interior V)
-    have h1 : T ⊆ S := fun f hf x hx => interior_subset (hf hx)
+    have h1 : T ⊆ S :=
+      Set.preimage_mono (ContinuousMap.CompactOpen.gen_mono_right U (interior_subset))
     have h2 : IsOpen T := isOpen_induced (ContinuousMap.isOpen_gen hUc isOpen_interior)
-    have h3 : T.Nonempty
-    · use 1
-      apply mylem
-      exact mem_interior_iff_mem_nhds.mpr hVo
+    have h3 : T.Nonempty :=
+      ⟨1, ContinuousMap.CompactOpen.const_mem_gen U (mem_interior_iff_mem_nhds.mpr hVo)⟩
     exact h3.mono (interior_maximal h1 h2)
-  exact ⟨⟨S, h6⟩, hS⟩
+  refine' ⟨⟨S, (inducing_toContinuousMap X Y).isCompact_iff.mpr (arzela_ascoli S' _ h)⟩, hS⟩
+  refine' IsClosed.isCompact _
+  change IsClosed S''
+  replace h0 : S'' = (⋂ (x ∈ U), {f | f x ∈ V}) ∩ ⋂ (x : X) (y : X), {f | f (x * y) = f x * f y}
+  · rw [h0]
+    ext f
+    simp only [Set.mem_inter_iff, Set.mem_iInter, Set.image_subset_iff, Set.mem_image]
+    exact ⟨fun ⟨f, hf1, hf2⟩ ↦ hf2 ▸ ⟨hf1, map_mul f⟩,
+      fun ⟨hf1, hf2⟩ ↦ ⟨MonoidHom.mk' f hf2, hf1, rfl⟩⟩
+  rw [h0]
+  refine' (isClosed_biInter (fun x _ ↦ _)).inter
+    (isClosed_iInter (fun x ↦ isClosed_iInter (fun y ↦ _)))
+  · exact Set.singleton_pi' x (fun _ ↦ V) ▸ isClosed_set_pi (fun _ _ ↦ hVc.isClosed)
+  · let g : (X → Y) → Y := fun f ↦ (f (x * y))⁻¹ * (f x * f y)
+    have hg : Continuous g := by continuity
+    have key : g ⁻¹' {1} = {f | f (x * y) = f x * f y}
+    · ext f
+      exact inv_mul_eq_one
+    rw [← key]
+    exact isClosed_singleton.preimage hg
 
 instance {X : Type*} [Group X] [TopologicalSpace X] [TopologicalGroup X] [LocallyCompactSpace X] :
     LocallyCompactSpace (ContinuousMonoidHom X circle) := by
