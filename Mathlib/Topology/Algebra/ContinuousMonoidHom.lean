@@ -3,11 +3,12 @@ Copyright (c) 2022 Thomas Browning. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Thomas Browning
 -/
-import Mathlib.Analysis.Complex.Circle
+import Mathlib.Analysis.SpecialFunctions.Complex.Circle
 import Mathlib.Topology.Algebra.Equicontinuity
 import Mathlib.Topology.Algebra.Group.Compact
 import Mathlib.Topology.ContinuousFunction.Algebra
 import Mathlib.Topology.ContinuousFunction.Bounded
+import Mathlib.Topology.IsLocalHomeomorph
 import Mathlib.Topology.UniformSpace.Equicontinuity
 
 #align_import topology.algebra.continuous_monoid_hom from "leanprover-community/mathlib"@"6ca1a09bc9aa75824bf97388c9e3b441fc4ccf3f"
@@ -445,11 +446,11 @@ theorem mythm {X Y : Type*}
     (U : Set X) (V : Set Y)
     (hUc : IsCompact U) (hVc : IsClosed V)
     (hVo : V ∈ nhds (1 : Y))
-    (h : EquicontinuousAt (fun f : {f : X →* Y | f '' U ⊆ V} ↦ (f : X → Y)) 1) :
+    (h : EquicontinuousAt (fun f : {f : X →* Y | U ⊆ f ⁻¹' V} ↦ (f : X → Y)) 1) :
     LocallyCompactSpace (ContinuousMonoidHom X Y) := by
   apply TopologicalSpace.PositiveCompacts.locallyCompactSpace_of_group
-  let S1 : Set (X →* Y) := {f | f '' U ⊆ V}
-  let S2 : Set (ContinuousMonoidHom X Y) := {f | f '' U ⊆ V}
+  let S1 : Set (X →* Y) := {f | U ⊆ f ⁻¹' V}
+  let S2 : Set (ContinuousMonoidHom X Y) := {f | U ⊆ f ⁻¹' V}
   let S3 : Set C(X, Y) := (↑) '' S2
   let S4 : Set (X → Y) := (↑) '' S3
   replace h : Equicontinuous ((↑) : S1 → X → Y) := equicontinuous_of_equicontinuousAt_one _ h
@@ -465,7 +466,7 @@ theorem mythm {X Y : Type*}
     rwa [← hS] at h
   have hS2 : (interior S2).Nonempty
   · let T : Set (ContinuousMonoidHom X Y) := {f | f '' U ⊆ interior V}
-    have h1 : T ⊆ S2 := fun f hf ↦ Set.Subset.trans hf interior_subset
+    have h1 : T ⊆ S2 := fun f hf ↦ Set.image_subset_iff.mp (Set.Subset.trans hf interior_subset)
     have h2 : IsOpen T := isOpen_induced (ContinuousMap.isOpen_gen hUc isOpen_interior)
     have h3 : T.Nonempty := ⟨1, fun _ ⟨_, _, h⟩ ↦ h ▸ mem_interior_iff_mem_nhds.mpr hVo⟩
     exact h3.mono (interior_maximal h1 h2)
@@ -475,23 +476,95 @@ theorem mythm {X Y : Type*}
   replace hS : S4 = Set.pi U (fun _ ↦ V) ∩ Set.range ((↑) : (X →* Y) → (X → Y))
   · rw [hS]
     ext f
-    simp_rw [Set.mem_image, Set.mem_setOf_eq, Set.image_subset_iff]
+    simp only [Set.mem_image, Set.mem_setOf_eq]
     exact ⟨fun ⟨g, hg, hf⟩ ↦ hf ▸ ⟨hg, g, rfl⟩, fun ⟨hg, g, hf⟩ ↦ ⟨g, hf ▸ hg, hf⟩⟩
   rw [hS]
   exact (isClosed_set_pi (fun _ _ ↦ hVc)).inter (MonoidHom.isClosed_range X Y)
 
+open Pointwise
+
+lemma localhomeomorph : IsLocalHomeomorph expMapCircle := sorry
+
+lemma closedmap : IsClosedMap expMapCircle := sorry
+
+lemma _root_.PartialHomeomorph.hasBasis_image {X Y : Type*} [TopologicalSpace X] [TopologicalSpace Y]
+  (f : PartialHomeomorph X Y)
+  {x : X} (hx : x ∈ f.source) {ι : Type*} {p : ι → Prop} {s : ι → Set X}
+  (h : Filter.HasBasis (nhds x) p s) : Filter.HasBasis (nhds (f x)) p (fun i ↦ (f '' s i)) := sorry
+
+lemma _root_.IsLocalHomeomorph.hasBasis_image {X Y : Type*} [TopologicalSpace X] [TopologicalSpace Y]
+  {f : X → Y} (hf : IsLocalHomeomorph f)
+  {x : X} {ι : Type*} {p : ι → Prop} {s : ι → Set X}
+  (h : Filter.HasBasis (nhds x) p s) : Filter.HasBasis (nhds (f x)) p (fun i ↦ (f '' s i)) := by
+  obtain ⟨e, hx, rfl⟩ := hf x
+  exact e.hasBasis_image hx h
+
+-- n + 1 ≤ 2 ^ n
+-- 1 / (2 ^ n) ≤ 1 / (n + 1)
+
+lemma basis0 :
+    Filter.HasBasis (nhds (0 : ℝ)) (fun _ ↦ True) (fun n : ℕ ↦ Set.Icc (-(1 / (n + 1))) (1 / (n + 1))) := by
+  have key := nhds_basis_zero_abs_sub_lt ℝ
+  sorry
+
+lemma basis1 :
+    Filter.HasBasis (nhds (0 : ℝ)) (fun _ ↦ True) (fun n : ℕ ↦ Set.Icc (-(1 / 2 ^ n)) (1 / 2 ^ n)) := by
+  rw [Filter.hasBasis_iff]
+  refine' fun S ↦ ⟨fun hS ↦ _, fun ⟨n, hn, h⟩ ↦ Filter.mem_of_superset
+    (Icc_mem_nhds (neg_neg_of_pos <| by positivity) (by positivity)) h⟩
+  obtain ⟨a, b, c, d, e⟩ := exists_Icc_mem_subset_of_mem_nhds hS
+  sorry
+
 instance {X : Type*} [TopologicalSpace X] [Group X] [TopologicalGroup X] [LocallyCompactSpace X] :
     LocallyCompactSpace (ContinuousMonoidHom X circle) := by
   have : UniformGroup circle := ⟨sorry⟩
-  obtain ⟨U, hUc, hUo⟩ := exists_compact_mem_nhds (1 : X)
-  obtain ⟨V, hVc, hVo⟩ := exists_compact_mem_nhds (1 : circle)
-  apply mythm U V hUc hVc.isClosed hVo
-  sorry
-  -- need to specify V more precisely, and prove equicontinuity
+  obtain ⟨U0, hU0c, hU0o⟩ := exists_compact_mem_nhds (1 : X)
+  let Un_aux : ℕ → {S : Set X | S ∈ nhds 1} :=
+    Nat.rec ⟨U0, hU0o⟩ <| fun _ S ↦ let h := exists_closed_nhds_one_inv_eq_mul_subset S.2
+      ⟨Classical.choose h, (Classical.choose_spec h).1⟩
+  let Un : ℕ → Set X := fun n ↦ (Un_aux n).1
+  have hUn0 : ∀ n, Un n ∈ nhds 1 := fun n ↦ (Un_aux n).2
+  have hUn1 : ∀ n, 1 ∈ Un n := fun n ↦ mem_of_mem_nhds (hUn0 n)
+  have hUn2 : ∀ n, Un (n + 1) * Un (n + 1) ⊆ Un n :=
+    fun n ↦ (Classical.choose_spec (exists_closed_nhds_one_inv_eq_mul_subset (Un_aux n).2)).2.2.2
+  have hUn3 : ∀ n, Un (n + 1) ⊆ Un n :=
+    fun n x hx ↦ hUn2 n (mul_one x ▸ Set.mul_mem_mul hx (hUn1 (n + 1)))
+  let arg : circle → ℝ := fun z ↦ Complex.arg z
+  let Vn : ℕ → Set circle :=
+    fun n ↦ expMapCircle '' Set.Icc (-(1 / 2 ^ n)) (1 / 2 ^ n)
+  have key1 : Filter.HasBasis (nhds (0 : ℝ)) (fun _ ↦ True) (fun n : ℕ ↦ Set.Icc (-(1 / 2 ^ n)) (1 / 2 ^ n))
+  · rw [Filter.hasBasis_iff]
+    refine' fun S ↦ ⟨fun hS ↦ _, fun ⟨n, hn, h⟩ ↦ Filter.mem_of_superset
+      (Icc_mem_nhds (neg_neg_of_pos <| by positivity) (by positivity)) h⟩
+    obtain ⟨a, b, c, d, e⟩ := exists_Icc_mem_subset_of_mem_nhds hS
+    sorry
+  have key0 : Filter.HasBasis (nhds 1) (fun _ ↦ True) Vn
+  · rw [← expMapCircle_zero]
+    exact localhomeomorph.hasBasis_image key1
+  apply mythm (Un 0) (Vn 0) hU0c (closedmap _ isClosed_Icc) (key0.mem_of_mem trivial)
+  have key : ∀ f : X →* circle, Un 0 ⊆ f ⁻¹' Vn 0 → ∀ n, Un n ⊆ f ⁻¹' Vn n
+  · intro f hf n
+    induction' n with n ih
+    · exact hf
+    · intro x hx
+      have h1 : f (x * x) ∈ Vn n := ih (hUn2 n (Set.mul_mem_mul hx hx))
+      rw [map_mul] at h1
+      have h2 : f x ∈ Vn n := ih (hUn3 n hx)
+      have h3 : f x ∈ Vn (n + 1)
+      · sorry
+      exact h3
+  let Wn : ℕ → Set (circle × circle) := fun n ↦ (fun p : circle × circle => p.2 / p.1) ⁻¹' Vn n
+  have key1 : Filter.HasBasis (uniformity circle) (fun _ ↦ True) Wn
+  · exact Filter.HasBasis.uniformity_of_nhds_one key0
+  rw [Filter.HasBasis.equicontinuousAt_iff_right key1]
+  intro n hn
+  rw [Filter.eventually_iff_exists_mem]
+  refine' ⟨Un n, hUn0 n, _⟩
+  intro x hx ⟨f, hf⟩
+  rw [Set.mem_preimage, map_one, div_one]
+  exact key f hf n hx
 
 end ContinuousMonoidHom
-
-
 
 /-- The Pontryagin dual of `A` is the group of continuous homomorphism `A → circle`. -/
 def PontryaginDual :=
