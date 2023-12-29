@@ -151,7 +151,7 @@ theorem eventually_iInf_lowerCentralSeries_eq [IsArtinian R M] :
   obtain ⟨n, hn : ∀ m, n ≤ m → lowerCentralSeries R L M n = lowerCentralSeries R L M m⟩ :=
     WellFounded.monotone_chain_condition.mp h_wf ⟨_, antitone_lowerCentralSeries R L M⟩
   refine Filter.eventually_atTop.mpr ⟨n, fun l hl ↦ le_antisymm (iInf_le _ _) (le_iInf fun m ↦ ?_)⟩
-  cases' le_or_lt l m with h h
+  rcases le_or_lt l m with h | h
   · rw [← hn _ hl, ← hn _ (hl.trans h)]
   · exact antitone_lowerCentralSeries R L M (le_of_lt h)
 
@@ -866,11 +866,11 @@ variable (R A L M : Type*) [CommRing R] [LieRing L] [LieAlgebra R L]
   [CommRing A] [Algebra R A]
 
 @[simp]
-lemma LieSubmodule.lowerCentralSeries_tensor_eq_extendScalars (k : ℕ) :
+lemma LieSubmodule.lowerCentralSeries_tensor_eq_baseChange (k : ℕ) :
     lowerCentralSeries A (A ⊗[R] L) (A ⊗[R] M) k =
-    (lowerCentralSeries R L M k).extendScalars A := by
+    (lowerCentralSeries R L M k).baseChange A := by
   induction' k with k ih; simp
-  simp only [lowerCentralSeries_succ, ih, ← extendScalars_top, lie_extendScalars]
+  simp only [lowerCentralSeries_succ, ih, ← baseChange_top, lie_baseChange]
 
 instance LieModule.instIsNilpotentTensor [IsNilpotent R L M] :
     IsNilpotent A (A ⊗[R] L) (A ⊗[R] M) := by

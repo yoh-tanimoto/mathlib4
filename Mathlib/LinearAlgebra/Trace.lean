@@ -299,8 +299,19 @@ lemma trace_comp_cycle' (f : M →ₗ[R] N) (g : N →ₗ[R] P) (h : P →ₗ[R]
 
 @[simp]
 theorem trace_conj' (f : M →ₗ[R] M) (e : M ≃ₗ[R] N) : trace R N (e.conj f) = trace R M f := by
-  rw [e.conj_apply, trace_comp_comm', ← comp_assoc, LinearEquiv.comp_coe,
-    LinearEquiv.self_trans_symm, LinearEquiv.refl_toLinearMap, id_comp]
+  classical
+  by_cases hM : ∃ s : Finset M, Nonempty (Basis s R M)
+  · obtain ⟨s, ⟨b⟩⟩ := hM
+    haveI := Module.Finite.of_basis b
+    haveI := (Module.free_def R M).mpr ⟨_, ⟨b⟩⟩
+    haveI := Module.Finite.of_basis (b.map e)
+    haveI := (Module.free_def R N).mpr ⟨_, ⟨(b.map e).reindex (e.toEquiv.image _)⟩⟩
+    rw [e.conj_apply, trace_comp_comm', ← comp_assoc, LinearEquiv.comp_coe,
+      LinearEquiv.self_trans_symm, LinearEquiv.refl_toLinearMap, id_comp]
+  · rw [trace, trace, dif_neg hM, dif_neg]; rfl
+    rintro ⟨s, ⟨b⟩⟩
+    exact hM ⟨s.image e.symm, ⟨(b.map e.symm).reindex
+      ((e.symm.toEquiv.image s).trans (Equiv.Set.ofEq Finset.coe_image.symm))⟩⟩
 #align linear_map.trace_conj' LinearMap.trace_conj'
 
 theorem IsProj.trace {p : Submodule R M} {f : M →ₗ[R] M} (h : IsProj p f) [Module.Free R p]
@@ -329,9 +340,9 @@ lemma trace_comp_eq_mul_of_commute_of_isNilpotent [IsReduced R] {f g : Module.En
   rw [hμ, comp_add, map_add, hg, add_zero, this, LinearMap.map_smul, smul_eq_mul]
 
 @[simp]
-lemma trace_extendScalars [Module.Free R M] [Module.Finite R M]
+lemma trace_baseChange [Module.Free R M] [Module.Finite R M]
     (f : M →ₗ[R] M) (A : Type*) [CommRing A] [Algebra R A] :
-    trace A _ (f.extendScalars A) = algebraMap R A (trace R _ f) := by
+    trace A _ (f.baseChange A) = algebraMap R A (trace R _ f) := by
   let b := Module.Free.chooseBasis R M
   let b' := Algebra.TensorProduct.basis A b
   change _ = (algebraMap R A : R →+ A) _
