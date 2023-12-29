@@ -442,65 +442,65 @@ theorem arzela_ascoli {X Y : Type*} [TopologicalSpace X] [UniformSpace Y] [Compa
 
 open BoundedContinuousFunction
 
-theorem mythm {X Y : Type*} [TopologicalSpace X] [Group X]
-    [TopologicalGroup X] [LocallyCompactSpace X]
-    [UniformSpace Y] [CommGroup Y] [UniformGroup Y] [T2Space Y] [CompactSpace Y]
+theorem MonoidHom.isClosed_range (X Y : Type*)
+    [TopologicalSpace X] [Group X] [TopologicalGroup X]
+    [TopologicalSpace Y] [Group Y] [TopologicalGroup Y] [T1Space Y] :
+    IsClosed (Set.range ((↑) : (X →* Y) → (X → Y))) := by
+  have key : Set.range ((↑) : (X →* Y) → (X → Y)) = ⋂ (x) (y), {f | f x * f y * (f (x * y))⁻¹ = 1}
+  · ext f
+    simp_rw [mul_inv_eq_one, eq_comm, Set.mem_iInter]
+    exact ⟨fun ⟨g, h⟩ ↦ h ▸ map_mul g, fun h ↦ ⟨MonoidHom.mk' f h, rfl⟩⟩
+  rw [key]
+  exact isClosed_iInter (fun _ ↦ isClosed_iInter
+    (fun _ ↦ isClosed_singleton.preimage (by continuity)))
+
+theorem mythm {X Y : Type*}
+    [TopologicalSpace X] [Group X] [TopologicalGroup X]
+    [UniformSpace Y] [CommGroup Y] [UniformGroup Y] [T1Space Y] [CompactSpace Y]
     (U : Set X) (V : Set Y)
-    (hUc : IsCompact U) (hVc : IsCompact V) -- could weaken hVc to `IsClosed V`
+    (hUc : IsCompact U) (hVc : IsClosed V)
     (hVo : V ∈ nhds (1 : Y))
     (h : EquicontinuousAt (fun f : {f : X →* Y | f '' U ⊆ V} ↦ (f : X → Y)) 1) :
     LocallyCompactSpace (ContinuousMonoidHom X Y) := by
   apply TopologicalSpace.PositiveCompacts.locallyCompactSpace_of_group
-  let S0 : Set (X →* Y) := {f | f '' U ⊆ V}
-  let S : Set (ContinuousMonoidHom X Y) := toContinuousMap ⁻¹' (ContinuousMap.CompactOpen.gen U V)
-  let S' : Set C(X, Y) := toContinuousMap '' S
-  let S'' : Set (X → Y) := ContinuousMap.toFun '' S'
-  replace h : Equicontinuous ((↑) : S0 → X → Y) := equicontinuous_of_equicontinuousAt_one _ h
-  have h0 : S'' = (↑) '' S0
-  · ext f
+  let S1 : Set (X →* Y) := {f | f '' U ⊆ V}
+  let S2 : Set (ContinuousMonoidHom X Y) := {f | f '' U ⊆ V}
+  let S3 : Set C(X, Y) := (↑) '' S2
+  let S4 : Set (X → Y) := (↑) '' S3
+  replace h : Equicontinuous ((↑) : S1 → X → Y) := equicontinuous_of_equicontinuousAt_one _ h
+  have hS : S4 = (↑) '' S1
+  · ext
     constructor
     · rintro ⟨-, ⟨f, hf, rfl⟩, rfl⟩
       exact ⟨f, hf, rfl⟩
     · rintro ⟨f, hf, rfl⟩
       exact ⟨⟨f, h.continuous ⟨f, hf⟩⟩, ⟨⟨f, h.continuous ⟨f, hf⟩⟩, hf, rfl⟩, rfl⟩
-  replace h : Equicontinuous ((↑) : S' → X → Y)
+  replace h : Equicontinuous ((↑) : S3 → X → Y)
   · rw [equicontinuous_iff_range, ← Set.image_eq_range] at h ⊢
-    rwa [← h0] at h
-  have hS : (interior S).Nonempty
-  · let T := toContinuousMap ⁻¹' ContinuousMap.CompactOpen.gen U (interior V)
-    have h1 : T ⊆ S :=
-      Set.preimage_mono (ContinuousMap.CompactOpen.gen_mono_right U (interior_subset))
+    rwa [← hS] at h
+  have hS2 : (interior S2).Nonempty
+  · let T : Set (ContinuousMonoidHom X Y) := {f | f '' U ⊆ interior V}
+    have h1 : T ⊆ S2 := fun f hf ↦ Set.Subset.trans hf interior_subset
     have h2 : IsOpen T := isOpen_induced (ContinuousMap.isOpen_gen hUc isOpen_interior)
-    have h3 : T.Nonempty :=
-      ⟨1, ContinuousMap.CompactOpen.const_mem_gen U (mem_interior_iff_mem_nhds.mpr hVo)⟩
+    have h3 : T.Nonempty := ⟨1, fun _ ⟨_, _, h⟩ ↦ h ▸ mem_interior_iff_mem_nhds.mpr hVo⟩
     exact h3.mono (interior_maximal h1 h2)
-  refine' ⟨⟨S, (inducing_toContinuousMap X Y).isCompact_iff.mpr (arzela_ascoli S' _ h)⟩, hS⟩
-  refine' IsClosed.isCompact _
-  change IsClosed S''
-  replace h0 : S'' = (⋂ (x ∈ U), {f | f x ∈ V}) ∩ ⋂ (x : X) (y : X), {f | f (x * y) = f x * f y}
-  · rw [h0]
+  suffices : IsClosed S4
+  · exact ⟨⟨S2, (inducing_toContinuousMap X Y).isCompact_iff.mpr
+      (arzela_ascoli S3 this.isCompact h)⟩, hS2⟩
+  replace hS : S4 = Set.pi U (fun _ ↦ V) ∩ Set.range ((↑) : (X →* Y) → (X → Y))
+  · rw [hS]
     ext f
-    simp only [Set.mem_inter_iff, Set.mem_iInter, Set.image_subset_iff, Set.mem_image]
-    exact ⟨fun ⟨f, hf1, hf2⟩ ↦ hf2 ▸ ⟨hf1, map_mul f⟩,
-      fun ⟨hf1, hf2⟩ ↦ ⟨MonoidHom.mk' f hf2, hf1, rfl⟩⟩
-  rw [h0]
-  refine' (isClosed_biInter (fun x _ ↦ _)).inter
-    (isClosed_iInter (fun x ↦ isClosed_iInter (fun y ↦ _)))
-  · exact Set.singleton_pi' x (fun _ ↦ V) ▸ isClosed_set_pi (fun _ _ ↦ hVc.isClosed)
-  · let g : (X → Y) → Y := fun f ↦ (f (x * y))⁻¹ * (f x * f y)
-    have hg : Continuous g := by continuity
-    have key : g ⁻¹' {1} = {f | f (x * y) = f x * f y}
-    · ext f
-      exact inv_mul_eq_one
-    rw [← key]
-    exact isClosed_singleton.preimage hg
+    simp_rw [Set.mem_image, Set.mem_setOf_eq, Set.image_subset_iff]
+    exact ⟨fun ⟨g, hg, hf⟩ ↦ hf ▸ ⟨hg, g, rfl⟩, fun ⟨hg, g, hf⟩ ↦ ⟨g, hf ▸ hg, hf⟩⟩
+  rw [hS]
+  exact (isClosed_set_pi (fun _ _ ↦ hVc)).inter (MonoidHom.isClosed_range X Y)
 
-instance {X : Type*} [Group X] [TopologicalSpace X] [TopologicalGroup X] [LocallyCompactSpace X] :
+instance {X : Type*} [TopologicalSpace X] [Group X] [TopologicalGroup X] [LocallyCompactSpace X] :
     LocallyCompactSpace (ContinuousMonoidHom X circle) := by
   have : UniformGroup circle := ⟨sorry⟩
   obtain ⟨U, hUc, hUo⟩ := exists_compact_mem_nhds (1 : X)
   obtain ⟨V, hVc, hVo⟩ := exists_compact_mem_nhds (1 : circle)
-  apply mythm U V hUc hVc hVo
+  apply mythm U V hUc hVc.isClosed hVo
   sorry
   -- need to specify V more precisely, and prove equicontinuity
 
