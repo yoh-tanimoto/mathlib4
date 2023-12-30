@@ -488,8 +488,6 @@ open Pointwise
 -- PR # 7596
 lemma coveringmap : IsCoveringMap expMapCircle := sorry
 
-lemma localhomeomorph : IsLocalHomeomorph expMapCircle := coveringmap.isLocalHomeomorph
-
 lemma basis0 :
     Filter.HasBasis (nhds (0 : ℝ)) (fun _ ↦ True) (fun n : ℕ ↦ Set.Icc (- (n + 1 : ℝ)⁻¹) (n + 1 : ℝ)⁻¹) := by
   have key := nhds_basis_zero_abs_sub_lt ℝ
@@ -518,31 +516,33 @@ lemma smul_Icc {a b c : ℝ} (ha : 0 < a) : a • Set.Icc b c = Set.Icc (a • b
   rintro ⟨y, ⟨h1, h2⟩, rfl⟩
   exact ⟨(mul_le_mul_left ha).mpr h1, (mul_le_mul_left ha).mpr h2⟩
 
+instance : UniformGroup circle := by
+  convert topologicalGroup_is_uniform_of_compactSpace circle
+  exact unique_uniformity_of_compact rfl rfl
+
 instance {X : Type*} [TopologicalSpace X] [Group X] [TopologicalGroup X] [LocallyCompactSpace X] :
     LocallyCompactSpace (ContinuousMonoidHom X circle) := by
-  have : UniformGroup circle
-  · convert topologicalGroup_is_uniform_of_compactSpace circle
-    exact unique_uniformity_of_compact rfl rfl
   obtain ⟨U0, hU0c, hU0o⟩ := exists_compact_mem_nhds (1 : X)
   let Un_aux : ℕ → {S : Set X | S ∈ nhds 1} :=
     Nat.rec ⟨U0, hU0o⟩ <| fun _ S ↦ let h := exists_closed_nhds_one_inv_eq_mul_subset S.2
       ⟨Classical.choose h, (Classical.choose_spec h).1⟩
   let Un : ℕ → Set X := fun n ↦ (Un_aux n).1
-  have hUn0 : ∀ n, Un n ∈ nhds 1 := fun n ↦ (Un_aux n).2
-  have hUn1 : ∀ n, 1 ∈ Un n := fun n ↦ mem_of_mem_nhds (hUn0 n)
+  have hUn1 : ∀ n, Un n ∈ nhds 1 := fun n ↦ (Un_aux n).2
   have hUn2 : ∀ n, Un (n + 1) * Un (n + 1) ⊆ Un n :=
     fun n ↦ (Classical.choose_spec (exists_closed_nhds_one_inv_eq_mul_subset (Un_aux n).2)).2.2.2
   have hUn3 : ∀ n, Un (n + 1) ⊆ Un n :=
-    fun n x hx ↦ hUn2 n (mul_one x ▸ Set.mul_mem_mul hx (hUn1 (n + 1)))
-  let Vn : ℕ → Set circle :=
-    fun n ↦ expMapCircle '' Set.Icc (-(2 ^ n : ℝ)⁻¹) (2 ^ n : ℝ)⁻¹
-  have key1 : Filter.HasBasis (nhds (0 : ℝ)) (fun _ ↦ True) (fun n : ℕ ↦ Set.Icc (-(2 ^ n : ℝ)⁻¹) (2 ^ n : ℝ)⁻¹)
-  · exact basis1
+    fun n x hx ↦ hUn2 n (mul_one x ▸ Set.mul_mem_mul hx (mem_of_mem_nhds (hUn1 (n + 1))))
+  let Vn : ℕ → Set circle := fun n ↦ expMapCircle '' Set.Icc (-(2 ^ n : ℝ)⁻¹) (2 ^ n : ℝ)⁻¹
   have key0 : Filter.HasBasis (nhds 1) (fun _ ↦ True) Vn
   · rw [← expMapCircle_zero, ← coveringmap.isLocalHomeomorph.map_nhds_eq 0]
-    exact key1.map expMapCircle
-  apply mythm (Un 0) (Vn 0) hU0c (isCompact_Icc.image coveringmap.continuous).isClosed
-    (key0.mem_of_mem trivial)
+    exact basis1.map expMapCircle
+  apply mythm (Un 0) (Vn 0) hU0c
+    (isCompact_Icc.image coveringmap.continuous).isClosed (key0.mem_of_mem trivial)
+  rw [key0.uniformity_of_nhds_one.equicontinuousAt_iff_right]
+  refine' fun n _ ↦ Filter.eventually_iff_exists_mem.mpr ⟨Un n, hUn1 n, fun x hx ⟨f, hf⟩ ↦ _⟩
+  rw [Set.mem_setOf_eq, map_one, div_one]
+  suffices : Un n ⊆ f ⁻¹' Vn n
+  · exact this hx
   have h3 : ∀ t, t < Real.pi → Set.Icc (-t) t ⊆ Set.Ioc (-Real.pi) Real.pi
   · intro t ht
     by_cases h : -t ≤ t
@@ -551,42 +551,31 @@ instance {X : Type*} [TopologicalSpace X] [Group X] [TopologicalGroup X] [Locall
       apply Set.empty_subset
   have hpi : 3 < Real.pi := Real.pi_gt_three
   have hpow : ∀ n, (2 ^ n : ℝ)⁻¹ ≤ 1 := fun n ↦ inv_le_one (one_le_pow_of_one_le one_le_two n)
-  have key : ∀ f : X →* circle, Un 0 ⊆ f ⁻¹' Vn 0 → ∀ n, Un n ⊆ f ⁻¹' Vn n
-  · intro f hf n
-    induction' n with n ih
-    · exact hf
-    · specialize hpow n
-      intro x hx
-      have h1 : f (x * x) ∈ Vn n := ih (hUn2 n (Set.mul_mem_mul hx hx))
-      rw [map_mul] at h1
-      have h2 : f x ∈ Vn n := ih (hUn3 n hx)
-      have h3 : f x ∈ Vn (n + 1)
-      · obtain ⟨s, hs, h1⟩ := h1
-        obtain ⟨t, ht, h2⟩ := h2
-        refine' ⟨t, _, h2⟩
-        rw [← h2, ← expMapCircle_add] at h1
-        have := (Set.Icc_add_Icc_subset _ _ _ _ (Set.add_mem_add ht ht))
-        rw [← neg_add] at this
-        have key := invOn_arg_expMapCircle.1.injOn (h3 _ ?_ hs) (h3 _ ?_ this) h1
-        rw [key] at hs
-        rw [← two_smul ℝ, ← Set.mem_inv_smul_set_iff₀, smul_Icc, smul_neg, ← smul_inv₀,
-            smul_eq_mul, ← pow_succ] at hs
-        exact hs
-        · exact inv_pos.mpr two_pos
-        · exact two_ne_zero
-        · linarith
-        · linarith
-      exact h3
-  let Wn : ℕ → Set (circle × circle) := fun n ↦ (fun p : circle × circle => p.2 / p.1) ⁻¹' Vn n
-  have key1 : Filter.HasBasis (uniformity circle) (fun _ ↦ True) Wn
-  · exact Filter.HasBasis.uniformity_of_nhds_one key0
-  rw [Filter.HasBasis.equicontinuousAt_iff_right key1]
-  intro n hn
-  rw [Filter.eventually_iff_exists_mem]
-  refine' ⟨Un n, hUn0 n, _⟩
-  intro x hx ⟨f, hf⟩
-  rw [Set.mem_preimage, map_one, div_one]
-  exact key f hf n hx
+  clear x hx
+  induction' n with n ih
+  · exact hf
+  specialize hpow n
+  intro x hx
+  have h1 : f (x * x) ∈ Vn n := ih (hUn2 n (Set.mul_mem_mul hx hx))
+  rw [map_mul] at h1
+  have h2 : f x ∈ Vn n := ih (hUn3 n hx)
+  have h3 : f x ∈ Vn (n + 1)
+  · obtain ⟨s, hs, h1⟩ := h1
+    obtain ⟨t, ht, h2⟩ := h2
+    refine' ⟨t, _, h2⟩
+    rw [← h2, ← expMapCircle_add] at h1
+    have := (Set.Icc_add_Icc_subset _ _ _ _ (Set.add_mem_add ht ht))
+    rw [← neg_add] at this
+    have key := invOn_arg_expMapCircle.1.injOn (h3 _ ?_ hs) (h3 _ ?_ this) h1
+    rw [key] at hs
+    rw [← two_smul ℝ, ← Set.mem_inv_smul_set_iff₀, smul_Icc, smul_neg, ← smul_inv₀,
+        smul_eq_mul, ← pow_succ] at hs
+    exact hs
+    · exact inv_pos.mpr two_pos
+    · exact two_ne_zero
+    · linarith
+    · linarith
+  exact h3
 
 end ContinuousMonoidHom
 
