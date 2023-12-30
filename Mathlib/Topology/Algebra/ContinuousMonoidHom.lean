@@ -483,6 +483,37 @@ theorem mythm {X Y : Type*}
   rw [hS]
   exact (isClosed_set_pi (fun _ _ ↦ hVc)).inter (MonoidHom.isClosed_range X Y)
 
+theorem mythm' {X Y : Type*}
+    [TopologicalSpace X] [Group X] [TopologicalGroup X] [LocallyCompactSpace X]
+    [UniformSpace Y] [CommGroup Y] [UniformGroup Y] [T1Space Y] [CompactSpace Y]
+    (V : ℕ → Set Y)
+    (hV : ∀ n x, x ∈ V n → x * x ∈ V n → x ∈ V (n + 1))
+    (hVc : IsClosed (V 0)) (hVo : Filter.HasBasis (nhds 1) (fun _ ↦ True) V) :
+    LocallyCompactSpace (ContinuousMonoidHom X Y) := by
+  obtain ⟨U0, hU0c, hU0o⟩ := exists_compact_mem_nhds (1 : X)
+  let U_aux : ℕ → {S : Set X | S ∈ nhds 1} :=
+    Nat.rec ⟨U0, hU0o⟩ <| fun _ S ↦ let h := exists_closed_nhds_one_inv_eq_mul_subset S.2
+      ⟨Classical.choose h, (Classical.choose_spec h).1⟩
+  let U : ℕ → Set X := fun n ↦ (U_aux n).1
+  have hU1 : ∀ n, U n ∈ nhds 1 := fun n ↦ (U_aux n).2
+  have hU2 : ∀ n, U (n + 1) * U (n + 1) ⊆ U n :=
+    fun n ↦ (Classical.choose_spec (exists_closed_nhds_one_inv_eq_mul_subset (U_aux n).2)).2.2.2
+  have hU3 : ∀ n, U (n + 1) ⊆ U n :=
+    fun n x hx ↦ hU2 n (mul_one x ▸ Set.mul_mem_mul hx (mem_of_mem_nhds (hU1 (n + 1))))
+  apply mythm (U 0) (V 0) hU0c hVc (hVo.mem_of_mem trivial)
+  rw [hVo.uniformity_of_nhds_one.equicontinuousAt_iff_right]
+  refine' fun n _ ↦ Filter.eventually_iff_exists_mem.mpr ⟨U n, hU1 n, fun x hx ⟨f, hf⟩ ↦ _⟩
+  rw [Set.mem_setOf_eq, map_one, div_one]
+  suffices : U n ⊆ f ⁻¹' V n
+  · exact this hx
+  clear x hx
+  induction' n with n ih
+  · exact hf
+  intro x hx
+  have h1 : f (x * x) ∈ V n := ih (hU2 n (Set.mul_mem_mul hx hx))
+  rw [map_mul] at h1
+  exact hV n (f x) (ih (hU3 n hx)) h1
+
 open Pointwise
 
 -- PR # 7596
@@ -522,27 +553,12 @@ instance : UniformGroup circle := by
 
 instance {X : Type*} [TopologicalSpace X] [Group X] [TopologicalGroup X] [LocallyCompactSpace X] :
     LocallyCompactSpace (ContinuousMonoidHom X circle) := by
-  obtain ⟨U0, hU0c, hU0o⟩ := exists_compact_mem_nhds (1 : X)
-  let Un_aux : ℕ → {S : Set X | S ∈ nhds 1} :=
-    Nat.rec ⟨U0, hU0o⟩ <| fun _ S ↦ let h := exists_closed_nhds_one_inv_eq_mul_subset S.2
-      ⟨Classical.choose h, (Classical.choose_spec h).1⟩
-  let Un : ℕ → Set X := fun n ↦ (Un_aux n).1
-  have hUn1 : ∀ n, Un n ∈ nhds 1 := fun n ↦ (Un_aux n).2
-  have hUn2 : ∀ n, Un (n + 1) * Un (n + 1) ⊆ Un n :=
-    fun n ↦ (Classical.choose_spec (exists_closed_nhds_one_inv_eq_mul_subset (Un_aux n).2)).2.2.2
-  have hUn3 : ∀ n, Un (n + 1) ⊆ Un n :=
-    fun n x hx ↦ hUn2 n (mul_one x ▸ Set.mul_mem_mul hx (mem_of_mem_nhds (hUn1 (n + 1))))
   let Vn : ℕ → Set circle := fun n ↦ expMapCircle '' Set.Icc (-(2 ^ n : ℝ)⁻¹) (2 ^ n : ℝ)⁻¹
   have key0 : Filter.HasBasis (nhds 1) (fun _ ↦ True) Vn
   · rw [← expMapCircle_zero, ← coveringmap.isLocalHomeomorph.map_nhds_eq 0]
     exact basis1.map expMapCircle
-  apply mythm (Un 0) (Vn 0) hU0c
-    (isCompact_Icc.image coveringmap.continuous).isClosed (key0.mem_of_mem trivial)
-  rw [key0.uniformity_of_nhds_one.equicontinuousAt_iff_right]
-  refine' fun n _ ↦ Filter.eventually_iff_exists_mem.mpr ⟨Un n, hUn1 n, fun x hx ⟨f, hf⟩ ↦ _⟩
-  rw [Set.mem_setOf_eq, map_one, div_one]
-  suffices : Un n ⊆ f ⁻¹' Vn n
-  · exact this hx
+  refine' mythm' Vn _ (isCompact_Icc.image coveringmap.continuous).isClosed key0
+  intro n x h2 h1
   have h3 : ∀ t, t < Real.pi → Set.Icc (-t) t ⊆ Set.Ioc (-Real.pi) Real.pi
   · intro t ht
     by_cases h : -t ≤ t
@@ -550,16 +566,8 @@ instance {X : Type*} [TopologicalSpace X] [Group X] [TopologicalGroup X] [Locall
     · rw [Set.Icc_eq_empty h]
       apply Set.empty_subset
   have hpi : 3 < Real.pi := Real.pi_gt_three
-  have hpow : ∀ n, (2 ^ n : ℝ)⁻¹ ≤ 1 := fun n ↦ inv_le_one (one_le_pow_of_one_le one_le_two n)
-  clear x hx
-  induction' n with n ih
-  · exact hf
-  specialize hpow n
-  intro x hx
-  have h1 : f (x * x) ∈ Vn n := ih (hUn2 n (Set.mul_mem_mul hx hx))
-  rw [map_mul] at h1
-  have h2 : f x ∈ Vn n := ih (hUn3 n hx)
-  have h3 : f x ∈ Vn (n + 1)
+  have hpow : (2 ^ n : ℝ)⁻¹ ≤ 1 := inv_le_one (one_le_pow_of_one_le one_le_two n)
+  have h3 : x ∈ Vn (n + 1)
   · obtain ⟨s, hs, h1⟩ := h1
     obtain ⟨t, ht, h2⟩ := h2
     refine' ⟨t, _, h2⟩
