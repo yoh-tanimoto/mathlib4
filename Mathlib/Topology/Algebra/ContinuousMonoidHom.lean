@@ -487,7 +487,7 @@ theorem mythm' {X Y : Type*}
     [TopologicalSpace X] [Group X] [TopologicalGroup X] [LocallyCompactSpace X]
     [UniformSpace Y] [CommGroup Y] [UniformGroup Y] [T1Space Y] [CompactSpace Y]
     (V : ℕ → Set Y)
-    (hV : ∀ n x, x ∈ V n → x * x ∈ V n → x ∈ V (n + 1))
+    (hV : ∀ {n x}, x ∈ V n → x * x ∈ V n → x ∈ V (n + 1))
     (hVc : IsClosed (V 0)) (hVo : Filter.HasBasis (nhds 1) (fun _ ↦ True) V) :
     LocallyCompactSpace (ContinuousMonoidHom X Y) := by
   obtain ⟨U0, hU0c, hU0o⟩ := exists_compact_mem_nhds (1 : X)
@@ -509,10 +509,7 @@ theorem mythm' {X Y : Type*}
   clear x hx
   induction' n with n ih
   · exact hf
-  intro x hx
-  have h1 : f (x * x) ∈ V n := ih (hU2 n (Set.mul_mem_mul hx hx))
-  rw [map_mul] at h1
-  exact hV n (f x) (ih (hU3 n hx)) h1
+  · exact fun x hx ↦ hV (ih (hU3 n hx)) (map_mul f x x ▸ ih (hU2 n (Set.mul_mem_mul hx hx)))
 
 open Pointwise
 
