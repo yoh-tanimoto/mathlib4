@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Jeremy Tan
 -/
 import Mathlib.Combinatorics.SimpleGraph.Clique
+import Mathlib.Combinatorics.SimpleGraph.DegreeSum
 import Mathlib.Order.Partition.Equipartition
 import Mathlib.Tactic.Linarith
 
@@ -261,3 +262,34 @@ noncomputable def isTuranMaximalIsoTuranGraph : G ≃g turanGraph (Fintype.card 
       ← (Nat.mod_eq_iff_lt rn0).mpr ((lc a).trans h),
       ← (Nat.mod_eq_iff_lt rn0).mpr ((lc b).trans h)]
     rfl
+
+variable {n : ℕ}
+
+instance : DecidableRel (turanGraph n r).Adj := by dsimp only [turanGraph]; infer_instance
+
+variable {hr : 0 < r}
+
+open BigOperators
+
+theorem degree_turanGraph (v : Fin n) :
+    (turanGraph n r).degree v = n - (n / r + if v % r < n % r then 1 else 0) := by
+  simp_rw [← card_neighborFinset_eq_degree, neighborFinset, Set.toFinset_card,
+    Fintype.card_ofFinset, mem_neighborSet, turanGraph, filter_not, card_univ_diff,
+    Fintype.card_fin]
+  congr
+  rw [card_eq_sum_ones, ← sum_subtype_eq_sum_filter, subtype_univ, sum_const, smul_eq_mul, mul_one]
+  simp
+
+theorem card_edgeFinset_turanGraph :
+    (turanGraph n r).edgeFinset.card =
+    (r - 1) * (n ^ 2 - (n % r) ^ 2) / (2 * r) + (n % r).choose 2 := by
+  rw [← mul_left_cancel_iff_of_pos zero_lt_two, ← sum_degrees_eq_twice_card_edges]
+  simp_rw [degree_turanGraph, sum_ite, sum_const, smul_eq_mul]
+  simp?
+
+
+theorem xxx (h : n ≤ r) : (turanGraph n r).IsTuranMaximal r := by
+  constructor
+  · exact cliqueFree_of_card_lt (by simp [Nat.lt_succ.mpr h])
+  · intro H _ cf
+    simp
