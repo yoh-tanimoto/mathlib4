@@ -1074,8 +1074,7 @@ instance decidableSublist [DecidableEq α] : ∀ l₁ l₂ : List α, Decidable 
 #align list.decidable_sublist List.decidableSublist
 
 /--If the first element of two lists are different, then a sublist relation can be reduced. -/
-theorem sublist_cons_neq {a b} (h₁ : a ≠ b) (h₂ : a::l₁ <+ b::l₂) :
-    a::l₁ <+ l₂ := by
+theorem Sublist.of_cons_of_ne {a b} (h₁ : a ≠ b) (h₂ : a :: l₁ <+ b :: l₂) : a :: l₁ <+ l₂ := by
   cases h₂
   next h₄ => assumption
   next h₄ => exact (h₁ rfl).rec
@@ -4417,7 +4416,7 @@ theorem getD_replicate_default_eq (r n : ℕ) : (replicate r d).getD n d = d := 
 #align list.nthd_replicate_default_eq List.getD_replicate_default_eqₓ -- argument order
 
 @[simp]
-theorem getD_replicate_elem_eq {y} (i n) (h : i < n) :
+theorem getD_replicate {y i n} (h : i < n) :
     getD (replicate n x) i y = x := by
   rw [getD, get?_eq_get, get_replicate]
   · exact Option.getD_some
