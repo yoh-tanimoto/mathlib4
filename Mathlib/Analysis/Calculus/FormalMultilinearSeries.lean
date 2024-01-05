@@ -35,24 +35,24 @@ variable {𝕜 : Type u} {𝕜' : Type u'} {E : Type v} {F : Type w} {G : Type x
 
 section
 
-variable [CommRing 𝕜] [AddCommGroup E] [Module 𝕜 E] [TopologicalSpace E] [TopologicalAddGroup E]
-  [ContinuousConstSMul 𝕜 E] [AddCommGroup F] [Module 𝕜 F] [TopologicalSpace F]
-  [TopologicalAddGroup F] [ContinuousConstSMul 𝕜 F] [AddCommGroup G] [Module 𝕜 G]
-  [TopologicalSpace G] [TopologicalAddGroup G] [ContinuousConstSMul 𝕜 G]
+variable [CommSemiring 𝕜] [AddCommMonoid E] [Module 𝕜 E] [TopologicalSpace E] [ContinuousAdd E]
+  [ContinuousConstSMul 𝕜 E] [AddCommMonoid F] [Module 𝕜 F] [TopologicalSpace F]
+  [ContinuousAdd F] [ContinuousConstSMul 𝕜 F] [AddCommMonoid G] [Module 𝕜 G]
+  [TopologicalSpace G] [ContinuousAdd G] [ContinuousConstSMul 𝕜 G]
 
 /-- A formal multilinear series over a field `𝕜`, from `E` to `F`, is given by a family of
 multilinear maps from `E^n` to `F` for all `n`. -/
 @[nolint unusedArguments]
-def FormalMultilinearSeries (𝕜 : Type*) (E : Type*) (F : Type*) [Ring 𝕜] [AddCommGroup E]
-    [Module 𝕜 E] [TopologicalSpace E] [TopologicalAddGroup E] [ContinuousConstSMul 𝕜 E]
-    [AddCommGroup F] [Module 𝕜 F] [TopologicalSpace F] [TopologicalAddGroup F]
+def FormalMultilinearSeries (𝕜 : Type*) (E : Type*) (F : Type*) [Semiring 𝕜] [AddCommMonoid E]
+    [Module 𝕜 E] [TopologicalSpace E] [ContinuousAdd E] [ContinuousConstSMul 𝕜 E]
+    [AddCommMonoid F] [Module 𝕜 F] [TopologicalSpace F] [ContinuousAdd F]
     [ContinuousConstSMul 𝕜 F] :=
   ∀ n : ℕ, E[×n]→L[𝕜] F
 #align formal_multilinear_series FormalMultilinearSeries
 
 -- Porting note: was `deriving`
-instance : AddCommGroup (FormalMultilinearSeries 𝕜 E F) :=
-  inferInstanceAs <| AddCommGroup <| ∀ n : ℕ, E[×n]→L[𝕜] F
+instance : AddCommMonoid (FormalMultilinearSeries 𝕜 E F) :=
+  inferInstanceAs <| AddCommMonoid <| ∀ n : ℕ, E[×n]→L[𝕜] F
 
 instance : Inhabited (FormalMultilinearSeries 𝕜 E F) :=
   ⟨0⟩
@@ -71,9 +71,6 @@ namespace FormalMultilinearSeries
 
 @[simp] -- porting note: new; was not needed in Lean 3
 theorem zero_apply (n : ℕ) : (0 : FormalMultilinearSeries 𝕜 E F) n = 0 := rfl
-
-@[simp] -- porting note: new; was not needed in Lean 3
-theorem neg_apply (f : FormalMultilinearSeries 𝕜 E F) (n : ℕ) : (-f) n = - f n := rfl
 
 @[ext] -- porting note: new theorem
 protected theorem ext {p q : FormalMultilinearSeries 𝕜 E F} (h : ∀ n, p n = q n) : p = q :=
@@ -138,7 +135,7 @@ theorem compContinuousLinearMap_apply (p : FormalMultilinearSeries 𝕜 F G) (u 
   rfl
 #align formal_multilinear_series.comp_continuous_linear_map_apply FormalMultilinearSeries.compContinuousLinearMap_apply
 
-variable (𝕜) [CommRing 𝕜'] [SMul 𝕜 𝕜']
+variable (𝕜) [CommSemiring 𝕜'] [SMul 𝕜 𝕜']
 
 variable [Module 𝕜' E] [ContinuousConstSMul 𝕜' E] [IsScalarTower 𝕜 𝕜' E]
 
@@ -153,6 +150,22 @@ protected def restrictScalars (p : FormalMultilinearSeries 𝕜' E F) :
 end FormalMultilinearSeries
 
 end
+
+namespace FormalMultilinearSeries
+variable [CommRing 𝕜] [AddCommGroup E] [Module 𝕜 E] [TopologicalSpace E] [TopologicalAddGroup E]
+  [ContinuousConstSMul 𝕜 E] [AddCommGroup F] [Module 𝕜 F] [TopologicalSpace F]
+  [TopologicalAddGroup F] [ContinuousConstSMul 𝕜 F]
+
+instance : AddCommGroup (FormalMultilinearSeries 𝕜 E F) :=
+  inferInstanceAs <| AddCommGroup <| ∀ n : ℕ, E[×n]→L[𝕜] F
+
+@[simp] -- porting note: new; was not needed in Lean 3
+theorem neg_apply (f : FormalMultilinearSeries 𝕜 E F) (n : ℕ) : (-f) n = - f n := rfl
+
+@[simp] -- porting note: new; was not needed in Lean 3
+theorem sub_apply (f g : FormalMultilinearSeries 𝕜 E F) (n : ℕ) : (f - g) n = f n - g n := rfl
+
+end FormalMultilinearSeries
 
 namespace FormalMultilinearSeries
 
@@ -183,10 +196,10 @@ end FormalMultilinearSeries
 
 namespace ContinuousLinearMap
 
-variable [CommRing 𝕜] [AddCommGroup E] [Module 𝕜 E] [TopologicalSpace E] [TopologicalAddGroup E]
-  [ContinuousConstSMul 𝕜 E] [AddCommGroup F] [Module 𝕜 F] [TopologicalSpace F]
-  [TopologicalAddGroup F] [ContinuousConstSMul 𝕜 F] [AddCommGroup G] [Module 𝕜 G]
-  [TopologicalSpace G] [TopologicalAddGroup G] [ContinuousConstSMul 𝕜 G]
+variable [CommSemiring 𝕜] [AddCommMonoid E] [Module 𝕜 E] [TopologicalSpace E] [ContinuousAdd E]
+  [ContinuousConstSMul 𝕜 E] [AddCommMonoid F] [Module 𝕜 F] [TopologicalSpace F]
+  [ContinuousAdd F] [ContinuousConstSMul 𝕜 F] [AddCommMonoid G] [Module 𝕜 G]
+  [TopologicalSpace G] [ContinuousAdd G] [ContinuousConstSMul 𝕜 G]
 
 /-- Composing each term `pₙ` in a formal multilinear series with a continuous linear map `f` on the
 left gives a new formal multilinear series `f.compFormalMultilinearSeries p` whose general term
@@ -212,9 +225,9 @@ namespace FormalMultilinearSeries
 
 section Order
 
-variable [CommRing 𝕜] {n : ℕ} [AddCommGroup E] [Module 𝕜 E] [TopologicalSpace E]
-  [TopologicalAddGroup E] [ContinuousConstSMul 𝕜 E] [AddCommGroup F] [Module 𝕜 F]
-  [TopologicalSpace F] [TopologicalAddGroup F] [ContinuousConstSMul 𝕜 F]
+variable [CommSemiring 𝕜] {n : ℕ} [AddCommMonoid E] [Module 𝕜 E] [TopologicalSpace E]
+  [ContinuousAdd E] [ContinuousConstSMul 𝕜 E] [AddCommMonoid F] [Module 𝕜 F]
+  [TopologicalSpace F] [ContinuousAdd F] [ContinuousConstSMul 𝕜 F]
   {p : FormalMultilinearSeries 𝕜 E F}
 
 /-- The index of the first non-zero coefficient in `p` (or `0` if all coefficients are zero). This
