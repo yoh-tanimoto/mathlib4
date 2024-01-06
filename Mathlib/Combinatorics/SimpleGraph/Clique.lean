@@ -298,40 +298,32 @@ theorem cliqueFree_completeMultipartiteGraph {ι : Type*} [Fintype ι] (V : ι �
   exact absurd he hn
 
 /-- Clique-freeness is preserved by `replaceVertex`. -/
-theorem cliqueFree_of_replaceVertex_cliqueFree [DecidableEq α] (s t) (h : G.CliqueFree n) :
+protected theorem CliqueFree.replaceVertex [DecidableEq α] (h : G.CliqueFree n) (s t) :
     (G.replaceVertex s t).CliqueFree n := by
   contrapose h
   obtain ⟨⟨f, hi⟩, ha⟩ := topEmbeddingOfNotCliqueFree h
   simp only [Function.Embedding.coeFn_mk, top_adj, ne_eq] at ha
   rw [not_cliqueFree_iff]
   by_cases mt : t ∈ Set.range f
-  · obtain ⟨x, hx⟩ := mt
+  · obtain ⟨x, _⟩ := mt
     by_cases ms : s ∈ Set.range f
-    · obtain ⟨y, hy⟩ := ms
-      by_cases hst : s = t
-      · simp_all [not_cliqueFree_iff]
-      · replace ha := @ha x y; simp_all
-    · use ⟨fun v => if v = x then s else f v, ?_⟩
-      swap
-      · intro a b
-        dsimp only
-        split_ifs
+    · obtain ⟨y, _⟩ := ms
+      have := @ha x y
+      simp_all [not_cliqueFree_iff]
+    · use ⟨fun v ↦ if v = x then s else f v, ?_⟩ <;> intro a b
+      · simp only [Function.Embedding.coeFn_mk, top_adj, ne_eq]
+        split_ifs with h1 h2 h2
         · simp_all
-        · intro; simp_all
-        · intro; simp_all
-        · apply hi
-      intro a b
-      simp only [Function.Embedding.coeFn_mk, top_adj, ne_eq]
-      split_ifs with h1 h2 h2
-      · simp_all
-      · have := (@ha b x).mpr h2
-        split_ifs at this; subst h1; tauto
-      · have := (@ha a x).mpr h1
-        split_ifs at this; subst h2; tauto
-      · rw [← @ha a b]
-        have := (@hi a x).mt h1
-        have := (@hi b x).mt h2
-        simp_all
+        · have := (@ha b x).mpr h2
+          split_ifs at this; subst h1; tauto
+        · have := (@ha a x).mpr h1
+          split_ifs at this; subst h2; tauto
+        · rw [← @ha a b]
+          have := (@hi a x).mt h1
+          have := (@hi b x).mt h2
+          simp_all
+      · dsimp only; split_ifs
+        exacts [by simp_all, fun _ ↦ by simp_all, fun _ ↦ by simp_all, by apply hi]
   · use ⟨f, hi⟩; simp_all
 
 @[simp]
@@ -345,7 +337,7 @@ theorem cliqueFree_two : G.CliqueFree 2 ↔ G = ⊥ := by
 #align simple_graph.clique_free_two SimpleGraph.cliqueFree_two
 
 /-- Adding an edge increases the clique number by at most one. -/
-theorem cliqueFree_of_addEdge_cliqueFree (v w) (h : G.CliqueFree n) :
+protected theorem CliqueFree.addEdge (h : G.CliqueFree n) (v w) :
     (G.addEdge v w).CliqueFree (n + 1) := by
   contrapose h
   obtain ⟨f, ha⟩ := topEmbeddingOfNotCliqueFree h

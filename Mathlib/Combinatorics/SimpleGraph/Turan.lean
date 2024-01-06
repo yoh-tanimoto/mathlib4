@@ -96,27 +96,22 @@ theorem not_adj_transitive (hmax : G.IsTuranMaximal r) (hst : ¬G.Adj s t) (hsu 
   by_cases z : G.degree s = G.degree t ∧ G.degree s = G.degree u <;>
     (contrapose! hmax; unfold IsTuranMaximal; push_neg; intro cf)
   · use (G.replaceVertex s t).replaceVertex s u, inferInstance
-    exact ⟨cliqueFree_of_replaceVertex_cliqueFree s u
-      (cliqueFree_of_replaceVertex_cliqueFree s t cf),
+    exact ⟨(cf.replaceVertex s t).replaceVertex s u,
       card_lt_card_replaceVertex2 _ hst hsu hmax z.1 z.2⟩
   · rw [Decidable.not_and] at z
     cases' z with st su
     · cases' lt_or_gt_of_ne st with less more
       · use G.replaceVertex t s, inferInstance
         rw [adj_comm] at hst
-        exact ⟨cliqueFree_of_replaceVertex_cliqueFree t s cf,
-          G.card_lt_card_replaceVertex1 hst less⟩
+        exact ⟨cf.replaceVertex t s, G.card_lt_card_replaceVertex1 hst less⟩
       · use G.replaceVertex s t, inferInstance
-        exact ⟨cliqueFree_of_replaceVertex_cliqueFree s t cf,
-          G.card_lt_card_replaceVertex1 hst more⟩
+        exact ⟨cf.replaceVertex s t, G.card_lt_card_replaceVertex1 hst more⟩
     · cases' lt_or_gt_of_ne su with less more
       · use G.replaceVertex u s, inferInstance
         rw [adj_comm] at hsu
-        exact ⟨cliqueFree_of_replaceVertex_cliqueFree u s cf,
-          G.card_lt_card_replaceVertex1 hsu less⟩
+        exact ⟨cf.replaceVertex u s, G.card_lt_card_replaceVertex1 hsu less⟩
       · use G.replaceVertex s u, inferInstance
-        exact ⟨cliqueFree_of_replaceVertex_cliqueFree s u cf,
-          G.card_lt_card_replaceVertex1 hsu more⟩
+        exact ⟨cf.replaceVertex s u, G.card_lt_card_replaceVertex1 hsu more⟩
 
 variable {G} (hmax : G.IsTuranMaximal r)
 
@@ -168,7 +163,7 @@ theorem notAdj_equipartition : (notAdjFinpartition hmax).IsEquipartition := by
   have : ¬IsTuranMaximal G r := by
     rw [IsTuranMaximal]; push_neg; intro cf
     use G.replaceVertex v w, inferInstance
-    refine' ⟨cliqueFree_of_replaceVertex_cliqueFree v w cf, _⟩
+    refine' ⟨cf.replaceVertex v w, _⟩
     have ha : G.Adj v w := by
       have lsn : large ≠ small := fun _ => by simp_all only [add_lt_iff_neg_left, not_lt_zero']
       contrapose! lsn
@@ -228,7 +223,7 @@ theorem notAdj_card_parts : (notAdjFinpartition hmax).parts.card = min (Fintype.
       change (notAdjSetoid hmax).r x' y'
       apply Finpartition.mem_part_ofSetoid_iff_rel.mp
       exact he' ▸ fp.mem_part _
-    refine' ⟨G.cliqueFree_of_addEdge_cliqueFree x y cf, _⟩
+    refine' ⟨cf.addEdge x y, _⟩
     rw [G.card_edgeFinset_addEdge _ hn]; · linarith
     change (notAdjSetoid hmax).r x y
     apply Finpartition.mem_part_ofSetoid_iff_rel.mp
@@ -269,27 +264,26 @@ instance : DecidableRel (turanGraph n r).Adj := by dsimp only [turanGraph]; infe
 
 variable {hr : 0 < r}
 
-open BigOperators
-
+/-
 theorem degree_turanGraph (v : Fin n) :
     (turanGraph n r).degree v = n - (n / r + if v % r < n % r then 1 else 0) := by
   simp_rw [← card_neighborFinset_eq_degree, neighborFinset, Set.toFinset_card,
     Fintype.card_ofFinset, mem_neighborSet, turanGraph, filter_not, card_univ_diff,
     Fintype.card_fin]
   congr
-  rw [card_eq_sum_ones, ← sum_subtype_eq_sum_filter, subtype_univ, sum_const, smul_eq_mul, mul_one]
-  simp
+  sorry
 
 theorem card_edgeFinset_turanGraph :
     (turanGraph n r).edgeFinset.card =
     (r - 1) * (n ^ 2 - (n % r) ^ 2) / (2 * r) + (n % r).choose 2 := by
   rw [← mul_left_cancel_iff_of_pos zero_lt_two, ← sum_degrees_eq_twice_card_edges]
-  simp_rw [degree_turanGraph, sum_ite, sum_const, smul_eq_mul]
-  simp?
-
+  simp_rw [degree_turanGraph]
+  sorry
 
 theorem xxx (h : n ≤ r) : (turanGraph n r).IsTuranMaximal r := by
   constructor
   · exact cliqueFree_of_card_lt (by simp [Nat.lt_succ.mpr h])
   · intro H _ cf
     simp
+-/
+variable {hs : 1 < r}
