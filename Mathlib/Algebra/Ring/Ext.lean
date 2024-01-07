@@ -67,11 +67,14 @@ local macro "AddEq[" inst₁:term ", " inst₂:term "]" : term =>
 local macro "MulEq[" inst₁:term ", " inst₂:term "]" : term =>
   `(term| ∀ x y : R, (letI := $inst₁; x * y : R) = (letI := $inst₂; x * y))
 
-/-- `ext_theorems` generates `ext` and `ext_iff` lemmas for the class named by the current namespace.
+/-- `ext_theorems := proof` generates ext lemmas for the class named by the current namespace.
 
-It should be followed by a proof that two instances of the class are equal, assuming that they
-define the same addition and multiplication operations. The instances will be named `inst₁` and
-`inst₂`, and the hypotheses that they define the same operations will be named `h_add` and `h_mul`
+The class named by the current namespace should be one of the ring-like typeclasses, in which `ext`
+and `ext_iff` lemmas will be generated.
+
+`proof` should be a proof that two instances of the class are equal, assuming that they define the
+same addition and multiplication operations. The instances will be named `inst₁` and `inst₂`, and
+the hypotheses that they define the same operations will be named `h_add` and `h_mul`
 respectively. -/
 local elab "ext_theorems " val:declVal : command =>
   Lean.Elab.Command.elabCommand =<<
