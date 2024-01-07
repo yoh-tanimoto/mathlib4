@@ -21,7 +21,7 @@ We follow `Algebra/Group/Ext` in using the term `(letI := i; HMul.hMul : R → R
 multiplcation specified by a typeclass instance `i` on a type `R` (and similarly for addition).
 
 We use hypotheses for ext lemmas of an extensional form, stating that the operations agree on all
-arguments. We abbreviate these hypotheses using local notations.
+arguments.
 
 Since `Algebra/Group/Ext` proved several injectivity lemmas, we do so as well — even if sometimes we
 don't need them to prove extensionality.
@@ -34,36 +34,71 @@ universe u
 
 variable {R : Type u}
 
+/-!
+### Notational abbreviations
+
+Since there is not a lot of variation in these results outside of the proof of the `ext` lemma
+itself, we use local notations and a macro to abbreviate.
+
+Specifically, we define the following local notations:
++ `AddEq[inst₁, inst₂]` states that the instances `inst₁` and `inst₂` of suitable algebraic
+  typeclasses (on R) define the same addition operation.
++ `MulEq[inst₁, inst₂]` states that the instances `inst₁` and `inst₂` of suitable algebraic
+  typeclasses (on R) define the same multiplication operation.
++ `ext_theorems <proof>` is a wrapper generating the `ext` and `ext_iff` theorems for the typeclass
+  named by the currently open namespace. All that it needs to be provided is the proof of the `ext`
+  result itself, showing that two instances `inst₁` and `inst₂` are equal, assuming that they define
+  the same addition and multiplication operations (hypotheses named by `h_add` and `h_mul`
+  respectively).
+
+  `ext_theorems` is unhygienic, which is OK since it is only used in this file, and the name
+  captures are entirely intentional.
+-/
+
+/-- `AddEq[inst₁, inst₂]` states that `inst₁` and `inst₂` define the same addition operation.
+
+`inst₁` and `inst₂` should be instances of classes which induce a `HAdd` instance on `R`. -/
 local macro "AddEq[" inst₁:term ", " inst₂:term "]" : term =>
   `(term| ∀ x y : R, (letI := $inst₁; x + y : R) = (letI := $inst₂; x + y))
 
+/-- `MulEq[inst₁, inst₂]` states that `inst₁` and `inst₂` define the same multiplication operation.
+
+`inst₁` and `inst₂` should be instances of classes which induce a `HMul` instance on `R`. -/
 local macro "MulEq[" inst₁:term ", " inst₂:term "]" : term =>
   `(term| ∀ x y : R, (letI := $inst₁; x * y : R) = (letI := $inst₂; x * y))
+
+/-- `ext_theorems` generates `ext` and `ext_iff` lemmas for the class named by the current namespace.
+
+It should be followed by a proof that two instances of the class are equal, assuming that they
+define the same addition and multiplication operations. The instances will be named `inst₁` and
+`inst₂`, and the hypotheses that they define the same operations will be named `h_add` and `h_mul`
+respectively. -/
+local elab "ext_theorems " val:declVal : command =>
+  Lean.Elab.Command.elabCommand =<<
+    set_option hygiene false in do
+      `(@[ext] theorem ext ⦃inst₁ inst₂ : $(Lean.mkCIdent <| ← Lean.getCurrNamespace) R⦄
+            (h_add : AddEq[inst₁, inst₂]) (h_mul : MulEq[inst₁, inst₂]) :
+            inst₁ = inst₂ $val:declVal
+        theorem ext_iff (inst₁ inst₂ : $(Lean.mkCIdent <| ← Lean.getCurrNamespace) R) :
+          inst₁ = inst₂ ↔ AddEq[inst₁, inst₂] ∧ MulEq[inst₁, inst₂] :=
+        ⟨fun h ↦ by constructor <;> (intros; congr), And.elim («ext» · ·)⟩)
 
 /-! ### Distrib -/
 namespace Distrib
 
-@[ext] theorem ext ⦃inst₁ inst₂ : Distrib R⦄
-    (h_add : AddEq[inst₁, inst₂]) (h_mul : MulEq[inst₁, inst₂]) :
-    inst₁ = inst₂ := by
+ext_theorems := by
   -- Split into `add` and `mul` functions and properties.
   rcases inst₁ with @⟨⟨⟩, ⟨⟩⟩
   rcases inst₂ with @⟨⟨⟩, ⟨⟩⟩
   -- Prove equality of parts using function extensionality.
   congr <;> (apply funext₂; assumption)
 
-theorem ext_iff (inst₁ inst₂ : Distrib R) :
-    inst₁ = inst₂ ↔ AddEq[inst₁, inst₂] ∧ MulEq[inst₁, inst₂] :=
-  ⟨fun h ↦ by constructor <;> (intros; congr), And.elim (ext · ·)⟩
-
 end Distrib
 
 /-! ### NonUnitalNonAssocSemiring -/
 namespace NonUnitalNonAssocSemiring
 
-@[ext] theorem ext ⦃inst₁ inst₂ : NonUnitalNonAssocSemiring R⦄
-    (h_add : AddEq[inst₁, inst₂]) (h_mul : MulEq[inst₁, inst₂]) :
-    inst₁ = inst₂ := by
+ext_theorems := by
   -- Split into `AddMonoid` instance, `mul` function and properties.
   rcases inst₁ with @⟨_, ⟨⟩⟩
   rcases inst₂ with @⟨_, ⟨⟩⟩
@@ -76,10 +111,6 @@ theorem toDistrib_injective : Function.Injective (@toDistrib R) := by
   · exact congrArg (·.toAdd.add x y) h
   · exact congrArg (·.toMul.mul x y) h
 
-theorem ext_iff (inst₁ inst₂ : NonUnitalNonAssocSemiring R) :
-    inst₁ = inst₂ ↔ AddEq[inst₁, inst₂] ∧ MulEq[inst₁, inst₂] :=
-  ⟨fun h ↦ by constructor <;> (intros; congr), And.elim (ext · ·)⟩
-
 end NonUnitalNonAssocSemiring
 
 /-! ### NonUnitalSemiring -/
@@ -89,15 +120,9 @@ theorem toNonUnitalNonAssocSemiring_injective :
     Function.Injective (@toNonUnitalNonAssocSemiring R) := by
   rintro ⟨⟩ ⟨⟩ _; congr
 
-@[ext] theorem ext ⦃inst₁ inst₂ : NonUnitalSemiring R⦄
-    (h_add : AddEq[inst₁, inst₂]) (h_mul : MulEq[inst₁, inst₂]) :
-    inst₁ = inst₂ :=
+ext_theorems :=
   toNonUnitalNonAssocSemiring_injective <|
     NonUnitalNonAssocSemiring.ext h_add h_mul
-
-theorem ext_iff (inst₁ inst₂ : NonUnitalSemiring R) :
-    inst₁ = inst₂ ↔ AddEq[inst₁, inst₂] ∧ MulEq[inst₁, inst₂] :=
-  ⟨fun h ↦ by constructor <;> (intros; congr), And.elim (ext · ·)⟩
 
 end NonUnitalSemiring
 
@@ -107,9 +132,7 @@ namespace NonAssocSemiring
 /- The best place to prove that the `NatCast` is determined by the other operations is probably in
 an extensionality lemma for `AddMonoidWithOne`, in which case we may as well do the typeclasses
 defined in `Algebra/GroupWithZero/Defs` as well. -/
-@[ext] theorem ext ⦃inst₁ inst₂ : NonAssocSemiring R⦄
-    (h_add : AddEq[inst₁, inst₂]) (h_mul : MulEq[inst₁, inst₂]) :
-    inst₁ = inst₂ := by
+ext_theorems := by
   have h : inst₁.toNonUnitalNonAssocSemiring = inst₂.toNonUnitalNonAssocSemiring := by
     ext <;> apply_assumption
   have h_zero : (inst₁.toMulZeroClass).toZero.zero = (inst₂.toMulZeroClass).toZero.zero :=
@@ -137,18 +160,12 @@ theorem toNonUnitalNonAssocSemiring_injective :
   intro _ _ _
   ext <;> congr
 
-theorem ext_iff (inst₁ inst₂ : NonAssocSemiring R) :
-    inst₁ = inst₂ ↔ AddEq[inst₁, inst₂] ∧ MulEq[inst₁, inst₂] :=
-  ⟨fun h ↦ by constructor <;> (intros; congr), And.elim (ext · ·)⟩
-
 end NonAssocSemiring
 
 /-! ### NonUnitalNonAssocRing -/
 namespace NonUnitalNonAssocRing
 
-@[ext] theorem ext ⦃inst₁ inst₂ : NonUnitalNonAssocRing R⦄
-    (h_add : AddEq[inst₁, inst₂]) (h_mul : MulEq[inst₁, inst₂]) :
-    inst₁ = inst₂ := by
+ext_theorems := by
   -- Split into `AddCommGroup` instance, `mul` function and properties.
   rcases inst₁ with @⟨_, ⟨⟩⟩; rcases inst₂ with @⟨_, ⟨⟩⟩
   congr <;> (ext; apply_assumption)
@@ -161,18 +178,12 @@ theorem toNonUnitalNonAssocSemiring_injective :
   · exact congrArg (·.toAdd.add x y) h
   · exact congrArg (·.toMul.mul x y) h
 
-theorem ext_iff (inst₁ inst₂ : NonUnitalNonAssocRing R) :
-    inst₁ = inst₂ ↔ AddEq[inst₁, inst₂] ∧ MulEq[inst₁, inst₂] :=
-  ⟨fun h ↦ by constructor <;> (intros; congr), And.elim (ext · ·)⟩
-
 end NonUnitalNonAssocRing
 
 /-! ### NonUnitalRing -/
 namespace NonUnitalRing
 
-@[ext] theorem ext ⦃inst₁ inst₂ : NonUnitalRing R⦄
-    (h_add : AddEq[inst₁, inst₂]) (h_mul : MulEq[inst₁, inst₂]) :
-    inst₁ = inst₂ := by
+ext_theorems := by
   have : inst₁.toNonUnitalNonAssocRing = inst₂.toNonUnitalNonAssocRing := by
     ext <;> apply_assumption
   -- Split into fields and prove they are equal using the above.
@@ -191,18 +202,12 @@ theorem toNonUnitalNonAssocring_injective :
   intro _ _ _
   ext <;> congr
 
-theorem ext_iff (inst₁ inst₂ : NonUnitalRing R) :
-    inst₁ = inst₂ ↔ AddEq[inst₁, inst₂] ∧ MulEq[inst₁, inst₂] :=
-  ⟨fun h ↦ by constructor <;> (intros; congr), And.elim (ext · ·)⟩
-
 end NonUnitalRing
 
 /-! ### NonAssocRing -/
 namespace NonAssocRing
 
-@[ext] theorem ext ⦃inst₁ inst₂ : NonAssocRing R⦄
-    (h_add : AddEq[inst₁, inst₂]) (h_mul : MulEq[inst₁, inst₂]) :
-    inst₁ = inst₂ := by
+ext_theorems := by
   have h₁ : inst₁.toNonUnitalNonAssocRing = inst₂.toNonUnitalNonAssocRing := by
     ext <;> apply_assumption
   have h₂ : inst₁.toNonAssocSemiring = inst₂.toNonAssocSemiring := by
@@ -230,18 +235,12 @@ theorem toNonUnitalNonAssocring_injective :
   intro _ _ _
   ext <;> congr
 
-theorem ext_iff (inst₁ inst₂ : NonAssocRing R) :
-    inst₁ = inst₂ ↔ AddEq[inst₁, inst₂] ∧ MulEq[inst₁, inst₂] :=
-  ⟨fun h ↦ by constructor <;> (intros; congr), And.elim (ext · ·)⟩
-
 end NonAssocRing
 
 /-! ### Semiring -/
 namespace Semiring
 
-@[ext] theorem ext ⦃inst₁ inst₂ : Semiring R⦄
-    (h_add : AddEq[inst₁, inst₂]) (h_mul : MulEq[inst₁, inst₂]) :
-    inst₁ = inst₂ := by
+ext_theorems := by
   -- Show that enough substructures are equal.
   have h₁ : inst₁.toNonUnitalSemiring = inst₂.toNonUnitalSemiring := by
     ext <;> apply_assumption
@@ -267,18 +266,12 @@ theorem toNonAssocSemiring_injective :
   · exact congrArg (·.toAdd.add x y) h
   · exact congrArg (·.toMul.mul x y) h
 
-theorem ext_iff (inst₁ inst₂ : Semiring R) :
-    inst₁ = inst₂ ↔ AddEq[inst₁, inst₂] ∧ MulEq[inst₁, inst₂] :=
-  ⟨fun h ↦ by constructor <;> (intros; congr), And.elim (ext · ·)⟩
-
 end Semiring
 
 /-! ### Ring -/
 namespace Ring
 
-@[ext] theorem ext ⦃inst₁ inst₂ : Ring R⦄
-    (h_add : AddEq[inst₁, inst₂]) (h_mul : MulEq[inst₁, inst₂]) :
-    inst₁ = inst₂ := by
+ext_theorems := by
   -- Show that enough substructures are equal.
   have h₁ : inst₁.toSemiring = inst₂.toSemiring := by
     ext <;> apply_assumption
@@ -312,10 +305,6 @@ theorem toSemiring_injective :
   · exact congrArg (·.toAdd.add x y) h
   · exact congrArg (·.toMul.mul x y) h
 
-theorem ext_iff (inst₁ inst₂ : Ring R) :
-    inst₁ = inst₂ ↔ AddEq[inst₁, inst₂] ∧ MulEq[inst₁, inst₂] :=
-  ⟨fun h ↦ by constructor <;> (intros; congr), And.elim (ext ·)⟩
-
 end Ring
 
 /-! ### NonUnitalNonAssocCommSemiring -/
@@ -325,15 +314,9 @@ theorem toNonUnitalNonAssocSemiring_injective :
     Function.Injective (@toNonUnitalNonAssocSemiring R) := by
   rintro ⟨⟩ ⟨⟩ _; congr
 
-@[ext] theorem ext ⦃inst₁ inst₂ : NonUnitalNonAssocCommSemiring R⦄
-    (h_add : AddEq[inst₁, inst₂]) (h_mul : MulEq[inst₁, inst₂]) :
-    inst₁ = inst₂ :=
+ext_theorems :=
   toNonUnitalNonAssocSemiring_injective <|
     NonUnitalNonAssocSemiring.ext h_add h_mul
-
-theorem ext_iff (inst₁ inst₂ : NonUnitalNonAssocCommSemiring R) :
-    inst₁ = inst₂ ↔ AddEq[inst₁, inst₂] ∧ MulEq[inst₁, inst₂] :=
-  ⟨fun h ↦ by constructor <;> (intros; congr), And.elim (ext · ·)⟩
 
 end NonUnitalNonAssocCommSemiring
 
@@ -344,15 +327,9 @@ theorem toNonUnitalSemiring_injective :
     Function.Injective (@toNonUnitalSemiring R) := by
   rintro ⟨⟩ ⟨⟩ _; congr
 
-@[ext] theorem ext ⦃inst₁ inst₂ : NonUnitalCommSemiring R⦄
-    (h_add : AddEq[inst₁, inst₂]) (h_mul : MulEq[inst₁, inst₂]) :
-    inst₁ = inst₂ :=
+ext_theorems :=
   toNonUnitalSemiring_injective <|
     NonUnitalSemiring.ext h_add h_mul
-
-theorem ext_iff (inst₁ inst₂ : NonUnitalCommSemiring R) :
-    inst₁ = inst₂ ↔ AddEq[inst₁, inst₂] ∧ MulEq[inst₁, inst₂] :=
-  ⟨fun h ↦ by constructor <;> (intros; congr), And.elim (ext · ·)⟩
 
 end NonUnitalCommSemiring
 
@@ -365,15 +342,9 @@ theorem toNonUnitalNonAssocRing_injective :
     Function.Injective (@toNonUnitalNonAssocRing R) := by
   rintro ⟨⟩ ⟨⟩ _; congr
 
-@[ext] theorem ext ⦃inst₁ inst₂ : NonUnitalNonAssocCommRing R⦄
-    (h_add : AddEq[inst₁, inst₂]) (h_mul : MulEq[inst₁, inst₂]) :
-    inst₁ = inst₂ :=
+ext_theorems :=
   toNonUnitalNonAssocRing_injective <|
     NonUnitalNonAssocRing.ext h_add h_mul
-
-theorem ext_iff (inst₁ inst₂ : NonUnitalNonAssocCommRing R) :
-    inst₁ = inst₂ ↔ AddEq[inst₁, inst₂] ∧ MulEq[inst₁, inst₂] :=
-  ⟨fun h ↦ by constructor <;> (intros; congr), And.elim (ext · ·)⟩
 
 end NonUnitalNonAssocCommRing
 
@@ -384,15 +355,9 @@ theorem toNonUnitalRing_injective :
     Function.Injective (@toNonUnitalRing R) := by
   rintro ⟨⟩ ⟨⟩ _; congr
 
-@[ext] theorem ext ⦃inst₁ inst₂ : NonUnitalCommRing R⦄
-    (h_add : AddEq[inst₁, inst₂]) (h_mul : MulEq[inst₁, inst₂]) :
-    inst₁ = inst₂ :=
+ext_theorems :=
   toNonUnitalRing_injective <|
     NonUnitalRing.ext h_add h_mul
-
-theorem ext_iff (inst₁ inst₂ : NonUnitalCommRing R) :
-    inst₁ = inst₂ ↔ AddEq[inst₁, inst₂] ∧ MulEq[inst₁, inst₂] :=
-  ⟨fun h ↦ by constructor <;> (intros; congr), And.elim (ext · ·)⟩
 
 end NonUnitalCommRing
 
@@ -405,15 +370,9 @@ theorem toSemiring_injective :
     Function.Injective (@toSemiring R) := by
   rintro ⟨⟩ ⟨⟩ _; congr
 
-@[ext] theorem ext ⦃inst₁ inst₂ : CommSemiring R⦄
-    (h_add : AddEq[inst₁, inst₂]) (h_mul : MulEq[inst₁, inst₂]) :
-    inst₁ = inst₂ :=
+ext_theorems :=
   toSemiring_injective <|
     Semiring.ext h_add h_mul
-
-theorem ext_iff (inst₁ inst₂ : CommSemiring R) :
-    inst₁ = inst₂ ↔ AddEq[inst₁, inst₂] ∧ MulEq[inst₁, inst₂] :=
-  ⟨fun h ↦ by constructor <;> (intros; congr), And.elim (ext · ·)⟩
 
 end CommSemiring
 
@@ -423,13 +382,7 @@ namespace CommRing
 theorem toRing_injective : Function.Injective (@toRing R) := by
   rintro ⟨⟩ ⟨⟩ _; congr
 
-@[ext] theorem ext ⦃inst₁ inst₂ : CommRing R⦄
-    (h_add : AddEq[inst₁, inst₂]) (h_mul : MulEq[inst₁, inst₂]) :
-    inst₁ = inst₂ :=
+ext_theorems :=
   toRing_injective <| Ring.ext h_add h_mul
-
-theorem ext_iff (inst₁ inst₂ : CommRing R) :
-    inst₁ = inst₂ ↔ AddEq[inst₁, inst₂] ∧ MulEq[inst₁, inst₂] :=
-  ⟨fun h ↦ by constructor <;> (intros; congr), And.elim (ext ·)⟩
 
 end CommRing
