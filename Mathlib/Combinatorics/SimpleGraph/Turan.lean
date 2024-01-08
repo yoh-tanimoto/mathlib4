@@ -3,12 +3,10 @@ Copyright (c) 2024 Jeremy Tan. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Jeremy Tan
 -/
-import Mathlib.Combinatorics.DoubleCounting
 import Mathlib.Combinatorics.SimpleGraph.Clique
 import Mathlib.Combinatorics.SimpleGraph.DegreeSum
 import Mathlib.Data.Int.Card
 import Mathlib.Order.Partition.Equipartition
-import Mathlib.Tactic.Linarith
 
 /-!
 # Turán's theorem
@@ -22,15 +20,26 @@ constructively that non-adjacency is an equivalence relation in a maximal graph,
 complete multipartite with the parts being the equivalence classes. Then basic manipulations show
 that the graph is (isomorphic to) the Turán graph for the given parameters.
 
-The reverse direction...
+The reverse direction proceeds as in Turán's original proof, via induction on the vertex count.
+If we know that `turanGraph n r` is Turán-maximal, consider any `r + 1`-cliquefree graph on
+`n + r` vertices; we can assume without loss of generality that it is Turán-maximal. Maximality
+implies there is an `r`-clique `K`, so the graph's edges split into three sets:
+* Edges entirely within `K`, which number at most `r.choose 2`
+* Edges entirely outside `K` and hence in the `n`-vertex subgraph induced by `Kᶜ`,
+  which by the inductive hypothesis number at most `(turanGraph n r).edgeFinset.card`
+* Edges spanning `K` and `Kᶜ`; no vertex in `Kᶜ` can connect to all of `K`, so this set of edges
+  numbers at most `(r - 1) * n`
+These bounds add up to exactly `(turanGraph (n + r) r).edgeFinset.card`, completing the induction.
 
 ## Main declarations
 
 * `G.IsTuranMaximal r`: predicate saying that `G` has the most number of edges for its number `n`
   of vertices while still being `r + 1`-cliquefree.
 * `turanGraph n r`: the canonical `r + 1`-cliquefree Turán graph on `n` vertices.
-* `isTuranMaximalIsoTuranGraph`: isomorphism between `G` with `G.IsTuranMaximal r` and
-  `turanGraph n r`.
+* `isTuranMaximalIsoTuranGraph`: the forward direction, an isomorphism between `G` satisfying
+  `G.IsTuranMaximal r` and `turanGraph n r`.
+* `isTuranMaximal_of_iso`: the reverse direction, `G.IsTuranMaximal r` given the isomorphism.
+* `isTuranMaximal_iff_nonempty_iso_turanGraph`: Turán's theorem in full.
 -/
 
 
@@ -56,7 +65,8 @@ section Prelims
 
 variable {n r : ℕ}
 
-instance : DecidableRel (turanGraph n r).Adj := by dsimp only [turanGraph]; infer_instance
+instance : DecidableRel (turanGraph n r).Adj := by
+  dsimp only [turanGraph]; infer_instance
 
 /-- For `n ≤ r`, `turanGraph n r` is complete. -/
 theorem turanGraph_eq_top_of_le {n r} (h : n ≤ r) : turanGraph n r = ⊤ := by
@@ -64,6 +74,16 @@ theorem turanGraph_eq_top_of_le {n r} (h : n ≤ r) : turanGraph n r = ⊤ := by
   simp only [turanGraph, top_adj]
   rw [Nat.mod_eq_of_lt (a.2.trans_le h), Nat.mod_eq_of_lt (b.2.trans_le h),
     not_iff_not, Fin.val_inj]
+
+/-- Given a graph over a finite vertex type `V` and a proof `cV` that `Fintype.card V = n`,
+`G.finned n` is an isomorphic (as shown in `finnedIso`) graph over `Fin n`. -/
+def finned (cV : Fintype.card V = n) : SimpleGraph (Fin n) where
+  Adj x y := G.Adj ((Fintype.equivFinOfCardEq cV).symm x) ((Fintype.equivFinOfCardEq cV).symm y)
+  symm x y := by simp_rw [adj_comm, imp_self]
+
+/-- The isomorphism between `G` and `G.finned cV`. -/
+noncomputable def finnedIso (cV : Fintype.card V = n) : G ≃g G.finned cV := by
+  use Fintype.equivFinOfCardEq cV; simp [finned]
 
 end Prelims
 
@@ -132,7 +152,11 @@ theorem not_adj_transitive (hmax : G.IsTuranMaximal r) (hst : ¬G.Adj s t) (hsu 
       · use G.replaceVertex s u, inferInstance
         exact ⟨cf.replaceVertex s u, G.card_lt_card_replaceVertex1 hsu more⟩
 
-variable {G} (hmax : G.IsTuranMaximal r)
+variable {G}
+
+section Forward
+
+variable (hmax : G.IsTuranMaximal r)
 
 /-- In a Turán-maximal graph, non-adjacency is an equivalence relation. -/
 theorem notAdj_equivalence : Equivalence fun x y => ¬G.Adj x y where
@@ -277,6 +301,10 @@ noncomputable def IsTuranMaximal.isoTuranGraph : G ≃g turanGraph (Fintype.card
       ← (Nat.mod_eq_iff_lt rn0).mpr ((lc b).trans h)]
     rfl
 
+end Forward
+
+section Reverse
+
 variable {n : ℕ} (hr : 0 < r)
 
 section Prelims
@@ -343,7 +371,8 @@ private lemma aux4 : Even ((n + n % r) * (r - 1) * (n / r)) := by
     · have v : Even (n + n % r) := Odd.add_odd no ((Odd.mod_even_iff ro).mpr no)
       simp [v, parity_simps]
 
-open BigOperators in
+open BigOperators
+
 /-- Formula for the number of edges in `turanGraph n r`. -/
 theorem card_edgeFinset_turanGraph : (turanGraph n r).edgeFinset.card =
     (n + n % r) * (r - 1) * (n / r) / 2 + (n % r).choose 2 := by
@@ -433,7 +462,7 @@ theorem card_edgeFinset_turanGraph_add : (turanGraph (n + r) r).edgeFinset.card 
   rw [← Nat.choose_two_right, add_comm, add_comm _ (r.choose 2)]; congr
   rw [mul_assoc, mul_comm, Nat.mul_div_left _ zero_lt_two, mul_comm]
 
-noncomputable local instance : DecidableRel G.Adj := Classical.decRel _
+private noncomputable instance : DecidableRel G.Adj := Classical.decRel _
 
 lemma exists_IsTuranMaximal_of_not_IsTuranMaximal (cf : G.CliqueFree (r + 1))
     (itm : ¬G.IsTuranMaximal r) : ∃ J : SimpleGraph V, J.IsTuranMaximal r := by
@@ -472,6 +501,74 @@ theorem not_cliqueFree_of_isTuranMaximal (H : SimpleGraph (Fin (n + r)))
     top_adj, not_iff_not]
   rw [Nat.mod_eq_of_lt a.2, Nat.mod_eq_of_lt b.2, Fin.val_inj]
 
+lemma restrictSubtype_cliqueFree (hmax : G.IsTuranMaximal r) (K : Finset V) :
+    (G.restrictSubtype Kᶜ).CliqueFree (r + 1) := by
+  by_contra ncf; unfold CliqueFree at ncf; push_neg at ncf; obtain ⟨Q, hQ⟩ := ncf
+  have nq := hQ.map (f := ⟨Subtype.val, Subtype.val_injective⟩)
+  rw [restrictSubtype_map] at nq
+  exact absurd hmax.1 (nq.mono (G.restrictSubset_le Kᶜ)).not_cliqueFree
+
+lemma restrictSubtype_compl_edgeFinset_card {m} (H : SimpleGraph (Fin (m + r)))
+    (itm : H.IsTuranMaximal r) (K : Finset (Fin (m + r))) (Kc : K.card = r)
+    (ih : (turanGraph m r).IsTuranMaximal r) :
+    (H.restrictSubtype Kᶜ).edgeFinset.card ≤ (turanGraph m r).edgeFinset.card := by
+  let S := H.restrictSubtype Kᶜ
+  have Sc : Fintype.card { x // x ∈ Kᶜ } = m := by simp [Kc]
+  let S' := S.finned Sc
+  let I := S.finnedIso Sc
+  have card_eq : S'.edgeFinset.card = S.edgeFinset.card := by
+    apply card_eq_of_equiv; simp only [Set.mem_toFinset]; exact I.mapEdgeSet.symm
+  exact card_eq ▸ ih.2 S' ((H.restrictSubtype_cliqueFree itm K).map I.symm)
+
+lemma sum_card_filter_adj_le_sub_mul {m} (H : SimpleGraph (Fin (m + r)))
+    (cf : H.CliqueFree (r + 1)) (K : Finset (Fin (m + r))) (Kp : H.IsNClique r K) :
+    ∑ b in Kᶜ, card (filter (fun x ↦ Adj H x b) K) ≤ (r - 1) * m := by
+  suffices : ∀ b ∈ Kᶜ, ∃ a ∈ K, ¬H.Adj a b
+  · have lt : ∀ b ∈ Kᶜ, (K.filter (H.Adj · b)).card ≤ r - 1 := by
+      intro b mb
+      simp_rw [← Nat.lt_add_one_iff, Nat.sub_add_cancel hr, ← Kp.2]
+      conv_rhs => rw [← filter_card_add_filter_neg_card_eq_card (H.Adj · b)]
+      rw [Nat.lt_add_right_iff_pos, card_pos]
+      obtain ⟨w, wp⟩ := this b mb
+      use w; exact mem_filter.mpr wp
+    convert sum_le_sum lt
+    rw [sum_const, smul_eq_mul, card_compl, Kp.2, Fintype.card_fin, add_tsub_cancel_right,
+      mul_comm]
+  by_contra! l; obtain ⟨b, _, pp⟩ := l
+  simp_rw [adj_comm] at pp
+  exact absurd cf (Kp.insert pp).not_cliqueFree
+
+lemma card_edgeFinset_le_card_turanGraph_calc {m} (H : SimpleGraph (Fin (m + r)))
+    (itm : H.IsTuranMaximal r) (ncf : ¬H.CliqueFree r)
+    (ih : (turanGraph m r).IsTuranMaximal r) :
+    card (edgeFinset H) ≤ card (edgeFinset (turanGraph (m + r) r)) := by
+  rw [CliqueFree] at ncf; push_neg at ncf; obtain ⟨K, Kp⟩ := ncf
+  have Kc : K.card = r := Kp.2
+  calc
+    H.edgeFinset.card = (H.restrictSubset K).edgeFinset.card +
+        (H.restrictSubset Kᶜ).edgeFinset.card +
+        (H.betweenSubset K).edgeFinset.card := by rw [edgeFinset_decompose_card]
+    _ = (H.restrictSubtype K).edgeFinset.card + (H.restrictSubtype Kᶜ).edgeFinset.card +
+        (H.betweenSubset K).edgeFinset.card := by simp_rw [restrictSubtype_edgeFinset_card]
+    _ ≤ r.choose 2 + (H.restrictSubtype Kᶜ).edgeFinset.card +
+        (H.betweenSubset K).edgeFinset.card := by
+      gcongr
+      convert card_edgeFinset_le_card_choose_two
+      · rw [Fintype.card_coe]; exact Kc.symm
+      · infer_instance
+    _ ≤ r.choose 2 + (turanGraph m r).edgeFinset.card +
+        (H.betweenSubset K).edgeFinset.card := by
+      gcongr
+      convert H.restrictSubtype_compl_edgeFinset_card (by convert itm) K Kc ih
+    _ = r.choose 2 + (turanGraph m r).edgeFinset.card +
+        ∑ b in Kᶜ, (K.filter (H.Adj · b)).card := by
+      rw [betweenSubset_edgeFinset_card]
+    _ ≤ r.choose 2 + (turanGraph m r).edgeFinset.card + (r - 1) * m := by
+      gcongr
+      exact H.sum_card_filter_adj_le_sub_mul hr itm.1 K Kp
+    _ = _ := by rw [card_edgeFinset_turanGraph_add hr, Nat.add_right_comm]
+
+/-- `turanGraph n r` is Turán-maximal *per se* (if `0 < r`). -/
 theorem isTuranMaximal_turanGraph : (turanGraph n r).IsTuranMaximal r := by
   suffices : r = 0 ∨ (turanGraph n r).IsTuranMaximal r
   · exact this.resolve_left (by intro a; exact absurd a hr.ne')
@@ -488,10 +585,41 @@ theorem isTuranMaximal_turanGraph : (turanGraph n r).IsTuranMaximal r := by
     · obtain ⟨S, Z⟩ := exists_IsTuranMaximal_of_not_IsTuranMaximal cf itm
       exact (Z.2 H cf).trans (this S Z.1 Z)
     have ncf := not_cliqueFree_of_isTuranMaximal H (by convert itm)
-    rw [CliqueFree] at ncf; push_neg at ncf; obtain ⟨K, Kp⟩ := ncf
-    rfl
+    convert card_edgeFinset_le_card_turanGraph_calc hr H (by convert itm) ncf ih
   · intro n r b
     simp only [not_and, not_le] at b
     cases' r.eq_zero_or_pos with hr hr
     · exact Or.inl hr
     · exact Or.inr <| isTuranMaximal_turanGraph_of_le hr (b hr).le
+
+theorem edgeFinset_card_eq_of_iso {β : Type*} [Fintype β] {H : SimpleGraph β} (e : G ≃g H) :
+    G.edgeFinset.card = H.edgeFinset.card := by
+  apply card_eq_of_equiv; simp only [Set.mem_toFinset]; exact e.mapEdgeSet
+
+/-- **Turán's theorem**, reverse direction.
+Any graph isomorphic to `turanGraph n r` is itself Turán-maximal. -/
+theorem isTuranMaximal_of_iso (iso : G ≃g turanGraph n r) : G.IsTuranMaximal r := by
+  obtain ⟨p1, p2⟩ := isTuranMaximal_turanGraph (n := n) hr
+  have cV := iso.card_eq_of_iso
+  simp at cV
+  constructor
+  · exact p1.map iso
+  · intro H _ cf
+    let H' := H.finned cV
+    let tr := H.finnedIso cV
+    have cf' : H'.CliqueFree (r + 1) := cf.map tr.symm
+    have e1 := edgeFinset_card_eq_of_iso iso
+    have e2 := edgeFinset_card_eq_of_iso tr
+    rw [e1, e2]
+    convert p2 H' cf'
+
+end Reverse
+
+/-- **Turán's theorem**. `turanGraph n r` is, up to isomorphism, the unique
+`r + 1`-cliquefree Turán-maximal graph on `n` vertices. -/
+theorem isTuranMaximal_iff_nonempty_iso_turanGraph (hr : 0 < r) :
+    G.IsTuranMaximal r ↔ Nonempty (G ≃g turanGraph (Fintype.card V) r) := by
+  constructor <;> intro h
+  · exact ⟨h.isoTuranGraph⟩
+  · obtain ⟨iso⟩ := h
+    exact isTuranMaximal_of_iso hr iso
