@@ -651,4 +651,20 @@ def induceUnivIso (G : SimpleGraph V) : G.induce Set.univ ≃g G where
   map_rel_iff' := by simp only [Equiv.Set.univ, Equiv.coe_fn_mk, comap_adj, Embedding.coe_subtype,
                                 Subtype.forall, Set.mem_univ, forall_true_left, implies_true]
 
+section Finite
+
+variable [Fintype V] {n : ℕ}
+
+/-- Given a graph over a finite vertex type `V` and a proof `hc` that `Fintype.card V = n`,
+`G.overFin n` is an isomorphic (as shown in `overFinIso`) graph over `Fin n`. -/
+def overFin (hc : Fintype.card V = n) : SimpleGraph (Fin n) where
+  Adj x y := G.Adj ((Fintype.equivFinOfCardEq hc).symm x) ((Fintype.equivFinOfCardEq hc).symm y)
+  symm x y := by simp_rw [adj_comm, imp_self]
+
+/-- The isomorphism between `G` and `G.finned cV`. -/
+noncomputable def overFinIso (hc : Fintype.card V = n) : G ≃g G.overFin hc := by
+  use Fintype.equivFinOfCardEq hc; simp [overFin]
+
+end Finite
+
 end SimpleGraph

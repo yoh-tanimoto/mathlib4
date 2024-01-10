@@ -121,7 +121,7 @@ abbrev addEdge : SimpleGraph V where
 @[simp]
 lemma addEdge_self : G.addEdge s s = G := by ext; simp
 
-lemma addEdge_adj (h : G.Adj s t) : G.addEdge s t = G := by
+lemma addEdge_of_adj (h : G.Adj s t) : G.addEdge s t = G := by
   ext
   simp only [ne_eq, G.ne_of_adj h, not_false_eq_true, true_and, or_iff_left_iff_imp]
   rintro (_ | _) <;> simp_all [adj_comm]
@@ -129,14 +129,14 @@ lemma addEdge_adj (h : G.Adj s t) : G.addEdge s t = G := by
 variable [Fintype V] {s t} [DecidableRel G.Adj]
 
 theorem edgeFinset_addEdge (hn : ¬G.Adj s t) (h : s ≠ t) :
-    (G.addEdge s t).edgeFinset = G.edgeFinset ∪ {s(s, t)} := by
+    (G.addEdge s t).edgeFinset = G.edgeFinset.cons s(s, t) (by simp_all) := by
   ext e
   refine' e.inductionOn _
   aesop
 
 theorem card_edgeFinset_addEdge (hn : ¬G.Adj s t) (h : s ≠ t) :
     (G.addEdge s t).edgeFinset.card = G.edgeFinset.card + 1 := by
-  rw [G.edgeFinset_addEdge hn h, card_disjoint_union (by simpa using hn)]; rfl
+  rw [G.edgeFinset_addEdge hn h, card_cons]
 
 end AddEdge
 

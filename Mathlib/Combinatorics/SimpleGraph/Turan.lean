@@ -45,12 +45,12 @@ These bounds add up to exactly `(turanGraph (n + r) r).edgeFinset.card`, complet
 
 open Finset
 
-universe u
-
 namespace SimpleGraph
 
-variable {V : Type u} [Fintype V] [DecidableEq V]
+variable {V : Type*} [Fintype V] [DecidableEq V]
 variable (G : SimpleGraph V) [DecidableRel G.Adj] {s t u : V}
+
+section Defs
 
 /-- An `r + 1`-cliquefree graph is `r`-Turán-maximal if any other `r + 1`-cliquefree graph on
 the same vertex set has the same or fewer number of edges. -/
@@ -61,12 +61,9 @@ def IsTuranMaximal (r : ℕ) : Prop :=
 /-- The canonical `r + 1`-cliquefree Turán graph on `n` vertices. -/
 def turanGraph (n r : ℕ) : SimpleGraph (Fin n) where Adj v w := v % r ≠ w % r
 
-section Prelims
-
 variable {n r : ℕ}
 
-instance : DecidableRel (turanGraph n r).Adj := by
-  dsimp only [turanGraph]; infer_instance
+instance : DecidableRel (turanGraph n r).Adj := by dsimp only [turanGraph]; infer_instance
 
 /-- For `n ≤ r`, `turanGraph n r` is complete. -/
 theorem turanGraph_eq_top_of_le {n r} (h : n ≤ r) : turanGraph n r = ⊤ := by
@@ -75,17 +72,42 @@ theorem turanGraph_eq_top_of_le {n r} (h : n ≤ r) : turanGraph n r = ⊤ := by
   rw [Nat.mod_eq_of_lt (a.2.trans_le h), Nat.mod_eq_of_lt (b.2.trans_le h),
     not_iff_not, Fin.val_inj]
 
-/-- Given a graph over a finite vertex type `V` and a proof `cV` that `Fintype.card V = n`,
-`G.finned n` is an isomorphic (as shown in `finnedIso`) graph over `Fin n`. -/
-def finned (cV : Fintype.card V = n) : SimpleGraph (Fin n) where
-  Adj x y := G.Adj ((Fintype.equivFinOfCardEq cV).symm x) ((Fintype.equivFinOfCardEq cV).symm y)
-  symm x y := by simp_rw [adj_comm, imp_self]
+variable (hr : 0 < r)
 
-/-- The isomorphism between `G` and `G.finned cV`. -/
-noncomputable def finnedIso (cV : Fintype.card V = n) : G ≃g G.finned cV := by
-  use Fintype.equivFinOfCardEq cV; simp [finned]
+theorem turanGraph_cliqueFree : (turanGraph n r).CliqueFree (r + 1) := by
+  rw [cliqueFree_iff]
+  by_contra h
+  rw [not_isEmpty_iff] at h
+  obtain ⟨f, mri⟩ := h
+  simp only [turanGraph, top_adj] at mri
+  have := @exists_ne_map_eq_of_card_lt_of_maps_to (Fin (r + 1)) (Fin r) univ univ (by simp)
+    (fun x ↦ ⟨(f x).1 % r, Nat.mod_lt _ hr⟩) (by simp)
+  obtain ⟨x, _, y, _, d, c⟩ := this
+  simp only [Fin.mk.injEq] at c
+  exact absurd c ((@mri x y).mpr d)
 
-end Prelims
+/-- For `n ≤ r` and `0 < r`, `turanGraph n r` is Turán-maximal. -/
+theorem isTuranMaximal_turanGraph_of_le (h : n ≤ r) : (turanGraph n r).IsTuranMaximal r := by
+  refine' ⟨turanGraph_cliqueFree hr, _⟩
+  intro H _ _
+  exact card_le_card (edgeFinset_mono ((turanGraph_eq_top_of_le h).symm ▸ le_top (a := H)))
+
+/-- An `r + 1`-cliquefree Turán-maximal graph is _not_ `r`-cliquefree
+if it can accommodate such a clique. -/
+theorem not_cliqueFree_of_isTuranMaximal (hn : r ≤ Fintype.card V) (hx : IsTuranMaximal G r) :
+    ¬G.CliqueFree r := by
+  by_contra cf
+  obtain ⟨K, ⟨_, cK⟩⟩ := exists_smaller_set (univ : Finset V) r hn
+  have := (G.isNClique_iff).not.mp (cf K)
+  simp_rw [cK, and_true, IsClique, Set.Pairwise, not_forall] at this
+  obtain ⟨a, _, b, _, ne, na⟩ := this
+  have nhx : ¬G.IsTuranMaximal r := by
+    simp_rw [IsTuranMaximal, hx.1, true_and]; push_neg
+    use G.addEdge a b, inferInstance, cf.addEdge a b
+    simp_rw [G.card_edgeFinset_addEdge na ne, Nat.lt.base]
+  contradiction
+
+end Defs
 
 /-- First part of Zykov symmetrisation. If vertex `s` has larger degree than
 a non-adjacent other vertex `t`, `G.replaceVertex s t` has more edges than `G`. -/
@@ -227,8 +249,7 @@ theorem notAdj_equipartition : (notAdjFinpartition hmax).IsEquipartition := by
 theorem notAdj_card_parts_le : (notAdjFinpartition hmax).parts.card ≤ r := by
   let fp := notAdjFinpartition hmax
   by_contra! h
-  -- `z` is an `r + 1`-clique in `G`, contradicting Turán-maximality
-  let z := fp.reprs
+  let z := fp.reprs -- `z` is an `r + 1`-clique in `G`
   have ncf : ¬G.CliqueFree z.card := by
     apply IsNClique.not_cliqueFree (s := z)
     constructor
@@ -306,28 +327,6 @@ end Forward
 section Reverse
 
 variable {n : ℕ} (hr : 0 < r)
-
-section Prelims
-
-theorem turanGraph_cliqueFree : (turanGraph n r).CliqueFree (r + 1) := by
-  rw [cliqueFree_iff]
-  by_contra h
-  rw [not_isEmpty_iff] at h
-  obtain ⟨f, mri⟩ := h
-  simp only [turanGraph, top_adj] at mri
-  have := @exists_ne_map_eq_of_card_lt_of_maps_to (Fin (r + 1)) (Fin r) univ univ (by simp)
-    (fun x ↦ ⟨(f x).1 % r, Nat.mod_lt _ hr⟩) (by simp)
-  obtain ⟨x, _, y, _, d, c⟩ := this
-  simp only [Fin.mk.injEq] at c
-  exact absurd c ((@mri x y).mpr d)
-
-/-- For `n ≤ r` and `0 < r`, `turanGraph n r` is Turán-maximal. -/
-theorem isTuranMaximal_turanGraph_of_le (h : n ≤ r) : (turanGraph n r).IsTuranMaximal r := by
-  refine' ⟨turanGraph_cliqueFree hr, _⟩
-  intro H _ _
-  exact card_le_card (edgeFinset_mono ((turanGraph_eq_top_of_le h).symm ▸ le_top (a := H)))
-
-end Prelims
 
 /-- Equivalence 0 -/
 def equivFin0 (p : ℕ → Prop) : { x : Fin n // p ↑x } ≃ { x : ℕ // x < n ∧ p x } where
@@ -462,8 +461,7 @@ theorem card_edgeFinset_turanGraph_add : (turanGraph (n + r) r).edgeFinset.card 
   rw [← Nat.choose_two_right, add_comm, add_comm _ (r.choose 2)]; congr
   rw [mul_assoc, mul_comm, Nat.mul_div_left _ zero_lt_two, mul_comm]
 
-private noncomputable instance : DecidableRel G.Adj := Classical.decRel _
-
+open Classical in
 lemma exists_IsTuranMaximal_of_not_IsTuranMaximal (cf : G.CliqueFree (r + 1))
     (itm : ¬G.IsTuranMaximal r) : ∃ J : SimpleGraph V, J.IsTuranMaximal r := by
   rw [IsTuranMaximal, not_and] at itm
@@ -486,21 +484,6 @@ lemma exists_IsTuranMaximal_of_not_IsTuranMaximal (cf : G.CliqueFree (r + 1))
   · simp only [Set.mem_toFinset, Set.mem_setOf_eq, not_and, not_lt] at Im
     convert ((Im cf).trans_lt Sm.2).le
 
-theorem not_cliqueFree_of_isTuranMaximal (H : SimpleGraph (Fin (n + r)))
-    (itm : IsTuranMaximal H r) : ¬H.CliqueFree r := by
-  let i1 := itm.isoTuranGraph
-  let i2 : turanGraph (Fintype.card (Fin (n + r))) r ≃g turanGraph (n + r) r := by
-    use finCongr (by simp); aesop
-  let i := i2.comp i1
-  apply not_cliqueFree_of_top_embedding <| i.symm.toEmbedding.comp <|
-    topEmbeddingOfNotCliqueFree <| not_cliqueFree_of_top_embedding _
-  rw [add_comm]
-  use (Fin.castAddEmb n).toEmbedding
-  intro a b
-  simp only [turanGraph, Fin.castAddEmb_toEmbedding, Function.Embedding.coeFn_mk, Fin.coe_castAdd,
-    top_adj, not_iff_not]
-  rw [Nat.mod_eq_of_lt a.2, Nat.mod_eq_of_lt b.2, Fin.val_inj]
-
 lemma restrictSubtype_cliqueFree (hmax : G.IsTuranMaximal r) (K : Finset V) :
     (G.restrictSubtype Kᶜ).CliqueFree (r + 1) := by
   by_contra ncf; unfold CliqueFree at ncf; push_neg at ncf; obtain ⟨Q, hQ⟩ := ncf
@@ -508,18 +491,20 @@ lemma restrictSubtype_cliqueFree (hmax : G.IsTuranMaximal r) (K : Finset V) :
   rw [restrictSubtype_map] at nq
   exact absurd hmax.1 (nq.mono (G.restrictSubset_le Kᶜ)).not_cliqueFree
 
+open Classical in
 lemma restrictSubtype_compl_edgeFinset_card {m} (H : SimpleGraph (Fin (m + r)))
     (itm : H.IsTuranMaximal r) (K : Finset (Fin (m + r))) (Kc : K.card = r)
     (ih : (turanGraph m r).IsTuranMaximal r) :
     (H.restrictSubtype Kᶜ).edgeFinset.card ≤ (turanGraph m r).edgeFinset.card := by
   let S := H.restrictSubtype Kᶜ
   have Sc : Fintype.card { x // x ∈ Kᶜ } = m := by simp [Kc]
-  let S' := S.finned Sc
-  let I := S.finnedIso Sc
+  let S' := S.overFin Sc
+  let I := S.overFinIso Sc
   have card_eq : S'.edgeFinset.card = S.edgeFinset.card := by
     apply card_eq_of_equiv; simp only [Set.mem_toFinset]; exact I.mapEdgeSet.symm
   exact card_eq ▸ ih.2 S' ((H.restrictSubtype_cliqueFree itm K).map I.symm)
 
+open Classical in
 lemma sum_card_filter_adj_le_sub_mul {m} (H : SimpleGraph (Fin (m + r)))
     (cf : H.CliqueFree (r + 1)) (K : Finset (Fin (m + r))) (Kp : H.IsNClique r K) :
     ∑ b in Kᶜ, card (filter (fun x ↦ Adj H x b) K) ≤ (r - 1) * m := by
@@ -538,35 +523,21 @@ lemma sum_card_filter_adj_le_sub_mul {m} (H : SimpleGraph (Fin (m + r)))
   simp_rw [adj_comm] at pp
   exact absurd cf (Kp.insert pp).not_cliqueFree
 
+open Classical in
 lemma card_edgeFinset_le_card_turanGraph_calc {m} (H : SimpleGraph (Fin (m + r)))
     (itm : H.IsTuranMaximal r) (ncf : ¬H.CliqueFree r)
     (ih : (turanGraph m r).IsTuranMaximal r) :
     card (edgeFinset H) ≤ card (edgeFinset (turanGraph (m + r) r)) := by
   rw [CliqueFree] at ncf; push_neg at ncf; obtain ⟨K, Kp⟩ := ncf
   have Kc : K.card = r := Kp.2
-  calc
-    H.edgeFinset.card = (H.restrictSubset K).edgeFinset.card +
-        (H.restrictSubset Kᶜ).edgeFinset.card +
-        (H.betweenSubset K).edgeFinset.card := by rw [edgeFinset_decompose_card]
-    _ = (H.restrictSubtype K).edgeFinset.card + (H.restrictSubtype Kᶜ).edgeFinset.card +
-        (H.betweenSubset K).edgeFinset.card := by simp_rw [restrictSubtype_edgeFinset_card]
-    _ ≤ r.choose 2 + (H.restrictSubtype Kᶜ).edgeFinset.card +
-        (H.betweenSubset K).edgeFinset.card := by
-      gcongr
-      convert card_edgeFinset_le_card_choose_two
-      · rw [Fintype.card_coe]; exact Kc.symm
-      · infer_instance
-    _ ≤ r.choose 2 + (turanGraph m r).edgeFinset.card +
-        (H.betweenSubset K).edgeFinset.card := by
-      gcongr
-      convert H.restrictSubtype_compl_edgeFinset_card (by convert itm) K Kc ih
-    _ = r.choose 2 + (turanGraph m r).edgeFinset.card +
-        ∑ b in Kᶜ, (K.filter (H.Adj · b)).card := by
-      rw [betweenSubset_edgeFinset_card]
-    _ ≤ r.choose 2 + (turanGraph m r).edgeFinset.card + (r - 1) * m := by
-      gcongr
-      exact H.sum_card_filter_adj_le_sub_mul hr itm.1 K Kp
-    _ = _ := by rw [card_edgeFinset_turanGraph_add hr, Nat.add_right_comm]
+  simp_rw [H.edgeFinset_decompose_card K, ← restrictSubtype_edgeFinset_card,
+    betweenSubset_edgeFinset_card, card_edgeFinset_turanGraph_add hr]
+  rw [add_right_comm (r.choose 2)]; gcongr
+  · convert card_edgeFinset_le_card_choose_two
+    · rw [Fintype.card_coe, Kc]
+    · infer_instance
+  · convert H.restrictSubtype_compl_edgeFinset_card (by convert itm) K Kc ih
+  · exact H.sum_card_filter_adj_le_sub_mul hr itm.1 K Kp
 
 /-- `turanGraph n r` is Turán-maximal *per se* (if `0 < r`). -/
 theorem isTuranMaximal_turanGraph : (turanGraph n r).IsTuranMaximal r := by
@@ -574,17 +545,15 @@ theorem isTuranMaximal_turanGraph : (turanGraph n r).IsTuranMaximal r := by
   · exact this.resolve_left (by intro a; exact absurd a hr.ne')
   apply Nat.mod.inductionOn (motive := fun n r ↦ r = 0 ∨ (turanGraph n r).IsTuranMaximal r)
   · intro n r ⟨hr, b⟩ ih
-    set m := n - r
-    have mr : n = m + r := Nat.eq_add_of_sub_eq b rfl
-    rw [mr]
+    rw [Nat.eq_add_of_sub_eq b rfl]
     replace ih := ih.resolve_left hr.ne'
     apply Or.inr
     refine' ⟨turanGraph_cliqueFree hr, _⟩
     intro H _ cf
     wlog itm : H.IsTuranMaximal r generalizing H
     · obtain ⟨S, Z⟩ := exists_IsTuranMaximal_of_not_IsTuranMaximal cf itm
-      exact (Z.2 H cf).trans (this S Z.1 Z)
-    have ncf := not_cliqueFree_of_isTuranMaximal H (by convert itm)
+      classical exact (Z.2 H cf).trans (this S Z.1 Z)
+    have ncf := H.not_cliqueFree_of_isTuranMaximal (r := r) (by simp) itm
     convert card_edgeFinset_le_card_turanGraph_calc hr H (by convert itm) ncf ih
   · intro n r b
     simp only [not_and, not_le] at b
@@ -592,6 +561,7 @@ theorem isTuranMaximal_turanGraph : (turanGraph n r).IsTuranMaximal r := by
     · exact Or.inl hr
     · exact Or.inr <| isTuranMaximal_turanGraph_of_le hr (b hr).le
 
+open Classical in
 theorem edgeFinset_card_eq_of_iso {β : Type*} [Fintype β] {H : SimpleGraph β} (e : G ≃g H) :
     G.edgeFinset.card = H.edgeFinset.card := by
   apply card_eq_of_equiv; simp only [Set.mem_toFinset]; exact e.mapEdgeSet
@@ -601,17 +571,13 @@ Any graph isomorphic to `turanGraph n r` is itself Turán-maximal. -/
 theorem isTuranMaximal_of_iso (iso : G ≃g turanGraph n r) : G.IsTuranMaximal r := by
   obtain ⟨p1, p2⟩ := isTuranMaximal_turanGraph (n := n) hr
   have cV := iso.card_eq_of_iso
-  simp at cV
+  rw [Fintype.card_fin] at cV
   constructor
   · exact p1.map iso
   · intro H _ cf
-    let H' := H.finned cV
-    let tr := H.finnedIso cV
-    have cf' : H'.CliqueFree (r + 1) := cf.map tr.symm
-    have e1 := edgeFinset_card_eq_of_iso iso
-    have e2 := edgeFinset_card_eq_of_iso tr
-    rw [e1, e2]
-    convert p2 H' cf'
+    let tr := H.overFinIso cV
+    rw [edgeFinset_card_eq_of_iso iso, edgeFinset_card_eq_of_iso tr]
+    convert p2 (H.overFin cV) (cf.map tr.symm)
 
 end Reverse
 
