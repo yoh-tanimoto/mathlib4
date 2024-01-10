@@ -547,8 +547,9 @@ def equivProduct3 :
     · rw [Nat.mod_eq_iff_lt y.ne.symm]; exact a
     · rw [Nat.add_mul_div_left _ _ y, (Nat.div_eq_zero_iff y).mpr a, zero_add]
   right_inv := fun ⟨n, l⟩ ↦ by
-    aesop
-    rw [Nat.mod_add_div]
+    dsimp only; split; rename_i lt
+    simp_rw [Subtype.mk.injEq, Prod.mk.injEq, Fin.mk.injEq] at lt ⊢
+    rw [← lt.1, ← lt.2, Nat.mod_add_div]
 
 theorem equivProduct3_part_eq_part {t u} :
     t.1.1 = u.1.1 ↔ (equivProduct3 P t) % P.parts.card = (equivProduct3 P u) % P.parts.card := by
