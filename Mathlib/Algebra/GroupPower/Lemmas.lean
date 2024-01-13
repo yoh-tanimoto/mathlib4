@@ -213,10 +213,10 @@ theorem zpow_sub_one (a : G) (n : ℤ) : a ^ (n - 1) = a ^ n * a⁻¹ :=
 
 @[to_additive add_zsmul]
 theorem zpow_add (a : G) (m n : ℤ) : a ^ (m + n) = a ^ m * a ^ n := by
-  induction' n using Int.induction_on with n ihn n ihn
-  case hz => simp
-  · simp only [← add_assoc, zpow_add_one, ihn, mul_assoc]
-  · rw [zpow_sub_one, ← mul_assoc, ← ihn, ← zpow_sub_one, add_sub_assoc]
+  induction n using Int.induction_on with
+  | hz => simp
+  | hp n ihn => simp only [← add_assoc, zpow_add_one, ihn, mul_assoc]
+  | hn n ihn => rw [zpow_sub_one, ← mul_assoc, ← ihn, ← zpow_sub_one, add_sub_assoc]
 #align zpow_add zpow_add
 #align add_zsmul add_zsmul
 
@@ -1217,32 +1217,6 @@ theorem conj_pow' (u : Mˣ) (x : M) (n : ℕ) :
 #align units.conj_pow' Units.conj_pow'
 
 end Units
-
-namespace MulOpposite
-
-/-- Moving to the opposite monoid commutes with taking powers. -/
-@[simp]
-theorem op_pow [Monoid M] (x : M) (n : ℕ) : op (x ^ n) = op x ^ n :=
-  rfl
-#align mul_opposite.op_pow MulOpposite.op_pow
-
-@[simp]
-theorem unop_pow [Monoid M] (x : Mᵐᵒᵖ) (n : ℕ) : unop (x ^ n) = unop x ^ n :=
-  rfl
-#align mul_opposite.unop_pow MulOpposite.unop_pow
-
-/-- Moving to the opposite group or `GroupWithZero` commutes with taking powers. -/
-@[simp]
-theorem op_zpow [DivInvMonoid M] (x : M) (z : ℤ) : op (x ^ z) = op x ^ z :=
-  rfl
-#align mul_opposite.op_zpow MulOpposite.op_zpow
-
-@[simp]
-theorem unop_zpow [DivInvMonoid M] (x : Mᵐᵒᵖ) (z : ℤ) : unop (x ^ z) = unop x ^ z :=
-  rfl
-#align mul_opposite.unop_zpow MulOpposite.unop_zpow
-
-end MulOpposite
 
 -- Porting note: this was added in an ad hoc port for use in `Tactic/NormNum/Basic`
 
