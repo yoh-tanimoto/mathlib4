@@ -105,8 +105,8 @@ theorem mem_balancedCoreAux_iff : x ∈ balancedCoreAux 𝕜 s ↔ ∀ r : 𝕜,
   mem_iInter₂
 #align mem_balanced_core_aux_iff mem_balancedCoreAux_iff
 
-theorem mem_balancedHull_iff : x ∈ balancedHull 𝕜 s ↔ ∃ (r : 𝕜) (_ : ‖r‖ ≤ 1), x ∈ r • s :=
-  mem_iUnion₂
+theorem mem_balancedHull_iff : x ∈ balancedHull 𝕜 s ↔ ∃ r : 𝕜, ‖r‖ ≤ 1 ∧ x ∈ r • s := by
+  simp [balancedHull]
 #align mem_balanced_hull_iff mem_balancedHull_iff
 
 /-- The balanced hull of `s` is minimal in the sense that it is contained in any balanced superset

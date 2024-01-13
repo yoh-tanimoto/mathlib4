@@ -315,12 +315,12 @@ theorem isVonNBounded_iff (s : Set E) : Bornology.IsVonNBounded 𝕜 s ↔ Borno
 #align normed_space.is_vonN_bounded_iff NormedSpace.isVonNBounded_iff
 
 theorem isVonNBounded_iff' (s : Set E) :
-    Bornology.IsVonNBounded 𝕜 s ↔ ∃ r : ℝ, ∀ (x : E) (_ : x ∈ s), ‖x‖ ≤ r := by
+    Bornology.IsVonNBounded 𝕜 s ↔ ∃ r : ℝ, ∀ x ∈ s, ‖x‖ ≤ r := by
   rw [NormedSpace.isVonNBounded_iff, isBounded_iff_forall_norm_le]
 #align normed_space.is_vonN_bounded_iff' NormedSpace.isVonNBounded_iff'
 
 theorem image_isVonNBounded_iff (f : E' → E) (s : Set E') :
-    Bornology.IsVonNBounded 𝕜 (f '' s) ↔ ∃ r : ℝ, ∀ (x : E') (_ : x ∈ s), ‖f x‖ ≤ r := by
+    Bornology.IsVonNBounded 𝕜 (f '' s) ↔ ∃ r : ℝ, ∀ x ∈ s, ‖f x‖ ≤ r := by
   simp_rw [isVonNBounded_iff', Set.ball_image_iff]
 #align normed_space.image_is_vonN_bounded_iff NormedSpace.image_isVonNBounded_iff
 
