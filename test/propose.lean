@@ -1,7 +1,7 @@
 import Std.Data.List.Basic
 import Mathlib.Tactic.Propose
 import Mathlib.Tactic.GuardHypNums
-import Mathlib.Algebra.Associated
+import Mathlib.Algebra.Prime
 
 -- For debugging, you may find these options useful:
 -- set_option trace.Tactic.propose true
@@ -79,7 +79,7 @@ info: Try this: have : p ∣ p * p ↔ p ∣ p ∨ p ∣ p := dvd_mul hp
 info: Try this: have : p ≠ 1 := ne_one hp
 -/
 #guard_msgs in
--- From Mathlib.Algebra.Associated:
+-- From Mathlib.Algebra.Prime:
 variable {α : Type} [CommMonoidWithZero α] in
 open Prime in
 theorem dvd_of_dvd_pow (hp : Prime p) {a : α} {n : ℕ} (h : p ∣ a ^ n) : p ∣ a := by
