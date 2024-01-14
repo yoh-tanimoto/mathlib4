@@ -304,33 +304,28 @@ theorem cliqueFree_completeMultipartiteGraph {ι : Type*} [Fintype ι] (V : ι �
   exact absurd he hn
 
 /-- Clique-freeness is preserved by `replaceVertex`. -/
-protected theorem CliqueFree.replaceVertex [DecidableEq α] (h : G.CliqueFree n) (s t) :
+protected theorem CliqueFree.replaceVertex [DecidableEq α] (h : G.CliqueFree n) (s t : α) :
     (G.replaceVertex s t).CliqueFree n := by
   contrapose h
-  obtain ⟨⟨f, hi⟩, ha⟩ := topEmbeddingOfNotCliqueFree h
-  simp only [Function.Embedding.coeFn_mk, top_adj, ne_eq] at ha
+  obtain ⟨φ, hφ⟩ := topEmbeddingOfNotCliqueFree h
   rw [not_cliqueFree_iff]
-  by_cases mt : t ∈ Set.range f
-  · obtain ⟨x, _⟩ := mt
-    by_cases ms : s ∈ Set.range f
-    · obtain ⟨y, _⟩ := ms
-      have := @ha x y
-      simp_all [not_cliqueFree_iff]
-    · use ⟨fun v ↦ if v = x then s else f v, ?_⟩ <;> intro a b
-      · simp only [Function.Embedding.coeFn_mk, top_adj, ne_eq]
-        split_ifs with h1 h2 h2
-        · simp_all
-        · have := (@ha b x).mpr h2
-          split_ifs at this; subst h1; tauto
-        · have := (@ha a x).mpr h1
-          split_ifs at this; subst h2; tauto
-        · rw [← @ha a b]
-          have := (@hi a x).mt h1
-          have := (@hi b x).mt h2
-          simp_all
-      · dsimp only; split_ifs
-        exacts [by simp_all, fun _ ↦ by simp_all, fun _ ↦ by simp_all, by apply hi]
-  · use ⟨f, hi⟩; simp_all
+  by_cases mt : t ∈ Set.range φ
+  · obtain ⟨x, hx⟩ := mt
+    by_cases ms : s ∈ Set.range φ
+    · obtain ⟨y, hy⟩ := ms
+      have e := @hφ x y
+      simp_rw [hx, hy, adj_comm, not_adj_replaceVertex_same, top_adj, false_iff, not_ne_iff] at e
+      rwa [← hx, e, hy, replaceVertex_self, not_cliqueFree_iff] at h
+    · unfold replaceVertex at hφ
+      use φ.setValue x s
+      intro a b
+      simp only [Embedding.coeFn_mk, Embedding.setValue, not_exists.mp ms, ite_false]
+      rw [apply_ite (G.Adj · _), apply_ite (G.Adj _ ·), apply_ite (G.Adj _ ·)]
+      convert @hφ a b <;> simp only [← φ.apply_eq_iff_eq, SimpleGraph.irrefl, hx]
+  · use φ
+    simp_rw [Set.mem_range, not_exists, ← ne_eq] at mt
+    conv at hφ => enter [a, b]; rw [G.adj_replaceVertex_iff_of_ne _ (mt a) (mt b)]
+    exact hφ
 
 @[simp]
 theorem cliqueFree_two : G.CliqueFree 2 ↔ G = ⊥ := by
@@ -359,7 +354,7 @@ protected theorem CliqueFree.addEdge (h : G.CliqueFree n) (v w) :
       (hx ▸ f.apply_eq_iff_eq x (x.succAbove a)).ne.mpr (x.succAbove_ne a).symm
     have ib : w ≠ f (x.succAbove b) :=
       (hx ▸ f.apply_eq_iff_eq x (x.succAbove b)).ne.mpr (x.succAbove_ne b).symm
-    simp only [ia, ib, and_false, false_and, or_false] at hs
+    simp only [addEdge, ia, ib, and_false, false_and, or_false] at hs
     rw [hs, Fin.succAbove_right_inj]
   · use ⟨f ∘ Fin.succEmbedding n, (f.2.of_comp_iff _).mpr (RelEmbedding.injective _)⟩
     intro a b
@@ -367,7 +362,7 @@ protected theorem CliqueFree.addEdge (h : G.CliqueFree n) (v w) :
     have hs := @ha a.succ b.succ
     have ia : f a.succ ≠ w := by simp_all
     have ib : f b.succ ≠ w := by simp_all
-    simp only [ia.symm, ib.symm, and_false, false_and, or_false] at hs
+    simp only [addEdge, ia.symm, ib.symm, and_false, false_and, or_false] at hs
     rw [hs, Fin.succ_inj]
 
 end CliqueFree
