@@ -124,18 +124,21 @@ theorem card_lt_card_replaceVertex2 (hst : ¬G.Adj s t) (hsu : ¬G.Adj s u) (htu
     G.edgeFinset.card < ((G.replaceVertex s t).replaceVertex s u).edgeFinset.card := by
   have ntu : t ≠ u := G.ne_of_adj htu
   have nst : s ≠ t := fun a => by subst a; contradiction
-  have := (G.adj_replaceVertex_iff_of_ne s t nst ntu.symm).not.mpr hsu
+  have := (G.adj_replaceVertex_iff_of_ne s nst ntu.symm).not.mpr hsu
   rw [card_edgeFinset_replaceVertex_of_not_adj _ this,
     card_edgeFinset_replaceVertex_of_not_adj _ hst, hdt, Nat.add_sub_cancel]
   have de1 : (G.replaceVertex s t).degree s = G.degree s := by
     unfold degree; congr 1; ext v
     simp only [mem_neighborFinset, SimpleGraph.irrefl, ite_self]
-    by_cases eq : v = t <;> simp_all
+    by_cases eq : v = t
+    · subst eq
+      simpa only [not_adj_replaceVertex_same, false_iff]
+    · rw [G.adj_replaceVertex_iff_of_ne s nst eq]
   have de2 : (G.replaceVertex s t).degree u = G.degree u - 1 := by
     unfold degree
     rw [← card_singleton t, ← card_sdiff (by simp [htu.symm])]
     congr 1; ext v
-    simp only [mem_neighborFinset, mem_sdiff, mem_singleton]
+    simp only [mem_neighborFinset, mem_sdiff, mem_singleton, replaceVertex]
     split_ifs with hu hv hv
     · simp_all
     · simp_all
