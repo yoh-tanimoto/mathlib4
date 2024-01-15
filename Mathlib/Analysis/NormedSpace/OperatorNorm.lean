@@ -503,7 +503,7 @@ theorem sSup_unit_ball_eq_norm {𝕜 𝕜₂ E F : Type*} [NormedAddCommGroup E]
   simpa only [NNReal.coe_sSup, Set.image_image] using NNReal.coe_eq.2 f.sSup_unit_ball_eq_nnnorm
 #align continuous_linear_map.Sup_unit_ball_eq_norm ContinuousLinearMap.sSup_unit_ball_eq_norm
 
-theorem sSup_closed_unit_ball_eq_nnnorm {𝕜 𝕜₂ E F : Type*} [NormedAddCommGroup E]
+theorem sSup_unit_closedBall_eq_nnnorm {𝕜 𝕜₂ E F : Type*} [NormedAddCommGroup E]
     [SeminormedAddCommGroup F] [DenselyNormedField 𝕜] [NontriviallyNormedField 𝕜₂] {σ₁₂ : 𝕜 →+* 𝕜₂}
     [NormedSpace 𝕜 E] [NormedSpace 𝕜₂ F] [RingHomIsometric σ₁₂] (f : E →SL[σ₁₂] F) :
     sSup ((fun x => ‖f x‖₊) '' closedBall 0 1) = ‖f‖₊ := by
@@ -514,15 +514,15 @@ theorem sSup_closed_unit_ball_eq_nnnorm {𝕜 𝕜₂ E F : Type*} [NormedAddCom
   rw [← sSup_unit_ball_eq_nnnorm]
   exact csSup_le_csSup ⟨‖f‖₊, hbdd⟩ ((nonempty_ball.2 zero_lt_one).image _)
     (Set.image_subset _ ball_subset_closedBall)
-#align continuous_linear_map.Sup_closed_unit_ball_eq_nnnorm ContinuousLinearMap.sSup_closed_unit_ball_eq_nnnorm
+#align continuous_linear_map.Sup_closed_unit_ball_eq_nnnorm ContinuousLinearMap.sSup_unit_closedBall_eq_nnnorm
 
-theorem sSup_closed_unit_ball_eq_norm {𝕜 𝕜₂ E F : Type*} [NormedAddCommGroup E]
+theorem sSup_unit_closedBall_eq_norm {𝕜 𝕜₂ E F : Type*} [NormedAddCommGroup E]
     [SeminormedAddCommGroup F] [DenselyNormedField 𝕜] [NontriviallyNormedField 𝕜₂] {σ₁₂ : 𝕜 →+* 𝕜₂}
     [NormedSpace 𝕜 E] [NormedSpace 𝕜₂ F] [RingHomIsometric σ₁₂] (f : E →SL[σ₁₂] F) :
     sSup ((fun x => ‖f x‖) '' closedBall 0 1) = ‖f‖ := by
   simpa only [NNReal.coe_sSup, Set.image_image] using
-    NNReal.coe_eq.2 f.sSup_closed_unit_ball_eq_nnnorm
-#align continuous_linear_map.Sup_closed_unit_ball_eq_norm ContinuousLinearMap.sSup_closed_unit_ball_eq_norm
+    NNReal.coe_eq.2 f.sSup_unit_closedBall_eq_nnnorm
+#align continuous_linear_map.Sup_closed_unit_ball_eq_norm ContinuousLinearMap.sSup_unit_closedBall_eq_norm
 
 end Sup
 
