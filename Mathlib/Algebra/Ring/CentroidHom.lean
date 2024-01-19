@@ -3,7 +3,9 @@ Copyright (c) 2022 Yaël Dillies. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Yaël Dillies, Christopher Hoskin
 -/
+import Mathlib.Algebra.Algebra.Basic
 import Mathlib.Algebra.Module.Hom
+import Mathlib.GroupTheory.GroupAction.Ring
 import Mathlib.RingTheory.NonUnitalSubsemiring.Basic
 import Mathlib.RingTheory.Subsemiring.Basic
 
@@ -21,7 +23,7 @@ $$
 In mathlib we call elements of the centroid "centroid homomorphisms" (`CentroidHom`) in keeping
 with `AddMonoidHom` etc.
 
-We use the `FunLike` design, so each type of morphisms has a companion typeclass which is meant to
+We use the `DFunLike` design, so each type of morphisms has a companion typeclass which is meant to
 be satisfied by itself and all stricter types.
 
 ## Types of morphisms
@@ -99,9 +101,9 @@ instance : CentroidHomClass (CentroidHom α) α where
   map_mul_right f := f.map_mul_right'
 
 
-/-- Helper instance for when there's too many metavariables to apply `FunLike.CoeFun`
+/-- Helper instance for when there's too many metavariables to apply `DFunLike.CoeFun`
 directly. -/
-/- Porting note: Lean gave me `unknown constant 'FunLike.CoeFun'` and says `CoeFun` is a type
+/- Porting note: Lean gave me `unknown constant 'DFunLike.CoeFun'` and says `CoeFun` is a type
 mismatch, so I used `library_search`. -/
 instance : CoeFun (CentroidHom α) fun _ ↦ α → α :=
   inferInstanceAs (CoeFun (CentroidHom α) fun _ ↦ α → α)
@@ -113,7 +115,7 @@ theorem toFun_eq_coe {f : CentroidHom α} : f.toFun = f := rfl
 
 @[ext]
 theorem ext {f g : CentroidHom α} (h : ∀ a, f a = g a) : f = g :=
-  FunLike.ext f g h
+  DFunLike.ext f g h
 #align centroid_hom.ext CentroidHom.ext
 
 @[simp, norm_cast]
@@ -128,7 +130,7 @@ theorem toAddMonoidHom_eq_coe (f : CentroidHom α) : f.toAddMonoidHom = f :=
 
 theorem coe_toAddMonoidHom_injective : Injective ((↑) : CentroidHom α → α →+ α) :=
   fun _f _g h => ext fun a ↦
-    haveI := FunLike.congr_fun h a
+    haveI := DFunLike.congr_fun h a
     this
 #align centroid_hom.coe_to_add_monoid_hom_injective CentroidHom.coe_toAddMonoidHom_injective
 
@@ -156,7 +158,7 @@ theorem coe_copy (f : CentroidHom α) (f' : α → α) (h : f' = f) : ⇑(f.copy
 #align centroid_hom.coe_copy CentroidHom.coe_copy
 
 theorem copy_eq (f : CentroidHom α) (f' : α → α) (h : f' = f) : f.copy f' h = f :=
-  FunLike.ext' h
+  DFunLike.ext' h
 #align centroid_hom.copy_eq CentroidHom.copy_eq
 
 variable (α)
@@ -229,7 +231,7 @@ theorem id_comp (f : CentroidHom α) : (CentroidHom.id α).comp f = f :=
 @[simp]
 theorem cancel_right {g₁ g₂ f : CentroidHom α} (hf : Surjective f) :
     g₁.comp f = g₂.comp f ↔ g₁ = g₂ :=
-  ⟨fun h ↦ ext <| hf.forall.2 <| FunLike.ext_iff.1 h, fun a ↦ congrFun (congrArg comp a) f⟩
+  ⟨fun h ↦ ext <| hf.forall.2 <| DFunLike.ext_iff.1 h, fun a ↦ congrFun (congrArg comp a) f⟩
 #align centroid_hom.cancel_right CentroidHom.cancel_right
 
 @[simp]
@@ -277,18 +279,18 @@ instance instSMul : SMul M (CentroidHom α) where
 #noalign centroid_hom.has_nsmul
 
 instance [SMul M N] [IsScalarTower M N α] : IsScalarTower M N (CentroidHom α) where
-  smul_assoc _ _ _ := ext <| fun _ => smul_assoc _ _ _
+  smul_assoc _ _ _ := ext fun _ => smul_assoc _ _ _
 
 instance [SMulCommClass M N α] : SMulCommClass M N (CentroidHom α) where
-  smul_comm _ _ _ := ext <| fun _ => smul_comm _ _ _
+  smul_comm _ _ _ := ext fun _ => smul_comm _ _ _
 
 instance [DistribMulAction Mᵐᵒᵖ α] [IsCentralScalar M α] : IsCentralScalar M (CentroidHom α) where
-  op_smul_eq_smul _ _ := ext <| fun _ => op_smul_eq_smul _ _
+  op_smul_eq_smul _ _ := ext fun _ => op_smul_eq_smul _ _
 
 instance isScalarTowerRight : IsScalarTower M (CentroidHom α) (CentroidHom α) where
   smul_assoc _ _ _ := rfl
 
-instance hasNpowNat : Pow (CentroidHom α) ℕ :=
+instance hasNPowNat : Pow (CentroidHom α) ℕ :=
   ⟨fun f n ↦
     { (f.toEnd ^ n : AddMonoid.End α) with
       map_mul_left' := fun a b ↦ by
@@ -303,7 +305,7 @@ instance hasNpowNat : Pow (CentroidHom α) ℕ :=
         · simp
           rw [pow_succ]
           exact (congr_arg f.toEnd ih).trans (f.map_mul_right' _ _) }⟩
-#align centroid_hom.has_npow_nat CentroidHom.hasNpowNat
+#align centroid_hom.has_npow_nat CentroidHom.hasNPowNat
 
 @[simp, norm_cast]
 theorem coe_zero : ⇑(0 : CentroidHom α) = 0 :=
@@ -431,6 +433,55 @@ instance : DistribMulAction M (CentroidHom α) :=
 
 instance : Module R (CentroidHom α) :=
   toEnd_injective.module R (toEndRingHom α).toAddMonoidHom toEnd_smul
+
+/-!
+The following instances show that `α` is a non-unital and non-associative algebra over
+`CentroidHom α`.
+-/
+
+/-- The tautological action by `CentroidHom α` on `α`.
+
+This generalizes `Function.End.applyMulAction`. -/
+instance applyModule : Module (CentroidHom α) α where
+  smul T a := T a
+  add_smul _ _ _ := rfl
+  zero_smul _ := rfl
+  one_smul _ := rfl
+  mul_smul _ _ _:= rfl
+  smul_zero := map_zero
+  smul_add := map_add
+
+@[simp]
+lemma smul_def (T : CentroidHom α) (a : α) : T • a = T a := rfl
+
+instance : SMulCommClass (CentroidHom α) α α where
+  smul_comm _ _ _ := map_mul_left _ _ _
+
+instance : SMulCommClass α (CentroidHom α) α := SMulCommClass.symm _ _ _
+
+instance : IsScalarTower (CentroidHom α) α α where
+  smul_assoc _ _ _ := (map_mul_right _ _ _).symm
+
+/-!
+Let `α` be an algebra over `R`, such that the canonical ring homomorphism of `R` into
+`CentroidHom α` lies in the center of `CentroidHom α`. Then `CentroidHom α` is an algebra over `R`
+-/
+
+variable {R : Type*}
+
+variable [CommSemiring R]
+variable [Module R α] [SMulCommClass R α α] [IsScalarTower R α α]
+
+/-- The natural ring homomorphism from `R` into `CentroidHom α`.
+
+This is a stronger version of `Module.toAddMonoidEnd`. -/
+@[simps! apply_toFun]
+def _root_.Module.toCentroidHom : R →+* CentroidHom α := RingHom.smulOneHom
+
+open Module in
+/-- `CentroidHom α` as an algebra over `R`. -/
+example (h : ∀ (r : R) (T : CentroidHom α), toCentroidHom r * T = T * toCentroidHom r) :
+    Algebra R (CentroidHom α) := toCentroidHom.toAlgebra' h
 
 local notation "L" => AddMonoid.End.mulLeft
 local notation "R" => AddMonoid.End.mulRight
