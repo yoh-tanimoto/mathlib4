@@ -251,15 +251,65 @@ variable (A : Type*) [Field A] [CharZero A]
 --   rw [← Set.finite_coe_iff]
 --   refine Finite.of_injective f this
 
-theorem aux2 {B : ℝ≥0} (hB₂ : minkowskiBound K 1 < (convexBodyLTFactor K) * B)
+theorem aux2 {B : ℝ≥0} (hB : minkowskiBound K 1 < (convexBodyLTFactor K) * B)
     {w : InfinitePlace K} (hw : IsReal w) :
-    ∃ a : 𝓞 K, (∀ z :InfinitePlace K, z a ≤ max 1 B) ∧ ℚ⟮(a:K)⟯ = ⊤ := by
-  let f : InfinitePlace K → ℝ≥0 := fun _ => 1
-  have : ∀ z, z ≠ w → f z ≠ 0 := sorry
-  obtain ⟨g, h_geqf, h_gprod⟩ := adjust_f K B this
-  obtain ⟨a, h_anz, h_ale⟩ := exists_ne_zero_mem_ringOfIntegers_lt (f := g)
-    (by rw [convexBodyLT_volume]; convert hB₂)
-  have h_gew  : 1 ≤ w a := by
+    ∃ a : 𝓞 K, (∀ z : InfinitePlace K, z a ≤ max 1 B) ∧ ℚ⟮(a:K)⟯ = ⊤ := by
+  obtain ⟨g, h_gf, h_geq⟩ := @adjust_f K  _ (fun _ => 1) _ w B (fun _ _ ↦ by norm_num)
+  obtain ⟨a, h_nz, h_le⟩ := exists_ne_zero_mem_ringOfIntegers_lt (f := g)
+    (by rw [convexBodyLT_volume]; convert hB)
+  have h_lt : ∀ ⦃z⦄, z ≠ w → z a < 1 := fun z hz ↦ by convert h_gf z hz ▸ (h_le z)
+  refine ⟨a, fun z ↦ ?_, ?_⟩
+  · refine le_of_lt ?_
+    rw [NNReal.coe_max, NNReal.coe_one, lt_max_iff]
+    by_cases hz : z = w
+    · right
+      rw [hz, ← h_geq, NNReal.coe_prod, ← Finset.prod_erase_mul _ _ (Finset.mem_univ w),
+        Finset.prod_congr rfl (fun z hz ↦ by norm_num [h_gf z (Finset.mem_erase.mp hz).1]) (g := 1)]
+      simp_rw [Pi.one_apply, Finset.prod_const_one, NNReal.coe_pow, one_mul, mult]
+      split_ifs; norm_num [h_le w]
+    · left; exact h_lt hz
+  · refine (Field.primitive_element_iff_algHom_eq_of_eval ℚ ℂ ?_ _ w.embedding.toRatAlgHom).mpr ?_
+    · exact fun x ↦ IsAlgClosed.splits_codomain (minpoly ℚ x)
+    · intro ψ hψ
+      suffices w = InfinitePlace.mk ψ.toRingHom by
+        rw [(mk_embedding w).symm, mk_eq_iff, conjugate_embedding_eq_of_isReal hw, or_self] at this
+        ext x
+        exact RingHom.congr_fun this x
+      have h : 1 ≤ w a := ge_one_of_lt_one h_nz h_lt
+      contrapose! h
+      convert h_lt h.symm using 1
+      rw [← norm_embedding_eq]
+      exact congr_arg (‖·‖) hψ
+
+
+#exit
+
+      suffices embedding w = ψ.toRingHom by ext x; exact RingHom.congr_fun this x
+      have t0 : InfinitePlace.mk ψ.toRingHom = w := by
+        have h_ge : 1 ≤ w a := ge_one_of_lt_one h_nz h_lt
+        contrapose! h_ge
+        specialize h_gf _ h_ge
+        have := congr_arg (‖·‖) hψ
+        have : w a = InfinitePlace.mk ψ.toRingHom a := by
+          rw [← NumberField.InfinitePlace.norm_embedding_eq,
+            ← NumberField.InfinitePlace.norm_embedding_eq]
+          convert this using 1
+          dsimp only
+          rw [norm_embedding_eq]
+          rfl
+        rw [this]
+        convert h_le _
+        rw [h_gf]
+        rfl
+      have t1 : w = InfinitePlace.mk (embedding w) := by
+        exact (mk_embedding w).symm
+      rw [t1, eq_comm, InfinitePlace.mk_eq_iff] at t0
+      have t3 : ComplexEmbedding.conjugate (embedding w) = embedding w := by
+        exact conjugate_embedding_eq_of_isReal hw
+      rwa [t3, or_self] at t0
+
+
+#exit
     have h_nm : (1:ℝ) ≤ |(Algebra.norm ℚ) (a:K)| := by
       rw [← Algebra.coe_norm_int, ← Int.cast_one, ← Int.cast_abs, Rat.cast_coe_int, Int.cast_le]
       exact Int.one_le_abs (Algebra.norm_ne_zero_iff.mpr h_anz)
@@ -305,6 +355,9 @@ theorem aux2 {B : ℝ≥0} (hB₂ : minkowskiBound K 1 < (convexBodyLTFactor K) 
     erw [← InfinitePlace.isReal_iff]
     exact hw
     exact fun x ↦ IsAlgClosed.splits_codomain (minpoly ℚ x)
+
+#exit
+
 variable (N : ℕ)
 
 theorem aux30 (hK : |discr K| ≤ N) :
