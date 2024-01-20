@@ -221,7 +221,7 @@ open scoped Polynomial IntermediateField BigOperators
 
 variable (A : Type*) [Field A] [CharZero A]
 
-theorem aux1 (S : Set {F : IntermediateField ℚ A // FiniteDimensional ℚ F}) {T : Set ℚ[X]}
+theorem aux1 (S : Set {F : IntermediateField ℚ A // FiniteDimensional ℚ F}) {T : Set ℤ[X]}
     (hT : T.Finite) (h : ∀ F ∈ S, ∃ P ∈ T, ∃ a : A, a ∈ Polynomial.rootSet P A ∧ F = ℚ⟮a⟯) :
     S.Finite := by
   let R := ⋃ P ∈ T, Polynomial.rootSet P A
@@ -236,9 +236,9 @@ theorem aux1 (S : Set {F : IntermediateField ℚ A // FiniteDimensional ℚ F}) 
     convert congr_arg (ℚ⟮·⟯) (Subtype.mk_eq_mk.mp h_eq)
     all_goals exact (h _ (Subtype.mem _)).choose_spec.2.choose_spec.2
 
-theorem aux2 {B : ℝ≥0} (hB : minkowskiBound K 1 < (convexBodyLTFactor K) * B)
+theorem aux2 (B : ℝ≥0) (hB : minkowskiBound K 1 < (convexBodyLTFactor K) * B)
     {w : InfinitePlace K} (hw : IsReal w) :
-    ∃ a : 𝓞 K, (∀ z : InfinitePlace K, z a ≤ max 1 B) ∧ ℚ⟮(a:K)⟯ = ⊤ := by
+    ∃ a ∈ 𝓞 K, (∀ z : InfinitePlace K, z a ≤ max 1 B) ∧ ℚ⟮(a:K)⟯ = ⊤ := by
   obtain ⟨g, h_gf, h_geq⟩ := @adjust_f K  _ (fun _ => 1) _ w B (fun _ _ ↦ by norm_num)
   obtain ⟨a, h_nz, h_le⟩ := exists_ne_zero_mem_ringOfIntegers_lt (f := g)
     (by rw [convexBodyLT_volume]; convert hB)
@@ -265,6 +265,61 @@ theorem aux2 {B : ℝ≥0} (hB : minkowskiBound K 1 < (convexBodyLTFactor K) * B
       convert h_lt h.symm using 1
       rw [← norm_embedding_eq]
       exact congr_arg (‖·‖) hψ
+
+variable (N : ℕ)
+
+noncomputable def aux30_bd : ℕ :=
+  Nat.ceil (max 1 (Real.log ((9 / 4 : ℝ) * N) / Real.log (3 * π / 4)))
+
+theorem aux30 (hK : |discr K| ≤ N) : finrank ℚ K ≤ aux30_bd N := by
+  sorry
+  -- by_cases hN : 1 ≤ N
+  -- · obtain h | h := lt_or_le 1 (finrank ℚ K)
+  --   · refine le_trans ?_ (le_max_right _ _)
+  --     rw [_root_.le_div_iff', ← Real.exp_le_exp, ← Real.rpow_def_of_pos (by positivity),
+  --       Real.exp_log (by positivity), ← inv_mul_le_iff (by positivity), inv_div, Real.rpow_nat_cast]
+  --     · exact le_trans (abs_discr_ge h) (Int.cast_le (α := ℝ).mpr hK)
+  --     · sorry
+  --   · have : finrank ℚ K = 1 := sorry
+  --     have : K ≃+* ℚ := by
+  --       let b := (finBasisOfFinrankEq ℚ K this).repr
+  --       sorry
+  --     sorry
+  -- · sorry
+
+set_option maxHeartbeats 800000 in
+theorem main : {F : { F : IntermediateField ℚ A // FiniteDimensional ℚ F } |
+      haveI :  NumberField F := @NumberField.mk _ _ inferInstance F.prop
+      |discr F| ≤ N }.Finite := by
+  let D := aux30_bd N
+  let B := (sqrt N * (2 : ℝ≥0∞) ^ D).toNNReal
+  let C := Nat.ceil (max B 1 ^ D * Nat.choose D (D / 2))
+  let T := {P : ℤ[X] | P.natDegree ≤ D ∧ ∀ i, |P.coeff i| ≤ C}
+  have : T.Finite := sorry
+  refine aux1 A _ this ?_
+  rintro ⟨F, hF₁⟩ hF₂
+  have : NumberField F := @NumberField.mk _ _ inferInstance hF₁
+  obtain ⟨w, hw⟩ : ∃ w : InfinitePlace F, IsReal w := sorry
+  have := aux2 B ?_ hw
+  obtain ⟨a, ha₁, ha₂⟩ := this
+  refine ⟨minpoly ℤ a, ?_, ?_⟩
+  sorry
+  refine ⟨?_, ?_, ?_⟩
+  use algebraMap F A a
+  · rw [Polynomial.mem_rootSet]
+    refine ⟨?_, ?_⟩
+    · refine minpoly.ne_zero ?_
+      exact integralClosure.isIntegral a
+    · rw [Polynomial.aeval_algebraMap_eq_zero_iff]
+      simp only [Subalgebra.aeval_coe, minpoly.aeval, ZeroMemClass.coe_zero]
+  · have := congr_arg (IntermediateField.map (IntermediateField.val F)) ha₂.symm
+    convert this
+    · simp
+
+      sorry
+    · simp
+      sorry
+
 
 #exit
 
