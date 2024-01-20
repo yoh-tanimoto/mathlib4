@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Rémy Degenne, Peter Pfaffelhuber
 -/
 import Mathlib.Data.ENNReal.Basic
+import Mathlib.MeasureTheory.Measure.OuterMeasure
 import Mathlib.MeasureTheory.SetSemiring
 import Mathlib.Topology.Instances.ENNReal
 
@@ -167,6 +168,20 @@ lemma addContent_union' (hs : s ∈ C) (ht : t ∈ C) (hst : s ∪ t ∈ C) (h_d
     exact Disjoint.eq_bot_of_self h_dis
 
 section IsSetSemiring
+
+lemma addContent_eq_add_diffFinset_of_subset (hC : IsSetSemiring C)
+    (hs : s ∈ C) (ht : t ∈ C) (hts : t ⊆ s) :
+    m s = m t + ∑ i in hC.diffFinset hs ht, m i := by
+  classical
+  conv_lhs => rw [← hC.sUnion_insert_diffFinset hs ht hts]
+  rw [← coe_insert, addContent_sUnion]
+  · rw [sum_insert]
+    exact hC.not_mem_diffFinset hs ht
+  · rw [coe_insert]
+    exact Set.insert_subset ht (hC.diffFinset_subset hs ht)
+  · rw [coe_insert]
+    exact hC.pairwiseDisjoint_insert_diffFinset hs ht
+  · rwa [coe_insert, hC.sUnion_insert_diffFinset hs ht hts]
 
 lemma addContent_eq_add_diffFinset₀_of_subset (hC : IsSetSemiring C)
     (hs : s ∈ C) (hI : ↑I ⊆ C) (hI_ss : ∀ t ∈ I, t ⊆ s)
@@ -364,5 +379,45 @@ theorem addContent_iUnion_le_of_addContent_iUnion_eq_tsum (hC : IsSetRing C)
   · exact Finset.sum_image_le_of_nonneg fun _ _ ↦ zero_le _
 
 end IsSetRing
+
+section ExtendContent
+
+/-- Build an `AddContent` from a finitely additive function defined on a set of sets. -/
+noncomputable def extendContent (hC : ∅ ∈ C) (m : ∀ s : Set α, s ∈ C → ℝ≥0∞) (m_empty : m ∅ hC = 0)
+    (m_sUnion : ∀ (I : Finset (Set α)) (h_ss : ↑I ⊆ C)
+      (_h_dis : PairwiseDisjoint (I : Set (Set α)) id) (h_mem : ⋃₀ ↑I ∈ C),
+      m (⋃₀ I) h_mem = ∑ u : I, m u (h_ss u.prop)) :
+    AddContent C where
+  toFun := extend m
+  empty' := extend_empty hC m_empty
+  sUnion' := by
+    simp_rw [← extend_eq m] at m_sUnion
+    intro I h_ss h_dis h_mem
+    rw [m_sUnion I h_ss h_dis h_mem, univ_eq_attach]
+    exact sum_attach _ _
+
+lemma extendContent_eq_extend (hC : ∅ ∈ C) (m : ∀ s : Set α, s ∈ C → ℝ≥0∞) (m_empty : m ∅ hC = 0)
+    (m_sUnion : ∀ (I : Finset (Set α)) (h_ss : ↑I ⊆ C)
+      (_h_dis : PairwiseDisjoint (I : Set (Set α)) id) (h_mem : ⋃₀ ↑I ∈ C),
+      m (⋃₀ I) h_mem = ∑ u : I, m u (h_ss u.prop)) :
+    ⇑(extendContent hC m m_empty m_sUnion) = extend m := rfl
+
+lemma extendContent_eq (hC : ∅ ∈ C) (m : ∀ s : Set α, s ∈ C → ℝ≥0∞) (m_empty : m ∅ hC = 0)
+    (m_sUnion : ∀ (I : Finset (Set α)) (h_ss : ↑I ⊆ C)
+      (_h_dis : PairwiseDisjoint (I : Set (Set α)) id) (h_mem : ⋃₀ ↑I ∈ C),
+      m (⋃₀ I) h_mem = ∑ u : I, m u (h_ss u.prop))
+    (hs : s ∈ C) :
+    extendContent hC m m_empty m_sUnion s = m s hs := by
+  rw [extendContent_eq_extend, extend_eq]
+
+lemma extendContent_eq_top (hC : ∅ ∈ C) (m : ∀ s : Set α, s ∈ C → ℝ≥0∞) (m_empty : m ∅ hC = 0)
+    (m_sUnion : ∀ (I : Finset (Set α)) (h_ss : ↑I ⊆ C)
+      (_h_dis : PairwiseDisjoint (I : Set (Set α)) id) (h_mem : ⋃₀ ↑I ∈ C),
+      m (⋃₀ I) h_mem = ∑ u : I, m u (h_ss u.prop))
+    (hs : s ∉ C) :
+    extendContent hC m m_empty m_sUnion s = ∞ := by
+  rw [extendContent_eq_extend, extend_eq_top m hs]
+
+end ExtendContent
 
 end MeasureTheory
