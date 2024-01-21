@@ -4,12 +4,11 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Xavier Roblot
 -/
 import Mathlib.Algebra.Module.Zlattice
+import Mathlib.LinearAlgebra.Pi
 import Mathlib.MeasureTheory.Group.GeometryOfNumbers
 import Mathlib.MeasureTheory.Measure.Lebesgue.VolumeOfBalls
 import Mathlib.NumberTheory.NumberField.Embeddings
 import Mathlib.NumberTheory.NumberField.FractionalIdeal
-import Mathlib.RingTheory.Discriminant
-import Mathlib.Topology.Bornology.Constructions
 
 #align_import number_theory.number_field.canonical_embedding from "leanprover-community/mathlib"@"60da01b41bbe4206f05d34fd70c8dd7498717a30"
 
@@ -607,6 +606,78 @@ theorem adjust_f {w₁ : InfinitePlace K} (B : ℝ≥0) (hf : ∀ w, w ≠ w₁ 
 
 end convexBodyLT
 
+section convexBodyLT'
+
+open  Metric ENNReal NNReal
+
+-- open Classical Metric ENNReal NNReal
+
+-- variable (f : InfinitePlace K → ℝ≥0) (w₀ : {w : InfinitePlace K // IsComplex w})
+
+-- abbrev convexBodyLT'' : Set (E K) :=
+--   (Set.univ.pi (fun w : { w : InfinitePlace K // IsReal w } ↦ ball 0 (f w))) ×ˢ
+--   (Set.univ.pi (fun w : { w : InfinitePlace K // IsComplex w } ↦
+--     if w = w₀ then {x | |x.re| < 1 ∧ |x.im| < (f w).toReal} else ball 0 (f w)))
+
+variable (f : InfinitePlace K → ℝ≥0) (w₀ : {w : InfinitePlace K // IsComplex w})
+
+abbrev convexBodyLT' : Set (E K) := convexBodyLT K f ∩ {x | |(x.2 w₀).re| < 1}
+
+theorem convexBodyLT_mem' {x : K} :
+    mixedEmbedding K x ∈ (convexBodyLT' K f w₀) ↔
+      (∀ w : InfinitePlace K, w x < f w) ∧ |(w₀.val.embedding x).re| < 1 := by
+  simp_rw [mixedEmbedding, RingHom.prod_apply, Set.mem_inter_iff, Set.mem_prod, Set.mem_pi,
+    Set.mem_univ, forall_true_left, mem_ball_zero_iff, Pi.ringHom_apply, ← Complex.norm_real,
+    embedding_of_isReal_apply, Subtype.forall, ← ball_or_left, ← not_isReal_iff_isComplex, em,
+    forall_true_left, norm_embedding_eq, Set.mem_setOf_eq, Pi.ringHom_apply]
+
+theorem convexBodyLT_symmetric' (x : E K) (hx : x ∈ (convexBodyLT' K f w₀)) :
+    -x ∈ (convexBodyLT' K f w₀) := by
+  rw [Set.mem_inter_iff]
+  refine ⟨convexBodyLT_symmetric K f _ (Set.mem_of_mem_inter_left hx), ?_⟩
+  rw [Set.mem_setOf_eq, Prod.snd_neg, Pi.neg_apply, Complex.neg_re, abs_neg]
+  convert Set.mem_of_mem_inter_right hx
+
+theorem convexBodyLT_convex' : Convex ℝ (convexBodyLT' K f w₀) := by
+  refine Convex.inter ?_ ?_
+  exact convexBodyLT_convex K f
+  · simp_rw [show {x : (E K) | |(x.2 w₀).re| < 1} = ((fun x ↦ x.2 w₀) ⁻¹' {a : ℂ | |a.re| < 1}) by
+      rw [Set.preimage_setOf_eq]]
+    refine Convex.is_linear_preimage ?_ ?_
+    · simp_rw [abs_lt]
+      exact Convex.inter (convex_halfspace_re_gt _) (convex_halfspace_re_lt _)
+    · exact LinearMap.isLinear (LinearMap.comp (LinearMap.proj w₀) (LinearMap.snd ℝ _ _))
+
+open Classical MeasureTheory
+
+variable [NumberField K]
+
+example (V : ℝ≥0) :
+    1 ≤ volume (convexBodyLT' K (fun w ↦ if w = w₀ then V else 1) w₀) := by
+
+
+end convexBodyLT'
+
+section SpecialFunction
+
+open MeasureTheory
+
+open scoped NNReal Classical
+
+variable {K}
+
+variable [NumberField K] (w₀ : InfinitePlace K)
+
+noncomputable def SpecialFunction (V : ℝ≥0) : InfinitePlace K → ℝ≥0 :=
+  fun w ↦ if w = w₀ then V else 1
+
+example (B : ℝ≥0) (hw₀ : IsComplex w₀) :
+    ∃ V, B < volume (convexBodyLT' K (SpecialFunction w₀ V) ⟨w₀, hw₀⟩) := by sorry
+
+
+
+end SpecialFunction
+
 section convexBodySum
 
 open ENNReal BigOperators Classical MeasureTheory Fintype
@@ -866,12 +937,37 @@ theorem exists_ne_zero_mem_ideal_lt (h : minkowskiBound K I < volume (convexBody
   obtain ⟨a, ha, rfl⟩ := hx
   exact ⟨a, ha, by simpa using h_nz, (convexBodyLT_mem K f).mp h_mem⟩
 
+/-- A version of `exists_ne_zero_mem_ideal_lt` where, in addition, the absolute value of the
+real part of `x` is smaller than `1` at some fixed complex place. This is useful to ensure that
+`x` is not real in some cases. -/
+theorem exists_ne_zero_mem_ideal_lt' (w₀ : {w : InfinitePlace K // IsComplex w})
+    (h : minkowskiBound K I < volume (convexBodyLT' K f w₀)) :
+    ∃ a ∈ (I : FractionalIdeal (𝓞 K)⁰ K), a ≠ 0 ∧ (∀ w : InfinitePlace K, w a < f w) ∧
+    |(w₀.val.embedding a).re| < 1 := by
+  have h_fund := Zspan.isAddFundamentalDomain (fractionalIdealLatticeBasis K I) volume
+  have : Countable (span ℤ (Set.range (fractionalIdealLatticeBasis K I))).toAddSubgroup := by
+    change Countable (span ℤ (Set.range (fractionalIdealLatticeBasis K I)) : Set (E K))
+    infer_instance
+  obtain ⟨⟨x, hx⟩, h_nz, h_mem⟩ := exists_ne_zero_mem_lattice_of_measure_mul_two_pow_lt_measure
+    h_fund (convexBodyLT_symmetric' K f w₀) (convexBodyLT_convex' K f w₀) h
+  rw [mem_toAddSubgroup, mem_span_fractionalIdealLatticeBasis] at hx
+  obtain ⟨a, ha, rfl⟩ := hx
+  exact ⟨a, ha, by simpa using h_nz, (convexBodyLT_mem' K f w₀).mp h_mem⟩
+
 /-- A version of `exists_ne_zero_mem_ideal_lt` for the ring of integers of `K`. -/
 theorem exists_ne_zero_mem_ringOfIntegers_lt (h : minkowskiBound K 1 < volume (convexBodyLT K f)) :
     ∃ a ∈ 𝓞 K, a ≠ 0 ∧ ∀ w : InfinitePlace K, w a < f w := by
   obtain ⟨_, h_mem, h_nz, h_bd⟩ := exists_ne_zero_mem_ideal_lt K 1 h
   obtain ⟨⟨a, ha⟩, rfl⟩ := (FractionalIdeal.mem_one_iff _).mp h_mem
-  exact ⟨a, ha, h_nz, fun w ↦ h_bd w⟩
+  exact ⟨a, ha, h_nz, h_bd⟩
+
+/-- A version of `exists_ne_zero_mem_ideal_lt'` for the ring of integers of `K`. -/
+theorem exists_ne_zero_mem_ringOfIntegers_lt' (w₀ : {w : InfinitePlace K // IsComplex w})
+    (h : minkowskiBound K 1 < volume (convexBodyLT' K f w₀)) :
+    ∃ a ∈ 𝓞 K, a ≠ 0 ∧ (∀ w : InfinitePlace K, w a < f w) ∧ |(w₀.val.embedding a).re| < 1 := by
+  obtain ⟨_, h_mem, h_nz, h_bd⟩ := exists_ne_zero_mem_ideal_lt' K 1 w₀ h
+  obtain ⟨⟨a, ha⟩, rfl⟩ := (FractionalIdeal.mem_one_iff _).mp h_mem
+  exact ⟨a, ha, h_nz, h_bd⟩
 
 theorem exists_ne_zero_mem_ideal_of_norm_le {B : ℝ}
     (h : (minkowskiBound K I) ≤ volume (convexBodySum K B)) :
