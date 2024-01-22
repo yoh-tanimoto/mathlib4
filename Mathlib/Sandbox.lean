@@ -1,6 +1,51 @@
-import Mathlib.FieldTheory.IntermediateField
-import Mathlib.Analysis.Convex.Complex
-import Mathlib.MeasureTheory.Measure.Lebesgue.VolumeOfBalls
+import Mathlib.MeasureTheory.Constructions.BorelSpace.Basic
+import Mathlib.NumberTheory.NumberField.Embeddings
+
+section Measurable
+
+variable {R : Type*} [Lattice R] [Group R] [MeasurableSpace R] [MeasurableSup₂ R]
+  [MeasurableInv R]
+
+@[to_additive (attr := measurability)]
+theorem measurable_mabs : Measurable fun x : R ↦ mabs x :=
+  Measurable.sup measurable_id' measurable_inv
+
+end Measurable
+
+section InfinitePlace
+
+variable {K : Type*} [Field K]
+
+namespace NumberField.InfinitePlace
+
+open NumberField IntermediateField Complex
+
+theorem _root_.NumberField.is_primitive_element_of_infinitePlace_lt [NumberField K] {x : 𝓞 K}
+    {w : InfinitePlace K} (h₁ : x ≠ 0) (h₂ : ∀ ⦃w'⦄, w' ≠ w → w' x < 1)
+    (h₃ : IsReal w ∨ |(w.embedding x).re| < 1) : ℚ⟮(x:K)⟯ = ⊤ := by
+  rw [Field.primitive_element_iff_algHom_eq_of_eval ℚ ℂ ?_ _ w.embedding.toRatAlgHom]
+  · intro ψ hψ
+    have h : 1 ≤ w x := ge_one_of_lt_one h₁ h₂
+    have main : w = InfinitePlace.mk ψ.toRingHom := by
+      contrapose! h
+      convert h₂ h.symm using 1
+      rw [← norm_embedding_eq]
+      exact congr_arg (‖·‖) hψ
+    rw [(mk_embedding w).symm, mk_eq_iff] at main
+    by_cases hw : IsReal w
+    · rw [conjugate_embedding_eq_of_isReal hw, or_self] at main
+      exact congr_arg RingHom.toRatAlgHom main
+    · refine congr_arg RingHom.toRatAlgHom (main.resolve_right fun h' ↦ ?_)
+      have : (embedding w x).im = 0 := by
+        erw [← conj_eq_iff_im, RingHom.congr_fun h' x]
+        exact hψ.symm
+      contrapose! h
+      rw [← norm_embedding_eq, ← re_add_im (embedding w x), this, ofReal_zero, zero_mul,
+        add_zero, norm_eq_abs, abs_ofReal]
+      exact h₃.resolve_left hw
+  . exact fun x ↦ IsAlgClosed.splits_codomain (minpoly ℚ x)
+
+end InfinitePlace
 
 section Algebra.Hom
 
@@ -11,18 +56,27 @@ theorem RingHom.toRatAlgHom_apply {R S : Type*} [Ring R] [Ring S] [Algebra ℚ R
 
 end Algebra.Hom
 
-section Complex
-
-open  MeasureTheory MeasureTheory.Measure NNReal
-
-example (r : ℝ≥0) (hr : 1 ≤ r) : r ≤ volume {x : ℂ | ‖x‖ < r ∧ |x.re| < 1} := by
-  
-
-  sorry
 
 
+section Volume
 
-end Complex
+open MeasureTheory MeasureTheory.Measure NNReal ENNReal
+
+example (B : ℝ≥0) : volume {x : ℂ | |x.re| < 1 ∧ |x.im| < B^2} = 4*B^2 := by
+  rw [← (Complex.volume_preserving_equiv_real_prod.symm).measure_preimage]
+  simp_rw [Set.preimage_setOf_eq, Complex.measurableEquivRealProd_symm_apply]
+  rw [show {a : ℝ × ℝ | |a.1| < 1 ∧ |a.2| < B ^ 2} =
+      Set.Ioo (-1:ℝ) (1:ℝ) ×ˢ Set.Ioo (- (B:ℝ) ^ 2) ((B:ℝ) ^ 2) by
+        ext; rw [Set.mem_setOf_eq, Set.mem_prod, Set.mem_Ioo, Set.mem_Ioo, abs_lt, abs_lt]]
+  rw [volume_eq_prod, prod_prod, Real.volume_Ioo, Real.volume_Ioo, sub_neg_eq_add, sub_neg_eq_add,
+    one_add_one_eq_two, ← two_mul, ofReal_mul zero_le_two, ofReal_pow (coe_nonneg B), ofReal_ofNat,
+    ofReal_coe_nnreal, ← mul_assoc, show (2:ℝ≥0∞) * 2 = 4 by norm_num]
+  refine MeasurableSet.inter ?_ ?_
+  · exact measurableSet_lt (measurable_abs.comp Complex.measurable_re) measurable_const
+  · exact measurableSet_lt (measurable_abs.comp Complex.measurable_im) measurable_const
+
+end Volume
+
 
 #exit
 

@@ -10,6 +10,8 @@ import Mathlib.MeasureTheory.Measure.Lebesgue.VolumeOfBalls
 import Mathlib.NumberTheory.NumberField.Embeddings
 import Mathlib.NumberTheory.NumberField.FractionalIdeal
 
+import Mathlib.Sandbox
+
 #align_import number_theory.number_field.canonical_embedding from "leanprover-community/mathlib"@"60da01b41bbe4206f05d34fd70c8dd7498717a30"
 
 /-!
@@ -610,14 +612,23 @@ section convexBodyLT'
 
 open  Metric ENNReal NNReal
 
--- open Classical Metric ENNReal NNReal
+open Classical
 
--- variable (f : InfinitePlace K → ℝ≥0) (w₀ : {w : InfinitePlace K // IsComplex w})
+variable (f : InfinitePlace K → ℝ≥0) (w₀ : {w : InfinitePlace K // IsComplex w})
 
--- abbrev convexBodyLT'' : Set (E K) :=
---   (Set.univ.pi (fun w : { w : InfinitePlace K // IsReal w } ↦ ball 0 (f w))) ×ˢ
---   (Set.univ.pi (fun w : { w : InfinitePlace K // IsComplex w } ↦
---     if w = w₀ then {x | |x.re| < 1 ∧ |x.im| < (f w).toReal} else ball 0 (f w)))
+abbrev convexBodyLT'' : Set (E K) :=
+  (Set.univ.pi (fun w : { w : InfinitePlace K // IsReal w } ↦ ball 0 (f w))) ×ˢ
+  (Set.univ.pi (fun w : { w : InfinitePlace K // IsComplex w } ↦
+    if w = w₀ then {x | ‖x.re‖ < 1 ∧ ‖x.im‖ < (f w).1 ^ 2} else ball 0 (f w)))
+
+theorem convexBodyLT_mem'' {x : K} :
+    mixedEmbedding K x ∈ (convexBodyLT'' K f w₀) ↔
+      (∀ w : InfinitePlace K, w ≠ w₀ → w x < f w) ∧
+      |(w₀.val.embedding x).re| < 1 ∧ |(w₀.val.embedding x).im| < (f w₀).toReal := by
+  simp_rw [mixedEmbedding, RingHom.prod_apply, Set.mem_prod, Set.mem_pi,
+    Set.mem_univ, forall_true_left, mem_ball_zero_iff, Pi.ringHom_apply, ← Complex.norm_real,
+    embedding_of_isReal_apply, Subtype.forall]
+  sorry
 
 variable (f : InfinitePlace K → ℝ≥0) (w₀ : {w : InfinitePlace K // IsComplex w})
 
@@ -648,35 +659,59 @@ theorem convexBodyLT_convex' : Convex ℝ (convexBodyLT' K f w₀) := by
       exact Convex.inter (convex_halfspace_re_gt _) (convex_halfspace_re_lt _)
     · exact LinearMap.isLinear (LinearMap.comp (LinearMap.proj w₀) (LinearMap.snd ℝ _ _))
 
-open Classical MeasureTheory
+open Classical MeasureTheory MeasureTheory.Measure BigOperators
 
 variable [NumberField K]
 
-example (V : ℝ≥0) :
-    1 ≤ volume (convexBodyLT' K (fun w ↦ if w = w₀ then V else 1) w₀) := by
+/-- The fudge factor that appears in the formula for the volume of `convexBodyLT'`. -/
+noncomputable abbrev convexBodyLTFactor' : ℝ≥0∞ :=
+  (2 : ℝ≥0∞) ^ (NrRealPlaces K + 2) * (NNReal.pi : ℝ≥0∞) ^ (NrComplexPlaces K - 1)
 
+theorem convexBodyLT_volume' :
+    volume (convexBodyLT'' K f w₀) = (convexBodyLTFactor' K) * ∏ w, (f w) ^ (mult w) := by
+  have vol_box : ∀ B : ℝ≥0, volume {x : ℂ | ‖x.re‖ < 1 ∧ ‖x.im‖ < B^2} = 4*B^2 := by
+    intro B
+    rw [← (Complex.volume_preserving_equiv_real_prod.symm).measure_preimage]
+    simp_rw [Set.preimage_setOf_eq, Complex.measurableEquivRealProd_symm_apply]
+    rw [show {a : ℝ × ℝ | ‖a.1‖ < 1 ∧ ‖a.2‖ < B ^ 2} =
+      Set.Ioo (-1:ℝ) (1:ℝ) ×ˢ Set.Ioo (- (B:ℝ) ^ 2) ((B:ℝ) ^ 2) by
+        ext; simp_rw [Set.mem_setOf_eq, Set.mem_prod, Set.mem_Ioo, Real.norm_eq_abs, abs_lt]]
+    simp_rw [volume_eq_prod, prod_prod, Real.volume_Ioo, sub_neg_eq_add, one_add_one_eq_two,
+      ← two_mul, ofReal_mul zero_le_two, ofReal_pow (coe_nonneg B), ofReal_ofNat,
+      ofReal_coe_nnreal, ← mul_assoc, show (2:ℝ≥0∞) * 2 = 4 by norm_num]
+    refine MeasurableSet.inter ?_ ?_
+    · exact measurableSet_lt (measurable_norm.comp Complex.measurable_re) measurable_const
+    · exact measurableSet_lt (measurable_norm.comp Complex.measurable_im) measurable_const
+  calc
+    _ = (∏ x : {w // InfinitePlace.IsReal w}, ENNReal.ofReal (2 * (f x.val))) *
+          ((∏ x in Finset.univ.erase  w₀, ENNReal.ofReal (f x.val) ^ 2 * pi) *
+          (4 * (f w₀) ^ 2)) := by
+      simp_rw [volume_eq_prod, prod_prod, volume_pi, pi_pi, Real.volume_ball]
+      rw [← Finset.prod_erase_mul _ _ (Finset.mem_univ w₀)]
+      congr 2
+      · refine Finset.prod_congr rfl (fun w' hw' ↦ ?_)
+        rw [if_neg (Finset.ne_of_mem_erase hw'), Complex.volume_ball]
+      · simpa only [ite_true] using vol_box (f w₀)
+    _ = (↑2 ^ NrRealPlaces K * (∏ x : {w // InfinitePlace.IsReal w}, ENNReal.ofReal (f x.val))) *
+          ((∏ x in Finset.univ.erase  w₀, ENNReal.ofReal (f x.val) ^ 2) *
+          ↑pi ^ (NrComplexPlaces K - 1) * (4 * (f w₀) ^ 2)) := by
+      simp_rw [ofReal_mul (by norm_num : 0 ≤ (2 : ℝ)), Finset.prod_mul_distrib, Finset.prod_const,
+        Finset.card_erase_of_mem (Finset.mem_univ _), Finset.card_univ, ofReal_ofNat]
+    _ = (convexBodyLTFactor' K) * (∏ x : {w // InfinitePlace.IsReal w}, ENNReal.ofReal (f x.val))
+        * (∏ x : {w // IsComplex w}, ENNReal.ofReal (f x.val) ^ 2) := by
+      rw [show (4:ℝ≥0∞) = 2 ^ 2 by norm_num, convexBodyLTFactor', pow_add,
+        ← Finset.prod_erase_mul _ _ (Finset.mem_univ w₀), ofReal_coe_nnreal]
+      ring
+    _ = (convexBodyLTFactor' K) * ∏ w, (f w) ^ (mult w) := by
+      simp_rw [mult, pow_ite, pow_one, Finset.prod_ite, ofReal_coe_nnreal, not_isReal_iff_isComplex,
+        coe_mul, coe_finset_prod, ENNReal.coe_pow, mul_assoc]
+      congr 3
+      · refine (Finset.prod_subtype (Finset.univ.filter _) ?_ (fun w => (f w : ℝ≥0∞))).symm
+        exact fun _ => by simp only [Finset.mem_univ, forall_true_left, Finset.mem_filter, true_and]
+      · refine (Finset.prod_subtype (Finset.univ.filter _) ?_ (fun w => (f w : ℝ≥0∞) ^ 2)).symm
+        exact fun _ => by simp only [Finset.mem_univ, forall_true_left, Finset.mem_filter, true_and]
 
 end convexBodyLT'
-
-section SpecialFunction
-
-open MeasureTheory
-
-open scoped NNReal Classical
-
-variable {K}
-
-variable [NumberField K] (w₀ : InfinitePlace K)
-
-noncomputable def SpecialFunction (V : ℝ≥0) : InfinitePlace K → ℝ≥0 :=
-  fun w ↦ if w = w₀ then V else 1
-
-example (B : ℝ≥0) (hw₀ : IsComplex w₀) :
-    ∃ V, B < volume (convexBodyLT' K (SpecialFunction w₀ V) ⟨w₀, hw₀⟩) := by sorry
-
-
-
-end SpecialFunction
 
 section convexBodySum
 
