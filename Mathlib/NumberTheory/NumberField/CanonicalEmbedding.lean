@@ -10,8 +10,6 @@ import Mathlib.MeasureTheory.Measure.Lebesgue.VolumeOfBalls
 import Mathlib.NumberTheory.NumberField.Embeddings
 import Mathlib.NumberTheory.NumberField.FractionalIdeal
 
-import Mathlib.Sandbox
-
 #align_import number_theory.number_field.canonical_embedding from "leanprover-community/mathlib"@"60da01b41bbe4206f05d34fd70c8dd7498717a30"
 
 /-!
@@ -616,66 +614,75 @@ open Classical
 
 variable (f : InfinitePlace K → ℝ≥0) (w₀ : {w : InfinitePlace K // IsComplex w})
 
-abbrev convexBodyLT'' : Set (E K) :=
+abbrev convexBodyLT' : Set (E K) :=
   (Set.univ.pi (fun w : { w : InfinitePlace K // IsReal w } ↦ ball 0 (f w))) ×ˢ
   (Set.univ.pi (fun w : { w : InfinitePlace K // IsComplex w } ↦
-    if w = w₀ then {x | ‖x.re‖ < 1 ∧ ‖x.im‖ < (f w).1 ^ 2} else ball 0 (f w)))
+    if w = w₀ then {x | |x.re| < 1 ∧ |x.im| < (f w : ℝ) ^ 2} else ball 0 (f w)))
 
-theorem convexBodyLT_mem'' {x : K} :
-    mixedEmbedding K x ∈ (convexBodyLT'' K f w₀) ↔
+theorem convexBodyLT'_mem {x : K} :
+    mixedEmbedding K x ∈ (convexBodyLT' K f w₀) ↔
       (∀ w : InfinitePlace K, w ≠ w₀ → w x < f w) ∧
-      |(w₀.val.embedding x).re| < 1 ∧ |(w₀.val.embedding x).im| < (f w₀).toReal := by
+      |(w₀.val.embedding x).re| < 1 ∧ |(w₀.val.embedding x).im| < (f w₀: ℝ) ^ 2 := by
   simp_rw [mixedEmbedding, RingHom.prod_apply, Set.mem_prod, Set.mem_pi,
     Set.mem_univ, forall_true_left, mem_ball_zero_iff, Pi.ringHom_apply, ← Complex.norm_real,
     embedding_of_isReal_apply, Subtype.forall]
-  sorry
+  refine ⟨?_, ?_⟩
+  · rintro ⟨h₁, h₂⟩
+    refine ⟨?_, ?_⟩
+    · intro w h_ne
+      by_cases hw : IsReal w
+      · exact norm_embedding_eq w _ ▸ h₁ w hw
+      · specialize h₂ w (not_isReal_iff_isComplex.mp hw)
+        rwa [if_neg, mem_ball_zero_iff, norm_embedding_eq] at h₂
+        rwa [Subtype.ext_iff]
+    · specialize h₂ w₀.val w₀.prop
+      simp_rw [if_true, Set.mem_setOf_eq] at h₂
+      exact h₂
+  · rintro ⟨h₁, h₂⟩
+    refine ⟨?_, ?_⟩
+    · intro w hw
+      specialize h₁ w (ne_of_isReal_isComplex hw w₀.prop)
+      rwa [norm_embedding_eq]
+    · intro w hw
+      by_cases h_ne : w = w₀
+      · simpa [h_ne]
+      · rw [if_neg, mem_ball_zero_iff, norm_embedding_eq]
+        exact h₁ w h_ne
+        rwa [Subtype.ext_iff]
 
-variable (f : InfinitePlace K → ℝ≥0) (w₀ : {w : InfinitePlace K // IsComplex w})
-
-abbrev convexBodyLT' : Set (E K) := convexBodyLT K f ∩ {x | |(x.2 w₀).re| < 1}
-
-theorem convexBodyLT_mem' {x : K} :
-    mixedEmbedding K x ∈ (convexBodyLT' K f w₀) ↔
-      (∀ w : InfinitePlace K, w x < f w) ∧ |(w₀.val.embedding x).re| < 1 := by
-  simp_rw [mixedEmbedding, RingHom.prod_apply, Set.mem_inter_iff, Set.mem_prod, Set.mem_pi,
-    Set.mem_univ, forall_true_left, mem_ball_zero_iff, Pi.ringHom_apply, ← Complex.norm_real,
-    embedding_of_isReal_apply, Subtype.forall, ← ball_or_left, ← not_isReal_iff_isComplex, em,
-    forall_true_left, norm_embedding_eq, Set.mem_setOf_eq, Pi.ringHom_apply]
-
-theorem convexBodyLT_symmetric' (x : E K) (hx : x ∈ (convexBodyLT' K f w₀)) :
+theorem convexBodyLT'_symmetric (x : E K) (hx : x ∈ (convexBodyLT' K f w₀)) :
     -x ∈ (convexBodyLT' K f w₀) := by
-  rw [Set.mem_inter_iff]
-  refine ⟨convexBodyLT_symmetric K f _ (Set.mem_of_mem_inter_left hx), ?_⟩
-  rw [Set.mem_setOf_eq, Prod.snd_neg, Pi.neg_apply, Complex.neg_re, abs_neg]
-  convert Set.mem_of_mem_inter_right hx
+  simp [Set.mem_prod, Prod.fst_neg, Set.mem_pi, Set.mem_univ, Pi.neg_apply,
+    mem_ball_zero_iff, norm_neg, Real.norm_eq_abs, forall_true_left, Subtype.forall,
+    Prod.snd_neg, Complex.norm_eq_abs, hx] at hx ⊢
+  convert hx using 3
+  split_ifs <;> simp
 
-theorem convexBodyLT_convex' : Convex ℝ (convexBodyLT' K f w₀) := by
-  refine Convex.inter ?_ ?_
-  exact convexBodyLT_convex K f
-  · simp_rw [show {x : (E K) | |(x.2 w₀).re| < 1} = ((fun x ↦ x.2 w₀) ⁻¹' {a : ℂ | |a.re| < 1}) by
-      rw [Set.preimage_setOf_eq]]
-    refine Convex.is_linear_preimage ?_ ?_
-    · simp_rw [abs_lt]
-      exact Convex.inter (convex_halfspace_re_gt _) (convex_halfspace_re_lt _)
-    · exact LinearMap.isLinear (LinearMap.comp (LinearMap.proj w₀) (LinearMap.snd ℝ _ _))
+theorem convexBodyLT'_convex : Convex ℝ (convexBodyLT' K f w₀) := by
+  refine Convex.prod (convex_pi (fun _ _ => convex_ball _ _)) (convex_pi (fun _ _ => ?_))
+  split_ifs
+  · simp_rw [abs_lt]
+    refine Convex.inter ((convex_halfspace_re_gt _).inter  (convex_halfspace_re_lt _))
+      ((convex_halfspace_im_gt _).inter  (convex_halfspace_im_lt _))
+  · exact convex_ball _ _
 
 open Classical MeasureTheory MeasureTheory.Measure BigOperators
 
 variable [NumberField K]
 
 /-- The fudge factor that appears in the formula for the volume of `convexBodyLT'`. -/
-noncomputable abbrev convexBodyLTFactor' : ℝ≥0∞ :=
+noncomputable abbrev convexBodyLT'Factor : ℝ≥0∞ :=
   (2 : ℝ≥0∞) ^ (NrRealPlaces K + 2) * (NNReal.pi : ℝ≥0∞) ^ (NrComplexPlaces K - 1)
 
-theorem convexBodyLT_volume' :
-    volume (convexBodyLT'' K f w₀) = (convexBodyLTFactor' K) * ∏ w, (f w) ^ (mult w) := by
-  have vol_box : ∀ B : ℝ≥0, volume {x : ℂ | ‖x.re‖ < 1 ∧ ‖x.im‖ < B^2} = 4*B^2 := by
+theorem convexBodyLT'_volume :
+    volume (convexBodyLT' K f w₀) = (convexBodyLT'Factor K) * ∏ w, (f w) ^ (mult w) := by
+  have vol_box : ∀ B : ℝ≥0, volume {x : ℂ | |x.re| < 1 ∧ |x.im| < B^2} = 4*B^2 := by
     intro B
     rw [← (Complex.volume_preserving_equiv_real_prod.symm).measure_preimage]
     simp_rw [Set.preimage_setOf_eq, Complex.measurableEquivRealProd_symm_apply]
-    rw [show {a : ℝ × ℝ | ‖a.1‖ < 1 ∧ ‖a.2‖ < B ^ 2} =
+    rw [show {a : ℝ × ℝ | |a.1| < 1 ∧ |a.2| < B ^ 2} =
       Set.Ioo (-1:ℝ) (1:ℝ) ×ˢ Set.Ioo (- (B:ℝ) ^ 2) ((B:ℝ) ^ 2) by
-        ext; simp_rw [Set.mem_setOf_eq, Set.mem_prod, Set.mem_Ioo, Real.norm_eq_abs, abs_lt]]
+        ext; simp_rw [Set.mem_setOf_eq, Set.mem_prod, Set.mem_Ioo, abs_lt]]
     simp_rw [volume_eq_prod, prod_prod, Real.volume_Ioo, sub_neg_eq_add, one_add_one_eq_two,
       ← two_mul, ofReal_mul zero_le_two, ofReal_pow (coe_nonneg B), ofReal_ofNat,
       ofReal_coe_nnreal, ← mul_assoc, show (2:ℝ≥0∞) * 2 = 4 by norm_num]
@@ -697,12 +704,12 @@ theorem convexBodyLT_volume' :
           ↑pi ^ (NrComplexPlaces K - 1) * (4 * (f w₀) ^ 2)) := by
       simp_rw [ofReal_mul (by norm_num : 0 ≤ (2 : ℝ)), Finset.prod_mul_distrib, Finset.prod_const,
         Finset.card_erase_of_mem (Finset.mem_univ _), Finset.card_univ, ofReal_ofNat]
-    _ = (convexBodyLTFactor' K) * (∏ x : {w // InfinitePlace.IsReal w}, ENNReal.ofReal (f x.val))
+    _ = (convexBodyLT'Factor K) * (∏ x : {w // InfinitePlace.IsReal w}, ENNReal.ofReal (f x.val))
         * (∏ x : {w // IsComplex w}, ENNReal.ofReal (f x.val) ^ 2) := by
-      rw [show (4:ℝ≥0∞) = 2 ^ 2 by norm_num, convexBodyLTFactor', pow_add,
+      rw [show (4:ℝ≥0∞) = 2 ^ 2 by norm_num, convexBodyLT'Factor, pow_add,
         ← Finset.prod_erase_mul _ _ (Finset.mem_univ w₀), ofReal_coe_nnreal]
       ring
-    _ = (convexBodyLTFactor' K) * ∏ w, (f w) ^ (mult w) := by
+    _ = (convexBodyLT'Factor K) * ∏ w, (f w) ^ (mult w) := by
       simp_rw [mult, pow_ite, pow_one, Finset.prod_ite, ofReal_coe_nnreal, not_isReal_iff_isComplex,
         coe_mul, coe_finset_prod, ENNReal.coe_pow, mul_assoc]
       congr 3
@@ -917,7 +924,7 @@ section minkowski
 
 open MeasureTheory MeasureTheory.Measure Classical FiniteDimensional Zspan Real Submodule
 
-open scoped ENNReal NNReal nonZeroDivisors
+open scoped ENNReal NNReal nonZeroDivisors IntermediateField
 
 variable [NumberField K] (I : (FractionalIdeal (𝓞 K)⁰ K)ˣ)
 
@@ -972,22 +979,22 @@ theorem exists_ne_zero_mem_ideal_lt (h : minkowskiBound K I < volume (convexBody
   obtain ⟨a, ha, rfl⟩ := hx
   exact ⟨a, ha, by simpa using h_nz, (convexBodyLT_mem K f).mp h_mem⟩
 
-/-- A version of `exists_ne_zero_mem_ideal_lt` where, in addition, the absolute value of the
-real part of `x` is smaller than `1` at some fixed complex place. This is useful to ensure that
-`x` is not real in some cases. -/
+/-- A version of `exists_ne_zero_mem_ideal_lt` where the absolute value of the real part of `x` is
+smaller than `1` at some fixed complex place. This is useful to ensure that `x` is not real in
+some cases. -/
 theorem exists_ne_zero_mem_ideal_lt' (w₀ : {w : InfinitePlace K // IsComplex w})
     (h : minkowskiBound K I < volume (convexBodyLT' K f w₀)) :
-    ∃ a ∈ (I : FractionalIdeal (𝓞 K)⁰ K), a ≠ 0 ∧ (∀ w : InfinitePlace K, w a < f w) ∧
-    |(w₀.val.embedding a).re| < 1 := by
+    ∃ a ∈ (I : FractionalIdeal (𝓞 K)⁰ K), a ≠ 0 ∧ (∀ w : InfinitePlace K, w ≠ w₀ → w a < f w) ∧
+      |(w₀.val.embedding a).re| < 1 ∧ |(w₀.val.embedding a).im| < (f w₀ : ℝ) ^ 2:= by
   have h_fund := Zspan.isAddFundamentalDomain (fractionalIdealLatticeBasis K I) volume
   have : Countable (span ℤ (Set.range (fractionalIdealLatticeBasis K I))).toAddSubgroup := by
     change Countable (span ℤ (Set.range (fractionalIdealLatticeBasis K I)) : Set (E K))
     infer_instance
   obtain ⟨⟨x, hx⟩, h_nz, h_mem⟩ := exists_ne_zero_mem_lattice_of_measure_mul_two_pow_lt_measure
-    h_fund (convexBodyLT_symmetric' K f w₀) (convexBodyLT_convex' K f w₀) h
+    h_fund (convexBodyLT'_symmetric K f w₀) (convexBodyLT'_convex K f w₀) h
   rw [mem_toAddSubgroup, mem_span_fractionalIdealLatticeBasis] at hx
   obtain ⟨a, ha, rfl⟩ := hx
-  exact ⟨a, ha, by simpa using h_nz, (convexBodyLT_mem' K f w₀).mp h_mem⟩
+  exact ⟨a, ha, by simpa using h_nz, (convexBodyLT'_mem K f w₀).mp h_mem⟩
 
 /-- A version of `exists_ne_zero_mem_ideal_lt` for the ring of integers of `K`. -/
 theorem exists_ne_zero_mem_ringOfIntegers_lt (h : minkowskiBound K 1 < volume (convexBodyLT K f)) :
@@ -999,10 +1006,41 @@ theorem exists_ne_zero_mem_ringOfIntegers_lt (h : minkowskiBound K 1 < volume (c
 /-- A version of `exists_ne_zero_mem_ideal_lt'` for the ring of integers of `K`. -/
 theorem exists_ne_zero_mem_ringOfIntegers_lt' (w₀ : {w : InfinitePlace K // IsComplex w})
     (h : minkowskiBound K 1 < volume (convexBodyLT' K f w₀)) :
-    ∃ a ∈ 𝓞 K, a ≠ 0 ∧ (∀ w : InfinitePlace K, w a < f w) ∧ |(w₀.val.embedding a).re| < 1 := by
+    ∃ a ∈ 𝓞 K, a ≠ 0 ∧ (∀ w : InfinitePlace K, w ≠ w₀ → w a < f w) ∧
+      |(w₀.val.embedding a).re| < 1 ∧ |(w₀.val.embedding a).im| < (f w₀ : ℝ) ^ 2 := by
   obtain ⟨_, h_mem, h_nz, h_bd⟩ := exists_ne_zero_mem_ideal_lt' K 1 w₀ h
   obtain ⟨⟨a, ha⟩, rfl⟩ := (FractionalIdeal.mem_one_iff _).mp h_mem
   exact ⟨a, ha, h_nz, h_bd⟩
+
+example {w₀ : InfinitePlace K} (hw₀ : IsReal w₀) {B : ℝ≥0} (hB₁ : 1 ≤ B)
+    (hB₂ : minkowskiBound K 1 < convexBodyLTFactor K * B) :
+    ∃ a ∈ 𝓞 K, (∀ w : InfinitePlace K, w a < B) ∧ ℚ⟮(a:K)⟯ = ⊤ := by
+  have : minkowskiBound K 1 < volume (convexBodyLT K (fun w ↦ if w = w₀ then B else 1)) := by
+    rw [convexBodyLT_volume, ← Finset.prod_erase_mul _ _ (Finset.mem_univ w₀)]
+    simp_rw [ite_pow, one_pow]
+    rw [Finset.prod_ite_eq']
+    simp_rw [Finset.not_mem_erase, ite_false, mult, hw₀, ite_true, one_mul, pow_one]
+    exact hB₂
+  obtain ⟨a, ha, h_nz, h_le⟩ := exists_ne_zero_mem_ringOfIntegers_lt K this
+  refine ⟨a, ha, fun w ↦ lt_of_lt_of_le (h_le w) ?_, ?_⟩
+  · split_ifs
+    · exact le_rfl
+    · exact NNReal.coe_le_coe.mpr hB₁
+  · refine (Field.primitive_element_iff_algHom_eq_of_eval ℚ ℂ ?_ _ w₀.embedding.toRatAlgHom).mpr ?_
+    · exact fun x ↦ IsAlgClosed.splits_codomain (minpoly ℚ x)
+    · intro ψ hψ
+      suffices w₀ = InfinitePlace.mk ψ.toRingHom by
+        rw [(mk_embedding w₀).symm, mk_eq_iff, conjugate_embedding_eq_of_isReal hw₀, or_self] at this
+        ext x
+        exact RingHom.congr_fun this x
+      have h : 1 ≤ w₀ (⟨a, ha⟩:(𝓞 K)) := ge_one_of_lt_one (Subtype.ne_of_val_ne h_nz)
+        (by convert fun w h_ne ↦ (if_neg h_ne) ▸ h_le w)
+      contrapose! h
+      convert h_lt h.symm using 1
+      rw [← norm_embedding_eq]
+      exact congr_arg (‖·‖) hψ
+
+#exit
 
 theorem exists_ne_zero_mem_ideal_of_norm_le {B : ℝ}
     (h : (minkowskiBound K I) ≤ volume (convexBodySum K B)) :
