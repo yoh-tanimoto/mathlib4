@@ -10,6 +10,8 @@ import Mathlib.MeasureTheory.Measure.Lebesgue.VolumeOfBalls
 import Mathlib.NumberTheory.NumberField.Embeddings
 import Mathlib.NumberTheory.NumberField.FractionalIdeal
 
+import Mathlib.Sandbox
+
 #align_import number_theory.number_field.canonical_embedding from "leanprover-community/mathlib"@"60da01b41bbe4206f05d34fd70c8dd7498717a30"
 
 /-!
@@ -614,6 +616,10 @@ open Classical
 
 variable (f : InfinitePlace K → ℝ≥0) (w₀ : {w : InfinitePlace K // IsComplex w})
 
+/-- A version of `convexBodyLT` with additional condition at a fixed complex place. This is needed
+to ensure the element constructed is not real, see for example
+`exists_primitive_element_lt_of_isComplex`.
+-/
 abbrev convexBodyLT' : Set (E K) :=
   (Set.univ.pi (fun w : { w : InfinitePlace K // IsReal w } ↦ ball 0 (f w))) ×ˢ
   (Set.univ.pi (fun w : { w : InfinitePlace K // IsComplex w } ↦
@@ -1012,35 +1018,49 @@ theorem exists_ne_zero_mem_ringOfIntegers_lt' (w₀ : {w : InfinitePlace K // Is
   obtain ⟨⟨a, ha⟩, rfl⟩ := (FractionalIdeal.mem_one_iff _).mp h_mem
   exact ⟨a, ha, h_nz, h_bd⟩
 
-example {w₀ : InfinitePlace K} (hw₀ : IsReal w₀) {B : ℝ≥0} (hB₁ : 1 ≤ B)
-    (hB₂ : minkowskiBound K 1 < convexBodyLTFactor K * B) :
-    ∃ a ∈ 𝓞 K, (∀ w : InfinitePlace K, w a < B) ∧ ℚ⟮(a:K)⟯ = ⊤ := by
+theorem exists_primitive_element_lt_of_isReal {w₀ : InfinitePlace K} (hw₀ : IsReal w₀) {B : ℝ≥0}
+    (hB : minkowskiBound K 1 < convexBodyLTFactor K * B) :
+    ∃ a ∈ 𝓞 K, ℚ⟮(a:K)⟯ = ⊤ ∧ (∀ w : InfinitePlace K, w a < max 1 B) := by
   have : minkowskiBound K 1 < volume (convexBodyLT K (fun w ↦ if w = w₀ then B else 1)) := by
     rw [convexBodyLT_volume, ← Finset.prod_erase_mul _ _ (Finset.mem_univ w₀)]
     simp_rw [ite_pow, one_pow]
     rw [Finset.prod_ite_eq']
     simp_rw [Finset.not_mem_erase, ite_false, mult, hw₀, ite_true, one_mul, pow_one]
-    exact hB₂
+    exact hB
   obtain ⟨a, ha, h_nz, h_le⟩ := exists_ne_zero_mem_ringOfIntegers_lt K this
-  refine ⟨a, ha, fun w ↦ lt_of_lt_of_le (h_le w) ?_, ?_⟩
-  · split_ifs
-    · exact le_rfl
-    · exact NNReal.coe_le_coe.mpr hB₁
-  · refine (Field.primitive_element_iff_algHom_eq_of_eval ℚ ℂ ?_ _ w₀.embedding.toRatAlgHom).mpr ?_
-    · exact fun x ↦ IsAlgClosed.splits_codomain (minpoly ℚ x)
-    · intro ψ hψ
-      suffices w₀ = InfinitePlace.mk ψ.toRingHom by
-        rw [(mk_embedding w₀).symm, mk_eq_iff, conjugate_embedding_eq_of_isReal hw₀, or_self] at this
-        ext x
-        exact RingHom.congr_fun this x
-      have h : 1 ≤ w₀ (⟨a, ha⟩:(𝓞 K)) := ge_one_of_lt_one (Subtype.ne_of_val_ne h_nz)
-        (by convert fun w h_ne ↦ (if_neg h_ne) ▸ h_le w)
-      contrapose! h
-      convert h_lt h.symm using 1
-      rw [← norm_embedding_eq]
-      exact congr_arg (‖·‖) hψ
+  refine ⟨a, ha, ?_, fun w ↦ lt_of_lt_of_le (h_le w) ?_⟩
+  · exact is_primitive_element_of_infinitePlace_lt ⟨a, ha⟩
+      (Subtype.ne_of_val_ne h_nz) (fun w h_ne ↦ by convert (if_neg h_ne) ▸ h_le w) (Or.inl hw₀)
+  · split_ifs <;> simp
 
-#exit
+theorem exists_primitive_element_lt_of_isComplex {w₀ : InfinitePlace K} (hw₀ : IsComplex w₀)
+    {B : ℝ≥0} (hB : minkowskiBound K 1 < convexBodyLT'Factor K * B ^ 2) :
+    ∃ a ∈ 𝓞 K, ℚ⟮(a:K)⟯ = ⊤ ∧ (∀ w : InfinitePlace K, w a < Real.sqrt (1 + B ^ 4)) := by
+  have : minkowskiBound K 1 <
+      volume (convexBodyLT' K (fun w ↦ if w = w₀ then B else 1) ⟨w₀, hw₀⟩) := by
+    rw [convexBodyLT'_volume, ← Finset.prod_erase_mul _ _ (Finset.mem_univ w₀)]
+    simp_rw [ite_pow, one_pow]
+    rw [Finset.prod_ite_eq']
+    simp_rw [Finset.not_mem_erase, ite_false, mult, not_isReal_iff_isComplex.mpr hw₀,
+      ite_true, ite_false, one_mul, ENNReal.coe_pow]
+    exact hB
+  obtain ⟨a, ha, h_nz, h_le, h_le₀⟩ := exists_ne_zero_mem_ringOfIntegers_lt' K ⟨w₀, hw₀⟩ this
+  refine ⟨a, ha, ?_, fun w ↦ ?_⟩
+  · exact is_primitive_element_of_infinitePlace_lt ⟨a, ha⟩ (Subtype.ne_of_val_ne h_nz)
+      (fun w h_ne ↦ by convert if_neg h_ne ▸ h_le w h_ne) (Or.inr h_le₀.1)
+  · by_cases h_eq : w = w₀
+    · rw [if_pos rfl] at h_le₀
+      dsimp only at h_le₀
+      rw [h_eq, ← norm_embedding_eq, Real.lt_sqrt (norm_nonneg _), ← Complex.re_add_im
+        (embedding w₀ a), Complex.norm_eq_abs, Complex.abs_add_mul_I, Real.sq_sqrt (by positivity)]
+      gcongr
+      · rw [← sq_abs, sq_lt_one_iff (abs_nonneg _)]
+        exact h_le₀.1
+      · rw [show (B:ℝ) ^ 4 = (B ^ 2) ^ 2 by rw [← pow_mul], sq_lt_sq, abs_pow, NNReal.abs_eq]
+        exact h_le₀.2
+    · refine lt_of_lt_of_le (if_neg h_eq ▸ h_le w h_eq) ?_
+      rw [NNReal.coe_one, Real.le_sqrt' zero_lt_one, one_pow]
+      norm_num
 
 theorem exists_ne_zero_mem_ideal_of_norm_le {B : ℝ}
     (h : (minkowskiBound K I) ≤ volume (convexBodySum K B)) :

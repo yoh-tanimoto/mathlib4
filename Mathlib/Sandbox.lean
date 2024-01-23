@@ -20,17 +20,16 @@ namespace NumberField.InfinitePlace
 
 open NumberField IntermediateField Complex
 
-theorem _root_.NumberField.is_primitive_element_of_infinitePlace_lt [NumberField K] {x : 𝓞 K}
+theorem _root_.NumberField.is_primitive_element_of_infinitePlace_lt [NumberField K] (x : 𝓞 K)
     {w : InfinitePlace K} (h₁ : x ≠ 0) (h₂ : ∀ ⦃w'⦄, w' ≠ w → w' x < 1)
     (h₃ : IsReal w ∨ |(w.embedding x).re| < 1) : ℚ⟮(x:K)⟯ = ⊤ := by
   rw [Field.primitive_element_iff_algHom_eq_of_eval ℚ ℂ ?_ _ w.embedding.toRatAlgHom]
   · intro ψ hψ
     have h : 1 ≤ w x := ge_one_of_lt_one h₁ h₂
     have main : w = InfinitePlace.mk ψ.toRingHom := by
+      erw [← norm_embedding_eq, hψ] at h
       contrapose! h
-      convert h₂ h.symm using 1
-      rw [← norm_embedding_eq]
-      exact congr_arg (‖·‖) hψ
+      exact h₂ h.symm
     rw [(mk_embedding w).symm, mk_eq_iff] at main
     by_cases hw : IsReal w
     · rw [conjugate_embedding_eq_of_isReal hw, or_self] at main
