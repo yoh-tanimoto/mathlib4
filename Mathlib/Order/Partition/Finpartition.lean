@@ -7,6 +7,7 @@ import Mathlib.Algebra.BigOperators.Basic
 import Mathlib.Order.SupIndep
 import Mathlib.Order.Atoms
 import Mathlib.Data.Fintype.Powerset
+import Mathlib.Data.Nat.Order.Lemmas
 
 #align_import order.partition.finpartition from "leanprover-community/mathlib"@"d6fad0e5bf2d6f48da9175d25c3dc5706b3834ce"
 
@@ -122,7 +123,7 @@ def map {β : Type*} [Lattice β] [OrderBot β] {a : α} (P : Finpartition a) (e
     Finpartition (e a) where
   parts := P.parts.map e
   supIndep u hu _ hb hbu _ hx hxu := by
-    rw [← symm_map_subset_iff] at hu
+    rw [← map_symm_subset] at hu
     simp only [mem_map_equiv] at hb
     have := P.supIndep hu hb (by simp [hbu]) (map_rel e.symm hx) ?_
     · rw [← e.symm.map_bot] at this
@@ -619,7 +620,8 @@ lemma card_mod_card_parts_le : s.card % P.parts.card ≤ P.parts.card := by
   rcases P.parts.card.eq_zero_or_pos with h | h
   · have h' := h
     rw [Finset.card_eq_zero, parts_eq_empty_iff, bot_eq_empty, ← Finset.card_eq_zero] at h'
-    rw [h, h']; norm_num
+    rw [h, h']
+    exact Nat.mod_le _ _
   · exact (Nat.mod_lt _ h).le
 
 variable [Fintype α]
@@ -643,7 +645,7 @@ def ofSetoid (s : Setoid α) [DecidableRel s.r] : Finpartition (univ : Finset α
            fun r2 => s.trans (s.trans d1.2 (s.symm d2.2)) r2⟩
   supParts := by
     ext a
-    simp only [sup_image, Function.comp.left_id, mem_univ, mem_sup, mem_filter, true_and,
+    simp only [sup_image, Function.id_comp, mem_univ, mem_sup, mem_filter, true_and,
       iff_true]
     use a; exact s.refl a
   not_bot_mem := by

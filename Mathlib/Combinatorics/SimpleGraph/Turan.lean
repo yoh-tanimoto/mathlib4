@@ -505,7 +505,7 @@ lemma restrictSubtype_compl_edgeFinset_card {m} (H : SimpleGraph (Fin (m + r)))
   let I := S.overFinIso Sc
   have card_eq : S'.edgeFinset.card = S.edgeFinset.card := by
     apply card_eq_of_equiv; simp only [Set.mem_toFinset]; exact I.mapEdgeSet.symm
-  exact card_eq ▸ ih.2 S' ((H.restrictSubtype_cliqueFree itm K).map I.symm)
+  exact card_eq ▸ ih.2 S' ((H.restrictSubtype_cliqueFree itm K).comap I.symm)
 
 open Classical in
 lemma sum_card_filter_adj_le_sub_mul {m} (H : SimpleGraph (Fin (m + r)))
@@ -573,14 +573,14 @@ theorem edgeFinset_card_eq_of_iso {β : Type*} [Fintype β] {H : SimpleGraph β}
 Any graph isomorphic to `turanGraph n r` is itself Turán-maximal. -/
 theorem isTuranMaximal_of_iso (iso : G ≃g turanGraph n r) : G.IsTuranMaximal r := by
   obtain ⟨p1, p2⟩ := isTuranMaximal_turanGraph (n := n) hr
-  have cV := iso.card_eq_of_iso
+  have cV := iso.card_eq
   rw [Fintype.card_fin] at cV
   constructor
-  · exact p1.map iso
+  · exact p1.comap iso
   · intro H _ cf
     let tr := H.overFinIso cV
     rw [edgeFinset_card_eq_of_iso iso, edgeFinset_card_eq_of_iso tr]
-    convert p2 (H.overFin cV) (cf.map tr.symm)
+    convert p2 (H.overFin cV) (cf.comap tr.symm)
 
 end Reverse
 
