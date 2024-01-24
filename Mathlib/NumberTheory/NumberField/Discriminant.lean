@@ -222,6 +222,7 @@ open scoped Polynomial IntermediateField BigOperators
 
 variable (A : Type*) [Field A] [CharZero A]
 
+-- Generalize and move elsewhere? Probably not
 theorem aux1 (S : Set {F : IntermediateField ℚ A // FiniteDimensional ℚ F}) {T : Set A}
     (hT : T.Finite) (h : ∀ F ∈ S, ∃ a ∈ T, F = ℚ⟮a⟯) :
     S.Finite := by
@@ -283,11 +284,17 @@ theorem rank_le_rankOfDiscrBdd :
   · apply le_max_of_le_left
     exact h
 
-theorem minkowskiBound_lt_mul_boundOfDiscBdd :
-    minkowskiBound K 1 < (convexBodyLTFactor K) * boundOfDiscBdd N := sorry
-
-theorem minkowskiBound_lt_mul_boundOfDiscBdd' :
-    minkowskiBound K 1 < (convexBodyLT'Factor K) * boundOfDiscBdd' N := sorry
+theorem minkowskiBound_le_of_disc_bdd :
+    minkowskiBound K 1 ≤ sqrt N * (2:ℝ≥0∞) ^ rankOfDiscrBdd N := by
+  rw [minkowskiBound, volume_fundamentalDomain_fractionalIdealLatticeBasis, Units.val_one,
+    FractionalIdeal.absNorm_one, Rat.cast_one, ENNReal.ofReal_one, one_mul, mixedEmbedding.finrank,
+    volume_fundamentalDomain_latticeBasis, show sqrt N = (1:ℝ≥0∞) * sqrt N by rw [one_mul]]
+  gcongr
+  · exact pow_le_one _ (by positivity) (by norm_num)
+  · rw [sqrt_le_sqrt_iff, ← NNReal.coe_le_coe, coe_nnnorm, Int.norm_eq_abs]
+    exact Int.cast_le.mpr hK
+  · exact one_le_two
+  · exact rank_le_rankOfDiscrBdd hK
 
 -- set_option trace.profiler true in
 open Polynomial in
@@ -296,6 +303,7 @@ theorem main : {F : { F : IntermediateField ℚ A // FiniteDimensional ℚ F } |
       |discr F| ≤ N }.Finite := by
   -- The bound on the coefficients of the polynomials
   let D := rankOfDiscrBdd N
+  
   -- The bound on the coefficients of the generating polynomials
   let C := Nat.ceil ((max (Real.sqrt (1 + (Bmax N) ^ 2)) 1) ^ D *
       Nat.choose D (D / 2))

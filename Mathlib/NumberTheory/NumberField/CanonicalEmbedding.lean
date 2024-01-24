@@ -558,8 +558,12 @@ instance : NoAtoms (volume : Measure (E K)) := by
 noncomputable abbrev convexBodyLTFactor : ℝ≥0 :=
   (2:ℝ≥0) ^ NrRealPlaces K * NNReal.pi ^ NrComplexPlaces K
 
-theorem convexBodyLTFactor_ne_zero : (convexBodyLTFactor K) ≠ 0 :=
+theorem convexBodyLTFactor_ne_zero : convexBodyLTFactor K ≠ 0 :=
   mul_ne_zero (pow_ne_zero _ two_ne_zero) (pow_ne_zero _ pi_ne_zero)
+
+theorem one_le_convexBodyLTFactor : 1 ≤ convexBodyLTFactor K :=
+  one_le_mul₀ (one_le_pow_of_one_le one_le_two _)
+    (one_le_pow_of_one_le (le_trans one_le_two Real.two_le_pi) _)
 
 /-- The volume of `(ConvexBodyLt K f)` where `convexBodyLT K f` is the set of points `x`
 such that `‖x w‖ < f w` for all infinite places `w`. -/
@@ -624,37 +628,24 @@ abbrev convexBodyLT' : Set (E K) :=
   (Set.univ.pi (fun w : { w : InfinitePlace K // IsComplex w } ↦
     if w = w₀ then {x | |x.re| < 1 ∧ |x.im| < (f w : ℝ) ^ 2} else ball 0 (f w)))
 
--- FIXME. fix this proof
 theorem convexBodyLT'_mem {x : K} :
     mixedEmbedding K x ∈ (convexBodyLT' K f w₀) ↔
       (∀ w : InfinitePlace K, w ≠ w₀ → w x < f w) ∧
       |(w₀.val.embedding x).re| < 1 ∧ |(w₀.val.embedding x).im| < (f w₀: ℝ) ^ 2 := by
-  simp_rw [mixedEmbedding, RingHom.prod_apply, Set.mem_prod, Set.mem_pi,
-    Set.mem_univ, forall_true_left, mem_ball_zero_iff, Pi.ringHom_apply, ← Complex.norm_real,
-    embedding_of_isReal_apply, Subtype.forall]
-  refine ⟨?_, ?_⟩
-  · rintro ⟨h₁, h₂⟩
-    refine ⟨?_, ?_⟩
-    · intro w h_ne
-      by_cases hw : IsReal w
-      · exact norm_embedding_eq w _ ▸ h₁ w hw
-      · specialize h₂ w (not_isReal_iff_isComplex.mp hw)
-        rwa [if_neg, mem_ball_zero_iff, norm_embedding_eq] at h₂
-        rwa [Subtype.ext_iff]
-    · specialize h₂ w₀.val w₀.prop
-      simp_rw [if_true, Set.mem_setOf_eq] at h₂
-      exact h₂
-  · rintro ⟨h₁, h₂⟩
-    refine ⟨?_, ?_⟩
-    · intro w hw
-      specialize h₁ w (ne_of_isReal_isComplex hw w₀.prop)
-      rwa [norm_embedding_eq]
-    · intro w hw
-      by_cases h_ne : w = w₀
-      · simpa [h_ne]
-      · rw [if_neg, mem_ball_zero_iff, norm_embedding_eq]
-        exact h₁ w h_ne
-        rwa [Subtype.ext_iff]
+  simp_rw [mixedEmbedding, RingHom.prod_apply, Set.mem_prod, Set.mem_pi, Set.mem_univ,
+    forall_true_left, Pi.ringHom_apply, apply_ite, mem_ball_zero_iff, ← Complex.norm_real,
+    embedding_of_isReal_apply, norm_embedding_eq, Subtype.forall, Set.mem_setOf_eq]
+  refine ⟨fun ⟨h₁, h₂⟩ ↦ ⟨fun w h_ne ↦ ?_, ?_⟩, fun ⟨h₁, h₂⟩ ↦ ⟨fun w hw ↦ ?_, fun w hw ↦ ?_⟩⟩
+  · by_cases hw : IsReal w
+    · exact norm_embedding_eq w _ ▸ h₁ w hw
+    · specialize h₂ w (not_isReal_iff_isComplex.mp hw)
+      rwa [if_neg (by exact Subtype.ne_of_val_ne h_ne)] at h₂
+  · simpa [if_true] using h₂ w₀.val w₀.prop
+  · exact h₁ w (ne_of_isReal_isComplex hw w₀.prop)
+  · by_cases h_ne : w = w₀
+    · simpa [h_ne]
+    · rw [if_neg (by exact Subtype.ne_of_val_ne h_ne)]
+      exact h₁ w h_ne
 
 theorem convexBodyLT'_symmetric (x : E K) (hx : x ∈ (convexBodyLT' K f w₀)) :
     -x ∈ (convexBodyLT' K f w₀) := by
@@ -682,8 +673,12 @@ variable [NumberField K]
 noncomputable abbrev convexBodyLT'Factor : ℝ≥0 :=
   (2:ℝ≥0) ^ (NrRealPlaces K + 2) * NNReal.pi ^ (NrComplexPlaces K - 1)
 
-theorem convexBodyLT'Factor_ne_zero : (convexBodyLT'Factor K) ≠ 0 :=
+theorem convexBodyLT'Factor_ne_zero : convexBodyLT'Factor K ≠ 0 :=
   mul_ne_zero (pow_ne_zero _ two_ne_zero) (pow_ne_zero _ pi_ne_zero)
+
+theorem one_le_convexBodyLT'Factor : 1 ≤ convexBodyLT'Factor K :=
+  one_le_mul₀ (one_le_pow_of_one_le one_le_two _)
+    (one_le_pow_of_one_le (le_trans one_le_two Real.two_le_pi) _)
 
 theorem convexBodyLT'_volume :
     volume (convexBodyLT' K f w₀) = (convexBodyLT'Factor K) * ∏ w, (f w) ^ (mult w) := by
