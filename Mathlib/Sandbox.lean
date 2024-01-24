@@ -1,16 +1,21 @@
 import Mathlib.MeasureTheory.Constructions.BorelSpace.Basic
 import Mathlib.NumberTheory.NumberField.Embeddings
 
-section Measurable
+section IntermediateField
 
-variable {R : Type*} [Lattice R] [Group R] [MeasurableSpace R] [MeasurableSup₂ R]
-  [MeasurableInv R]
 
-@[to_additive (attr := measurability)]
-theorem measurable_mabs : Measurable fun x : R ↦ mabs x :=
-  Measurable.sup measurable_id' measurable_inv
+theorem IntermediateField.map_injective {K L L' : Type*} [Field K] [Field L] [Field L']
+    [Algebra K L] [Algebra K L'] {f : L →ₐ[K] L'} (hf : Function.Injective f) :
+    Function.Injective (IntermediateField.map f) := by
+  intro _ _ h
+  rwa [← toSubalgebra_injective.eq_iff, toSubalgebra_map, toSubalgebra_map,
+    (Subalgebra.map_injective hf).eq_iff, toSubalgebra_injective.eq_iff] at h
 
-end Measurable
+theorem IntermediateField.lift_injective {K L : Type*} [Field K] [Field L] [Algebra K L]
+    (F : IntermediateField K L) : Function.Injective F.lift :=
+  IntermediateField.map_injective Subtype.val_injective
+
+end IntermediateField
 
 section InfinitePlace
 
@@ -55,7 +60,7 @@ theorem RingHom.toRatAlgHom_apply {R S : Type*} [Ring R] [Ring S] [Algebra ℚ R
 
 end Algebra.Hom
 
-
+#exit
 
 section Volume
 
