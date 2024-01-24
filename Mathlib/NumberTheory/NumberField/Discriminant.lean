@@ -222,47 +222,72 @@ open scoped Polynomial IntermediateField BigOperators
 
 variable (A : Type*) [Field A] [CharZero A]
 
--- Why not finite of surjective?
 theorem aux1 (S : Set {F : IntermediateField ℚ A // FiniteDimensional ℚ F}) {T : Set A}
     (hT : T.Finite) (h : ∀ F ∈ S, ∃ a ∈ T, F = ℚ⟮a⟯) :
     S.Finite := by
   rw [← Set.finite_coe_iff] at hT
-  refine Set.finite_coe_iff.mp <| Finite.of_injective (β := T) (fun ⟨F, hF⟩ ↦ ?_) ?_
-  · specialize h F hF
-    exact ⟨h.choose, h.choose_spec.1⟩
-  · intro F₁ F₂ h_eq
-    rw [Subtype.ext_iff_val, Subtype.ext_iff_val]
-    convert congr_arg (ℚ⟮·⟯) (Subtype.mk_eq_mk.mp h_eq)
-    all_goals exact (h _ (Subtype.mem _)).choose_spec.2
+  refine Set.finite_coe_iff.mp <| Finite.of_injective
+    (fun ⟨F, hF⟩ ↦ (⟨(h F hF).choose, (h F hF).choose_spec.1⟩ : T)) (fun _ _ h_eq ↦ ?_)
+  rw [Subtype.ext_iff_val, Subtype.ext_iff_val]
+  convert congr_arg (ℚ⟮·⟯) (Subtype.mk_eq_mk.mp h_eq)
+  all_goals exact (h _ (Subtype.mem _)).choose_spec.2
 
-variable {N : ℕ} (hK : |discr K| ≤ N)
+variable (N : ℕ) (hK : |discr K| ≤ N)
 
-theorem rank_le_of_discr_bdd :
-    finrank ℚ K ≤  Nat.ceil (max 1 (Real.log ((9 / 4 : ℝ) * N) / Real.log (3 * π / 4))) := by
-  have := hK
-  sorry
-  -- by_cases hN : 1 ≤ N
-  -- · obtain h | h := lt_or_le 1 (finrank ℚ K)
-  --   · refine le_trans ?_ (le_max_right _ _)
-  --     rw [_root_.le_div_iff', ← Real.exp_le_exp, ← Real.rpow_def_of_pos (by positivity),
-  --       Real.exp_log (by positivity), ← inv_mul_le_iff (by positivity), inv_div, Real.rpow_nat_cast]
-  --     · exact le_trans (abs_discr_ge h) (Int.cast_le (α := ℝ).mpr hK)
-  --     · sorry
-  --   · have : finrank ℚ K = 1 := sorry
-  --     have : K ≃+* ℚ := by
-  --       let b := (finBasisOfFinrankEq ℚ K this).repr
-  --       sorry
-  --     sorry
-  -- · sorry
+noncomputable abbrev rankOfDiscrBdd : ℕ :=
+  max 1 (Nat.floor ((Real.log ((9 / 4 : ℝ) * N) / Real.log (3 * π / 4))))
 
-variable (N) in
-def Bmax : ℝ≥0 := N
+abbrev boundOfDiscBdd : ℝ≥0 := N
 
-theorem minkowskiBound_lt_Bmax (hK : |discr K| ≤ N) :
-    minkowskiBound K 1 < (convexBodyLTFactor K) * Bmax N := sorry
+abbrev boundOfDiscBdd' : ℝ≥0 := N
 
-theorem minkowskiBound_lt'_Bmax (hK : |discr K| ≤ N) :
-    minkowskiBound K 1 < (convexBodyLT'Factor K) * Bmax N := sorry
+variable {N}
+
+theorem rank_le_rankOfDiscrBdd :
+    finrank ℚ K ≤ rankOfDiscrBdd N := by
+  have h₁ : N ≠ 0 := by
+    intro h
+    rw [h, Nat.cast_zero, abs_nonpos_iff] at hK
+    exact discr_ne_zero K hK
+  have h₂ : 1 < 3 * π / 4 := by
+    rw [_root_.lt_div_iff (by positivity), ← _root_.div_lt_iff' (by positivity), one_mul]
+    linarith [Real.pi_gt_three]
+  obtain h | h := lt_or_le 1 (finrank ℚ K)
+  · apply le_max_of_le_right
+    rw [Nat.le_floor_iff]
+    · have := le_trans (abs_discr_ge h) (Int.cast_le.mpr hK)
+      contrapose! this
+      rw [← Real.rpow_nat_cast]
+      have := Real.rpow_lt_rpow_of_exponent_lt (x := (3 * π / 4)) ?_ this
+      · have := mul_lt_mul_of_pos_left this (by positivity : (0:ℝ) < 4 / 9)
+        refine lt_of_le_of_lt ?_ this
+        rw [Real.log_div_log, Real.rpow_logb, ← mul_assoc]
+        have : (4:ℝ) / 9 * (9 / 4) = 1 := by norm_num
+        rw [this]
+        rw [one_mul]
+        exact le_rfl
+        positivity
+        exact ne_of_gt h₂
+        positivity
+      · exact h₂
+    · refine div_nonneg ?_ ?_
+      · refine Real.log_nonneg ?_
+        rw [mul_comm, ← mul_div_assoc, _root_.le_div_iff (by positivity), one_mul,
+          ← _root_.div_le_iff (by positivity)]
+        have : (1:ℝ) ≤ N := by
+          rw [Nat.one_le_cast]
+          exact Nat.one_le_iff_ne_zero.mpr h₁
+        linarith
+      · refine Real.log_nonneg ?_
+        exact le_of_lt h₂
+  · apply le_max_of_le_left
+    exact h
+
+theorem minkowskiBound_lt_mul_boundOfDiscBdd :
+    minkowskiBound K 1 < (convexBodyLTFactor K) * boundOfDiscBdd N := sorry
+
+theorem minkowskiBound_lt_mul_boundOfDiscBdd' :
+    minkowskiBound K 1 < (convexBodyLT'Factor K) * boundOfDiscBdd' N := sorry
 
 -- set_option trace.profiler true in
 open Polynomial in
@@ -270,7 +295,7 @@ theorem main : {F : { F : IntermediateField ℚ A // FiniteDimensional ℚ F } |
       haveI :  NumberField F := @NumberField.mk _ _ inferInstance F.prop
       |discr F| ≤ N }.Finite := by
   -- The bound on the coefficients of the polynomials
-  let D := Nat.ceil (max 1 (Real.log ((9 / 4 : ℝ) * N) / Real.log (3 * π / 4)))
+  let D := rankOfDiscrBdd N
   -- The bound on the coefficients of the generating polynomials
   let C := Nat.ceil ((max (Real.sqrt (1 + (Bmax N) ^ 2)) 1) ^ D *
       Nat.choose D (D / 2))
@@ -288,7 +313,7 @@ theorem main : {F : { F : IntermediateField ℚ A // FiniteDimensional ℚ F } |
     · rw [Field.primitive_element_iff_minpoly_natDegree_eq, h_minpoly,
             (minpoly.monic ha).natDegree_map] at ha₁
       rw [ha₁]
-      exact rank_le_of_discr_bdd hF₂
+      exact rank_le_rankOfDiscrBdd hF₂
     · rw [Set.mem_Icc, ← abs_le, ← @Int.cast_le ℝ]
       refine (Eq.trans_le ?_ <| Embeddings.coeff_bdd_of_norm_le
           ((le_iff_le a _).mp (fun w ↦ le_of_lt (ha₂ w))) i).trans ?_
@@ -296,11 +321,11 @@ theorem main : {F : { F : IntermediateField ℚ A // FiniteDimensional ℚ F } |
       · refine le_trans ?_ (Nat.le_ceil _)
         norm_num
         gcongr
-        · refine le_trans (pow_le_pow_right (le_max_right _ 1) (rank_le_of_discr_bdd hF₂)) ?_
+        · refine le_trans (pow_le_pow_right (le_max_right _ 1) (rank_le_rankOfDiscrBdd hF₂)) ?_
           refine pow_le_pow_left (by positivity) (max_le_max_right _ ?_) _
           rw [Real.le_sqrt (by positivity) (by positivity)]
           norm_num
-        · exact (Nat.choose_le_choose _ (rank_le_of_discr_bdd hF₂)).trans (Nat.choose_le_middle _ _)
+        · exact (Nat.choose_le_choose _ (rank_le_rankOfDiscrBdd hF₂)).trans (Nat.choose_le_middle _ _)
     -- make this a local lemma?
     · refine mem_rootSet.mpr ⟨minpoly.ne_zero ha, ?_⟩
       rw [show (a:A) = algebraMap F A a by rfl, aeval_algebraMap_eq_zero_iff]
@@ -315,7 +340,7 @@ theorem main : {F : { F : IntermediateField ℚ A // FiniteDimensional ℚ F } |
     · rw [Field.primitive_element_iff_minpoly_natDegree_eq, h_minpoly,
           (minpoly.monic ha).natDegree_map] at ha₁
       rw [ha₁]
-      exact rank_le_of_discr_bdd hF₂
+      exact rank_le_rankOfDiscrBdd hF₂
     · rw [Set.mem_Icc, ← abs_le, ← @Int.cast_le ℝ]
       refine (Eq.trans_le ?_ <| Embeddings.coeff_bdd_of_norm_le
         ((le_iff_le a _).mp (fun w ↦ le_of_lt (ha₂ w))) i).trans ?_
@@ -324,8 +349,9 @@ theorem main : {F : { F : IntermediateField ℚ A // FiniteDimensional ℚ F } |
         norm_num
         gcongr
         · exact le_max_right _ _
-        · exact rank_le_of_discr_bdd hF₂
-        · exact (Nat.choose_le_choose _ (rank_le_of_discr_bdd hF₂)).trans (Nat.choose_le_middle _ _)
+        · exact rank_le_rankOfDiscrBdd hF₂
+        · exact (Nat.choose_le_choose _ (rank_le_rankOfDiscrBdd hF₂)).trans
+            (Nat.choose_le_middle _ _)
     · refine mem_rootSet.mpr ⟨minpoly.ne_zero ha, ?_⟩
       rw [show (a:A) = algebraMap F A a by rfl, aeval_algebraMap_eq_zero_iff]
       exact minpoly.aeval ℤ a

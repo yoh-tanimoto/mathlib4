@@ -3,7 +3,6 @@ import Mathlib.NumberTheory.NumberField.Embeddings
 
 section IntermediateField
 
-
 theorem IntermediateField.map_injective {K L L' : Type*} [Field K] [Field L] [Field L']
     [Algebra K L] [Algebra K L'] {f : L →ₐ[K] L'} (hf : Function.Injective f) :
     Function.Injective (IntermediateField.map f) := by
