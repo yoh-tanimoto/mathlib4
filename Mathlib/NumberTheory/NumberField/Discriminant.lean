@@ -32,7 +32,7 @@ number field, discriminant
 
 namespace NumberField
 
-open Classical NumberField Matrix NumberField.InfinitePlace FiniteDimensional
+open Classical NumberField Matrix NumberField.InfinitePlace FiniteDimensional Polynomial
 
 open scoped Real nonZeroDivisors
 
@@ -216,9 +216,9 @@ theorem abs_discr_gt_two (h : 1 < finrank ℚ K) : 2 < |discr K| := by
     show (72:ℝ) / 9 = 8 by norm_num]
   linarith [h₂]
 
-section Hermite
+namespace hermiteTheorem
 
-open scoped Polynomial IntermediateField BigOperators
+open scoped IntermediateField BigOperators
 
 variable (A : Type*) [Field A] [CharZero A]
 
@@ -238,9 +238,7 @@ variable (N : ℕ) (hK : |discr K| ≤ N)
 noncomputable abbrev rankOfDiscrBdd : ℕ :=
   max 1 (Nat.floor ((Real.log ((9 / 4 : ℝ) * N) / Real.log (3 * π / 4))))
 
-abbrev boundOfDiscBdd : ℝ≥0 := N
-
-abbrev boundOfDiscBdd' : ℝ≥0 := N
+noncomputable abbrev boundOfDiscBdd : ℝ≥0 := sqrt N * (2:ℝ≥0) ^ rankOfDiscrBdd N + 1
 
 variable {N}
 
@@ -284,11 +282,13 @@ theorem rank_le_rankOfDiscrBdd :
   · apply le_max_of_le_left
     exact h
 
-theorem minkowskiBound_le_of_disc_bdd :
-    minkowskiBound K 1 ≤ sqrt N * (2:ℝ≥0∞) ^ rankOfDiscrBdd N := by
-  rw [minkowskiBound, volume_fundamentalDomain_fractionalIdealLatticeBasis, Units.val_one,
-    FractionalIdeal.absNorm_one, Rat.cast_one, ENNReal.ofReal_one, one_mul, mixedEmbedding.finrank,
-    volume_fundamentalDomain_latticeBasis, show sqrt N = (1:ℝ≥0∞) * sqrt N by rw [one_mul]]
+theorem minkowskiBound_lt_boundOfDiscBdd : minkowskiBound K 1 < boundOfDiscBdd N := by
+  have : boundOfDiscBdd N - 1 < boundOfDiscBdd N := by norm_num
+  refine lt_of_le_of_lt ?_ (coe_lt_coe.mpr this)
+  rw [minkowskiBound, volume_fundamentalDomain_fractionalIdealLatticeBasis, boundOfDiscBdd,
+    add_tsub_cancel_right, Units.val_one, FractionalIdeal.absNorm_one, Rat.cast_one,
+    ENNReal.ofReal_one, one_mul, mixedEmbedding.finrank, volume_fundamentalDomain_latticeBasis,
+    coe_mul, ENNReal.coe_pow, coe_ofNat, show sqrt N = (1:ℝ≥0∞) * sqrt N by rw [one_mul]]
   gcongr
   · exact pow_le_one _ (by positivity) (by norm_num)
   · rw [sqrt_le_sqrt_iff, ← NNReal.coe_le_coe, coe_nnnorm, Int.norm_eq_abs]
@@ -296,24 +296,52 @@ theorem minkowskiBound_le_of_disc_bdd :
   · exact one_le_two
   · exact rank_le_rankOfDiscrBdd hK
 
--- set_option trace.profiler true in
-open Polynomial in
+theorem minkowskiBound_lt_convexBodyLTFactor_mul_of_disc_bdd :
+    minkowskiBound K 1 < convexBodyLTFactor K * ↑(sqrt N * (2:ℝ≥0) ^ rankOfDiscrBdd N + 1) := by
+  suffices minkowskiBound K 1 ≤ sqrt N * (2:ℝ≥0) ^ rankOfDiscrBdd N by sorry
+  rw [minkowskiBound, volume_fundamentalDomain_fractionalIdealLatticeBasis, Units.val_one,
+    FractionalIdeal.absNorm_one, Rat.cast_one, ENNReal.ofReal_one, one_mul, mixedEmbedding.finrank,
+    volume_fundamentalDomain_latticeBasis, coe_ofNat, show sqrt N = (1:ℝ≥0∞) * sqrt N by
+    rw [one_mul]]
+  gcongr
+  · exact pow_le_one _ (by positivity) (by norm_num)
+  · rw [sqrt_le_sqrt_iff, ← NNReal.coe_le_coe, coe_nnnorm, Int.norm_eq_abs]
+    exact Int.cast_le.mpr hK
+  · exact one_le_two
+  · exact rank_le_rankOfDiscrBdd hK
+
+theorem minkowskiBound_lt_convexBodyLT'Factor_mul_of_disc_bdd :
+    minkowskiBound K 1 < convexBodyLT'Factor K * ↑(sqrt N * (2:ℝ≥0) ^ rankOfDiscrBdd N + 1) := by
+  suffices minkowskiBound K 1 ≤ sqrt N * (2:ℝ≥0) ^ rankOfDiscrBdd N by sorry
+  rw [minkowskiBound, volume_fundamentalDomain_fractionalIdealLatticeBasis, Units.val_one,
+    FractionalIdeal.absNorm_one, Rat.cast_one, ENNReal.ofReal_one, one_mul, mixedEmbedding.finrank,
+    volume_fundamentalDomain_latticeBasis, coe_ofNat, show sqrt N = (1:ℝ≥0∞) * sqrt N by
+    rw [one_mul]]
+  gcongr
+  · exact pow_le_one _ (by positivity) (by norm_num)
+  · rw [sqrt_le_sqrt_iff, ← NNReal.coe_le_coe, coe_nnnorm, Int.norm_eq_abs]
+    exact Int.cast_le.mpr hK
+  · exact one_le_two
+  · exact rank_le_rankOfDiscrBdd hK
+
+set_option maxHeartbeats 300000 in
 theorem main : {F : { F : IntermediateField ℚ A // FiniteDimensional ℚ F } |
       haveI :  NumberField F := @NumberField.mk _ _ inferInstance F.prop
       |discr F| ≤ N }.Finite := by
   -- The bound on the coefficients of the polynomials
   let D := rankOfDiscrBdd N
-  
+  -- The bound to use in `exists_primitive_element_lt`
+  let B := sqrt N * (2:ℝ≥0) ^ rankOfDiscrBdd N + 1
   -- The bound on the coefficients of the generating polynomials
-  let C := Nat.ceil ((max (Real.sqrt (1 + (Bmax N) ^ 2)) 1) ^ D *
-      Nat.choose D (D / 2))
-  refine aux1 A _ (bUnion_roots_finite (algebraMap ℤ A) D (Set.finite_Icc (-C : ℤ) C)) ?_
+  let C := Nat.ceil ((max (Real.sqrt (1 + B ^ 2)) 1) ^ D *  Nat.choose D (D / 2))
+  refine aux1 A _ (bUnion_roots_finite (algebraMap ℤ A) D
+    (Set.finite_Icc (-C : ℤ) C)) ?_
   rintro ⟨F, hF₁⟩ hF₂
   haveI : NumberField F := @NumberField.mk _ _ inferInstance hF₁
   obtain ⟨w⟩ := (inferInstance : Nonempty (InfinitePlace F))
   simp_rw [Set.mem_iUnion]
   by_cases hw : IsReal w
-  · have := minkowskiBound_lt_Bmax hF₂
+  · have := minkowskiBound_lt_convexBodyLTFactor_mul_of_disc_bdd hF₂
     obtain ⟨a, ha, ha₁, ha₂⟩ := exists_primitive_element_lt_of_isReal F hw this
     have h_minpoly := minpoly.isIntegrallyClosed_eq_field_fractions' ℚ ha
     refine ⟨a, ⟨⟨minpoly ℤ a, ⟨?_, fun i ↦ ?_⟩, ?_⟩, ?_⟩⟩
@@ -327,20 +355,21 @@ theorem main : {F : { F : IntermediateField ℚ A // FiniteDimensional ℚ F } |
           ((le_iff_le a _).mp (fun w ↦ le_of_lt (ha₂ w))) i).trans ?_
       · rw [h_minpoly, coeff_map, eq_intCast, Int.norm_cast_rat, Int.norm_eq_abs, Int.cast_abs]
       · refine le_trans ?_ (Nat.le_ceil _)
-        norm_num
+        rw [show max ↑(max (B:ℝ≥0) 1) (1:ℝ) = max (B:ℝ) 1 by norm_num]
         gcongr
         · refine le_trans (pow_le_pow_right (le_max_right _ 1) (rank_le_rankOfDiscrBdd hF₂)) ?_
           refine pow_le_pow_left (by positivity) (max_le_max_right _ ?_) _
           rw [Real.le_sqrt (by positivity) (by positivity)]
           norm_num
-        · exact (Nat.choose_le_choose _ (rank_le_rankOfDiscrBdd hF₂)).trans (Nat.choose_le_middle _ _)
+        · exact (Nat.choose_le_choose _ (rank_le_rankOfDiscrBdd hF₂)).trans
+            (Nat.choose_le_middle _ _)
     -- make this a local lemma?
     · refine mem_rootSet.mpr ⟨minpoly.ne_zero ha, ?_⟩
       rw [show (a:A) = algebraMap F A a by rfl, aeval_algebraMap_eq_zero_iff]
       exact minpoly.aeval ℤ a
     · rw [← (IntermediateField.lift_injective _).eq_iff, eq_comm] at ha₁
       convert ha₁ <;> simp
-  · have := minkowskiBound_lt'_Bmax hF₂
+  · have := minkowskiBound_lt_convexBodyLT'Factor_mul_of_disc_bdd hF₂
     rw [not_isReal_iff_isComplex] at hw
     obtain ⟨a, ha, ha₁, ha₂⟩ := exists_primitive_element_lt_of_isComplex F hw this
     have h_minpoly := minpoly.isIntegrallyClosed_eq_field_fractions' ℚ ha
@@ -366,7 +395,7 @@ theorem main : {F : { F : IntermediateField ℚ A // FiniteDimensional ℚ F } |
     · rw [← (IntermediateField.lift_injective _).eq_iff, eq_comm] at ha₁
       convert ha₁ <;> simp
 
-end Hermite
+end hermiteTheorem
 
 end NumberField
 
