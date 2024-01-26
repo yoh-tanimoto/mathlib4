@@ -313,18 +313,21 @@ theorem natDegree_le_rankOfDiscrBdd {a : K} (ha : a ∈ 𝓞 K) (h : ℚ⟮a⟯ 
 theorem calc1 (B : ℝ≥0) {a b : ℕ} (h : a ≤ b) :
     max (↑(max B 1)) (1:ℝ) ^ a * Nat.choose a (a / 2) ≤
       ⌈max B 1 ^ b * (Nat.choose b (b / 2))⌉₊ := by
-  sorry
-  -- refine le_trans ?_ (Nat.le_ceil _)
-  -- rw [show max ↑(max (B:ℝ≥0) 1) (1:ℝ) = max (B:ℝ) 1 by norm_num]
-  -- gcongr
-  -- · refine le_trans (pow_le_pow_right (le_max_right _ 1) (rank_le_rankOfDiscrBdd hF₂)) ?_
-  --   refine pow_le_pow_left (by positivity) (max_le_max_right _ ?_) _
-  --   rw [Real.le_sqrt (by positivity) (by positivity)]
-  --   norm_num
-  -- · exact (Nat.choose_le_choose _ (rank_le_rankOfDiscrBdd hF₂)).trans
-  --     (Nat.choose_le_middle _ _)
+  refine le_trans ?_ (Nat.le_ceil _)
+  rw [show max ↑(max (B:ℝ≥0) 1) (1:ℝ) = max (B:ℝ) 1 by simp, val_eq_coe, NNReal.coe_mul,
+    NNReal.coe_pow, NNReal.coe_max, NNReal.coe_one]
+  gcongr
+  · exact le_max_right _ 1
+  · rw [NNReal.coe_nat_cast, Nat.cast_le]
+    exact (Nat.choose_le_choose _ h).trans (Nat.choose_le_middle _ _)
 
-#exit
+example (M : ℝ≥0∞) (C B : ℝ≥0) (hC : 1 ≤ C) (hB : M < B) : M < C * B := by
+  sorry
+
+example : minkowskiBound K 1 < convexBodyLTFactor K * boundOfDiscBdd N := by
+  have := minkowskiBound_lt_boundOfDiscBdd hK
+
+  sorry
 
 theorem main1 : {K : { F : IntermediateField ℚ A // FiniteDimensional ℚ F} |
       haveI :  NumberField K := @NumberField.mk _ _ inferInstance K.prop
@@ -358,6 +361,7 @@ theorem main1 : {K : { F : IntermediateField ℚ A // FiniteDimensional ℚ F} |
   convert (mul_le_mul_right₀ (by positivity : boundOfDiscBdd N ≠ 0)).mpr
     (one_le_convexBodyLTFactor K)
   rw [one_mul]
+  sorry
 
 #exit
 
