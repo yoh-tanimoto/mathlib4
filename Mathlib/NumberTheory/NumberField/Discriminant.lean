@@ -32,7 +32,7 @@ number field, discriminant
 
 namespace NumberField
 
-open Classical NumberField Matrix NumberField.InfinitePlace FiniteDimensional Polynomial
+open Classical NumberField Matrix NumberField.InfinitePlace FiniteDimensional
 
 open scoped Real nonZeroDivisors
 
@@ -216,14 +216,18 @@ theorem abs_discr_gt_two (h : 1 < finrank ℚ K) : 2 < |discr K| := by
     show (72:ℝ) / 9 = 8 by norm_num]
   linarith [h₂]
 
+-- Some texts
 namespace hermiteTheorem
+
+open Polynomial
 
 open scoped IntermediateField BigOperators
 
 variable (A : Type*) [Field A] [CharZero A]
 
--- Generalize and move elsewhere? Probably not
-theorem aux1 (S : Set {F : IntermediateField ℚ A // FiniteDimensional ℚ F}) {T : Set A}
+-- Generalize to get rid of subsets and move elsewhere? Probably not
+theorem aux1 {p : IntermediateField ℚ A → Prop}
+    (S : Set {F : IntermediateField ℚ A // p F}) {T : Set A}
     (hT : T.Finite) (h : ∀ F ∈ S, ∃ a ∈ T, F = ℚ⟮a⟯) :
     S.Finite := by
   rw [← Set.finite_coe_iff] at hT
@@ -233,55 +237,59 @@ theorem aux1 (S : Set {F : IntermediateField ℚ A // FiniteDimensional ℚ F}) 
   convert congr_arg (ℚ⟮·⟯) (Subtype.mk_eq_mk.mp h_eq)
   all_goals exact (h _ (Subtype.mem _)).choose_spec.2
 
-variable (N : ℕ) (hK : |discr K| ≤ N)
+theorem aux11 {S : Set (IntermediateField ℚ A)}
+    {T : Set A}
+    (hT : T.Finite) (h : ∀ F ∈ S, ∃ a ∈ T, F = ℚ⟮a⟯) :
+    S.Finite := by
+  rw [← Set.finite_coe_iff] at hT
+  refine Set.finite_coe_iff.mp <| Finite.of_injective (β := T) ?_ ?_
+  · intro ⟨F, hF⟩
+    exact (⟨((h F) hF).choose, ((h F) hF).choose_spec.1⟩ : T)
+  · intro _ _ h_eq
+    rw [Subtype.ext_iff]
+    convert congr_arg (ℚ⟮·⟯) (Subtype.mk_eq_mk.mp h_eq)
+    all_goals exact (h _ (Subtype.mem _)).choose_spec.2
 
+variable (N : ℕ)
+
+/-- The upper bound of the degree of a number field `K` with `|discr K| ≤ N`;
+see `rank_le_rankOfDiscrBdd`. -/
 noncomputable abbrev rankOfDiscrBdd : ℕ :=
   max 1 (Nat.floor ((Real.log ((9 / 4 : ℝ) * N) / Real.log (3 * π / 4))))
 
+/-- The strict upper bound of the Minkowski bound of a number field `K` with `|discr K| ≤ N`;
+see `minkowskiBound_lt_boundOfDiscBdd`. -/
 noncomputable abbrev boundOfDiscBdd : ℝ≥0 := sqrt N * (2:ℝ≥0) ^ rankOfDiscrBdd N + 1
 
-variable {N}
+variable {N} (hK : |discr K| ≤ N)
 
+/-- If `|discr K| ≤ N` then the degree of `K` is at most `rankOfDiscrBdd`. -/
 theorem rank_le_rankOfDiscrBdd :
     finrank ℚ K ≤ rankOfDiscrBdd N := by
-  have h₁ : N ≠ 0 := by
-    intro h
-    rw [h, Nat.cast_zero, abs_nonpos_iff] at hK
-    exact discr_ne_zero K hK
+  have h_nz : N ≠ 0 := by
+    refine fun h ↦ discr_ne_zero K ?_
+    rwa [h, Nat.cast_zero, abs_nonpos_iff] at hK
   have h₂ : 1 < 3 * π / 4 := by
     rw [_root_.lt_div_iff (by positivity), ← _root_.div_lt_iff' (by positivity), one_mul]
     linarith [Real.pi_gt_three]
   obtain h | h := lt_or_le 1 (finrank ℚ K)
   · apply le_max_of_le_right
     rw [Nat.le_floor_iff]
-    · have := le_trans (abs_discr_ge h) (Int.cast_le.mpr hK)
-      contrapose! this
+    · have h := le_trans (abs_discr_ge h) (Int.cast_le.mpr hK)
+      contrapose! h
       rw [← Real.rpow_nat_cast]
-      have := Real.rpow_lt_rpow_of_exponent_lt (x := (3 * π / 4)) ?_ this
-      · have := mul_lt_mul_of_pos_left this (by positivity : (0:ℝ) < 4 / 9)
-        refine lt_of_le_of_lt ?_ this
-        rw [Real.log_div_log, Real.rpow_logb, ← mul_assoc]
-        have : (4:ℝ) / 9 * (9 / 4) = 1 := by norm_num
-        rw [this]
-        rw [one_mul]
-        exact le_rfl
-        positivity
-        exact ne_of_gt h₂
-        positivity
-      · exact h₂
-    · refine div_nonneg ?_ ?_
-      · refine Real.log_nonneg ?_
-        rw [mul_comm, ← mul_div_assoc, _root_.le_div_iff (by positivity), one_mul,
-          ← _root_.div_le_iff (by positivity)]
-        have : (1:ℝ) ≤ N := by
-          rw [Nat.one_le_cast]
-          exact Nat.one_le_iff_ne_zero.mpr h₁
-        linarith
-      · refine Real.log_nonneg ?_
-        exact le_of_lt h₂
-  · apply le_max_of_le_left
-    exact h
+      rw [Real.log_div_log] at h
+      refine lt_of_le_of_lt ?_ (mul_lt_mul_of_pos_left
+        (Real.rpow_lt_rpow_of_exponent_lt h₂ h) (by positivity : (0:ℝ) < 4 / 9))
+      rw [Real.rpow_logb (lt_trans zero_lt_one h₂) (ne_of_gt h₂) (by positivity), ← mul_assoc,
+            ← inv_div, inv_mul_cancel (by norm_num), one_mul, Int.cast_ofNat]
+    · refine div_nonneg (Real.log_nonneg ?_) (Real.log_nonneg (le_of_lt h₂))
+      rw [mul_comm, ← mul_div_assoc, _root_.le_div_iff (by positivity), one_mul,
+        ← _root_.div_le_iff (by positivity)]
+      exact le_trans (by norm_num) (Nat.one_le_cast.mpr (Nat.one_le_iff_ne_zero.mpr h_nz))
+  · exact le_max_of_le_left h
 
+/-- If `|discr K| ≤ N` then the Minkowski bound of `K` is less than `boundOfDiscrBdd`. -/
 theorem minkowskiBound_lt_boundOfDiscBdd : minkowskiBound K 1 < boundOfDiscBdd N := by
   have : boundOfDiscBdd N - 1 < boundOfDiscBdd N := by norm_num
   refine lt_of_le_of_lt ?_ (coe_lt_coe.mpr this)
@@ -295,6 +303,73 @@ theorem minkowskiBound_lt_boundOfDiscBdd : minkowskiBound K 1 < boundOfDiscBdd N
     exact Int.cast_le.mpr hK
   · exact one_le_two
   · exact rank_le_rankOfDiscrBdd hK
+
+theorem natDegree_le_rankOfDiscrBdd {a : K} (ha : a ∈ 𝓞 K) (h : ℚ⟮a⟯ = ⊤) :
+    natDegree (minpoly ℤ (a:K)) ≤ rankOfDiscrBdd N := by
+  rw [Field.primitive_element_iff_minpoly_natDegree_eq,
+    minpoly.isIntegrallyClosed_eq_field_fractions' ℚ ha, (minpoly.monic ha).natDegree_map] at h
+  exact h.symm ▸ rank_le_rankOfDiscrBdd hK
+
+theorem calc1 (B : ℝ≥0) {a b : ℕ} (h : a ≤ b) :
+    max (↑(max B 1)) (1:ℝ) ^ a * Nat.choose a (a / 2) ≤
+      ⌈max B 1 ^ b * (Nat.choose b (b / 2))⌉₊ := by
+  sorry
+  -- refine le_trans ?_ (Nat.le_ceil _)
+  -- rw [show max ↑(max (B:ℝ≥0) 1) (1:ℝ) = max (B:ℝ) 1 by norm_num]
+  -- gcongr
+  -- · refine le_trans (pow_le_pow_right (le_max_right _ 1) (rank_le_rankOfDiscrBdd hF₂)) ?_
+  --   refine pow_le_pow_left (by positivity) (max_le_max_right _ ?_) _
+  --   rw [Real.le_sqrt (by positivity) (by positivity)]
+  --   norm_num
+  -- · exact (Nat.choose_le_choose _ (rank_le_rankOfDiscrBdd hF₂)).trans
+  --     (Nat.choose_le_middle _ _)
+
+#exit
+
+theorem main1 : {K : { F : IntermediateField ℚ A // FiniteDimensional ℚ F} |
+      haveI :  NumberField K := @NumberField.mk _ _ inferInstance K.prop
+      {w : InfinitePlace K | IsReal w}.Nonempty ∧ |discr K| ≤ N }.Finite := by
+  -- The bound on the degree of the generating polynomials
+  let D := rankOfDiscrBdd N
+  -- The bound on the coefficients of the generating polynomials
+  let C := Nat.ceil ((max (boundOfDiscBdd N) 1) ^ D *  Nat.choose D (D / 2))
+  refine aux1 A _ (bUnion_roots_finite (algebraMap ℤ A) D
+      (Set.finite_Icc (-C : ℤ) C)) (fun ⟨K, hK₀⟩ ⟨hK₁, hK₂⟩ ↦ ?_)
+  -- We now need to prove that each field is generated by an element of the union of the rootset
+  simp_rw [Set.mem_iUnion]
+  haveI : NumberField K := @NumberField.mk _ _ inferInstance hK₀
+  obtain ⟨w₀, hw₀⟩ := hK₁
+  suffices minkowskiBound K 1 < (convexBodyLTFactor K) * boundOfDiscBdd N by
+    obtain ⟨x, hx, hx₁, hx₂⟩ := exists_primitive_element_lt_of_isReal K hw₀ this
+    refine ⟨x, ⟨⟨minpoly ℤ x, ⟨?_, fun i ↦ ?_⟩, ?_⟩, ?_⟩⟩
+    · exact natDegree_le_rankOfDiscrBdd hK₂ hx hx₁
+    · rw [Set.mem_Icc, ← abs_le, ← @Int.cast_le ℝ]
+      refine (Eq.trans_le ?_ <| Embeddings.coeff_bdd_of_norm_le
+          ((le_iff_le x _).mp (fun w ↦ le_of_lt (hx₂ w))) i).trans ?_
+      · rw [minpoly.isIntegrallyClosed_eq_field_fractions' ℚ hx, coeff_map, eq_intCast,
+          Int.norm_cast_rat, Int.norm_eq_abs, Int.cast_abs]
+      · refine calc1 _ ?_
+        exact rank_le_rankOfDiscrBdd hK₂
+    · refine mem_rootSet.mpr ⟨minpoly.ne_zero hx, ?_⟩
+      exact (aeval_algebraMap_eq_zero_iff _ _ _).mpr (minpoly.aeval ℤ x)
+    · rw [← (IntermediateField.lift_injective _).eq_iff, eq_comm] at hx₁
+      convert hx₁ <;> simp
+  refine lt_of_lt_of_le (minkowskiBound_lt_boundOfDiscBdd hK₂) ?_
+  convert (mul_le_mul_right₀ (by positivity : boundOfDiscBdd N ≠ 0)).mpr
+    (one_le_convexBodyLTFactor K)
+  rw [one_mul]
+
+#exit
+
+  · sorry
+  · have t1 := minkowskiBound_lt_boundOfDiscBdd hK₂
+    have t2 := one_le_convexBodyLTFactor K
+    have := (mul_le_mul_right₀ (by positivity : boundOfDiscBdd N ≠ 0)).mpr t2
+    rw [one_mul, ← coe_le_coe, coe_mul] at this
+    exact lt_of_lt_of_le t1 this
+
+
+#exit
 
 theorem minkowskiBound_lt_convexBodyLTFactor_mul_of_disc_bdd :
     minkowskiBound K 1 < convexBodyLTFactor K * ↑(sqrt N * (2:ℝ≥0) ^ rankOfDiscrBdd N + 1) := by
@@ -342,13 +417,13 @@ theorem main : {F : { F : IntermediateField ℚ A // FiniteDimensional ℚ F } |
   simp_rw [Set.mem_iUnion]
   by_cases hw : IsReal w
   · have := minkowskiBound_lt_convexBodyLTFactor_mul_of_disc_bdd hF₂
-    obtain ⟨a, ha, ha₁, ha₂⟩ := exists_primitive_element_lt_of_isReal F hw this
-    have h_minpoly := minpoly.isIntegrallyClosed_eq_field_fractions' ℚ ha
-    refine ⟨a, ⟨⟨minpoly ℤ a, ⟨?_, fun i ↦ ?_⟩, ?_⟩, ?_⟩⟩
+    obtain ⟨x, hx, hx₁, hx₂⟩ := exists_primitive_element_lt_of_isReal F hw this
+    have h_minpoly := minpoly.isIntegrallyClosed_eq_field_fractions' ℚ hx
+    refine ⟨x, ⟨⟨minpoly ℤ x, ⟨?_, fun i ↦ ?_⟩, ?_⟩, ?_⟩⟩
     -- make this a local lemma?
     · rw [Field.primitive_element_iff_minpoly_natDegree_eq, h_minpoly,
-            (minpoly.monic ha).natDegree_map] at ha₁
-      rw [ha₁]
+            (minpoly.monic ha).natDegree_map] at hx₁
+      rw [hx₁]
       exact rank_le_rankOfDiscrBdd hF₂
     · rw [Set.mem_Icc, ← abs_le, ← @Int.cast_le ℝ]
       refine (Eq.trans_le ?_ <| Embeddings.coeff_bdd_of_norm_le
