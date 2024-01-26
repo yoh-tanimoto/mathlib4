@@ -121,6 +121,11 @@ lemma cast_mul_eq_zsmul_cast {α : Type*} [AddCommGroupWithOne α] :
     simp only [sub_mul, one_mul, cast_sub, ih, sub_zsmul, one_zsmul, ← sub_eq_add_neg, forall_const]
 #align int.cast_mul_eq_zsmul_cast Int.cast_mul_eq_zsmul_cast
 
+theorem natAbs_add_neg_pos_iff (i j : ℤ) : 0 < natAbs (i + -j) ↔ i ≠ j := by
+  rw [natAbs_pos, ne_eq, add_neg_eq_zero]
+
+theorem natAbs_sub_pos_iff (i j : ℤ) : 0 < natAbs (i - j) ↔ i ≠ j := by
+  rw [natAbs_pos, ne_eq, sub_eq_zero]
 
 /-! ### succ and pred -/
 
@@ -607,6 +612,22 @@ lemma mul_bit1 [NonAssocRing R] {n r : R} : r * bit1 n = (2 : ℤ) • (r * n) +
 
 end NonAssocRing
 end bit0_bit1
+
+section Group
+
+variable {G : Type*} [Group G]
+
+@[to_additive (attr := simp) abs_zsmul_eq_zero_iff]
+theorem zpow_abs_eq_one_iff (a : G) (i : ℤ) : a ^ |i| = 1 ↔ a ^ i = 1 := by
+  cases abs_cases i with
+  | inl h => rw [h.1]
+  | inr h => rw [h.1, zpow_neg, inv_eq_one]
+
+@[to_additive (attr := simp) natAbs_nsmul_eq_zero_iff]
+theorem pow_natAbs_eq_one_iff (a : G) (i : ℤ) : a ^ Int.natAbs i = 1 ↔ a ^ i = 1 := by
+  rw [← zpow_ofNat, Int.coe_natAbs, zpow_abs_eq_one_iff]
+
+end Group
 
 -- We should need only a minimal development of sets in order to get here.
 assert_not_exists Set.range
