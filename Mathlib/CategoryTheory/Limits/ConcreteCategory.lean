@@ -188,16 +188,6 @@ theorem Concrete.colimit_rep_eq_iff_exists [HasColimit F] {i j : J} (x : F.obj i
 
 end FilteredColimits
 
-section Sigma
-
-theorem Concrete.sigma.exists_rep {α : Type v} (f : α → C) [HasCoproduct f]
-    [PreservesColimit (Discrete.functor f) (forget C)] (x : ↑(∐ f)) :
-    ∃ (i : α) (y : f i), Sigma.ι f i y = x := by
-  obtain ⟨⟨i⟩, y, rfl⟩ := Concrete.colimit_exists_rep _ x
-  exact ⟨i, y, rfl⟩
-
-end Sigma
-
 end Colimits
 
 end CategoryTheory.Limits

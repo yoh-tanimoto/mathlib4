@@ -483,8 +483,8 @@ noncomputable def coproductEquiv {J : Type v} [Small.{u} J] (F : J → Type u) [
     _ ≃ Σj, (F ∘ (equivShrink.{u} J).symm) j := (coproductIso.{u, u} _).toEquiv
     _ ≃ Σj, F j := Equiv.sigmaCongrLeft _
 
-attribute [local instance] ConcreteCategory.funLike
-theorem forget_hom_Type (α β : Type u) (f : α ⟶ β) : FunLike.coe f = f := rfl
+attribute [local instance] ConcreteCategory.instFunLike
+theorem forget_hom_Type (α β : Type u) (f : α ⟶ β) : DFunLike.coe f = f := rfl
 
 @[simp]
 theorem coproductEquiv_ι {J : Type v} [Small.{u} J] (F : J → Type u) [HasCoproduct F] (j : J)

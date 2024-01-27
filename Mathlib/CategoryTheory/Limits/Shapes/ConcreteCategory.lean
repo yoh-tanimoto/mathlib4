@@ -283,6 +283,16 @@ theorem cokernel_funext {C : Type*} [Category C] [HasZeroMorphisms C] [ConcreteC
   simpa using w x
 #align category_theory.limits.cokernel_funext CategoryTheory.Limits.Concrete.cokernel_funext
 
+section Sigma
+
+theorem Concrete.sigma.exists_rep [ConcreteCategory.{v} C]
+  {α : Type v} (f : α → C) [HasCoproduct f] [PreservesColimit (Discrete.functor f) (forget C)] (x : ↑(∐ f)) :
+    ∃ (i : α) (y : f i), Sigma.ι f i y = x := by
+  obtain ⟨⟨i⟩, y, rfl⟩ := Concrete.colimit_exists_rep (Discrete.functor f) x
+  exact ⟨i, y, rfl⟩
+
+end Sigma
+
 -- TODO: Add analogous lemmas about coproducts and coequalizers.
 
 end CategoryTheory.Limits.Concrete
