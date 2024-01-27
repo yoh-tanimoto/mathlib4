@@ -5,7 +5,8 @@ Authors: Dagur Asgeirsson
 -/
 import Mathlib.CategoryTheory.Limits.Preserves.Ulift
 import Mathlib.CategoryTheory.Sites.Whiskering
-import Mathlib.Condensed.Equivalence
+import Mathlib.Condensed.Basic
+import Mathlib.Topology.Category.Stonean.Basic
 
 /-!
 # Functors from categories of topological spaces to condensed sets
@@ -45,7 +46,7 @@ end Universes
 
 section Topology
 
-/-- `CompHaus.toCondensed_aux` yields a functor. -/
+/-- The functor from `CompHaus` to `Condensed.{u} (Type u)` given by the Yoneda sheaf. -/
 def compHausToCondensed' : CompHaus.{u} ⥤ Condensed.{u} (Type u) where
   obj S := {
     val := yoneda.obj S
