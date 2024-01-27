@@ -45,7 +45,7 @@ theorem IsIndObject_iff (X : Cᵒᵖ ⥤ Type v) :
     let c := (tautologicalCocone X).whisker (SmallFilteredIntermediate.inclusion (fromFinalModel (CostructuredArrow yoneda X)))
     let hc : IsColimit c := (Functor.Final.isColimitWhiskerEquiv _ _).symm (isColimitTautologicalCocone X)
     have hq : _root_.Nonempty (FinalModel (CostructuredArrow yoneda X)) :=
-      Nonempty.map (Functor.Final.lift (fromFinalModel (CostructuredArrow yoneda X))) IsFiltered.Nonempty
+      Nonempty.map (Functor.Final.lift (fromFinalModel (CostructuredArrow yoneda X))) IsFiltered.nonempty
     refine' ⟨SmallFilteredIntermediate (fromFinalModel (CostructuredArrow yoneda X)),
       SmallFilteredIntermediate.inclusion (fromFinalModel (CostructuredArrow yoneda X))
         ⋙ CostructuredArrow.proj yoneda X, c.ι, hc⟩
