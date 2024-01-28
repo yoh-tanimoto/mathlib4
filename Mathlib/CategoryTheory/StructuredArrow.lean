@@ -484,6 +484,15 @@ lemma homMk'_mk_comp (f : S.obj Y ⟶ T) (g : Y' ⟶ Y) (g' : Y'' ⟶ Y') :
     homMk' (mk f) (g' ≫ g) = eqToHom (by simp) ≫ homMk' (mk (S.map g ≫ f)) g' ≫ homMk' (mk f) g :=
   homMk'_comp _ _ _
 
+@[simps]
+def homMk'' (f : S.obj Y ⟶ T) (g : Y' ⟶ Y) : mk (S.map g ≫ f) ⟶ mk f where
+  left := g
+  right := eqToHom (by ext)
+
+lemma homMk''_id (f : S.obj Y ⟶ T) : homMk'' f (𝟙 Y) = eqToHom (by aesop_cat) := by aesop_cat
+lemma homMk''_comp (f : S.obj Y ⟶ T) (g : Y' ⟶ Y) (g' : Y'' ⟶ Y') :
+    homMk'' f (g' ≫ g) = eqToHom (by simp) ≫ homMk'' (S.map g ≫ f) g' ≫ homMk'' f g := by aesop_cat
+
 /-- To construct an isomorphism of costructured arrows,
 we need an isomorphism of the objects underlying the source,
 and to check that the triangle commutes.
