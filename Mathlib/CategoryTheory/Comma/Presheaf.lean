@@ -24,9 +24,9 @@ CostructuredArrow yoneda A      ⥤      Over A
 where the top arrow is the forgetful functor forgetting the yoneda-costructure, the right arrow is
 the aforementioned equivalence and the diagonal arrow is the Yoneda embedding.
 
-In the notation of Kashiwara-Schapira, the type of equivalence is written `C^ₐ ≌ Cₐ^`, where `·ₐ` is
-`CostructuredArrow` (with the functor `S` being either the identity or the Yonenda embedding) and
-`^` is taking presheaves. The equivalence is a key ingredient in various results in
+In the notation of Kashiwara-Schapira, the type of the equivalence is written `C^ₐ ≌ Cₐ^`, where
+`·ₐ` is `CostructuredArrow` (with the functor `S` being either the identity or the Yonenda
+embedding) and `^` is taking presheaves. The equivalence is a key ingredient in various results in
 Kashiwara-Schapira.
 
 The proof is somewhat long and technical, in part due to the construction inherently involving a
@@ -87,8 +87,6 @@ lemma YonedaPreimage.ext {F A : Cᵒᵖ ⥤ Type v} {η : F ⟶ A} {X : C} {s : 
     {u v : YonedaPreimage η s} : u.val = v.val → u = v :=
   Subtype.ext
 
--- lemma YonedaPreimage.val_eqToHom {F A : Cᵒᵖ ⥤ Type v} {η : F ⟶ A} {X : C} {s : yoneda.obj X ⟶ A}
-
 lemma YonedaPreimage.app_val {F A : Cᵒᵖ ⥤ Type v} {η : F ⟶ A} {X : C} {s : yoneda.obj X ⟶ A}
     (p : YonedaPreimage η s) : η.app _ p.val = yonedaEquiv s :=
   p.prop.app
@@ -120,9 +118,6 @@ lemma YonedaPreimage.map₂_val {F A : Cᵒᵖ ⥤ Type v} {η : F ⟶ A} {X Y :
     {s : yoneda.obj X ⟶ A} {t : yoneda.obj Y ⟶ A} (hst : yoneda.map f ≫ t = s)
     (u : YonedaPreimage η t) : (u.map₂ f hst).val = F.map f.op u.val :=
   rfl
-
--- lemma YonedaPreimage.map₂_val_eqToHom {F A : Cᵒᵖ ⥤ Type v} {η : F ⟶ A} {X Y : C} (h : X = Y)
---     {s : yoneda.obj X ⟶ A} {t : yoneda.obj Y ⟶ A} (u : YonedaPreimage η t) : (u.map₂ (eqToHom h) _).val = u.val := sorry
 
 @[simp]
 lemma YonedaPreimage_map₁_map₂ {F G A : Cᵒᵖ ⥤ Type v} {η : F ⟶ A} {μ : G ⟶ A} (ε : F ⟶ G) (hε : ε ≫ μ = η) {X Y : C}
@@ -419,8 +414,6 @@ def cofo {A : Cᵒᵖ ⥤ Type v} (F : (CostructuredArrow yoneda A)ᵒᵖ ⥤ Ty
     F.obj (Opposite.op s) → YonedaPreimage (YonedaCollectionFunctorToA A F) s.hom :=
   fun x => ⟨YonedaCollection.mk' s.hom x, ⟨by simp [-yonedaEquiv_apply, YonedaCollection.fst_eq_yonedEquiv_fst']⟩⟩
 
---cofo G s.unop (η.app s x) = YonedaPreimage.map₁ (cofo F s.unop x) (NatTrans.mk fun X ↦ YonedaCollection.map₁ η) _
-
 @[simp]
 lemma cofo_naturality₁ {A : Cᵒᵖ ⥤ Type v} {F G : (CostructuredArrow yoneda A)ᵒᵖ ⥤ Type v} (η : F ⟶ G)
     (s : (CostructuredArrow yoneda A)ᵒᵖ) (x : F.obj s) : cofo G s.unop (η.app s x) = YonedaPreimage.map₁ (cofo F s.unop x) (YonedaCollectionMap η) (by aesop_cat) := by
@@ -433,9 +426,6 @@ lemma cofo_naturality₁ {A : Cᵒᵖ ⥤ Type v} {F G : (CostructuredArrow yone
     erw [YonedaCollection.mk'_snd']
     erw [YonedaCollection.mk'_snd']
     exact FunctorToTypes.naturality _ _ _ _ _
-
--- F.map f ≫ (cobij F Y.unop).hom = (cobij F X.unop).hom ≫ fun u ↦ YonedaPreimage.map₂ u f.unop.left _
--- cofo F t.unop (F.map f x) = YonedaPreimage.map₂ (cofo F s.unop x) f.unop.left _
 
 lemma bloink {A : Cᵒᵖ ⥤ Type v} (F : (CostructuredArrow yoneda A)ᵒᵖ ⥤ Type v) (s t : CostructuredArrow yoneda A)
     (f : s ⟶ t) (x : F.obj (Opposite.op t)) : (F.map (CostructuredArrow.homMk'' t.hom f.left).op x) = F.map (eqToHom <| by simp [← CostructuredArrow.eq_mk]) (F.map f.op x) := by
@@ -504,7 +494,9 @@ end OverPresheaf
 /-- If `A : Cᵒᵖ ⥤ Type v` is a presheaf, then we have an equivalence between presheaves lying over
     `A` and the category of presheaves on `CostructuredArrow yoneda A`. There is a quasicommutative
     triangle involving this equivalence, see
-    `CostructuredArrow.toOverCompOverEquivPresheafCostructuredArrow`. -/
+    `CostructuredArrow.toOverCompOverEquivPresheafCostructuredArrow`.
+
+    This is Lemma 1.4.12 in [Kashiwara2006]. -/
 def OverEquivPresheafCostructuredArrow (A : Cᵒᵖ ⥤ Type v) :
     Over A ≌ ((CostructuredArrow yoneda A)ᵒᵖ ⥤ Type v) :=
   Equivalence.mk (OverPresheaf.yonedaPreimageFunctor A) (OverPresheaf.YonedaCollectionTotal A)
@@ -512,7 +504,9 @@ def OverEquivPresheafCostructuredArrow (A : Cᵒᵖ ⥤ Type v) :
 
 /-- If `A : Cᵒᵖ ⥤ Type v` is a presheaf, then the Yoneda embedding for
     `CostructuredArrow yoneda A` factors through `Over A` via a forgetful functor and an
-    equivalence.-/
+    equivalence.
+
+    This is Lemma 1.4.12 in [Kashiwara2006]. -/
 def CostructuredArrow.toOverCompOverEquivPresheafCostructuredArrow (A : Cᵒᵖ ⥤ Type v) :
     CostructuredArrow.toOver yoneda A ⋙ (OverEquivPresheafCostructuredArrow A).functor ≅ yoneda :=
   OverPresheaf.yonedaCompYonedaPreimageFunctor A
