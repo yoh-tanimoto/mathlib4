@@ -511,6 +511,13 @@ def YonedaPreimage.val {F A : Cᵒᵖ ⥤ Type v₁} {η : F ⟶ A} {X : C} {s :
     YonedaPreimage η s → F.obj (Opposite.op X) :=
   Subtype.val
 
+@[ext]
+lemma YonedaPreimage.ext {F A : Cᵒᵖ ⥤ Type v₁} {η : F ⟶ A} {X : C} {s : yoneda.obj X ⟶ A}
+    {u v : YonedaPreimage η s} : u.val = v.val → u = v :=
+  Subtype.ext
+
+-- lemma YonedaPreimage.val_eqToHom {F A : Cᵒᵖ ⥤ Type v₁} {η : F ⟶ A} {X : C} {s : yoneda.obj X ⟶ A}
+
 lemma YonedaPreimage.app_val {F A : Cᵒᵖ ⥤ Type v₁} {η : F ⟶ A} {X : C} {s : yoneda.obj X ⟶ A}
     (p : YonedaPreimage η s) : η.app _ p.val = yonedaEquiv s :=
   p.prop.app
@@ -543,10 +550,8 @@ lemma YonedaPreimage.map₂_val {F A : Cᵒᵖ ⥤ Type v₁} {η : F ⟶ A} {X 
     (u : YonedaPreimage η t) : (u.map₂ f hst).val = F.map f.op u.val :=
   rfl
 
-@[ext]
-lemma YonedaPreimage.ext {F A : Cᵒᵖ ⥤ Type v₁} {η : F ⟶ A} {X : C} {s : yoneda.obj X ⟶ A}
-    {u v : YonedaPreimage η s} : u.val = v.val → u = v :=
-  Subtype.ext
+-- lemma YonedaPreimage.map₂_val_eqToHom {F A : Cᵒᵖ ⥤ Type v₁} {η : F ⟶ A} {X Y : C} (h : X = Y)
+--     {s : yoneda.obj X ⟶ A} {t : yoneda.obj Y ⟶ A} (u : YonedaPreimage η t) : (u.map₂ (eqToHom h) _).val = u.val := sorry
 
 @[simp]
 lemma YonedaPreimage_map₁_map₂ {F G A : Cᵒᵖ ⥤ Type v₁} {η : F ⟶ A} {μ : G ⟶ A} (ε : F ⟶ G) (hε : ε ≫ μ = η) {X Y : C}
@@ -556,14 +561,19 @@ lemma YonedaPreimage_map₁_map₂ {F G A : Cᵒᵖ ⥤ Type v₁} {η : F ⟶ A
   YonedaPreimage.ext <| (elementwise_of% (ε.naturality f.op).symm) u.val
 
 @[simps (config := { fullyApplied := false }) obj map]
-def yonedaPreimageFunctor' (A : Cᵒᵖ ⥤ Type v₁) (η : Over A) : (CostructuredArrow yoneda A)ᵒᵖ ⥤ Type v₁ where
-  obj s := YonedaPreimage η.hom s.unop.hom
+def yonedaPreimageFunctor' {A F : Cᵒᵖ ⥤ Type v₁} (η : F ⟶ A) : (CostructuredArrow yoneda A)ᵒᵖ ⥤ Type v₁ where
+  obj s := YonedaPreimage η s.unop.hom
   map f u := u.map₂ f.unop.left f.unop.w
 
 @[simps]
+def yonedaPreimageFunctor'_map₁ {A F G : Cᵒᵖ ⥤ Type v₁} {η : F ⟶ A} {μ : G ⟶ A} (ε : F ⟶ G) (hε : ε ≫ μ = η) :
+    yonedaPreimageFunctor' η ⟶ yonedaPreimageFunctor' μ where
+  app s u := u.map₁ ε hε
+
+@[simps]
 def yonedaPreimageFunctor (A : Cᵒᵖ ⥤ Type v₁) : Over A ⥤ (CostructuredArrow yoneda A)ᵒᵖ ⥤ Type v₁ where
-  obj := yonedaPreimageFunctor' A
-  map ε := { app := fun s u => u.map₁ ε.left ε.w }
+  obj η := yonedaPreimageFunctor' η.hom
+  map ε := yonedaPreimageFunctor'_map₁ ε.left ε.w
 
 def yonedaPreimageCostructuredArrow (A : Cᵒᵖ ⥤ Type v₁) (s t : CostructuredArrow yoneda A) :
     YonedaPreimage s.hom t.hom ≅ t ⟶ s :=
@@ -578,6 +588,7 @@ def yonedaPreimageCostructuredArrow (A : Cᵒᵖ ⥤ Type v₁) (s t : Costructu
     rw [← this, Category.comp_id]
   ⟩⟩, by aesop_cat, by aesop_cat⟩
 
+@[simps!]
 def yonedaCompYonedaPreimageFunctor (A : Cᵒᵖ ⥤ Type v₁) :
     CostructuredArrow.toOver yoneda A ⋙ yonedaPreimageFunctor A ≅ yoneda :=
   NatIso.ofComponents (fun s => by
@@ -745,231 +756,189 @@ def YonedaCollectionFunctor' (A : Cᵒᵖ ⥤ Type v₁) (F : (CostructuredArrow
   obj X := YonedaCollection F X.unop
   map f := YonedaCollection.map₂ F f.unop
 
+@[simps]
+def YonedaCollectionMap {A : Cᵒᵖ ⥤ Type v₁} {F G : (CostructuredArrow yoneda A)ᵒᵖ ⥤ Type v₁} (η : F ⟶ G) :
+    YonedaCollectionFunctor' A F ⟶ YonedaCollectionFunctor' A G where
+  app X := YonedaCollection.map₁ η
+  naturality := by
+    intros
+    ext
+    simp
+
 @[simps (config := { fullyApplied := false }) obj map]
 def YonedaCollectionFunctor (A : Cᵒᵖ ⥤ Type v₁) : ((CostructuredArrow yoneda A)ᵒᵖ ⥤ Type v₁) ⥤ Cᵒᵖ ⥤ Type v₁ where
   obj := YonedaCollectionFunctor' A
-  map η :=
-  { app := fun X => YonedaCollection.map₁ η
-    naturality := by
-      intros
-      ext
-      simp }
+  map η := YonedaCollectionMap η
 
 @[simps (config := { fullyApplied := false }) app]
 def YonedaCollectionFunctorToA (A : Cᵒᵖ ⥤ Type v₁) (F : (CostructuredArrow yoneda A)ᵒᵖ ⥤ Type v₁) :
     YonedaCollectionFunctor' A F ⟶ A where
   app X := YonedaCollection.fst
 
+@[simps! (config := { fullyApplied := false }) obj map]
 def YonedaCollectionTotal (A : Cᵒᵖ ⥤ Type v₁) :
     ((CostructuredArrow yoneda A)ᵒᵖ ⥤ Type v₁) ⥤ Over A :=
   (YonedaCollectionFunctor A).toOver _ (YonedaCollectionFunctorToA A) (by aesop_cat)
 
 theorem c : 0 = 0 := rfl
 
-instance {X : Cᵒᵖ} {A : Cᵒᵖ ⥤ Type v₁} (η : Over A) :
-    HasCoproduct (fun (s : yoneda.obj X.unop ⟶ A) => { u : η.left.obj X // NatTrans.app η.hom X u = yonedaEquiv s }) :=
-  u.has_colimit _
+def ax {A F : Cᵒᵖ ⥤ Type v₁} (η : F ⟶ A) (X : C) :
+    YonedaCollection (yonedaPreimageFunctor' η) X → F.obj (Opposite.op X) :=
+  fun p => p.snd'.val
 
-@[simps!]
-noncomputable def unit_pt (A : Cᵒᵖ ⥤ Type v₁) (η : Over A) :
-    (terribleFunctor A ⋙ terribleReverse A).obj η ≅ η := by
-  refine' Over.isoMk (NatIso.ofComponents (fun X => _) _) _
-  · dsimp
-    refine' ⟨Sigma.desc fun s u => u.1, fun u => _, _, _⟩
-    · refine' Sigma.ι (fun (s : yoneda.obj X.unop ⟶ A) => { u : η.left.obj X // NatTrans.app η.hom X u = yonedaEquiv s })
-        (yonedaEquiv.symm (η.hom.app X u)) ⟨u, _⟩
-      erw [Equiv.apply_symm_apply]
-    · apply Sigma.hom_ext
-      intro s
-      simp
-      ext u
-      simp
-      rcases u with ⟨u, hu⟩
-      have : s = yonedaEquiv.symm (NatTrans.app η.hom X u)
-      · erw [hu, Equiv.symm_apply_apply]
-      subst this
-      simp only [Functor.const_obj_obj, Opposite.op_unop, Functor.id_obj]
-    · ext x
-      dsimp
-      erw [← types_comp_apply (Sigma.ι _ _) (Sigma.desc _)]
-      rw [colimit.ι_desc]
-      simp only [Cofan.mk_pt, Cofan.mk_ι_app]
-  · intros X Y f
-    simp
-    apply Sigma.hom_ext
-    intro s
-    ext u
-    rw [Sigma.ι_comp_map'_assoc, colimit.ι_desc_assoc]
-    simp only [colimit.ι_desc, Cofan.mk_pt, Cofan.mk_ι_app, types_comp_apply, blub₂_map_coe, Opposite.unop_op,
-      CostructuredArrow.mk_left, Opposite.op_unop, Quiver.Hom.unop_op, CostructuredArrow.homMk'_left,
-      Quiver.Hom.op_unop, Functor.const_obj_obj, Functor.id_obj, CostructuredArrow.mk_right,
-      CostructuredArrow.mk_hom_eq_self, Discrete.functor_obj]
-  · apply NatTrans.ext
-    apply funext
-    intro X
-    apply Sigma.hom_ext
-    intro s
-    dsimp
-    ext u
-    erw [colimit.ι_desc, colimit.ι_desc_assoc]
-    simp [u.2]
+@[simp]
+lemma ax_naturality₁ {A F G : Cᵒᵖ ⥤ Type v₁} {η : F ⟶ A} {μ : G ⟶ A} (ε : F ⟶ G) (hε : ε ≫ μ = η) (X : C) (p : YonedaCollection (yonedaPreimageFunctor' η) X) :
+    ax μ X (p.map₁ (yonedaPreimageFunctor'_map₁ ε hε)) = ε.app _ (ax η X p) := by
+  simp [ax]
 
-noncomputable def unit (A : Cᵒᵖ ⥤ Type v₁) : (terribleFunctor A ⋙ terribleReverse A) ≅ 𝟭 (Over A) :=
-  NatIso.ofComponents (unit_pt A) (by
-    intros η μ ε
-    apply CostructuredArrow.hom_ext
-    apply NatTrans.ext
-    apply funext
-    intro X
-    apply Sigma.hom_ext
-    intro s
-    ext u
-    dsimp
-    erw [← types_comp_apply (Sigma.ι _ _) (Sigma.desc _), colimit.ι_desc,
-      ← types_comp_apply (Sigma.ι _ _) (Limits.Sigma.map _)]
-    rw [← Sigma.map'_id, Sigma.ι_comp_map']
-    simp
-    erw [← types_comp_apply (Sigma.ι _ _) (Sigma.desc _), colimit.ι_desc]
-    simp)
+@[simp]
+lemma ax_naturality₂ {A F : Cᵒᵖ ⥤ Type v₁} (η : F ⟶ A) (X Y : C) (f : X ⟶ Y) (p : YonedaCollection (yonedaPreimageFunctor' η) Y) :
+    ax η X (YonedaCollection.map₂ (yonedaPreimageFunctor' η) f p) = F.map f.op (ax η Y p) := by
+  simp [ax]
 
-instance {A : Cᵒᵖ ⥤ Type v₁} (F : (CostructuredArrow yoneda A)ᵒᵖ ⥤ Type v₁) (X : (CostructuredArrow yoneda A)ᵒᵖ) :
-    HasCoproduct (fun (s : yoneda.obj X.unop.left ⟶ A) => F.obj (Opposite.op (CostructuredArrow.mk s))) :=
-  u.has_colimit _
+@[simp]
+lemma app_ax {A F : Cᵒᵖ ⥤ Type v₁} (η : F ⟶ A) (X : Cᵒᵖ) (p : YonedaCollection (yonedaPreimageFunctor' η) X.unop) :
+    η.app X (ax η X.unop p) = p.fst := by
+  simp [ax]
+  have := p.snd'.app_val
+  dsimp [-yonedaEquiv_apply] at this
+  simp [-yonedaEquiv_apply, this, YonedaCollection.fst_eq_yonedEquiv_fst']
 
-open Classical
+def back {A F : Cᵒᵖ ⥤ Type v₁} (η : F ⟶ A) (X : C) :
+    F.obj (Opposite.op X) → YonedaCollection (yonedaPreimageFunctor' η) X :=
+  fun x => YonedaCollection.mk' (yonedaEquiv.symm (η.app _ x)) ⟨x, ⟨by aesop_cat⟩⟩
 
-lemma Iso.op_trans {X Y Z : C} (i : X ≅ Y) (j : Y ≅ Z) : Iso.op (i ≪≫ j) = Iso.op j ≪≫ Iso.op i :=
-  rfl
-
-lemma eqToIso_op {X Y : C} (h : X = Y) : (eqToIso h).op = eqToIso (by rw [h]) := by
+lemma ax_back {A F : Cᵒᵖ ⥤ Type v₁} (η : F ⟶ A) (X : C) : ax η X ∘ back η X = id := by
+  ext x
+  dsimp [ax, back]
   aesop_cat
 
-set_option maxHeartbeats 2000000
+lemma back_ax {A F : Cᵒᵖ ⥤ Type v₁} (η : F ⟶ A) (X : C) : back η X ∘ ax η X = id := by
+  ext1 p
+  simp [ax, back]
+  refine' YonedaCollection.ext' _ _ _ _
+  · have := p.snd'.app_val
+    dsimp [-yonedaEquiv_apply] at this
+    dsimp
+    simp [-yonedaEquiv_apply, this]
+  · apply YonedaPreimage.ext
+    aesop_cat
+
+@[simps]
+def bij {A F : Cᵒᵖ ⥤ Type v₁} (η : F ⟶ A) (X : C) :
+    YonedaCollection (yonedaPreimageFunctor' η) X ≅ F.obj (Opposite.op X) where
+  hom := ax η X
+  inv := back η X
+  hom_inv_id := back_ax η X
+  inv_hom_id := ax_back η X
 
 @[simps!]
-noncomputable def counit_pt (A : Cᵒᵖ ⥤ Type v₁) (F : (CostructuredArrow yoneda A)ᵒᵖ ⥤ Type v₁) :
-    F ≅ (terribleReverse A ⋙ terribleFunctor A).obj F := by
-  refine' (NatIso.ofComponents (fun X => _) _).symm
-  · refine' ⟨fun u => _, fun u => _, _, _⟩
-    swap
-    · refine' ⟨_, _⟩
-      · refine' (_ ≫ Sigma.ι (fun (s : yoneda.obj X.unop.left ⟶ A) => F.obj (Opposite.op (CostructuredArrow.mk s))) X.unop.hom) u
-        refine' (F.mapIso _).hom
-        refine' Iso.op _
-        exact (CostructuredArrow.eta X.unop).symm
-      · --sorry -- DONE!
-        dsimp [Functor.toOver]
-        erw [← types_comp_apply (Sigma.ι _ _) (Sigma.desc _), colimit.ι_desc]
-        dsimp only [Cofan.mk_pt, Cofan.mk_ι_app]
-    · refine' (F.mapIso (Iso.op _)).hom (Types.Sigma.rep u.1)
-      · refine' CostructuredArrow.eta _ ≪≫ CostructuredArrow.mkCongr _
-        --sorry -- DONE!
-        dsimp [Functor.toOver] at u
-        rcases u with ⟨u, hu⟩
-        obtain h := Types.Sigma.ι_comp_rep u
-        rw [← h] at hu
-        erw [← types_comp_apply (Sigma.ι _ _) (Sigma.desc _), colimit.ι_desc] at hu
-        dsimp at hu
-        exact yonedaEquiv.injective hu.symm
-    swap
-    · --sorry -- DONE!
-      ext u
-      dsimp [-Functor.mapIso_hom]
-      rw [← Iso.toEquiv_fun, ← Equiv.eq_symm_apply]
-      simp only [Types.Sigma.rep_ι]
-      rw [← types_comp_apply _ (eqToHom _)]
-      refine' congr_fun _ _
-      change (F.mapIso _).hom ≫ eqToHom _ = (F.mapIso _).symm.hom
-      rw [← Iso.eq_inv_comp]
-      simp only [CostructuredArrow.mkCongr_eq_eqToIso, CostructuredArrow.eta_eq_eqToIso]
-      simp only [eqToIso_op, eqToIso_map, Functor.mapIso_inv, Iso.symm_inv, Iso.op_inv, eqToIso.hom,
-        eqToHom_op, Iso.symm_hom, Functor.mapIso_hom, eqToHom_map, Iso.trans_inv, eqToIso.inv, op_comp, F.map_comp, eqToHom_trans]
-      -- rw [F.mapIso_inv, ← F.mapIso_symm, F.mapIso_hom, F.mapIso_hom, ← F.map_comp, Iso.op_inv,
-      --   Iso.symm_hom, Iso.op_inv, ← op_comp, ← Iso.trans_inv, Iso.symm_self_id_assoc, CostructuredArrow.mkCongr_eq_eqToIso,
-      --   ← Iso.op_inv, eqToIso_op, eqToIso.inv, eqToHom_map]
-    · --sorry -- DONE!
-      ext1 u
-      dsimp [Functor.toOver] at u
-      rcases u with ⟨u, hu⟩
-      simp only [terribleReverse, Functor.comp_obj, terribleFunctor_obj, blub₂_obj, Functor.toOver_obj_left, bla₂'_obj,
-        bla₂_obj, Opposite.unop_op, Functor.const_obj_obj, Functor.id_obj, Opposite.op_unop, types_comp_apply,
-        types_id_apply, Subtype.mk.injEq]
-      obtain h := Types.Sigma.ι_comp_rep u
-      rw [← h] at hu
-      erw [← types_comp_apply (Sigma.ι _ _) (Sigma.desc _), colimit.ι_desc] at hu
-      dsimp at hu
-      simp only [← h]
-      rw [Types.Sigma.ι_eq_iff]
-      have hh : F.obj (Opposite.op (CostructuredArrow.mk X.unop.hom)) =
-        F.obj (Opposite.op (CostructuredArrow.mk (Types.Sigma.comp u))) := by rw [yonedaEquiv.injective hu]
-      refine' ⟨yonedaEquiv.injective hu.symm, _⟩
-      have hi : eqToHom hh = (F.mapIso (Iso.op (eqToIso (by rw [yonedaEquiv.injective hu])))).hom := by
-        simp [eqToIso_op, eqToHom_map]
-      rw [hi]
-      rw [← types_comp_apply (F.mapIso _).hom (F.mapIso _).hom]
-      rw [← Iso.trans_hom, ← F.mapIso_trans]
-      rw [← types_comp_apply (F.mapIso _).hom (F.mapIso _).hom]
-      rw [← Iso.trans_hom, ← F.mapIso_trans]
-      simp only [← Iso.op_trans]
-      simp only [Iso.trans_assoc]
-      rw [Iso.symm_self_id_assoc]
-      rw [CostructuredArrow.mkCongr_eq_eqToIso, eqToIso_trans, eqToIso_op, eqToIso_refl, F.mapIso_refl, Iso.refl_hom]
-      simp only [types_id_apply]
-  ·
-    intros x s f
-    dsimp [Functor.toOver]
-    ext u
-    rcases u with ⟨u, hu⟩
-    obtain h := Types.Sigma.ι_comp_rep u
-    rw [← h] at hu
-    erw [← types_comp_apply (Sigma.ι _ _) (Sigma.desc _), colimit.ι_desc] at hu
-    dsimp at hu
-    dsimp [-Functor.mapIso_hom]
-    rw [← types_comp_apply (F.map _) (F.map _), ← F.map_comp]
-    simp only [Types.Sigma.rep_map']
-    rw [← eqToHom_map]
-    swap
-    · congr
-      rw [Types.Sigma.comp_map']
-    ·
-      rw [← types_comp_apply (F.map _) (F.map _)]
-      rw [← F.map_comp]
-      rw [← types_comp_apply (F.map _) (F.map _)]
-      rw [← F.map_comp]
-      refine' congr_fun _ (Types.Sigma.rep u)
-      refine' congr_arg F.map _
-      apply Quiver.Hom.unop_inj
-      ext
-      simp [CostructuredArrow.eqToHom_left]
+def unit₀ {A F : Cᵒᵖ ⥤ Type v₁} (η : F ⟶ A) : YonedaCollectionFunctor' A (yonedaPreimageFunctor' η) ≅ F :=
+  NatIso.ofComponents (fun X => bij η X.unop) (by aesop_cat)
 
-noncomputable def counit (A : Cᵒᵖ ⥤ Type v₁) : 𝟭 ((CostructuredArrow yoneda A)ᵒᵖ ⥤ Type v₁) ≅ (terribleReverse A ⋙ terribleFunctor A) :=
-  Iso.symm $ NatIso.ofComponents (fun F => (counit_pt A F).symm) (by
-    intros F G η
-    dsimp only [terribleReverse, Functor.comp_obj, terribleFunctor_obj, Functor.id_obj, Functor.comp_map, Iso.symm_hom,
-      Functor.id_map]
-    ext s u
-    dsimp only [Functor.toOver, Functor.toCostructuredArrow_obj, bla₂'_obj, blub₂_obj, CostructuredArrow.mk_left,
-      bla₂_obj, Opposite.unop_op, CostructuredArrow.mk_right, Functor.const_obj_obj, Functor.id_obj,
-      CostructuredArrow.mk_hom_eq_self, bla₂''_app, Opposite.op_unop] at u
-    simp only [FunctorToTypes.comp, terribleFunctor_map_app, blub₂_obj, Functor.toOver_obj_left, bla₂'_obj, bla₂_obj,
-      Opposite.unop_op, Functor.const_obj_obj, Functor.id_obj, Functor.toOver_map_left, bla₂'_map_app, Sigma.map'_id,
-      id_eq, counit_pt_inv_app, Eq.ndrec]
-    simp only [← Sigma.map'_id]
-    rw [Types.Sigma.rep_map']
-    rw [← types_comp_apply (F.map _) (F.map _), ← F.map_comp, FunctorToTypes.naturality]
-    conv_rhs => simp only [← Iso.op_hom]
-    rw [← Iso.trans_hom, ← G.mapIso_hom]
-    rw [← types_comp_apply (G.map _) (G.map _), ← G.map_comp, ← types_comp_apply (eqToHom _) (G.map _)]
-    refine' congr_fun _ (η.app _ _)
-    simp only [CostructuredArrow.eta_eq_eqToIso, CostructuredArrow.mkCongr_eq_eqToIso, eqToIso.hom, eqToHom_map, eqToIso_map, eqToIso_op,
-      Functor.mapIso_trans, eqToHom_op, Functor.map_comp, eqToHom_trans, Iso.trans_hom])
+@[simps!]
+def unit_pt {A : Cᵒᵖ ⥤ Type v₁} (η : Over A) : (yonedaPreimageFunctor A ⋙ YonedaCollectionTotal A).obj η ≅ η :=
+  Over.isoMk (unit₀ η.hom) (by aesop_cat)
 
-noncomputable def terribleEquiv (A : Cᵒᵖ ⥤ Type v₁) : Over A ≌ ((CostructuredArrow yoneda A)ᵒᵖ ⥤ Type v₁) :=
-  Equivalence.mk (terribleFunctor A) (terribleReverse A) (unit A).symm (counit A).symm
+def unit {A : Cᵒᵖ ⥤ Type v₁} : yonedaPreimageFunctor A ⋙ YonedaCollectionTotal A ≅ 𝟭 (Over A) :=
+  NatIso.ofComponents unit_pt (by aesop_cat)
 
-def terribleTriangle (A : Cᵒᵖ ⥤ Type v₁) :
-    CostructuredArrow.toOver yoneda A ⋙ (terribleEquiv A).functor ≅ yoneda :=
-  terribleTriangle' A
+theorem d : 0 = 0 := rfl
+
+@[simp]
+lemma val_fst' {A : Cᵒᵖ ⥤ Type v₁} (F : (CostructuredArrow yoneda A)ᵒᵖ ⥤ Type v₁) (X : C)
+    (s : yoneda.obj X ⟶ A) (p : YonedaPreimage (YonedaCollectionFunctorToA A F) s) : p.val.fst' = s := by
+  simpa [-yonedaEquiv_apply, YonedaCollection.fst_eq_yonedEquiv_fst'] using p.app_val
+
+def cofo {A : Cᵒᵖ ⥤ Type v₁} (F : (CostructuredArrow yoneda A)ᵒᵖ ⥤ Type v₁) (s : CostructuredArrow yoneda A) :
+    F.obj (Opposite.op s) → YonedaPreimage (YonedaCollectionFunctorToA A F) s.hom :=
+  fun x => ⟨YonedaCollection.mk' s.hom x, ⟨by simp [-yonedaEquiv_apply, YonedaCollection.fst_eq_yonedEquiv_fst']⟩⟩
+
+--cofo G s.unop (η.app s x) = YonedaPreimage.map₁ (cofo F s.unop x) (NatTrans.mk fun X ↦ YonedaCollection.map₁ η) _
+
+@[simp]
+lemma cofo_naturality₁ {A : Cᵒᵖ ⥤ Type v₁} {F G : (CostructuredArrow yoneda A)ᵒᵖ ⥤ Type v₁} (η : F ⟶ G)
+    (s : (CostructuredArrow yoneda A)ᵒᵖ) (x : F.obj s) : cofo G s.unop (η.app s x) = YonedaPreimage.map₁ (cofo F s.unop x) (YonedaCollectionMap η) (by aesop_cat) := by
+  dsimp [cofo]
+  apply YonedaPreimage.ext
+  simp
+  refine' YonedaCollection.ext' _ _ _ _
+  · simp
+  · simp
+    erw [YonedaCollection.mk'_snd']
+    erw [YonedaCollection.mk'_snd']
+    exact FunctorToTypes.naturality _ _ _ _ _
+
+-- F.map f ≫ (cobij F Y.unop).hom = (cobij F X.unop).hom ≫ fun u ↦ YonedaPreimage.map₂ u f.unop.left _
+-- cofo F t.unop (F.map f x) = YonedaPreimage.map₂ (cofo F s.unop x) f.unop.left _
+
+lemma bloink {A : Cᵒᵖ ⥤ Type v₁} (F : (CostructuredArrow yoneda A)ᵒᵖ ⥤ Type v₁) (s t : CostructuredArrow yoneda A)
+    (f : s ⟶ t) (x : F.obj (Opposite.op t)) : (F.map (CostructuredArrow.homMk'' t.hom f.left).op x) = F.map (eqToHom <| by simp [← CostructuredArrow.eq_mk]) (F.map f.op x) := by
+  have : (CostructuredArrow.homMk'' t.hom f.left).op = f.op ≫ eqToHom (by simp [← CostructuredArrow.eq_mk]) := by
+    apply Quiver.Hom.unop_inj
+    aesop_cat
+  erw [this]
+  simp
+
+@[simp]
+lemma cofo_naturality₂ {A : Cᵒᵖ ⥤ Type v₁} (F : (CostructuredArrow yoneda A)ᵒᵖ ⥤ Type v₁) (s t : (CostructuredArrow yoneda A)ᵒᵖ)
+    (f : t ⟶ s) (x : F.obj t) : cofo F s.unop (F.map f x) = YonedaPreimage.map₂ (cofo F t.unop x) f.unop.left (by simp) := by
+  simp [cofo]
+  apply YonedaPreimage.ext
+  rw [YonedaPreimage.map₂_val]
+  refine' YonedaCollection.ext' _ _ _ _
+  · simp only [Opposite.unop_op, YonedaCollectionFunctor'_obj, val_fst',
+    YonedaCollectionFunctor'_map, Quiver.Hom.unop_op, YonedaCollection.map₂_fst', CommaMorphism.w,
+    Functor.const_obj_obj, CostructuredArrow.right_eq_id, Functor.const_obj_map, comp_id]
+  · erw [YonedaCollection.mk'_snd']
+    erw [YonedaCollection.mk'_snd']
+    erw [YonedaCollection.mk'_snd']
+    simp only [Opposite.unop_op, YonedaCollectionFunctor'_obj, YonedaCollectionFunctor'_map,
+      Quiver.Hom.unop_op, id_eq, eq_mpr_eq_cast, val_fst', blubb, bla]
+    erw [bloink]
+    simp
+
+def coba {A : Cᵒᵖ ⥤ Type v₁} (F : (CostructuredArrow yoneda A)ᵒᵖ ⥤ Type v₁) (s : CostructuredArrow yoneda A) :
+    YonedaPreimage (YonedaCollectionFunctorToA A F) s.hom → F.obj (Opposite.op s) :=
+  fun p => F.map (eqToHom (by simp [val_fst', ← CostructuredArrow.eq_mk])) p.val.snd'
+
+lemma cofo_coba {A : Cᵒᵖ ⥤ Type v₁} (F : (CostructuredArrow yoneda A)ᵒᵖ ⥤ Type v₁) (s : CostructuredArrow yoneda A) :
+    cofo F s ∘ coba F s = id := by
+  ext p
+  dsimp [cofo, coba]
+  change YonedaCollection.mk' _ _ = _
+  refine' YonedaCollection.ext' _ _ _ _
+  · simp
+  · simp
+
+lemma coba_cofo {A : Cᵒᵖ ⥤ Type v₁} (F : (CostructuredArrow yoneda A)ᵒᵖ ⥤ Type v₁) (s : CostructuredArrow yoneda A) :
+    coba F s ∘ cofo F s = id := by
+  ext x
+  dsimp [cofo, coba]
+  erw [YonedaCollection.mk'_snd']
+  simp
+
+@[simps]
+def cobij {A : Cᵒᵖ ⥤ Type v₁} (F : (CostructuredArrow yoneda A)ᵒᵖ ⥤ Type v₁) (s : CostructuredArrow yoneda A) :
+    F.obj (Opposite.op s) ≅ YonedaPreimage (YonedaCollectionFunctorToA A F) s.hom where
+  hom := cofo F s
+  inv := coba F s
+  hom_inv_id := coba_cofo F s
+  inv_hom_id := cofo_coba F s
+
+@[simps! (config := { fullyApplied := false }) hom]
+def counit₀ (A : Cᵒᵖ ⥤ Type v₁) (F : (CostructuredArrow yoneda A)ᵒᵖ ⥤ Type v₁) :
+    F ≅ yonedaPreimageFunctor' (YonedaCollectionFunctorToA A F) :=
+  NatIso.ofComponents (fun s => cobij F s.unop) (by aesop_cat)
+
+def counit {A : Cᵒᵖ ⥤ Type v₁} : 𝟭 ((CostructuredArrow yoneda A)ᵒᵖ ⥤ Type v₁) ≅ (YonedaCollectionTotal A ⋙ yonedaPreimageFunctor A) :=
+  NatIso.ofComponents (counit₀ A) (by aesop_cat)
+
+def OverEquivPresheafCostructuredArrow (A : Cᵒᵖ ⥤ Type v₁) : Over A ≌ ((CostructuredArrow yoneda A)ᵒᵖ ⥤ Type v₁) :=
+  Equivalence.mk (yonedaPreimageFunctor A) (YonedaCollectionTotal A) (unit).symm (counit).symm
+
+def ToOverCompOverEquivPresheafCostructuredArrow (A : Cᵒᵖ ⥤ Type v₁) : CostructuredArrow.toOver yoneda A ⋙ (OverEquivPresheafCostructuredArrow A).functor ≅ yoneda :=
+  yonedaCompYonedaPreimageFunctor A
 
 open Functor
 
@@ -984,19 +953,19 @@ theorem final_toCostructuredArrow_comp_pre {c : Cocone (α ⋙ yoneda)} (hc : Is
       ((evaluation (CostructuredArrow yoneda c.pt)ᵒᵖ (Type v₁)).obj (Opposite.op d))
       (Cocone.toCostructuredArrow c ⋙ CostructuredArrow.pre α yoneda c.pt ⋙ yoneda)
     exact e
-  refine' IsTerminal.isTerminalOfObj (terribleEquiv c.pt).inverse
+  refine' IsTerminal.isTerminalOfObj (OverEquivPresheafCostructuredArrow c.pt).inverse
     (colimit (c.toCostructuredArrow ⋙ CostructuredArrow.pre α _ _  ⋙ yoneda)) _
   apply IsTerminal.ofIso (Over.mkIdTerminal)
-  let i := preservesColimitIso ((terribleEquiv c.pt).inverse) (Cocone.toCostructuredArrow c ⋙ CostructuredArrow.pre α yoneda c.pt ⋙ yoneda)
+  let i := preservesColimitIso ((OverEquivPresheafCostructuredArrow c.pt).inverse) (Cocone.toCostructuredArrow c ⋙ CostructuredArrow.pre α yoneda c.pt ⋙ yoneda)
   refine' _ ≪≫ i.symm
-  let j := terribleTriangle c.pt
+  let j := ToOverCompOverEquivPresheafCostructuredArrow c.pt
 
   -- TODO: Extract this out
-  let k : CostructuredArrow.toOver yoneda c.pt ≅ yoneda ⋙ (terribleEquiv c.pt).inverse := by
+  let k : CostructuredArrow.toOver yoneda c.pt ≅ yoneda ⋙ (OverEquivPresheafCostructuredArrow c.pt).inverse := by
     calc
-      CostructuredArrow.toOver yoneda c.pt ≅ CostructuredArrow.toOver yoneda c.pt ⋙ (terribleEquiv c.pt).functor ⋙ (terribleEquiv c.pt).inverse
-        := isoWhiskerLeft (CostructuredArrow.toOver _ _) ((terribleEquiv c.pt).unitIso)
-      _ ≅ yoneda ⋙ (terribleEquiv c.pt).inverse := isoWhiskerRight j (terribleEquiv c.pt).inverse
+      CostructuredArrow.toOver yoneda c.pt ≅ CostructuredArrow.toOver yoneda c.pt ⋙ (OverEquivPresheafCostructuredArrow c.pt).functor ⋙ (OverEquivPresheafCostructuredArrow c.pt).inverse
+        := isoWhiskerLeft (CostructuredArrow.toOver _ _) ((OverEquivPresheafCostructuredArrow c.pt).unitIso)
+      _ ≅ yoneda ⋙ (OverEquivPresheafCostructuredArrow c.pt).inverse := isoWhiskerRight j (OverEquivPresheafCostructuredArrow c.pt).inverse
 
   let k' := isoWhiskerLeft (Cocone.toCostructuredArrow c ⋙ CostructuredArrow.pre α yoneda c.pt) k
   let k'' := HasColimit.isoOfNatIso k'
