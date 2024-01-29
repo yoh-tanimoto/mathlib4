@@ -507,7 +507,7 @@ theorem final_toCostructuredArrow_comp_pre {c : Cocone (α ⋙ yoneda)} (hc : Is
   apply IsTerminal.ofIso (Over.mkIdTerminal)
   let i := preservesColimitIso ((OverEquivPresheafCostructuredArrow c.pt).inverse) (Cocone.toCostructuredArrow c ⋙ CostructuredArrow.pre α yoneda c.pt ⋙ yoneda)
   refine' _ ≪≫ i.symm
-  let j := ToOverCompOverEquivPresheafCostructuredArrow c.pt
+  let j := CostructuredArrow.toOverCompOverEquivPresheafCostructuredArrow c.pt
 
   -- TODO: Extract this out
   let k : CostructuredArrow.toOver yoneda c.pt ≅ yoneda ⋙ (OverEquivPresheafCostructuredArrow c.pt).inverse := by
