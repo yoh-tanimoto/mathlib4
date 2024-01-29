@@ -4418,9 +4418,9 @@ theorem getD_replicate_default_eq (r n : ℕ) : (replicate r d).getD n d = d := 
 @[simp]
 theorem getD_replicate {y i n} (h : i < n) :
     getD (replicate n x) i y = x := by
-  rw [getD, get?_eq_get, get_replicate]
-  · exact Option.getD_some
-  · rwa [length_replicate]
+  rw [getD_eq_get]
+  rw [get_replicate]
+  rwa [length_replicate]
 
 theorem getD_append (l l' : List α) (d : α) (n : ℕ) (h : n < l.length)
     (h' : n < (l ++ l').length := h.trans_le ((length_append l l').symm ▸ le_self_add)) :
