@@ -95,7 +95,7 @@ lemma YonedaPreimage.app_val {F A : Cᵒᵖ ⥤ Type v} {η : F ⟶ A} {X : C} {
 lemma YonedaPreimage.map_val {A : Cᵒᵖ ⥤ Type v} {Y : C} {η : yoneda.obj Y ⟶ A} {X : C} {s : yoneda.obj X ⟶ A}
     (p : YonedaPreimage η s) : yoneda.map p.val ≫ η = s := by
   apply yonedaEquiv.injective
-  simp [yonedaEquiv_comp, yonedaEquiv_yoneda_map, p.app_val, Opposite.op_unop]
+  simp [yonedaEquiv_apply, yonedaEquiv_comp, yonedaEquiv_yoneda_map, p.app_val, Opposite.op_unop]
 
 def YonedaPreimage.map₁ {F G A : Cᵒᵖ ⥤ Type v} {η : F ⟶ A} {μ : G ⟶ A} {X : C}
     {s : yoneda.obj X ⟶ A} (u : YonedaPreimage η s) (ε : F ⟶ G) (hε : ε ≫ μ = η) :
@@ -148,7 +148,7 @@ def yonedaPreimageCostructuredArrow (A : Cᵒᵖ ⥤ Type v) (s t : Costructured
     dsimp at this
     rw [Category.comp_id] at this
     rw [← this, ← yonedaEquiv_naturality]
-    dsimp
+    dsimp [yonedaEquiv_apply]
     have := congrFun (s.hom.naturality f.left.op) (𝟙 s.left)
     dsimp at this
     rw [← this, Category.comp_id]
@@ -363,8 +363,8 @@ lemma app_ax {A F : Cᵒᵖ ⥤ Type v} (η : F ⟶ A) (X : Cᵒᵖ) (p : Yoneda
     η.app X (ax η X.unop p) = p.fst := by
   simp [ax]
   have := p.snd'.app_val
-  dsimp [-yonedaEquiv_apply] at this
-  simp [-yonedaEquiv_apply, this, YonedaCollection.fst_eq_yonedEquiv_fst']
+  dsimp  at this
+  simp [ this, YonedaCollection.fst_eq_yonedEquiv_fst']
 
 def back {A F : Cᵒᵖ ⥤ Type v} (η : F ⟶ A) (X : C) :
     F.obj (Opposite.op X) → YonedaCollection (yonedaPreimageFunctor' η) X :=
@@ -380,9 +380,9 @@ lemma back_ax {A F : Cᵒᵖ ⥤ Type v} (η : F ⟶ A) (X : C) : back η X ∘ 
   simp [ax, back]
   refine' YonedaCollection.ext' _ _ _ _
   · have := p.snd'.app_val
-    dsimp [-yonedaEquiv_apply] at this
+    dsimp at this
     dsimp
-    simp [-yonedaEquiv_apply, this]
+    simp [this]
   · apply YonedaPreimage.ext
     aesop_cat
 
@@ -408,11 +408,11 @@ def unit {A : Cᵒᵖ ⥤ Type v} : yonedaPreimageFunctor A ⋙ YonedaCollection
 @[simp]
 lemma val_fst' {A : Cᵒᵖ ⥤ Type v} (F : (CostructuredArrow yoneda A)ᵒᵖ ⥤ Type v) (X : C)
     (s : yoneda.obj X ⟶ A) (p : YonedaPreimage (YonedaCollectionFunctorToA A F) s) : p.val.fst' = s := by
-  simpa [-yonedaEquiv_apply, YonedaCollection.fst_eq_yonedEquiv_fst'] using p.app_val
+  simpa [YonedaCollection.fst_eq_yonedEquiv_fst'] using p.app_val
 
 def cofo {A : Cᵒᵖ ⥤ Type v} (F : (CostructuredArrow yoneda A)ᵒᵖ ⥤ Type v) (s : CostructuredArrow yoneda A) :
     F.obj (Opposite.op s) → YonedaPreimage (YonedaCollectionFunctorToA A F) s.hom :=
-  fun x => ⟨YonedaCollection.mk' s.hom x, ⟨by simp [-yonedaEquiv_apply, YonedaCollection.fst_eq_yonedEquiv_fst']⟩⟩
+  fun x => ⟨YonedaCollection.mk' s.hom x, ⟨by simp [YonedaCollection.fst_eq_yonedEquiv_fst']⟩⟩
 
 @[simp]
 lemma cofo_naturality₁ {A : Cᵒᵖ ⥤ Type v} {F G : (CostructuredArrow yoneda A)ᵒᵖ ⥤ Type v} (η : F ⟶ G)
