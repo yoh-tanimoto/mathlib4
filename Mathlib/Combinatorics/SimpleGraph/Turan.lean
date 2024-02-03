@@ -459,7 +459,7 @@ theorem card_edgeFinset_turanGraph_add : (turanGraph (n + r) r).edgeFinset.card 
       add_comm (n + r), ← add_assoc, Nat.div_add_mod, ← add_assoc, mul_comm, ← two_mul, add_mul]
   nth_rw 1 [← Nat.div_two_mul_two_of_even (aux4 hr),
     ← Nat.div_two_mul_two_of_even (n := 2 * n * (r - 1)) (by simp),
-    ← Nat.div_two_mul_two_of_even (n := r * (r - 1)) (Nat.even_mul_self_pred _),
+    ← Nat.div_two_mul_two_of_even (n := r * (r - 1)) (Nat.even_mul_pred_self _),
     ← add_mul, ← add_mul, Nat.mul_div_left _ zero_lt_two]
   rw [← Nat.choose_two_right, add_comm, add_comm _ (r.choose 2)]; congr
   rw [mul_assoc, mul_comm, Nat.mul_div_left _ zero_lt_two, mul_comm]
