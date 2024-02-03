@@ -443,7 +443,7 @@ theorem card_edgeFinset_turanGraph : (turanGraph n r).edgeFinset.card =
   rw [mul_add, Nat.two_mul_div_two_of_even (aux4 hr), add_tsub_assoc_of_le (Nat.le_mul_self _)]
   congr
   cases' (n % r).eq_zero_or_pos with h h; · simp [h]
-  rw [Nat.choose_two_right, Nat.two_mul_div_two_of_even (Nat.even_mul_self_pred _), mul_tsub,
+  rw [Nat.choose_two_right, Nat.two_mul_div_two_of_even (Nat.even_mul_pred_self _), mul_tsub,
     mul_one]
 
 theorem card_edgeFinset_turanGraph_add : (turanGraph (n + r) r).edgeFinset.card =
