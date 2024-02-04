@@ -80,21 +80,33 @@ structure MakesOverArrow {F : Cᵒᵖ ⥤ Type v} (η : F ⟶ A) {X : C} (s : yo
     (u : F.obj (op X)) : Prop where
   (app : η.app (op X) u = yonedaEquiv s)
 
+namespace MakesOverArrow
+
 /-- "Functoriality" of `MakesOverArrow η s` in `η`. -/
-lemma MakesOverArrow.map₁ {F G : Cᵒᵖ ⥤ Type v} {η : F ⟶ A} {μ : G ⟶ A} {ε : F ⟶ G}
+lemma map₁ {F G : Cᵒᵖ ⥤ Type v} {η : F ⟶ A} {μ : G ⟶ A} {ε : F ⟶ G}
     (hε : ε ≫ μ = η) {X : C} {s : yoneda.obj X ⟶ A} {u : F.obj (op X)}
     (h : MakesOverArrow η s u) : MakesOverArrow μ s (ε.app _ u) :=
   ⟨by rw [← elementwise_of% NatTrans.comp_app ε μ, hε, h.app]⟩
 
 /-- "Functoriality of `MakesOverArrow η s` in `s`. -/
-lemma MakesOverArrow.map₂ {F : Cᵒᵖ ⥤ Type v} {η : F ⟶ A} {X Y : C} (f : X ⟶ Y)
+lemma map₂ {F : Cᵒᵖ ⥤ Type v} {η : F ⟶ A} {X Y : C} (f : X ⟶ Y)
     {s : yoneda.obj X ⟶ A} {t : yoneda.obj Y ⟶ A} (hst : yoneda.map f ≫ t = s)
     {u : F.obj (op Y)} (h : MakesOverArrow η t u) : MakesOverArrow η s (F.map f.op u) :=
   ⟨by rw [elementwise_of% η.naturality, h.app, yonedaEquiv_naturality, hst]⟩
 
+lemma of_arrow {F : Cᵒᵖ ⥤ Type v} {η : F ⟶ A} {X : C} {s : yoneda.obj X ⟶ A}
+    {f : yoneda.obj X ⟶ F} (hf : f ≫ η = s) : MakesOverArrow η s (yonedaEquiv f) :=
+  ⟨hf ▸ rfl⟩
+
+lemma of_yoneda_arrow {Y : C} {η : yoneda.obj Y ⟶ A} {X : C} {s : yoneda.obj X ⟶ A} {f : X ⟶ Y}
+    (hf : yoneda.map f ≫ η = s) : MakesOverArrow η s f := by
+  simpa only [yonedaEquiv_yoneda_map f] using of_arrow hf
+
+end MakesOverArrow
+
 /-- This is equivalent to the type `Over.mk s ⟶ Over.mk η`, but that lives in the wrong universe.
     However, if `F = yoneda.obj Y` for some `Y`, then (using that the Yoneda embedding is fully
-    faithful) we get a good statement, see `yonedaPreimageCostructuredArrow`. -/
+    faithful) we get a good statement, see `OverArrow.costructuredArrowIso`. -/
 def OverArrows {F : Cᵒᵖ ⥤ Type v} (η : F ⟶ A) {X : C} (s : yoneda.obj X ⟶ A) : Type v :=
   Subtype (MakesOverArrow η s)
 
@@ -154,6 +166,21 @@ lemma map₁_map₂ {F G : Cᵒᵖ ⥤ Type v} {η : F ⟶ A} {μ : G ⟶ A} (ε
     (u.map₁ ε hε).map₂ f hf = (u.map₂ f hf).map₁ ε hε :=
   OverArrows.ext <| (elementwise_of% (ε.naturality f.op).symm) u.val
 
+def yonedaArrow {Y : C} {η : yoneda.obj Y ⟶ A} {X : C} {s : yoneda.obj X ⟶ A} (f : X ⟶ Y)
+    (hf : yoneda.map f ≫ η = s) : OverArrows η s :=
+  ⟨f, .of_yoneda_arrow hf⟩
+
+@[simp]
+lemma yonedaArrow_val {Y : C} {η : yoneda.obj Y ⟶ A} {X : C} {s : yoneda.obj X ⟶ A} {f : X ⟶ Y}
+    (hf : yoneda.map f ≫ η = s) : (yonedaArrow f hf).val = f :=
+  rfl
+
+/-- If `η` is also `yoneda`-costructured, then `OverArrows η s` is just morphisms of costructured
+    arrows. -/
+def costructuredArrowIso (s t : CostructuredArrow yoneda A) : OverArrows s.hom t.hom ≅ t ⟶ s where
+  hom p := CostructuredArrow.homMk p.val (by aesop_cat)
+  inv f := yonedaArrow f.left f.w
+
 end OverArrows
 
 /-- This is basically just `yoneda.obj η : (Over A)ᵒᵖ ⥤ Type (max u v)` restricted along the
@@ -167,7 +194,7 @@ def restrictedYonedaObj {F : Cᵒᵖ ⥤ Type v} (η : F ⟶ A) :
 
 /-- Functoriality of `restrictedYonedaObj η` in `η`. -/
 @[simps]
-def restrictedYonedaObj_map₁ {F G : Cᵒᵖ ⥤ Type v} {η : F ⟶ A} {μ : G ⟶ A} (ε : F ⟶ G)
+def restrictedYonedaObjMap₁ {F G : Cᵒᵖ ⥤ Type v} {η : F ⟶ A} {μ : G ⟶ A} (ε : F ⟶ G)
     (hε : ε ≫ μ = η) : restrictedYonedaObj η ⟶ restrictedYonedaObj μ where
   app s u := u.map₁ ε hε
 
@@ -179,27 +206,18 @@ def restrictedYonedaObj_map₁ {F G : Cᵒᵖ ⥤ Type v} {η : F ⟶ A} {μ : G
 @[simps]
 def restrictedYoneda (A : Cᵒᵖ ⥤ Type v) : Over A ⥤ (CostructuredArrow yoneda A)ᵒᵖ ⥤ Type v where
   obj η := restrictedYonedaObj η.hom
-  map ε := restrictedYonedaObj_map₁ ε.left ε.w
+  map ε := restrictedYonedaObjMap₁ ε.left ε.w
 
-def yonedaPreimageCostructuredArrow (s t : CostructuredArrow yoneda A) :
-    OverArrows s.hom t.hom ≅ t ⟶ s :=
-  ⟨fun p => CostructuredArrow.homMk p.val (by aesop_cat), fun f => ⟨f.left, ⟨by
-    have := f.w
-    dsimp at this
-    rw [Category.comp_id] at this
-    rw [← this, ← yonedaEquiv_naturality]
-    dsimp [yonedaEquiv_apply]
-    have := congrFun (s.hom.naturality f.left.op) (𝟙 s.left)
-    dsimp at this
-    rw [← this, Category.comp_id]
-  ⟩⟩, by aesop_cat, by aesop_cat⟩
-
-def yonedaCompOverArrowsFunctor (A : Cᵒᵖ ⥤ Type v) :
+/-- Further restricting the functor
+    `restrictedYoneda : Over A ⥤ (CostructuredArrow yoneda A)ᵒᵖ ⥤ Type v` along the forgetful
+    functor in the first argument recovers the Yoneda embedding
+    `CostructuredArrow yoneda A ⥤ (CostructuredArrow yoneda A)ᵒᵖ ⥤ Type v`. This basically follows
+    from the fact that the Yoneda embedding on `C` is fully faithful. -/
+def toOverYonedaCompRestrictedYoneda (A : Cᵒᵖ ⥤ Type v) :
     CostructuredArrow.toOver yoneda A ⋙ restrictedYoneda A ≅ yoneda :=
-  NatIso.ofComponents (fun s => by
-    refine' NatIso.ofComponents (fun t => yonedaPreimageCostructuredArrow _ _) _
-    aesop_cat
-  ) (by aesop_cat)
+  NatIso.ofComponents
+    (fun s => NatIso.ofComponents (fun t => OverArrows.costructuredArrowIso _ _) (by aesop_cat))
+    (by aesop_cat)
 
 def YonedaCollection (F : (CostructuredArrow yoneda A)ᵒᵖ ⥤ Type v) (X : C) :
     Type v :=
@@ -389,7 +407,7 @@ def ax {F : Cᵒᵖ ⥤ Type v} (η : F ⟶ A) (X : C) :
 
 @[simp]
 lemma ax_naturality₁ {F G : Cᵒᵖ ⥤ Type v} {η : F ⟶ A} {μ : G ⟶ A} (ε : F ⟶ G) (hε : ε ≫ μ = η) (X : C) (p : YonedaCollection (restrictedYonedaObj η) X) :
-    ax μ X (p.map₁ (restrictedYonedaObj_map₁ ε hε)) = ε.app _ (ax η X p) := by
+    ax μ X (p.map₁ (restrictedYonedaObjMap₁ ε hε)) = ε.app _ (ax η X p) := by
   simp [ax]
 
 @[simp]
@@ -548,6 +566,6 @@ def OverEquivPresheafCostructuredArrow (A : Cᵒᵖ ⥤ Type v) :
     This is Lemma 1.4.12 in [Kashiwara2006]. -/
 def CostructuredArrow.toOverCompOverEquivPresheafCostructuredArrow (A : Cᵒᵖ ⥤ Type v) :
     CostructuredArrow.toOver yoneda A ⋙ (OverEquivPresheafCostructuredArrow A).functor ≅ yoneda :=
-  OverPresheafAux.yonedaCompOverArrowsFunctor A
+  OverPresheafAux.toOverYonedaCompRestrictedYoneda A
 
 end CategoryTheory
