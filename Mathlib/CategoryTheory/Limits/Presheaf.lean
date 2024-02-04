@@ -502,19 +502,19 @@ theorem final_toCostructuredArrow_comp_pre {c : Cocone (α ⋙ yoneda)} (hc : Is
       ((evaluation (CostructuredArrow yoneda c.pt)ᵒᵖ (Type v₁)).obj (Opposite.op d))
       (Cocone.toCostructuredArrow c ⋙ CostructuredArrow.pre α yoneda c.pt ⋙ yoneda)
     exact e
-  refine' IsTerminal.isTerminalOfObj (OverEquivPresheafCostructuredArrow c.pt).inverse
+  refine' IsTerminal.isTerminalOfObj (overEquivPresheafCostructuredArrow c.pt).inverse
     (colimit (c.toCostructuredArrow ⋙ CostructuredArrow.pre α _ _  ⋙ yoneda)) _
   apply IsTerminal.ofIso (Over.mkIdTerminal)
-  let i := preservesColimitIso ((OverEquivPresheafCostructuredArrow c.pt).inverse) (Cocone.toCostructuredArrow c ⋙ CostructuredArrow.pre α yoneda c.pt ⋙ yoneda)
+  let i := preservesColimitIso ((overEquivPresheafCostructuredArrow c.pt).inverse) (Cocone.toCostructuredArrow c ⋙ CostructuredArrow.pre α yoneda c.pt ⋙ yoneda)
   refine' _ ≪≫ i.symm
   let j := CostructuredArrow.toOverCompOverEquivPresheafCostructuredArrow c.pt
 
   -- TODO: Extract this out
-  let k : CostructuredArrow.toOver yoneda c.pt ≅ yoneda ⋙ (OverEquivPresheafCostructuredArrow c.pt).inverse := by
+  let k : CostructuredArrow.toOver yoneda c.pt ≅ yoneda ⋙ (overEquivPresheafCostructuredArrow c.pt).inverse := by
     calc
-      CostructuredArrow.toOver yoneda c.pt ≅ CostructuredArrow.toOver yoneda c.pt ⋙ (OverEquivPresheafCostructuredArrow c.pt).functor ⋙ (OverEquivPresheafCostructuredArrow c.pt).inverse
-        := isoWhiskerLeft (CostructuredArrow.toOver _ _) ((OverEquivPresheafCostructuredArrow c.pt).unitIso)
-      _ ≅ yoneda ⋙ (OverEquivPresheafCostructuredArrow c.pt).inverse := isoWhiskerRight j (OverEquivPresheafCostructuredArrow c.pt).inverse
+      CostructuredArrow.toOver yoneda c.pt ≅ CostructuredArrow.toOver yoneda c.pt ⋙ (overEquivPresheafCostructuredArrow c.pt).functor ⋙ (overEquivPresheafCostructuredArrow c.pt).inverse
+        := isoWhiskerLeft (CostructuredArrow.toOver _ _) ((overEquivPresheafCostructuredArrow c.pt).unitIso)
+      _ ≅ yoneda ⋙ (overEquivPresheafCostructuredArrow c.pt).inverse := isoWhiskerRight j (overEquivPresheafCostructuredArrow c.pt).inverse
 
   let k' := isoWhiskerLeft (Cocone.toCostructuredArrow c ⋙ CostructuredArrow.pre α yoneda c.pt) k
   let k'' := HasColimit.isoOfNatIso k'

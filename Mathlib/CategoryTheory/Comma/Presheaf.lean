@@ -562,7 +562,7 @@ open OverPresheafAux
     `CostructuredArrow.toOverCompOverEquivPresheafCostructuredArrow`.
 
     This is Lemma 1.4.12 in [Kashiwara2006]. -/
-def OverEquivPresheafCostructuredArrow (A : Cᵒᵖ ⥤ Type v) :
+def overEquivPresheafCostructuredArrow (A : Cᵒᵖ ⥤ Type v) :
     Over A ≌ ((CostructuredArrow yoneda A)ᵒᵖ ⥤ Type v) :=
   .mk (restrictedYoneda A) (costructuredArrowPresheafToOver A) (unit A) (counit A)
 
@@ -572,7 +572,7 @@ def OverEquivPresheafCostructuredArrow (A : Cᵒᵖ ⥤ Type v) :
 
     This is Lemma 1.4.12 in [Kashiwara2006]. -/
 def CostructuredArrow.toOverCompOverEquivPresheafCostructuredArrow (A : Cᵒᵖ ⥤ Type v) :
-    CostructuredArrow.toOver yoneda A ⋙ (OverEquivPresheafCostructuredArrow A).functor ≅ yoneda :=
+    CostructuredArrow.toOver yoneda A ⋙ (overEquivPresheafCostructuredArrow A).functor ≅ yoneda :=
   toOverYonedaCompRestrictedYoneda A
 
 end CategoryTheory
