@@ -316,7 +316,7 @@ lemma map₂_yonedaEquivFst {Y : C} (f : X ⟶ Y) (p : YonedaCollection F Y) :
   simp only [YonedaCollection.yonedaEquivFst_eq, map₂_fst, yonedaEquiv_naturality]
 
 @[simp]
-lemma map₂_snd' {Y : C} (f : X ⟶ Y) (p : YonedaCollection F Y) :
+lemma map₂_snd {Y : C} (f : X ⟶ Y) (p : YonedaCollection F Y) :
     (YonedaCollection.map₂ F f p).snd = F.map ((CostructuredArrow.homMk'' p.fst f).op ≫
       eqToHom (by rw [YonedaCollection.map₂_fst f])) p.snd := by
   simp [map₂]
