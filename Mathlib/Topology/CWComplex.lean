@@ -5,28 +5,36 @@ https://leanprover.zulipchat.com/#narrow/stream/217875-Is-there-code-for-X.3F/to
 
 import Mathlib.Topology.ContinuousFunction.Basic
 import Mathlib.Topology.Category.TopCat.Basic
+import Mathlib.Topology.Order
 
 --universe u v w x
 --variable {F : Type*} {X : Type u} {X' : Type v} {Y : Type w} {Z : Type x} {ι : Type*}
 --variable [TopologicalSpace X] [TopologicalSpace X'] [TopologicalSpace Y]
 
---open ContinuousMap
-
 -- A type witnessing that X' is obtained from X by attaching n-cells
---structure CW_aux (X X' : Type*) [TopologicalSpace X] [TopologicalSpace X'] (n : ℕ) where
-structure CW_aux (X X' : Type*) [TopologicalSpace X] [TopologicalSpace X'] (n : ℕ) where
-  inclusion : ContinuousMap X X' -- C[X, X']
+structure AttachCells (X X' : Type*) [TopologicalSpace X] [TopologicalSpace X'] (n : ℕ) where
+  inclusion : C(X, X') -- rewrite using pushouts?
   cells : Type
--- should also have, for each i in cells a map ∂D^n ⟶ X, and
--- a homeomorphism between X' and the result of gluing these n-cells to X
 
-structure CW_complex where
-  skeleta : ℕ → TopCat
-  foo : (n : ℕ) → CW_aux (skeleta n) (skeleta (n+1)) n
+structure CWComplex where
+  /- Skeleta -/
+  sk : ℤ → TopCat
+  /- Every n-skeleton for n < 0 is empty. -/
+  sk_neg_empty : ∀ n < 0, sk n = Empty
+  /- For n ≥ 0, the (n-1)-skeleton is obtained from the n-skeleton by attaching n-cells. -/
+  attach : (n : ℕ) → AttachCells (sk (n - 1)) (sk n) n
 
---structure CW_complex (X : Type*) [TopologicalSpace X] where
-  -- skeleta : ℕ → ???
-  --foo : (n : ℕ) → CW_aux (skeleta n) (skeleta (n+1)) n
-  --foo : Π n, CW_aux (skeleta n) (skeleta (n+1)) n
+-- -- A type witnessing that X' is obtained from X by attaching n-cells
+-- structure AttachCells (X X' : Type*) [TopologicalSpace X] [TopologicalSpace X'] (n : ℕ) where
+--   inclusion : C(X, X')
+--   cells : Type
+-- -- should also have, for each i in cells a map ∂D^n ⟶ X, and
+-- -- a homeomorphism between X' and the result of gluing these n-cells to X
 
-#check CW_aux
+-- structure CWComplex where
+--   /- Skeleta -/
+--   sk : ℕ → TopCat
+--   /- The 0-skeleton is a discrete topological space. -/
+--   discrete_sk_zero : DiscreteTopology (sk 0)
+--   /- The (n+1)-skeleton is obtained from the n-skeleton by attaching (n+1)-cells. -/
+--   attach : (n : ℕ) → AttachCells (sk n) (sk (n + 1)) (n + 1)
