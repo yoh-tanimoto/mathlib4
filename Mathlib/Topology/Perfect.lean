@@ -26,6 +26,9 @@ including a version of the Cantor-Bendixson Theorem.
 * `exists_countable_union_perfect_of_isClosed`: One version of the **Cantor-Bendixson Theorem**:
   A closed set in a second countable space can be written as the union of a countable set and a
   perfect set.
+* `ConnectedSpace.perfectSpace_of_nontrivial_of_t1space`: A T1, connected, nontrivial space is
+  perfect.
+* `set_infinite_of_perfectSpace`: In a T1 `PerfectSpace`, every nonempty open set must be infinite.
 
 ## Implementation Notes
 
@@ -123,6 +126,14 @@ theorem Preperfect.perfect_closure (hC : Preperfect C) : Perfect (closure C) := 
   rw [closure_eq_cluster_pts] at hx
   exact hx
 #align preperfect.perfect_closure Preperfect.perfect_closure
+
+/--
+The punctured neighborhood of any point in a preperfect set is not the bottom filter.
+-/
+theorem Preperfect.nhdsWithin_neBot (hC : Preperfect C) {x : α} (x_in_s : x ∈ C) :
+    Filter.NeBot (𝓝[≠] x) := ⟨fun eq_bot => by
+  simpa [AccPt, Filter.neBot_iff, eq_bot, bot_inf_eq] using hC _ x_in_s⟩
+
 
 /-- In a T1 space, being preperfect is equivalent to having perfect closure.-/
 theorem preperfect_iff_perfect_closure [T1Space α] : Preperfect C ↔ Perfect (closure C) := by
@@ -248,7 +259,16 @@ instance PerfectSpace.not_isolated (x : X): Filter.NeBot (𝓝[≠] x) := by
   have := (PerfectSpace.univ_perfect X).acc _ (Set.mem_univ x)
   rwa [AccPt, Filter.principal_univ, inf_top_eq] at this
 
+theorem PerfectSpace.prePerfect_of_isOpen {s : Set X} (s_open : IsOpen s) : Preperfect s :=
+  Set.inter_univ s ▸ (PerfectSpace.univ_perfect X).acc.open_inter s_open
+
 section Prod
+
+/-!
+### Constructions of perfect spaces
+
+The product topological space `X × Y` is perfect if `X` or `Y` is perfect.
+-/
 
 variable {Y : Type*} [TopologicalSpace Y]
 
@@ -273,3 +293,54 @@ instance PerfectSpace.prod_right [PerfectSpace Y] : PerfectSpace (X × Y) :=
     exact PerfectSpace.not_isolated q
 
 end Prod
+
+section ConnectedSpace
+
+/-- A non-trivial connected T1 space has no isolated points. -/
+instance (priority := 100) ConnectedSpace.perfectSpace_of_nontrivial_of_t1space
+    [PreconnectedSpace X] [Nontrivial X] [T1Space X] : PerfectSpace X := by
+  apply perfectSpace_of_forall_not_isolated
+  intro x
+  by_contra contra
+  rw [not_neBot, ← isOpen_singleton_iff_punctured_nhds] at contra
+  replace contra := nonempty_inter isOpen_compl_singleton
+    contra (compl_union_self _) (Set.nonempty_compl_of_nontrivial _) (singleton_nonempty _)
+  simp [compl_inter_self {x}] at contra
+
+end ConnectedSpace
+
+section Infinite
+
+/-!
+### Preperfect sets are infinite
+
+Any open pre-perfect set must be infinite.
+As a corollary, a perfect space must be infinite (`infinite_of_perfectSpace`) and every nonempty,
+open set must be infinite (`set_infinite_of_perfectSpace`).
+-/
+
+/--
+In a T1 space, nonempty open pre-perfect sets are infinite.
+-/
+theorem set_infinite_of_prePerfect [T1Space X] {s : Set X} (s_prePerfect : Preperfect s)
+    (s_open : IsOpen s) (s_nonempty : s.Nonempty) : s.Infinite := by
+  let ⟨p, p_in_s⟩ := s_nonempty
+  have := s_prePerfect.nhdsWithin_neBot p_in_s
+  apply infinite_of_mem_nhds p
+  exact IsOpen.mem_nhds s_open p_in_s
+
+/--
+In a T1, perfect space, nonempty open sets are infinite.
+-/
+theorem set_infinite_of_perfectSpace [T1Space X] [PerfectSpace X] {s : Set X} (s_open : IsOpen s)
+    (s_nonempty : s.Nonempty) : s.Infinite :=
+  set_infinite_of_prePerfect (PerfectSpace.prePerfect_of_isOpen s_open) s_open s_nonempty
+
+variable (α) in
+/--
+If a topological space is perfect, T1 and nonempty, then it is infinite.
+-/
+theorem infinite_of_perfectSpace [T1Space X] [PerfectSpace X] [Nonempty X] : Infinite X :=
+  Set.infinite_univ_iff.mp (set_infinite_of_perfectSpace isOpen_univ univ_nonempty)
+
+end PerfectSpace.Infinite
