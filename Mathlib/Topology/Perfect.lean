@@ -248,18 +248,18 @@ section PerfectSpace
 
 variable {X : Type*} [TopologicalSpace X]
 
-theorem perfectSpace_of_forall_not_isolated (h_forall : ∀ x : X, Filter.NeBot (𝓝[≠] x)) :
-    PerfectSpace X := ⟨⟨isClosed_univ, fun x _ => by
-  rw [AccPt, Filter.principal_univ, inf_top_eq]
-  exact h_forall x⟩⟩
-
-variable [PerfectSpace X]
-
+variable [PerfectSpace X] in
 instance PerfectSpace.not_isolated (x : X): Filter.NeBot (𝓝[≠] x) := by
   have := (PerfectSpace.univ_perfect X).acc _ (Set.mem_univ x)
   rwa [AccPt, Filter.principal_univ, inf_top_eq] at this
 
-theorem PerfectSpace.prePerfect_of_isOpen {s : Set X} (s_open : IsOpen s) : Preperfect s :=
+theorem perfectSpace_iff_forall_not_isolated : PerfectSpace X ↔ ∀ x : X, Filter.NeBot (𝓝[≠] x) :=
+  ⟨fun perfect x => perfect.not_isolated x, fun h_forall => ⟨⟨isClosed_univ, fun x _ => by
+    rw [AccPt, Filter.principal_univ, inf_top_eq]
+    exact h_forall x⟩⟩⟩
+
+variable [PerfectSpace X] in
+theorem PerfectSpace.preperfect_of_isOpen {s : Set X} (s_open : IsOpen s) : Preperfect s :=
   Set.inter_univ s ▸ (PerfectSpace.univ_perfect X).acc.open_inter s_open
 
 section Prod
@@ -280,14 +280,14 @@ theorem nhdsWithin_punctured_prod_neBot_iff {p : X} {q : Y} : Filter.NeBot (𝓝
 
 variable (X Y) in
 instance PerfectSpace.prod_left [PerfectSpace X] : PerfectSpace (X × Y) :=
-  perfectSpace_of_forall_not_isolated fun ⟨p, q⟩ => by
+  perfectSpace_iff_forall_not_isolated.mpr fun ⟨p, q⟩ => by
     rw [nhdsWithin_punctured_prod_neBot_iff]
     left
     exact PerfectSpace.not_isolated p
 
 variable (X Y) in
 instance PerfectSpace.prod_right [PerfectSpace Y] : PerfectSpace (X × Y) :=
-  perfectSpace_of_forall_not_isolated fun ⟨p, q⟩ => by
+  perfectSpace_iff_forall_not_isolated.mpr fun ⟨p, q⟩ => by
     rw [nhdsWithin_punctured_prod_neBot_iff]
     right
     exact PerfectSpace.not_isolated q
@@ -299,7 +299,7 @@ section ConnectedSpace
 /-- A non-trivial connected T1 space has no isolated points. -/
 instance (priority := 100) ConnectedSpace.perfectSpace_of_nontrivial_of_t1space
     [PreconnectedSpace X] [Nontrivial X] [T1Space X] : PerfectSpace X := by
-  apply perfectSpace_of_forall_not_isolated
+  rw [perfectSpace_iff_forall_not_isolated]
   intro x
   by_contra contra
   rw [not_neBot, ← isOpen_singleton_iff_punctured_nhds] at contra
@@ -334,7 +334,7 @@ In a T1, perfect space, nonempty open sets are infinite.
 -/
 theorem set_infinite_of_perfectSpace [T1Space X] [PerfectSpace X] {s : Set X} (s_open : IsOpen s)
     (s_nonempty : s.Nonempty) : s.Infinite :=
-  set_infinite_of_prePerfect (PerfectSpace.prePerfect_of_isOpen s_open) s_open s_nonempty
+  set_infinite_of_prePerfect (PerfectSpace.preperfect_of_isOpen s_open) s_open s_nonempty
 
 variable (α) in
 /--
