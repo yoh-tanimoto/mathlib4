@@ -554,6 +554,8 @@ end counit
 
 end OverPresheafAux
 
+open OverPresheafAux
+
 /-- If `A : Cᵒᵖ ⥤ Type v` is a presheaf, then we have an equivalence between presheaves lying over
     `A` and the category of presheaves on `CostructuredArrow yoneda A`. There is a quasicommutative
     triangle involving this equivalence, see
@@ -562,8 +564,7 @@ end OverPresheafAux
     This is Lemma 1.4.12 in [Kashiwara2006]. -/
 def OverEquivPresheafCostructuredArrow (A : Cᵒᵖ ⥤ Type v) :
     Over A ≌ ((CostructuredArrow yoneda A)ᵒᵖ ⥤ Type v) :=
-  Equivalence.mk (OverPresheafAux.restrictedYoneda A) (OverPresheafAux.costructuredArrowPresheafToOver A)
-    (OverPresheafAux.unit A) (OverPresheafAux.counit A)
+  .mk (restrictedYoneda A) (costructuredArrowPresheafToOver A) (unit A) (counit A)
 
 /-- If `A : Cᵒᵖ ⥤ Type v` is a presheaf, then the Yoneda embedding for
     `CostructuredArrow yoneda A` factors through `Over A` via a forgetful functor and an
@@ -572,6 +573,6 @@ def OverEquivPresheafCostructuredArrow (A : Cᵒᵖ ⥤ Type v) :
     This is Lemma 1.4.12 in [Kashiwara2006]. -/
 def CostructuredArrow.toOverCompOverEquivPresheafCostructuredArrow (A : Cᵒᵖ ⥤ Type v) :
     CostructuredArrow.toOver yoneda A ⋙ (OverEquivPresheafCostructuredArrow A).functor ≅ yoneda :=
-  OverPresheafAux.toOverYonedaCompRestrictedYoneda A
+  toOverYonedaCompRestrictedYoneda A
 
 end CategoryTheory
