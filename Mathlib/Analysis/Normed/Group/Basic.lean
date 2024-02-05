@@ -1412,10 +1412,9 @@ def evalAddNorm' : PositivityExt where eval {u α} _ _ e := do
     assertInstancesCommute
     try
       let _t0 ← synthInstanceQ q(T0Space $E)
-      let zE ← synthInstanceQ q(Zero $E)
       let pE ← synthInstanceQ q(PartialOrder $E)
       assumeInstancesCommute
-      let p ← (← core zE pE a).toNonzero
+      let p ← (← core q(inferInstance) pE a).toNonzero
       return .positive q(norm_pos_iff'.mpr $p)
     catch _ =>
       return .nonnegative q(norm_nonneg $a)
