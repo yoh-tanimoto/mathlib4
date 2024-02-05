@@ -1398,7 +1398,7 @@ def evalMulNorm : PositivityExt where eval {u α} _ _ e := do
   match u, α, e with
   | 0, ~q(ℝ), ~q(@Norm.norm $E $_n $a) =>
     let _sng ← synthInstanceQ q(SeminormedGroup $E)
-    assumeInstancesCommute
+    assertInstancesCommute
     return .nonnegative q(norm_nonneg' $a)
   | _, _, _ => throwError "not `‖ · ‖`"
 
@@ -1409,6 +1409,7 @@ def evalAddNorm' : PositivityExt where eval {u α} _ _ e := do
   match u, α, e with
   | 0, ~q(ℝ), ~q(@Norm.norm $E $_n $a) =>
     let _sng ← synthInstanceQ q(SeminormedAddGroup $E)
+    assertInstancesCommute
     try
       let _t0 ← synthInstanceQ q(T0Space $E)
       let zE ← synthInstanceQ q(Zero $E)
@@ -1417,7 +1418,6 @@ def evalAddNorm' : PositivityExt where eval {u α} _ _ e := do
       let p ← (← core zE pE a).toNonzero
       return .positive q(norm_pos_iff'.mpr $p)
     catch _ =>
-      assumeInstancesCommute
       return .nonnegative q(norm_nonneg $a)
   | _, _, _ => throwError "not `‖ · ‖`"
 
