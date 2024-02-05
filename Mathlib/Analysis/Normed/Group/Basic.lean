@@ -527,27 +527,6 @@ theorem norm_nonneg' (a : E) : 0 ≤ ‖a‖ := by
 theorem abs_norm' (z : E) : |‖z‖| = ‖z‖ := abs_of_nonneg <| norm_nonneg' _
 #align abs_norm abs_norm
 
-namespace Mathlib.Meta.Positivity
-
-open Lean Meta Qq Function
-
-/-- Extension for the `positivity` tactic: multiplicative norms are nonnegative, via
-`norm_nonneg'`. -/
-@[positivity Norm.norm _]
-def evalMulNorm : PositivityExt where eval {_ _} _zα _pα e := do
-  let .app _ a ← whnfR e | throwError "not ‖ · ‖"
-  let p ← mkAppM ``norm_nonneg' #[a]
-  pure (.nonnegative p)
-
-/-- Extension for the `positivity` tactic: additive norms are nonnegative, via `norm_nonneg`. -/
-@[positivity Norm.norm _]
-def evalAddNorm : PositivityExt where eval {_ _} _zα _pα e := do
-  let .app _ a ← whnfR e | throwError "not ‖ · ‖"
-  let p ← mkAppM ``norm_nonneg #[a]
-  pure (.nonnegative p)
-
-end Mathlib.Meta.Positivity
-
 @[to_additive (attr := simp) norm_zero]
 theorem norm_one' : ‖(1 : E)‖ = 0 := by rw [← dist_one_right, dist_self]
 #align norm_one' norm_one'
@@ -1237,7 +1216,9 @@ theorem Filter.Tendsto.op_one_isBoundedUnder_le' {f : α → E} {g : α → F} {
   · exact (mul_nonpos_of_nonpos_of_nonneg (mul_nonpos_of_nonpos_of_nonneg hA <| norm_nonneg' _) <|
       norm_nonneg' _).trans_lt ε₀
   calc
-    A * ‖f i‖ * ‖g i‖ ≤ A * δ * C := by gcongr; exact hg
+    -- TODO: this used to just be `gcongr; exact hg`, but we had to move the `positivity` extension
+    -- down to below `norm_pos_iff`; someone splitting the file should (try to) fix this.
+    A * ‖f i‖ * ‖g i‖ ≤ A * δ * C := by gcongr; exacts [norm_nonneg' _, hg]
     _ = A * C * δ := (mul_right_comm _ _ _)
     _ < ε := hδ
 #align filter.tendsto.op_one_is_bounded_under_le' Filter.Tendsto.op_one_isBoundedUnder_le'
@@ -1405,6 +1386,42 @@ theorem SeminormedGroup.uniformCauchySeqOn_iff_tendstoUniformlyOn_one {f : ι �
 #align seminormed_add_group.uniform_cauchy_seq_on_iff_tendsto_uniformly_on_zero SeminormedAddGroup.uniformCauchySeqOn_iff_tendstoUniformlyOn_zero
 
 end SeminormedGroup
+
+namespace Mathlib.Meta.Positivity
+
+open Lean Meta Qq Function
+
+/-- Extension for the `positivity` tactic: multiplicative norms are nonnegative, via
+`norm_nonneg'`. -/
+@[positivity Norm.norm _]
+def evalMulNorm : PositivityExt where eval {u α} _ _ e := do
+  match u, α, e with
+  | 0, ~q(ℝ), ~q(@Norm.norm $E $_n $a) =>
+    let _sng ← synthInstanceQ q(SeminormedGroup $E)
+    assumeInstancesCommute
+    return .nonnegative q(norm_nonneg' $a)
+  | _, _, _ => throwError "not `‖ · ‖`"
+
+/-- Extension for the `positivity` tactic: additive norms are nonnegative, and if their argument
+is non-zero, then they are positive. Via `norm_nonneg` and `norm_pos_iff'`. -/
+@[positivity Norm.norm _]
+def evalAddNorm' : PositivityExt where eval {u α} _ _ e := do
+  match u, α, e with
+  | 0, ~q(ℝ), ~q(@Norm.norm $E $_n $a) =>
+    let _sng ← synthInstanceQ q(SeminormedAddGroup $E)
+    try
+      let _t0 ← synthInstanceQ q(T0Space $E)
+      let zE ← synthInstanceQ q(Zero $E)
+      let pE ← synthInstanceQ q(PartialOrder $E)
+      assumeInstancesCommute
+      let p ← (← core zE pE a).toNonzero
+      return .positive q(norm_pos_iff'.mpr $p)
+    catch _ =>
+      assumeInstancesCommute
+      return .nonnegative q(norm_nonneg $a)
+  | _, _, _ => throwError "not `‖ · ‖`"
+
+end Mathlib.Meta.Positivity
 
 section Induced
 
