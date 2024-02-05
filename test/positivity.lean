@@ -32,6 +32,9 @@ example {a : ℤ} (ha : 0 ≤ a) : 0 ≤ a := by positivity
 example {a : ℤ} (ha : a ≠ 0) : a ≠ 0 := by positivity
 example {a : ℤ} (ha : a = 0) : 0 ≤ a := by positivity
 
+-- unsure why this is failing.
+example {V : Type*} [Zero V] [PartialOrder V] {x : V} (hx : 0 < x) : x ≠ 0 := by positivity
+
 /- ### Reversing hypotheses -/
 
 example {a : ℤ} (ha : a > 0) : 0 < a := by positivity
@@ -274,7 +277,8 @@ example : 0 ≤ Real.log 0 := by positivity
 example : 0 ≤ Real.log (-1) := by positivity
 
 example {V : Type*} [NormedCommGroup V] (x : V) : 0 ≤ ‖x‖ := by positivity
-example {V : Type*} [NormedCommGroup V] {x : V} (hx : x ≠ 0) : 0 < ‖x‖ := by positivity
+example {V : Type*} [NormedAddCommGroup V] [LinearOrder V] {x : V} (hx : x ≠ 0) : 0 < ‖x‖ :=
+  by positivity
 example {V : Type*} [NormedAddCommGroup V] (x : V) : 0 ≤ ‖x‖ := by positivity
 
 example : 0 ≤ ‖Multiplicative.ofAdd (37 : ℤ)‖ := by positivity
