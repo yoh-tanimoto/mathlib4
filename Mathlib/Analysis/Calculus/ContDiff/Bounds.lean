@@ -123,6 +123,7 @@ theorem ContinuousLinearMap.norm_iteratedFDerivWithin_le_of_bilinear_aux {Du Eu 
 /-- Bounding the norm of the iterated derivative of `B (f x) (g x)` within a set in terms of the
 iterated derivatives of `f` and `g` when `B` is bilinear:
 `‖D^n (x ↦ B (f x) (g x))‖ ≤ ‖B‖ ∑_{k ≤ n} n.choose k ‖D^k f‖ ‖D^{n-k} g‖` -/
+set_option maxHeartbeats 400000 in
 theorem ContinuousLinearMap.norm_iteratedFDerivWithin_le_of_bilinear (B : E →L[𝕜] F →L[𝕜] G)
     {f : D → E} {g : D → F} {N : ℕ∞} {s : Set D} {x : D} (hf : ContDiffOn 𝕜 N f s)
     (hg : ContDiffOn 𝕜 N g s) (hs : UniqueDiffOn 𝕜 s) (hx : x ∈ s) {n : ℕ} (hn : (n : ℕ∞) ≤ N) :
