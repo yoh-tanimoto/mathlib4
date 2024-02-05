@@ -113,6 +113,33 @@ theorem hasFDerivAt_fourier [CompleteSpace E] [MeasurableSpace V] [BorelSpace V]
     ae_of_all _ (fun v w' _ ↦ hasFDerivAt_fourier_transform_integrand_right L f v w')
   exact hasFDerivAt_integral_of_dominated_of_fderiv_le one_pos h1 h2 h3 h4 h5 h6
 
+
+/-- Second Main theorem of this section: if both `f` and `x ↦ ‖x‖ * ‖f x‖` are integrable, then the
+Fourier transform of `f` has a Fréchet derivative (everywhere in its domain) and its derivative is
+the Fourier transform of `mul_L L f`. -/
+theorem fourierIntegral_fderiv_eq [CompleteSpace E] [MeasurableSpace V] [BorelSpace V]
+    {μ : Measure V} [SecondCountableTopologyEither V (W →L[ℝ] ℝ)]
+    (hf : Integrable f μ) (hf' : Integrable (fderiv ℝ f) μ) (w : W) :
+    VectorFourier.fourierIntegral fourierChar μ L.toLinearMap₂ (fderiv ℝ f) =
+      mul_L L.flip (VectorFourier.fourierIntegral fourierChar μ L.toLinearMap₂ f) := by sorry
+
+
+
+#exit
+     := by
+  let Z := VectorFourier.fourierIntegral fourierChar μ L.toLinearMap₂ (fderiv ℝ f)
+  let T := mul_L L.flip (VectorFourier.fourierIntegral fourierChar μ L.toLinearMap₂ f)
+  have  : HasFDerivAt (𝕜 := ℝ) Z T w := sorry
+
+#exit
+
+
+
+    HasFDerivAt (VectorFourier.fourierIntegral fourierChar μ L.toLinearMap₂ (fderiv ℝ f))
+      ((mul_L L.flip (VectorFourier.fourierIntegral fourierChar μ L.toLinearMap₂ f)) w) w := by
+  sorry
+
+
 section inner
 
 variable {V : Type*} [NormedAddCommGroup V] [InnerProductSpace ℝ V] [SecondCountableTopology V]
