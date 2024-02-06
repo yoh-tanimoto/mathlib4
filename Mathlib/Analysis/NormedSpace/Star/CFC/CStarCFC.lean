@@ -142,7 +142,11 @@ theorem Isometry.nnnorm_map_of_map_one {E F : Type*} [SeminormedGroup E] [Semino
   Subtype.ext <| hi.norm_map_of_map_one h₁ x
 
 -- MOVE ME
-instance {A : Type*} [NormedRing A] [NormedAlgebra ℂ A] : NormedAlgebra ℝ A where
+instance {E : Type*} [NormedAddCommGroup E] [NormedSpace ℂ E] : NormedSpace ℝ E :=
+  inferInstance
+
+-- MOVE ME
+instance {A : Type*} [SeminormedRing A] [NormedAlgebra ℂ A] : NormedAlgebra ℝ A where
   norm_smul_le r a := by simpa using norm_smul_le (r : ℂ) a
 
 -- MOVE ME
