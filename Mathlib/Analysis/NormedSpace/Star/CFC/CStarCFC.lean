@@ -1,9 +1,6 @@
 import Mathlib.Analysis.NormedSpace.Star.ContinuousFunctionalCalculus
 import Mathlib.Analysis.NormedSpace.Star.CFC.CFCv2
 
-attribute [-instance] AlgHom.instContinuousLinearMapClassToSemiringToDivisionSemiringToSemifieldToFieldToTopologicalSpaceToUniformSpaceToPseudoMetricSpaceToSeminormedRingToAddCommMonoidToNonUnitalNonAssocSemiringToNonUnitalNonAssocRingToNonAssocRingToRingToTopologicalSpaceToUniformSpaceToPseudoMetricSpaceToSeminormedRingToSeminormedCommRingToNormedCommRingToAddCommMonoidToNonUnitalNonAssocSemiringToNonUnitalNonAssocCommSemiringToNonUnitalNonAssocCommRingToNonUnitalCommRingToNonUnitalSeminormedCommRingToModuleToSeminormedAddCommGroupToNonUnitalSeminormedRingToNonUnitalNormedRingToNormedSpace'ToModuleToSeminormedAddCommGroupToNonUnitalSeminormedRingToNormedSpace
-attribute [-instance] StarAlgHom.instContinuousLinearMapClassComplexInstSemiringComplexToTopologicalSpaceToUniformSpaceToPseudoMetricSpaceToSeminormedRingToAddCommMonoidToNonUnitalNonAssocSemiringToNonUnitalNonAssocRingToNonAssocRingToRingToTopologicalSpaceToUniformSpaceToPseudoMetricSpaceToSeminormedRingToAddCommMonoidToNonUnitalNonAssocSemiringToNonUnitalNonAssocRingToNonAssocRingToRingToModuleInstNormedFieldComplexToSeminormedAddCommGroupToNonUnitalSeminormedRingToNonUnitalNormedRingToNormedSpace'ToModuleToSeminormedAddCommGroupToNonUnitalSeminormedRingToNonUnitalNormedRingToNormedSpace'
-
 noncomputable section
 
 section prereqs
@@ -58,14 +55,14 @@ instance : CFC ℂ (IsStarNormal : A → Prop) where
   hom_predicate_preserving {a} ha f := ⟨by rw [← map_star]; exact Commute.all (star f) f |>.map _⟩
 
 lemma IsSelfAdjoint.spectrumRestricts {a : A} (ha : IsSelfAdjoint a) :
-    SpectrumRestricts a Complex.reClm where
+    SpectrumRestricts a Complex.reCLM where
   rightInvOn _x hx := ha.mem_spectrum_eq_re hx |>.symm
   left_inv := Complex.ofReal_re
 
 /-- An element in a C⋆-algebra is selfadjoint if and only if it is normal and its spectrum is
 contained in `ℝ`. -/
 lemma isSelfAdjoint_iff_isStarNormal_and_spectrumRestricts {a : A} :
-    IsSelfAdjoint a ↔ IsStarNormal a ∧ SpectrumRestricts a Complex.reClm := by
+    IsSelfAdjoint a ↔ IsStarNormal a ∧ SpectrumRestricts a Complex.reCLM := by
   refine ⟨fun ha ↦ ⟨ha.isStarNormal, ha.spectrumRestricts⟩, ?_⟩
   rintro ⟨ha₁, ha₂⟩
   classical
@@ -77,7 +74,7 @@ lemma isSelfAdjoint_iff_isStarNormal_and_spectrumRestricts {a : A} :
   exact Complex.conj_ofReal _
 
 instance : CFC ℝ (IsSelfAdjoint : A → Prop) :=
-  cfc_of_spectrumRestricts (q := IsStarNormal) (p := IsSelfAdjoint) Complex.reClm
+  cfc_of_spectrumRestricts (q := IsStarNormal) (p := IsSelfAdjoint) Complex.reCLM
     Complex.isometry_ofReal (fun _ ↦ isSelfAdjoint_iff_isStarNormal_and_spectrumRestricts)
     (fun _ _ ↦ inferInstance)
 
@@ -104,7 +101,7 @@ lemma spectrumRestricts_nnreal_iff {A : Type*} [Ring A] [Algebra ℝ A] {a : A} 
 
 -- MOVE ME
 lemma spectrumRestricts_real_iff {A : Type*} [Ring A] [Algebra ℂ A] {a : A} :
-    SpectrumRestricts a Complex.reClm ↔ ∀ x ∈ spectrum ℂ a, x = x.re := by
+    SpectrumRestricts a Complex.reCLM ↔ ∀ x ∈ spectrum ℂ a, x = x.re := by
   refine ⟨fun h x hx ↦ ?_, fun h ↦ ?_⟩
   · obtain ⟨x, -, rfl⟩ := h.algebraMap_image.symm ▸ hx
     simp
@@ -179,7 +176,7 @@ lemma spectrumRestricts_nnreal_iff_nnnorm {a : A} {t : ℝ≥0} (ha : IsSelfAdjo
     (ht : ‖a‖₊ ≤ t) : SpectrumRestricts a ContinuousMap.toNNReal ↔ ‖algebraMap ℝ A t - a‖₊ ≤ t := by
   have : IsSelfAdjoint (algebraMap ℝ A t - a) := IsSelfAdjoint.algebraMap A (.all (t : ℝ)) |>.sub ha
   rw [← ENNReal.coe_le_coe, ← IsSelfAdjoint.spectralRadius_eq_nnnorm,
-    ← SpectrumRestricts.spectralRadius_eq (f := Complex.reClm) (algebraMap_isometry ℝ ℂ)] at ht ⊢
+    ← SpectrumRestricts.spectralRadius_eq (f := Complex.reCLM) (algebraMap_isometry ℝ ℂ)] at ht ⊢
   exact spectrumRestricts_nnreal_iff_spectralRadius_le ht
   all_goals
     try apply IsSelfAdjoint.spectrumRestricts

@@ -5,9 +5,6 @@ import Mathlib.Analysis.NormedSpace.Star.CFC.CFCRestricts
 # Another approach with less DTT hell?
 -/
 
-attribute [-instance] AlgHom.instContinuousLinearMapClassToSemiringToDivisionSemiringToSemifieldToFieldToTopologicalSpaceToUniformSpaceToPseudoMetricSpaceToSeminormedRingToAddCommMonoidToNonUnitalNonAssocSemiringToNonUnitalNonAssocRingToNonAssocRingToRingToTopologicalSpaceToUniformSpaceToPseudoMetricSpaceToSeminormedRingToSeminormedCommRingToNormedCommRingToAddCommMonoidToNonUnitalNonAssocSemiringToNonUnitalNonAssocCommSemiringToNonUnitalNonAssocCommRingToNonUnitalCommRingToNonUnitalSeminormedCommRingToModuleToSeminormedAddCommGroupToNonUnitalSeminormedRingToNonUnitalNormedRingToNormedSpace'ToModuleToSeminormedAddCommGroupToNonUnitalSeminormedRingToNormedSpace
-attribute [-instance] StarAlgHom.instContinuousLinearMapClassComplexInstSemiringComplexToTopologicalSpaceToUniformSpaceToPseudoMetricSpaceToSeminormedRingToAddCommMonoidToNonUnitalNonAssocSemiringToNonUnitalNonAssocRingToNonAssocRingToRingToTopologicalSpaceToUniformSpaceToPseudoMetricSpaceToSeminormedRingToAddCommMonoidToNonUnitalNonAssocSemiringToNonUnitalNonAssocRingToNonAssocRingToRingToModuleInstNormedFieldComplexToSeminormedAddCommGroupToNonUnitalSeminormedRingToNonUnitalNormedRingToNormedSpace'ToModuleToSeminormedAddCommGroupToNonUnitalSeminormedRingToNonUnitalNormedRingToNormedSpace'
-
 section Basic
 
 class CFC (R : Type*) {A : Type*} (p : outParam (A → Prop)) [CommSemiring R] [StarRing R]
@@ -330,6 +327,7 @@ lemma cfcBare_inv {a : Aˣ} (ha : p a) :
   nth_rw 2 [← cfcSpec_map_id ha (R := R)]
   rw [cfcBare_apply ha this, ← map_mul]
   convert map_one (cfcSpec ha)
+  all_goals try infer_instance -- after merging master, `convert` got worse
   ext x
   simp [inv_mul_cancel (fun hx ↦ spectrum.zero_not_mem R a.isUnit (hx ▸ x.2))]
 
@@ -358,7 +356,8 @@ lemma cfcBare_neg {a : A} (ha : p a) :
   simp only [add_right_neg]
   nth_rw 1 [← cfcSpec_map_id ha (R := R)]
   rw [cfcBare_apply ha continuous_neg.continuousOn, ← map_add]
-  convert map_zero _
+  convert map_zero (cfcSpec ha)
+  all_goals try infer_instance -- again, `convert` is worse, maybe because of #8386
   ext
   simp
 

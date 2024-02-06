@@ -92,7 +92,7 @@ def SpectrumRestricts.starAlgHom {R : Type u} {S : Type v} {A : Type w} [CommSem
     C(spectrum R a, R) →⋆ₐ[R] A :=
   (φ.restrictScalars R).comp <|
     (ContinuousMap.compStarAlgHom (spectrum S a) (StarAlgHom.ofId R S)
-          (algebraMapClm R S).continuous).comp
+          (algebraMapCLM R S).continuous).comp
       (ContinuousMap.compStarAlgHom' R R
         ⟨Subtype.map f h.subset_preimage,
           (map_continuous f).subtype_map fun x (hx : x ∈ spectrum S a) => h.subset_preimage hx⟩)
