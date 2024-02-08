@@ -47,12 +47,12 @@ instance : CFC ℂ (IsStarNormal : A → Prop) where
   toStarAlgHom {a} ha := (elementalStarAlgebra ℂ a).subtype.comp <| continuousFunctionalCalculus a
   hom_closedEmbedding {a} ha :=
     isometry_subtype_coe.comp (continuousFunctionalCalculus a).isometry |>.closedEmbedding
-  hom_map_id {a} ha := congr_arg Subtype.val <| continuousFunctionalCalculus_map_id a
+  hom_id {a} ha := congr_arg Subtype.val <| continuousFunctionalCalculus_map_id a
   hom_map_spectrum {a} ha f := by
     simp only [StarAlgHom.comp_apply, StarAlgHom.coe_coe, StarSubalgebra.coe_subtype]
     rw [← StarSubalgebra.spectrum_eq (elementalStarAlgebra.isClosed ℂ a),
       AlgEquiv.spectrum_eq (continuousFunctionalCalculus a), ContinuousMap.spectrum_eq_range]
-  hom_predicate_preserving {a} ha f := ⟨by rw [← map_star]; exact Commute.all (star f) f |>.map _⟩
+  predicate_hom {a} ha f := ⟨by rw [← map_star]; exact Commute.all (star f) f |>.map _⟩
 
 lemma IsSelfAdjoint.spectrumRestricts {a : A} (ha : IsSelfAdjoint a) :
     SpectrumRestricts a Complex.reCLM where
@@ -69,7 +69,7 @@ lemma isSelfAdjoint_iff_isStarNormal_and_spectrumRestricts {a : A} :
   rw [isSelfAdjoint_iff]
   nth_rw 2 [← cfcBare_id ha₁ (R := ℂ)]
   rw [← cfcBare_star ha₁ (R := ℂ)]
-  refine cfcBare_eq_of_eqOn fun x hx ↦ ?_
+  refine cfcBare_congr fun x hx ↦ ?_
   obtain ⟨x, -, rfl⟩ := ha₂.algebraMap_image.symm ▸ hx
   exact Complex.conj_ofReal _
 
@@ -291,7 +291,7 @@ lemma spectrum_star_mul_self_nonneg {b : A} : ∀ x ∈ spectrum ℝ (star b * b
   have bar := h_c_spec₂.eq_zero_of_neg (.star_mul_self c) h_c_spec₀
   rw [bar, neg_zero] at h_eq_a_neg
   simp (config := {zeta := false}) only [a_neg, ← map_pow, ← map_zero (cfc a (R := ℝ))] at h_eq_a_neg
-  have baz := cfc_eqOn_of_eq (IsSelfAdjoint.star_mul_self b) _ _ h_eq_a_neg
+  have baz := cfc_eqOn_of_eq (IsSelfAdjoint.star_mul_self b) h_eq_a_neg
   intro x hx
   specialize baz hx
   by_contra! hx'
@@ -330,7 +330,7 @@ lemma nonneg_iff_isSelfAdjoint_and_spectrumRestricts {a : A} :
     have : a = star s * s := by
       rw [← cfc_id ha₁ (R := ℝ)]
       simp only [← map_star, ← map_mul]
-      apply cfc_eq_of_eqOn ha₁
+      apply cfc_congr ha₁
       rw [spectrumRestricts_nnreal_iff] at ha₂
       peel ha₂ with x hx _
       simp [Real.mul_self_sqrt this]
