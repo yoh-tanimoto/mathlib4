@@ -86,6 +86,7 @@ lemma cfcSpec_map_id :
     cfcSpec ha ((ContinuousMap.id R).restrict <| spectrum R a) = a :=
   CFC.hom_id ha
 
+/-- The **spectral mapping theorem** for the continuous functional calculus. -/
 lemma cfcSpec_map_spectrum (f : C(spectrum R a, R)) :
     spectrum R (cfcSpec ha f) = Set.range f :=
   CFC.hom_map_spectrum ha f
@@ -138,7 +139,6 @@ noncomputable irreducible_def cfcBare (a : A) (f : R → R) : A := by
     then cfcSpec h.1 ⟨_, h.2.restrict⟩
     else 0 -- algebraMap R A (f 0) -- chosen to agree with `cfc`
 
-variable [∀ a : A, Subsingleton (CFCCore (spectrum R a) a)]
 variable {a : A}
 
 lemma cfcBare_apply {f : R → R} (ha : p a) (hf : ContinuousOn f (spectrum R a)) :
@@ -161,6 +161,7 @@ variable (R) in
 lemma cfcBare_id (ha : p a) : cfcBare a (id : R → R) = a :=
   cfcBare_apply (R := R) ha continuousOn_id ▸ cfcSpec_map_id ha
 
+/-- The **spectral mapping theorem** for the continuous functional calculus. -/
 lemma cfcBare_map_spectrum (ha : p a) {f : R → R} (hf : ContinuousOn f (spectrum R a)) :
     spectrum R (cfcBare a f) = f '' spectrum R a := by
   simp [cfcBare_apply ha hf, cfcSpec_map_spectrum ha]
@@ -217,12 +218,15 @@ lemma cfcBare_map_add {f g : R → R} (hf : ContinuousOn f (spectrum R a))
     congr
   · simp [cfcBare_apply_of_not ha]
 
--- generalize to arbitrary smuls with an `IsScalarTower`?
-lemma cfcBare_map_smul (r : R) {f : R → R} (hf : ContinuousOn f (spectrum R a)) :
-    cfcBare a (r • f) = r • cfcBare a f := by
+-- when `R := ℂ`, this should work for `S` being any of `ℕ`, `ℤ`, `ℝ≥0`, `ℝ`, `ℂ`.
+lemma cfcBare_map_smul {S : Type*} [SMul S R] [ContinuousConstSMul S R]
+    [SMulZeroClass S A] [IsScalarTower S R A] [IsScalarTower S R (R → R)]
+    (s : S) {f : R → R} (hf : ContinuousOn f (spectrum R a)) :
+    cfcBare a (s • f) = s • cfcBare a f := by
   by_cases ha : p a
-  · rw [cfcBare_apply ha hf, ← map_smul,
-      cfcBare_apply ha (show ContinuousOn (r • f) _ from hf.const_smul r)] -- fun_prop failure? beta reduction problems?
+  · rw [cfcBare_apply ha hf, cfcBare_apply ha (show ContinuousOn (s • f) _ from hf.const_smul s)]
+    simp_rw [← smul_one_smul R s _]
+    rw [← map_smul]
     congr
   · simp [cfcBare_apply_of_not ha]
 
@@ -394,7 +398,6 @@ section Neg
 variable {R A : Type*} {p : A → Prop} [CommRing R] [StarRing R] [MetricSpace R]
 variable [TopologicalRing R] [ContinuousStar R] [TopologicalSpace A]
 variable [Ring A] [StarRing A] [Algebra R A] [CFC R p]
-variable [∀ a : A, Subsingleton (CFCCore (spectrum R a) a)]
 
 lemma cfcBare_map_sub {a : A} {f g : R → R} (hf : ContinuousOn f (spectrum R a))
     (hg : ContinuousOn g (spectrum R a)) :
@@ -421,6 +424,8 @@ lemma cfcBare_neg {a : A} (ha : p a) :
   have := cfcBare_id R ha ▸ cfcBare_map_neg a (id : R → R)
   exact this
 
+variable [∀ a : A, Subsingleton (CFCCore (spectrum R a) a)]
+
 lemma cfcBare_comp_neg {a : A} (ha : p a) {f : R → R}
     (hf : ContinuousOn f ((-·) '' (spectrum R (a : A)))) :
     cfcBare (a : A) (fun x ↦ f (-x)) = cfcBare (-a) f := by
@@ -429,6 +434,8 @@ lemma cfcBare_comp_neg {a : A} (ha : p a) {f : R → R}
 end Neg
 
 section cfc
+
+section Basic
 
 variable {R A : Type*} {p : A → Prop} [CommSemiring R] [StarRing R] [MetricSpace R]
 variable [TopologicalSemiring R] [ContinuousStar R] [TopologicalSpace A] [Ring A] [StarRing A]
@@ -468,6 +475,7 @@ lemma cfc_eq_cfcBare [StarModule R A] {a : A} (ha : p a) (f : C(R, R)) :
 lemma cfc_id (ha : p a) : cfc a (ContinuousMap.id R) = a := by
   rw [cfc_apply ha, cfcSpec_map_id ha]
 
+/-- The **spectral mapping theorem** for the continuous functional calculus. -/
 lemma cfc_map_spectrum (ha : p a) (f : C(R, R)) : spectrum R (cfc a f) = f '' spectrum R a := by
   simp [cfc_apply ha, cfcSpec_map_spectrum ha, Set.range_comp]
 
@@ -505,17 +513,16 @@ lemma eq_zero_of_spectrum_eq_zero (ha : p a) (h_spec : spectrum R a = {0}) : a =
 lemma eq_one_of_spectrum_eq_one (ha : p a) (h_spec : spectrum R a = {1}) : a = 1 := by
   simpa using eq_algebraMap_of_spectrum_singleton ha h_spec
 
--- pow, star, smul
-
 lemma cfc_pow (ha : p a) (n : ℕ) : cfc a (.id R ^ n) = a ^ n := by
   rw [map_pow, cfc_id ha]
 
 lemma cfc_star (ha : p a) : cfc a (star (.id R)) = star a := by
   rw [map_star, cfc_id ha]
 
--- generalize to other smuls
-lemma cfc_smul (ha : p a) (r : R) : cfc a (r • .id R) = r • a := by
-  rw [map_smul, cfc_id ha]
+lemma cfc_smul {S : Type*} [SMul S R] [ContinuousConstSMul S R]
+    [SMulZeroClass S A] [IsScalarTower S R A] [IsScalarTower S R C(R, R)]
+    {a : A} (ha : p a) (s : S) : cfc a (s • .id R) = s • a := by
+  rw [← smul_one_smul R s (ContinuousMap.id R), map_smul, cfc_id ha, ← smul_one_smul R s a]
 
 -- inv, zpow, neg
 
@@ -537,6 +544,24 @@ lemma cfc_comp_smul (ha : p a) (r : R) (f : C(R, R)) :
     cfc a (f.comp (r • .id R)) = cfc (r • a) f := by
   rw [cfc_comp ha, cfc_smul ha]
 
+end Basic
+
+section Neg
+
+variable {R A : Type*} {p : A → Prop} [CommRing R] [StarRing R] [MetricSpace R]
+variable [TopologicalRing R] [ContinuousStar R] [TopologicalSpace A]
+variable [Ring A] [StarRing A] [Algebra R A] [CFC R p] [StarModule R A]
+
+lemma cfc_neg {a : A} (ha : p a) : cfc a (- (.id R)) = -a := by
+  rw [map_neg, cfc_id ha]
+
+variable [∀ a : A, Subsingleton (CFCCore (spectrum R a) a)]
+
+lemma cfc_comp_neg {a : A} (ha : p a) (f : C(R, R)) :
+    cfc a (f.comp (- (.id R))) = cfc (-a) f := by
+  rw [cfc_comp ha, cfc_neg ha]
+
+end Neg
 -- spectrum subset circle → unitary
 
 end cfc
