@@ -54,6 +54,13 @@ instance : CFC ℂ (IsStarNormal : A → Prop) where
       AlgEquiv.spectrum_eq (continuousFunctionalCalculus a), ContinuousMap.spectrum_eq_range]
   predicate_hom {a} ha f := ⟨by rw [← map_star]; exact Commute.all (star f) f |>.map _⟩
 
+instance {a : A} [IsStarNormal a] {f : C(ℂ, ℂ)} : IsStarNormal (cfc a f) :=
+  cfc_predicate ‹_› f
+
+-- this seems like interesting notation, food for thought
+-- notation3 "⇧" f "(" a ")" => cfc a f
+-- notation3 "⇧ᵇ" f "(" a ")" => cfcBare a f
+
 lemma IsSelfAdjoint.spectrumRestricts {a : A} (ha : IsSelfAdjoint a) :
     SpectrumRestricts a Complex.reCLM where
   rightInvOn _x hx := ha.mem_spectrum_eq_re hx |>.symm
@@ -77,6 +84,48 @@ instance : CFC ℝ (IsSelfAdjoint : A → Prop) :=
   cfc_of_spectrumRestricts (q := IsStarNormal) (p := IsSelfAdjoint) Complex.reCLM
     Complex.isometry_ofReal (fun _ ↦ isSelfAdjoint_iff_isStarNormal_and_spectrumRestricts)
     (fun _ _ ↦ inferInstance)
+
+lemma mem_unitary_of_spectrum_subset_circle {u : A} [IsStarNormal u]
+    (hu : spectrum ℂ u ⊆ circle) : u ∈ unitary A := by
+  rw [unitary.mem_iff, ← cfc_id (R := ℂ) (a := u) ‹_›, ← map_star, ← map_mul, ← map_mul]
+  nontriviality A
+  constructor
+  all_goals
+    apply eq_one_of_spectrum_eq_one (R := ℂ) (by infer_instance)
+    rw [Set.eq_singleton_iff_nonempty_unique_mem]
+    refine ⟨spectrum.nonempty _, ?_⟩
+    rw [cfc_map_spectrum ‹_›]
+    rintro - ⟨x, hx, rfl⟩
+    simp only [ContinuousMap.mul_apply, ContinuousMap.star_apply, ContinuousMap.id_apply,
+      IsROrC.star_def, mul_comm x]
+    apply hu at hx
+    rwa [SetLike.mem_coe, mem_circle_iff_normSq, ← Complex.ofReal_injective.eq_iff,
+      Complex.normSq_eq_conj_mul_self] at hx
+
+-- MOVE ME
+instance unitary.isStarNormal {M : Type*} [Monoid M] [StarMul M] (u : unitary M) :
+    IsStarNormal u where
+  star_comm_self := by
+    have := unitary.mem_iff.mp u.2
+    exact_mod_cast this.1.trans this.2.symm
+
+-- MOVE ME
+instance unitary.coe_isStarNormal {M : Type*} [Monoid M] [StarMul M] (u : unitary M) :
+    IsStarNormal (u : M) where
+  star_comm_self := congr(Subtype.val $(star_comm_self' u))
+
+-- MOVE ME
+lemma isStarNormal_of_mem_unitary {M : Type*} [Monoid M] [StarMul M] {u : M}
+    (hu : u ∈ unitary M) : IsStarNormal u :=
+  unitary.coe_isStarNormal ⟨u, hu⟩
+
+lemma unitary_iff_isStarNormal_and_spectrum_subset_circle {u : A} :
+    u ∈ unitary A ↔ IsStarNormal u ∧ spectrum ℂ u ⊆ circle := by
+  refine ⟨fun hu ↦ ?_, ?_⟩
+  · have := isStarNormal_of_mem_unitary hu
+    exact ⟨this, spectrum.subset_circle_of_unitary hu⟩
+  · rintro ⟨_, hu⟩
+    exact mem_unitary_of_spectrum_subset_circle hu
 
 end Normal
 
