@@ -517,12 +517,12 @@ noncomputable def equivProduct : s ≃ { t : Finset α × ℕ // t.1 ∈ P.parts
   invFun t := by
     obtain ⟨⟨p, i⟩, ⟨m, l⟩⟩ := t
     let x := p.equivFin.symm ⟨i, l⟩
-    exact ⟨x.1, mem_of_subset ((le_sup m).trans P.supParts.le) x.2⟩
+    exact ⟨x.1, mem_of_subset ((le_sup m).trans P.sup_parts.le) x.2⟩
   left_inv x := by simp
   right_inv t := by
     obtain ⟨⟨p, i⟩, ⟨m, l⟩⟩ := t
     let x := p.equivFin.symm ⟨i, l⟩
-    have ξ : x.1 ∈ s := mem_of_subset ((le_sup m).trans P.supParts.le) x.2
+    have ξ : x.1 ∈ s := mem_of_subset ((le_sup m).trans P.sup_parts.le) x.2
     have ξ' : P.part ξ = p := P.eq_of_mem_parts (P.part_mem _) m (P.mem_part _) x.2
     simp only [ξ', Subtype.mk.injEq, Prod.mk.injEq, true_and]
     have : p.equivFin x = i := by simp

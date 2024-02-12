@@ -162,7 +162,7 @@ theorem not_adj_transitive (hmax : G.IsTuranMaximal r) (hst : ¬G.Adj s t) (hsu 
   · use (G.replaceVertex s t).replaceVertex s u, inferInstance
     exact ⟨(cf.replaceVertex s t).replaceVertex s u,
       card_lt_card_replaceVertex2 _ hst hsu hmax z.1 z.2⟩
-  · rw [Decidable.not_and] at z
+  · rw [Decidable.not_and_iff_or_not_not, ← ne_eq, ← ne_eq] at z
     cases' z with st su
     · cases' lt_or_gt_of_ne st with less more
       · use G.replaceVertex t s, inferInstance
