@@ -523,6 +523,35 @@ theorem norm_nonneg' (a : E) : 0 ≤ ‖a‖ := by
 #align norm_nonneg' norm_nonneg'
 #align norm_nonneg norm_nonneg
 
+namespace Mathlib.Meta.Positivity
+
+open Lean Meta Qq Function
+
+/-- Extension for the `positivity` tactic: multiplicative norms are nonnegative,
+via `norm_nonneg'`. -/
+@[positivity Norm.norm _]
+def evalMulNorm : PositivityExt where eval {u α} _ _ e := do
+  match u, α, e with
+  | 0, ~q(ℝ), ~q(@Norm.norm $E $_n $a) =>
+    let _sng ← synthInstanceQ q(SeminormedGroup $E)
+    assertInstancesCommute
+    return .nonnegative q(norm_nonneg' $a)
+  | _, _, _ => throwError "not `‖ · ‖`"
+
+/-- Extension for the `positivity` tactic: additive norms are nonnegative, via `norm_nonneg`.
+See `evalAddNorm'` for the positive case - we split these up for performance & as `norm_pos_iff'`
+is declared much further down the file.. -/
+@[positivity Norm.norm _]
+def evalAddNorm : PositivityExt where eval {u α} _ _ e := do
+  match u, α, e with
+  | 0, ~q(ℝ), ~q(@Norm.norm $E $_n $a) =>
+    let _sng ← synthInstanceQ q(SeminormedAddGroup $E)
+    assertInstancesCommute
+    return .nonnegative q(norm_nonneg $a)
+  | _, _, _ => throwError "not `‖ · ‖`"
+
+end Mathlib.Meta.Positivity
+
 @[to_additive (attr := simp) abs_norm]
 theorem abs_norm' (z : E) : |‖z‖| = ‖z‖ := abs_of_nonneg <| norm_nonneg' _
 #align abs_norm abs_norm
@@ -1398,33 +1427,18 @@ namespace Mathlib.Meta.Positivity
 
 open Lean Meta Qq Function
 
-/-- Extension for the `positivity` tactic: multiplicative norms are nonnegative, via
-`norm_nonneg'`. -/
-@[positivity Norm.norm _]
-def evalMulNorm : PositivityExt where eval {u α} _ _ e := do
-  match u, α, e with
-  | 0, ~q(ℝ), ~q(@Norm.norm $E $_n $a) =>
-    let _sng ← synthInstanceQ q(SeminormedGroup $E)
-    assertInstancesCommute
-    return .nonnegative q(norm_nonneg' $a)
-  | _, _, _ => throwError "not `‖ · ‖`"
-
-/-- Extension for the `positivity` tactic: additive norms are nonnegative, and if their argument
-is non-zero, then they are positive. Via `norm_nonneg` and `norm_pos_iff'`. -/
+/-- Extension for the `positivity` tactic: additive norms are positive if their argument
+is non-zero. Via `norm_pos_iff'`. See `evalAddNorm'` for the non-negative case. -/
 @[positivity Norm.norm _]
 def evalAddNorm' : PositivityExt where eval {u α} _ _ e := do
   match u, α, e with
   | 0, ~q(ℝ), ~q(@Norm.norm $E $_n $a) =>
     let _sng ← synthInstanceQ q(SeminormedAddGroup $E)
+    let _t0 ← synthInstanceQ q(T0Space $E)
+    let pE ← synthInstanceQ q(PartialOrder $E)
+    let p ← (← core q(inferInstance) pE a).toNonzero
     assertInstancesCommute
-    try
-      let _t0 ← synthInstanceQ q(T0Space $E)
-      let pE ← synthInstanceQ q(PartialOrder $E)
-      assumeInstancesCommute
-      let p ← (← core q(inferInstance) pE a).toNonzero
-      return .positive q(norm_pos_iff'.mpr $p)
-    catch _ =>
-      return .nonnegative q(norm_nonneg $a)
+    return .positive q(norm_pos_iff'.mpr $p)
   | _, _, _ => throwError "not `‖ · ‖`"
 
 end Mathlib.Meta.Positivity
