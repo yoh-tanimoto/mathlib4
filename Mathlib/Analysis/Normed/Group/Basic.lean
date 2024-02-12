@@ -1252,11 +1252,9 @@ theorem Filter.Tendsto.op_one_isBoundedUnder_le' {f : α → E} {g : α → F} {
   · exact (mul_nonpos_of_nonpos_of_nonneg (mul_nonpos_of_nonpos_of_nonneg hA <| norm_nonneg' _) <|
       norm_nonneg' _).trans_lt ε₀
   calc
-    -- TODO: this used to just be `gcongr; exact hg`, but we had to move the `positivity` extension
-    -- down to below `norm_pos_iff`; someone splitting the file should (try to) fix this.
-    A * ‖f i‖ * ‖g i‖ ≤ A * δ * C := by gcongr; exacts [norm_nonneg' _, hg]
-    _ = A * C * δ := (mul_right_comm _ _ _)
-    _ < ε := hδ
+    A * ‖f i‖ * ‖g i‖ ≤ A * δ * C := by gcongr; exact hg
+                    _ = A * C * δ := (mul_right_comm _ _ _)
+                    _ < ε := hδ
 #align filter.tendsto.op_one_is_bounded_under_le' Filter.Tendsto.op_one_isBoundedUnder_le'
 #align filter.tendsto.op_zero_is_bounded_under_le' Filter.Tendsto.op_zero_isBoundedUnder_le'
 
