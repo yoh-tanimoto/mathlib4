@@ -235,9 +235,9 @@ def compareHypLT (lo e : Q($α)) (p₂ : Q($lo < $e)) : MetaM (Strictness zα p�
   | .nonnegative p₁ => pure (.positive q(lt_of_le_of_lt $p₁ $p₂))
   | _ => pure .none
 
-/-- A variation on `assumption` when the hypothesis is `a = b` where `a` is a numeral. -/
-def compareHypEq (e a : Q($α)) (p₂ : Q($a = $e)) : MetaM (Strictness zα pα e) := do
-  match ← normNumPositivity zα pα a with
+/-- A variation on `assumption` when the hypothesis is `x = e` where `x` is a numeral. -/
+def compareHypEq (e x : Q($α)) (p₂ : Q($x = $e)) : MetaM (Strictness zα pα e) := do
+  match ← normNumPositivity zα pα x with
   | .positive p₁ => pure (.positive q(lt_of_lt_of_eq $p₁ $p₂))
   | .nonnegative p₁ => pure (.nonnegative q(le_of_le_of_eq $p₁ $p₂))
   | .nonzero p₁ => pure (.nonzero q(ne_of_ne_of_eq' $p₁ $p₂))
@@ -250,11 +250,11 @@ initialize registerTraceClass `Tactic.positivity.failure
 where `a` is a numeral. -/
 def compareHyp (e : Q($α)) (ldecl : LocalDecl) : MetaM (Strictness zα pα e) := do
   have e' : Q(Prop) := ldecl.type
+  let p : Q($e') := .fvar ldecl.fvarId
   match e' with
   | ~q(@LE.le.{u} $β $_le $lo $hi) =>
     let .defEq (_ : $α =Q $β) ← isDefEqQ α β | return .none
     let .defEq _ ← isDefEqQ e hi | return .none
-    let p : Q($lo ≤ $hi) := .fvar ldecl.fvarId
     match lo with
     | ~q(0) =>
       assertInstancesCommute
@@ -263,7 +263,6 @@ def compareHyp (e : Q($α)) (ldecl : LocalDecl) : MetaM (Strictness zα pα e) :
   | ~q(@LT.lt.{u} $β $_lt $lo $hi) =>
     let .defEq (_ : $α =Q $β) ← isDefEqQ α β | return .none
     let .defEq _ ← isDefEqQ e hi | return .none
-    let p : Q($lo < $hi) := .fvar ldecl.fvarId
     match lo with
     | ~q(0) =>
       assertInstancesCommute
@@ -271,7 +270,6 @@ def compareHyp (e : Q($α)) (ldecl : LocalDecl) : MetaM (Strictness zα pα e) :
     | _ => compareHypLT zα pα lo e p
   | ~q(@Eq.{u+1} $α' $lhs $rhs) =>
     let .defEq (_ : $α =Q $α') ← isDefEqQ α α' | pure .none
-    let p : Q($lhs = $rhs) := .fvar ldecl.fvarId
     match ← isDefEqQ e rhs with
     | .defEq _ =>
       match lhs with
@@ -284,7 +282,6 @@ def compareHyp (e : Q($α)) (ldecl : LocalDecl) : MetaM (Strictness zα pα e) :
       | _ => compareHypEq zα pα e rhs q(Eq.symm $p)
   | ~q(@Ne.{u + 1} $α' $lhs $rhs) =>
     let .defEq (_ : $α =Q $α') ← isDefEqQ α α' | pure .none
-    let p : Q($lhs ≠ $rhs) := .fvar ldecl.fvarId
     match lhs, rhs with
     | ~q(0), _ =>
       let .defEq _ ← isDefEqQ e rhs | pure .none
