@@ -226,7 +226,7 @@ theorem edgeFinset_decompose : G.edgeFinset =
 theorem edgeFinset_decompose_card : G.edgeFinset.card =
     (G.restrictSubset K).edgeFinset.card + (G.restrictSubset Kᶜ).edgeFinset.card +
     (G.betweenSubset K).edgeFinset.card := by
-  rw [G.edgeFinset_decompose K, card_union_eq, card_union_eq]
+  rw [G.edgeFinset_decompose K, card_union_of_disjoint, card_union_of_disjoint]
   · rw [disjoint_iff_inter_eq_empty]
     ext e; refine' e.inductionOn _; intro x y
     simp_rw [mem_inter, mem_edgeFinset, mem_edgeSet, restrictSubset, mem_compl]
