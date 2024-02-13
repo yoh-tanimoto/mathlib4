@@ -1426,7 +1426,7 @@ namespace Mathlib.Meta.Positivity
 open Lean Meta Qq Function
 
 /-- Extension for the `positivity` tactic: additive norms are positive if their argument
-is non-zero. Via `norm_pos_iff'`. See `evalAddNorm'` for the non-negative case. -/
+is non-zero. Via `norm_pos_iff'`. See `evalAddNorm` for the non-negative case. -/
 @[positivity Norm.norm _]
 def evalAddNorm' : PositivityExt where eval {u α} _ _ e := do
   match u, α, e with
