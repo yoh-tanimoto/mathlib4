@@ -112,3 +112,16 @@ theorem iteratedDeriv_neg : iteratedDeriv n (-f) = -iteratedDeriv n f := by
 
 variable (f) in
 theorem iteratedDeriv_neg' : iteratedDeriv n (-f ·) = -iteratedDeriv n f := iteratedDeriv_neg f
+
+lemma deriv_comp_neg (f : 𝕜 → F) (a : 𝕜) : deriv (fun x ↦ f (-x)) a = -deriv f (-a) := by sorry
+
+lemma iteratedDeriv_comp_neg :
+    iteratedDeriv n (fun x ↦ f (-x)) = fun a => (-1 : 𝕜) ^ n • iteratedDeriv n f (-a) := by
+  funext a
+  induction' n with n ih generalizing a
+  · simp only [Nat.zero_eq, iteratedDeriv_zero, pow_zero, one_smul]
+  · have ih' : iteratedDeriv n (fun x ↦ f (-x)) = fun x ↦ (-1 : 𝕜) ^ n • iteratedDeriv n f (-x) :=
+      funext ih
+    rw [iteratedDeriv_succ, iteratedDeriv_succ, ih', pow_succ, neg_mul, one_mul,
+      deriv_comp_neg (f := fun x ↦ (-1 : 𝕜) ^ n • iteratedDeriv n f x), deriv_const_smul, neg_smul]
+    simp

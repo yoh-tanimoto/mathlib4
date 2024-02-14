@@ -150,6 +150,37 @@ theorem deriv_const_smul (c : R) (hf : DifferentiableAt 𝕜 f x) :
   (hf.hasDerivAt.const_smul c).deriv
 #align deriv_const_smul deriv_const_smul
 
+lemma deriv_const_smul_of_isUnit {K : Type*} [Field K] [Module K F] [SMulCommClass 𝕜 K F]
+    [ContinuousConstSMul K F] (c : R) (hc : IsUnit c) :
+    deriv (fun y ↦ c • f y) x = c • deriv f x := by
+  by_cases hf : DifferentiableAt 𝕜 f x
+  · exact deriv_const_smul c hf
+  · rcases eq_or_ne c 0 with rfl | hc'
+    · simp only [zero_smul, deriv_const']
+    · have H : ¬DifferentiableAt 𝕜 (fun y ↦ c • f y) x
+      · contrapose! hf
+        obtain ⟨d, hd⟩ := hc.exists_left_inv
+        simpa [smul_smul, hd] using DifferentiableAt.const_smul hf d
+
+
+      rw [deriv_zero_of_not_differentiableAt hf, deriv_zero_of_not_differentiableAt H, smul_zero]
+
+/-- A variant of `deriv_const_smul` without differentiability assumption when the scalar
+multiplication is by field elements. -/
+lemma deriv_const_smul' {K : Type*} [Field K] [Module K F] [SMulCommClass 𝕜 K F]
+    [ContinuousConstSMul K F] (c : K) :
+    deriv (fun y ↦ c • f y) x = c • deriv f x := by
+  by_cases hf : DifferentiableAt 𝕜 f x
+  · exact deriv_const_smul c hf
+  · rcases eq_or_ne c 0 with rfl | hc
+    · simp only [zero_smul, deriv_const']
+    · have H : ¬DifferentiableAt 𝕜 (fun y ↦ c • f y) x
+      · contrapose! hf
+        change DifferentiableAt 𝕜 (fun y ↦ f y) x
+        conv => enter [2, y]; rw [← inv_smul_smul₀ hc (f y)]
+        exact DifferentiableAt.const_smul hf c⁻¹
+      rw [deriv_zero_of_not_differentiableAt hf, deriv_zero_of_not_differentiableAt H, smul_zero]
+
 end ConstSMul
 
 section Mul
