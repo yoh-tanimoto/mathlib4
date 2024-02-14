@@ -724,15 +724,13 @@ theorem compl_le_iff_compl_le : xᶜ ≤ y ↔ yᶜ ≤ x :=
 theorem sdiff_compl : x \ yᶜ = x ⊓ y := by rw [sdiff_eq, compl_compl]
 #align sdiff_compl sdiff_compl
 
-instance OrderDual.booleanAlgebra (α) [BooleanAlgebra α] : BooleanAlgebra αᵒᵈ :=
-  { OrderDual.distribLattice α, OrderDual.boundedOrder α with
-    compl := fun a => toDual (ofDual aᶜ),
-    sdiff :=
-      fun a b => toDual (ofDual b ⇨ ofDual a), himp := fun a b => toDual (ofDual b \ ofDual a),
-    inf_compl_le_bot := fun a => (@codisjoint_hnot_right _ _ (ofDual a)).top_le,
-    top_le_sup_compl := fun a => (@disjoint_compl_right _ _ (ofDual a)).le_bot,
-    sdiff_eq := fun _ _ => @himp_eq α _ _ _,
-    himp_eq := fun _ _ => @sdiff_eq α _ _ _, }
+instance OrderDual.instBooleanAlgebra : BooleanAlgebra αᵒᵈ where
+  __ := distribLattice α
+  __ := instHeytingAlgebra
+  sdiff_eq _ _ := @himp_eq α _ _ _
+  himp_eq _ _ := @sdiff_eq α _ _ _
+  inf_compl_le_bot a := (@codisjoint_hnot_right _ _ (ofDual a)).top_le
+  top_le_sup_compl a := (@disjoint_compl_right _ _ (ofDual a)).le_bot
 
 @[simp]
 theorem sup_inf_inf_compl : x ⊓ y ⊔ x ⊓ yᶜ = x := by rw [← sdiff_eq, sup_inf_sdiff _ _]
@@ -794,7 +792,7 @@ instance Prop.booleanAlgebra : BooleanAlgebra Prop :=
     top_le_sup_compl := fun p _ => Classical.em p }
 #align Prop.boolean_algebra Prop.booleanAlgebra
 
-instance Prod.instBooleanAlgebra (α β) [BooleanAlgebra α] [BooleanAlgebra β] :
+instance Prod.instBooleanAlgebra [BooleanAlgebra α] [BooleanAlgebra β] :
     BooleanAlgebra (α × β) where
   __ := distribLattice α β
   __ := instHeytingAlgebra

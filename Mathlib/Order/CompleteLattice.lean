@@ -339,17 +339,17 @@ instance CompleteLinearOrder.toLinearOrder [i : CompleteLinearOrder α] : Linear
 
 namespace OrderDual
 
-variable (α)
+instance instCompleteLattice [CompleteLattice α] : CompleteLattice αᵒᵈ where
+  __ := boundedOrder α
+  le_sSup := @CompleteLattice.sInf_le α _
+  sSup_le := @CompleteLattice.le_sInf α _
+  sInf_le := @CompleteLattice.le_sSup α _
+  le_sInf := @CompleteLattice.sSup_le α _
 
-instance completeLattice [CompleteLattice α] : CompleteLattice αᵒᵈ :=
-  { OrderDual.lattice α, OrderDual.supSet α, OrderDual.infSet α, OrderDual.boundedOrder α with
-    le_sSup := @CompleteLattice.sInf_le α _
-    sSup_le := @CompleteLattice.le_sInf α _
-    sInf_le := @CompleteLattice.le_sSup α _
-    le_sInf := @CompleteLattice.sSup_le α _ }
-
-instance OrderDual.instCompleteLinearOrder [CompleteLinearOrder α] : CompleteLinearOrder αᵒᵈ :=
-  { completeLattice α, instLinearOrder α, instBiheytingAlgebra with }
+instance instCompleteLinearOrder [CompleteLinearOrder α] : CompleteLinearOrder αᵒᵈ where
+  __ := instCompleteLattice
+  __ := instBiheytingAlgebra
+  __ := instLinearOrder α
 
 end OrderDual
 
@@ -1735,14 +1735,14 @@ instance Pi.infSet {α : Type*} {β : α → Type*} [∀ i, InfSet (β i)] : Inf
   ⟨fun s i => ⨅ f : s, (f : ∀ i, β i) i⟩
 #align pi.has_Inf Pi.infSet
 
-instance Pi.completeLattice {α : Type*} {β : α → Type*} [∀ i, CompleteLattice (β i)] :
-    CompleteLattice (∀ i, β i) :=
-  { Pi.boundedOrder, Pi.lattice with
-    le_sSup := fun s f hf i => le_iSup (fun f : s => (f : ∀ i, β i) i) ⟨f, hf⟩
-    sInf_le := fun s f hf i => iInf_le (fun f : s => (f : ∀ i, β i) i) ⟨f, hf⟩
-    sSup_le := fun _ _ hf i => iSup_le fun g => hf g g.2 i
-    le_sInf := fun _ _ hf i => le_iInf fun g => hf g g.2 i }
-#align pi.complete_lattice Pi.completeLattice
+instance Pi.instCompleteLattice {α : Type*} {β : α → Type*} [∀ i, CompleteLattice (β i)] :
+    CompleteLattice (∀ i, β i) where
+  __ := Pi.boundedOrder
+  le_sSup s f hf i := le_iSup (fun f : s => (f : ∀ i, β i) i) ⟨f, hf⟩
+  sInf_le s f hf i := iInf_le (fun f : s => (f : ∀ i, β i) i) ⟨f, hf⟩
+  sSup_le _ _ hf i := iSup_le fun g ↦ hf g g.2 i
+  le_sInf _ _ hf i := le_iInf fun g ↦ hf g g.2 i
+#align pi.complete_lattice Pi.instCompleteLattice
 
 theorem sSup_apply {α : Type*} {β : α → Type*} [∀ i, SupSet (β i)] {s : Set (∀ a, β a)} {a : α} :
     (sSup s) a = ⨆ f : s, (f : ∀ a, β a) a :=
@@ -1877,18 +1877,14 @@ theorem iSup_mk [SupSet α] [SupSet β] (f : ι → α) (g : ι → β) :
   congr_arg₂ Prod.mk (fst_iSup _) (snd_iSup _)
 #align prod.supr_mk Prod.iSup_mk
 
-variable (α β)
-
-instance completeLattice [CompleteLattice α] [CompleteLattice β] : CompleteLattice (α × β) :=
-  { Prod.lattice α β, Prod.boundedOrder α β, Prod.supSet α β, Prod.infSet α β with
-    le_sSup := fun _ _ hab => ⟨le_sSup <| mem_image_of_mem _ hab, le_sSup <| mem_image_of_mem _ hab⟩
-    sSup_le := fun _ _ h =>
-      ⟨sSup_le <| ball_image_of_ball fun p hp => (h p hp).1,
-        sSup_le <| ball_image_of_ball fun p hp => (h p hp).2⟩
-    sInf_le := fun _ _ hab => ⟨sInf_le <| mem_image_of_mem _ hab, sInf_le <| mem_image_of_mem _ hab⟩
-    le_sInf := fun _ _ h =>
-      ⟨le_sInf <| ball_image_of_ball fun p hp => (h p hp).1,
-        le_sInf <| ball_image_of_ball fun p hp => (h p hp).2⟩ }
+instance instCompleteLattice [CompleteLattice α] [CompleteLattice β] : CompleteLattice (α × β) where
+  __ := boundedOrder α β
+  le_sSup _ _ hab := ⟨le_sSup <| mem_image_of_mem _ hab, le_sSup <| mem_image_of_mem _ hab⟩
+  sSup_le _ _ h := ⟨sSup_le <| ball_image_of_ball fun p hp => (h p hp).1,
+    sSup_le <| ball_image_of_ball fun p hp => (h p hp).2⟩
+  sInf_le _ _ hab := ⟨sInf_le <| mem_image_of_mem _ hab, sInf_le <| mem_image_of_mem _ hab⟩
+  le_sInf _ _ h := ⟨le_sInf <| ball_image_of_ball fun p hp => (h p hp).1,
+    le_sInf <| ball_image_of_ball fun p hp => (h p hp).2⟩
 
 end Prod
 
