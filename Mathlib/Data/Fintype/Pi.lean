@@ -159,35 +159,35 @@ lemma Fin.snoc_mem_piFinset_snoc_iff {n : ℕ} {α : Fin (n + 1) → Type*}
     Fin.snoc xs x ∈ Fintype.piFinset (Fin.snoc Sᵢ Sₙ) ↔ xs ∈ Fintype.piFinset Sᵢ ∧ x ∈ Sₙ := by
   simp_rw [Fin.mem_piFinset_succ_iff', init_snoc, snoc_last]
 
-lemma Finset.map_piFinSuccAboveEquiv_filter_piFinset_succAbove {n : ℕ} (k : Fin (n + 1))
+lemma Finset.map_piFinSuccAbove_filter_piFinset_succAbove {n : ℕ} (k : Fin (n + 1))
     {α : Fin (n + 1) → Type*}
     (p : ((i : Fin n) → α (Fin.succAbove k i)) → Prop) [DecidablePred p]
     (S : (i : Fin (n + 1)) → Finset (α i)) :
     ((Fintype.piFinset S).filter fun r ↦ p (fun x ↦ r <| Fin.succAbove k x)).map
-      (Equiv.piFinSuccAboveEquiv α k).toEmbedding
+      (Equiv.piFinSuccAbove α k).toEmbedding
     = S k ×ˢ (Fintype.piFinset (fun x ↦ S <| Fin.succAbove k x)).filter p := by
   congr
   ext ⟨x, f⟩
   simp? [Fin.forall_iff_succAbove k] says simp only [Fintype.mem_piFinset,
-      Fin.forall_iff_succAbove k, and_imp, mem_map_equiv, Equiv.piFinSuccAboveEquiv_symm_apply,
+      Fin.forall_iff_succAbove k, and_imp, mem_map_equiv, Equiv.piFinSuccAbove_symm_apply,
       mem_filter, Fin.insertNth_apply_same, Fin.insertNth_apply_succAbove, mem_product]
   tauto
 
-lemma Finset.map_piFinSuccAboveEquiv_filter_piFinset {n : ℕ} {α : Fin (n + 1) → Type*}
+lemma Finset.map_piFinSuccAbove_filter_piFinset {n : ℕ} {α : Fin (n + 1) → Type*}
     (p : ((i : Fin n) → α i.succ) → Prop) [DecidablePred p]
     (S : (i : Fin (n + 1)) → Finset (α i)) :
     ((Fintype.piFinset S).filter fun r ↦ p (Fin.tail r)).map
-      (Equiv.piFinSuccAboveEquiv α 0).toEmbedding
+      (Equiv.piFinSuccAbove α 0).toEmbedding
     = S 0 ×ˢ (Fintype.piFinset (Fin.tail S)).filter p :=
-  Finset.map_piFinSuccAboveEquiv_filter_piFinset_succAbove 0 p S
+  Finset.map_piFinSuccAbove_filter_piFinset_succAbove 0 p S
 
-lemma Finset.filter_piFinset_eq_map_piFinSuccAboveEquiv_symm {n : ℕ} {α : Fin (n + 1) → Type*}
+lemma Finset.filter_piFinset_eq_map_piFinSuccAbove_symm {n : ℕ} {α : Fin (n + 1) → Type*}
     (p : ((i : Fin n) → α i.succ) → Prop) [DecidablePred p]
     (S : ∀ i, Finset (α i)) :
     ((Fintype.piFinset S).filter fun r ↦ p (Fin.tail r))
     = (S 0 ×ˢ (Fintype.piFinset (Fin.tail S)).filter p).map
-        (Equiv.piFinSuccAboveEquiv α 0).symm.toEmbedding := by
-  rw [← Finset.map_piFinSuccAboveEquiv_filter_piFinset, Finset.map_map,
+        (Equiv.piFinSuccAbove α 0).symm.toEmbedding := by
+  rw [← Finset.map_piFinSuccAbove_filter_piFinset, Finset.map_map,
     Function.Embedding.equiv_toEmbedding_trans_symm_toEmbedding, map_refl]
 
 lemma Finset.card_filter_succ_piFinset_eq {n : ℕ} {α : Fin (n + 1) → Type*}
@@ -195,6 +195,6 @@ lemma Finset.card_filter_succ_piFinset_eq {n : ℕ} {α : Fin (n + 1) → Type*}
     (S : (i : Fin (n + 1)) → Finset (α i)) :
     ((Fintype.piFinset S).filter fun r ↦ p (Fin.tail r)).card
     = (S 0).card * ((Fintype.piFinset (Fin.tail S)).filter p).card := by
-  rw [← Finset.card_map ((Equiv.piFinSuccAboveEquiv α 0).toEmbedding),
-    map_piFinSuccAboveEquiv_filter_piFinset]
+  rw [← Finset.card_map ((Equiv.piFinSuccAbove α 0).toEmbedding),
+    map_piFinSuccAbove_filter_piFinset]
   exact Finset.card_product (S 0) ((Fintype.piFinset (Fin.tail S)).filter p)
