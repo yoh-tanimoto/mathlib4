@@ -393,7 +393,7 @@ theorem arzela_ascoli {X Y : Type*} [TopologicalSpace X] [UniformSpace Y] [Compa
     (S : Set C(X, Y)) (hS1 : IsCompact (ContinuousMap.toFun '' S))
     (hS2 : Equicontinuous ((↑) : S → X → Y)) :
     IsCompact S := by
-  suffices : Inducing (Equiv.Set.image (↑) S FunLike.coe_injective)
+  suffices : Inducing (Equiv.Set.image (↑) S DFunLike.coe_injective)
   · rw [isCompact_iff_compactSpace] at hS1 ⊢
     exact (Equiv.toHomeomorphOfInducing _ this).symm.compactSpace
   rw [inducing_subtype_val.inducing_iff, inducing_iff_nhds]
