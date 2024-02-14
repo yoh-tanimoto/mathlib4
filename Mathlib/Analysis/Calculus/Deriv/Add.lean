@@ -385,3 +385,21 @@ theorem deriv_const_sub (c : F) : deriv (fun y => c - f y) x = -deriv f x := by
 #align deriv_const_sub deriv_const_sub
 
 end Sub
+
+section ApplyNeg
+
+open ContinuousLinearMap in
+theorem deriv_comp_neg (f : 𝕜 → F) (a : 𝕜) : deriv (fun x ↦ f (-x)) a = -deriv f (-a) := by
+  by_cases h : DifferentiableAt 𝕜 f (-a)
+  · simp_rw [← fderiv_deriv]
+    rw [← Function.comp_def, fderiv.comp _ h differentiable_neg.differentiableAt, coe_comp',
+      Function.comp_apply, fderiv_neg, fderiv_id', neg_apply, coe_id', id_eq, map_neg]
+  · have H : ¬ DifferentiableAt 𝕜 (fun x ↦ f (-x)) a := by
+      contrapose! h
+      rw [← neg_neg a] at h
+      convert h.comp (-a) differentiable_neg.differentiableAt
+      ext
+      simp only [Function.comp_apply, neg_neg]
+    rw [deriv_zero_of_not_differentiableAt h, deriv_zero_of_not_differentiableAt H, neg_zero]
+
+end ApplyNeg
