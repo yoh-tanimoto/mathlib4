@@ -82,7 +82,7 @@ In any base, we have `ofDigits b L = L.foldr (fun x y ↦ x + b * y) 0`.
 * For `b = 0`, we define `digits 0 n = [n]`, except `digits 0 0 = []`.
 
 Note this differs from the existing `Nat.toDigits` in core, which is used for printing numerals.
-In particular, `Nat.toDigits b 0 = [0]`, while `digits b 0 = []`.
+In particular, `Nat.toDigits b 0 = ['0']`, while `digits b 0 = []`.
 -/
 def digits : ℕ → ℕ → List ℕ
   | 0 => digitsAux0
