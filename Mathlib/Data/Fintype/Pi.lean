@@ -168,9 +168,10 @@ lemma Finset.map_piFinSuccAbove_filter_piFinset_succAbove {n : ℕ} (k : Fin (n 
     = S k ×ˢ (Fintype.piFinset (fun x ↦ S <| Fin.succAbove k x)).filter p := by
   congr
   ext ⟨x, f⟩
-  simp? [Fin.forall_iff_succAbove k] says simp only [Fintype.mem_piFinset,
-      Fin.forall_iff_succAbove k, and_imp, mem_map_equiv, Equiv.piFinSuccAbove_symm_apply,
-      mem_filter, Fin.insertNth_apply_same, Fin.insertNth_apply_succAbove, mem_product]
+  simp? [Fin.forall_iff_succAbove
+        k] says simp only [mem_map_equiv, Equiv.piFinSuccAbove_symm_apply, mem_filter,
+      Fintype.mem_piFinset, Fin.forall_iff_succAbove k, Fin.insertNth_apply_same,
+      Fin.insertNth_apply_succAbove, mem_product]
   tauto
 
 lemma Finset.map_piFinSuccAbove_filter_piFinset {n : ℕ} {α : Fin (n + 1) → Type*}
