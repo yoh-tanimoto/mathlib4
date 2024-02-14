@@ -794,28 +794,29 @@ instance Prop.booleanAlgebra : BooleanAlgebra Prop :=
     top_le_sup_compl := fun p _ => Classical.em p }
 #align Prop.boolean_algebra Prop.booleanAlgebra
 
-instance Prod.booleanAlgebra (α β) [BooleanAlgebra α] [BooleanAlgebra β] :
+instance Prod.instBooleanAlgebra (α β) [BooleanAlgebra α] [BooleanAlgebra β] :
     BooleanAlgebra (α × β) where
-  __ := Prod.heytingAlgebra
-  __ := Prod.distribLattice α β
+  __ := distribLattice α β
+  __ := instHeytingAlgebra
   himp_eq x y := by ext <;> simp [himp_eq]
   sdiff_eq x y := by ext <;> simp [sdiff_eq]
   inf_compl_le_bot x := by constructor <;> simp
   top_le_sup_compl x := by constructor <;> simp
 
-instance Pi.booleanAlgebra {ι : Type u} {α : ι → Type v} [∀ i, BooleanAlgebra (α i)] :
-    BooleanAlgebra (∀ i, α i) :=
-  { Pi.sdiff, Pi.heytingAlgebra, @Pi.distribLattice ι α _ with
-    sdiff_eq := fun _ _ => funext fun _ => sdiff_eq,
-    himp_eq := fun _ _ => funext fun _ => himp_eq,
-    inf_compl_le_bot := fun _ _ => BooleanAlgebra.inf_compl_le_bot _,
-    top_le_sup_compl := fun _ _ => BooleanAlgebra.top_le_sup_compl _ }
-#align pi.boolean_algebra Pi.booleanAlgebra
+instance Pi.instBooleanAlgebra {ι : Type u} {α : ι → Type v} [∀ i, BooleanAlgebra (α i)] :
+    BooleanAlgebra (∀ i, α i) where
+  __ := distribLattice
+  __ := instHeytingAlgebra
+  sdiff_eq _ _ := funext fun _ => sdiff_eq
+  himp_eq _ _ := funext fun _ => himp_eq
+  inf_compl_le_bot _ _ := BooleanAlgebra.inf_compl_le_bot _
+  top_le_sup_compl _ _ := BooleanAlgebra.top_le_sup_compl _
+#align pi.boolean_algebra Pi.instBooleanAlgebra
 
 instance Bool.instBooleanAlgebra : BooleanAlgebra Bool where
-  __ := Bool.linearOrder
-  __ := Bool.boundedOrder
-  __ := Bool.instDistribLattice
+  __ := instDistribLattice
+  __ := linearOrder
+  __ := boundedOrder
   compl := not
   inf_compl_le_bot a := a.and_not_self.le
   top_le_sup_compl a := a.or_not_self.ge

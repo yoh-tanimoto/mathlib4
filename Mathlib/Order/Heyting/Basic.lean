@@ -422,24 +422,19 @@ instance (priority := 100) GeneralizedHeytingAlgebra.toDistribLattice : DistribL
     simp_rw [@inf_comm _ _ a, ← le_himp_iff, sup_le_iff, le_himp_iff, ← sup_le_iff]; rfl
 #align generalized_heyting_algebra.to_distrib_lattice GeneralizedHeytingAlgebra.toDistribLattice
 
-instance : GeneralizedCoheytingAlgebra αᵒᵈ :=
-  { OrderDual.lattice α, OrderDual.orderBot α with
-    sdiff := fun a b => toDual (ofDual b ⇨ ofDual a),
-    sdiff_le_iff := fun a b c => by
-      rw [sup_comm]
-      exact le_himp_iff }
+instance OrderDual.instGeneralizedCoheytingAlgebra : GeneralizedCoheytingAlgebra αᵒᵈ where
+  sdiff a b := toDual (ofDual b ⇨ ofDual a)
+  sdiff_le_iff a b c := by rw [sup_comm]; exact le_himp_iff
 
-instance Prod.generalizedHeytingAlgebra [GeneralizedHeytingAlgebra β] :
-    GeneralizedHeytingAlgebra (α × β) :=
-  { Prod.lattice α β, Prod.orderTop α β, Prod.himp α β with
-    le_himp_iff := fun _ _ _ => and_congr le_himp_iff le_himp_iff }
-#align prod.generalized_heyting_algebra Prod.generalizedHeytingAlgebra
+instance Prod.instGeneralizedHeytingAlgebra [GeneralizedHeytingAlgebra β] :
+    GeneralizedHeytingAlgebra (α × β) where
+  le_himp_iff _ _ _ := and_congr le_himp_iff le_himp_iff
+#align prod.generalized_heyting_algebra Prod.instGeneralizedHeytingAlgebra
 
-instance Pi.generalizedHeytingAlgebra {α : ι → Type*} [∀ i, GeneralizedHeytingAlgebra (α i)] :
-    GeneralizedHeytingAlgebra (∀ i, α i) :=
-  { Pi.lattice, Pi.orderTop with
-    le_himp_iff := fun i => by simp [le_def] }
-#align pi.generalized_heyting_algebra Pi.generalizedHeytingAlgebra
+instance Pi.instGeneralizedHeytingAlgebra {α : ι → Type*} [∀ i, GeneralizedHeytingAlgebra (α i)] :
+    GeneralizedHeytingAlgebra (∀ i, α i) where
+  le_himp_iff i := by simp [le_def]
+#align pi.generalized_heyting_algebra Pi.instGeneralizedHeytingAlgebra
 
 end GeneralizedHeytingAlgebra
 
@@ -702,24 +697,19 @@ instance (priority := 100) GeneralizedCoheytingAlgebra.toDistribLattice : Distri
       fun a b c => by simp_rw [← sdiff_le_iff, le_inf_iff, sdiff_le_iff, ← le_inf_iff]; rfl }
 #align generalized_coheyting_algebra.to_distrib_lattice GeneralizedCoheytingAlgebra.toDistribLattice
 
-instance : GeneralizedHeytingAlgebra αᵒᵈ :=
-  { OrderDual.lattice α, OrderDual.orderTop α with
-    himp := fun a b => toDual (ofDual b \ ofDual a),
-    le_himp_iff := fun a b c => by
-      rw [inf_comm]
-      exact sdiff_le_iff }
+instance OrderDual.instGeneralizedHeytingAlgebra : GeneralizedHeytingAlgebra αᵒᵈ where
+  himp := fun a b => toDual (ofDual b \ ofDual a)
+  le_himp_iff := fun a b c => by rw [inf_comm]; exact sdiff_le_iff
 
-instance Prod.generalizedCoheytingAlgebra [GeneralizedCoheytingAlgebra β] :
-    GeneralizedCoheytingAlgebra (α × β) :=
-  { Prod.lattice α β, Prod.orderBot α β, Prod.sdiff α β with
-    sdiff_le_iff := fun _ _ _ => and_congr sdiff_le_iff sdiff_le_iff }
-#align prod.generalized_coheyting_algebra Prod.generalizedCoheytingAlgebra
+instance Prod.instGeneralizedCoheytingAlgebra [GeneralizedCoheytingAlgebra β] :
+    GeneralizedCoheytingAlgebra (α × β) where
+  sdiff_le_iff _ _ _ := and_congr sdiff_le_iff sdiff_le_iff
+#align prod.generalized_coheyting_algebra Prod.instGeneralizedCoheytingAlgebra
 
-instance Pi.generalizedCoheytingAlgebra {α : ι → Type*} [∀ i, GeneralizedCoheytingAlgebra (α i)] :
-    GeneralizedCoheytingAlgebra (∀ i, α i) :=
-  { Pi.lattice, Pi.orderBot with
-    sdiff_le_iff := fun i => by simp [le_def] }
-#align pi.generalized_coheyting_algebra Pi.generalizedCoheytingAlgebra
+instance Pi.instGeneralizedCoheytingAlgebra {α : ι → Type*}
+    [∀ i, GeneralizedCoheytingAlgebra (α i)] : GeneralizedCoheytingAlgebra (∀ i, α i) where
+  sdiff_le_iff i := by simp [le_def]
+#align pi.generalized_coheyting_algebra Pi.instGeneralizedCoheytingAlgebra
 
 end GeneralizedCoheytingAlgebra
 
@@ -909,14 +899,11 @@ theorem compl_compl_himp_distrib (a b : α) : (a ⇨ b)ᶜᶜ = aᶜᶜ ⇨ bᶜ
     exact inf_himp_le
 #align compl_compl_himp_distrib compl_compl_himp_distrib
 
-instance : CoheytingAlgebra αᵒᵈ :=
-  { OrderDual.lattice α, OrderDual.boundedOrder α with
-    hnot := toDual ∘ compl ∘ ofDual,
-    sdiff := fun a b => toDual (ofDual b ⇨ ofDual a),
-    sdiff_le_iff := fun a b c => by
-      rw [sup_comm]
-      exact le_himp_iff,
-    top_sdiff := @himp_bot α _ }
+instance OrderDual.instCoheytingAlgebra : CoheytingAlgebra αᵒᵈ where
+  hnot := toDual ∘ compl ∘ ofDual
+  sdiff a b := toDual (ofDual b ⇨ ofDual a)
+  sdiff_le_iff a b c := by rw [sup_comm]; exact le_himp_iff
+  top_sdiff := @himp_bot α _
 
 @[simp]
 theorem ofDual_hnot (a : αᵒᵈ) : ofDual (￢a) = (ofDual a)ᶜ :=
@@ -928,16 +915,14 @@ theorem toDual_compl (a : α) : toDual aᶜ = ￢toDual a :=
   rfl
 #align to_dual_compl toDual_compl
 
-instance Prod.heytingAlgebra [HeytingAlgebra β] : HeytingAlgebra (α × β) :=
-  { Prod.generalizedHeytingAlgebra, Prod.boundedOrder α β, Prod.hasCompl α β with
-     himp_bot := fun a => Prod.ext_iff.2 ⟨himp_bot a.1, himp_bot a.2⟩ }
-#align prod.heyting_algebra Prod.heytingAlgebra
+instance Prod.instHeytingAlgebra [HeytingAlgebra β] : HeytingAlgebra (α × β) where
+    himp_bot a := Prod.ext_iff.2 ⟨himp_bot a.1, himp_bot a.2⟩
+#align prod.heyting_algebra Prod.instHeytingAlgebra
 
-instance Pi.heytingAlgebra {α : ι → Type*} [∀ i, HeytingAlgebra (α i)] :
-    HeytingAlgebra (∀ i, α i) :=
-  { Pi.orderBot, Pi.generalizedHeytingAlgebra with
-    himp_bot := fun f => funext fun i => himp_bot (f i) }
-#align pi.heyting_algebra Pi.heytingAlgebra
+instance Pi.instHeytingAlgebra {α : ι → Type*} [∀ i, HeytingAlgebra (α i)] :
+    HeytingAlgebra (∀ i, α i) where
+  himp_bot f := funext fun i ↦ himp_bot (f i)
+#align pi.heyting_algebra Pi.instHeytingAlgebra
 
 end HeytingAlgebra
 
@@ -1089,14 +1074,11 @@ theorem hnot_hnot_sdiff_distrib (a b : α) : ￢￢(a \ b) = ￢￢a \ ￢￢b :
     exact hnot_anti (hnot_anti le_sup_sdiff)
 #align hnot_hnot_sdiff_distrib hnot_hnot_sdiff_distrib
 
-instance : HeytingAlgebra αᵒᵈ :=
-  { OrderDual.lattice α, OrderDual.boundedOrder α with
-    compl := toDual ∘ hnot ∘ ofDual,
-    himp := fun a b => toDual (ofDual b \ ofDual a),
-    le_himp_iff := fun a b c => by
-      rw [inf_comm]
-      exact sdiff_le_iff,
-    himp_bot := @top_sdiff' α _ }
+instance OrderDual.instHeytingAlgebra : HeytingAlgebra αᵒᵈ where
+  compl := toDual ∘ hnot ∘ ofDual
+  himp a b := toDual (ofDual b \ ofDual a)
+  le_himp_iff a b c := by rw [inf_comm]; exact sdiff_le_iff
+  himp_bot := @top_sdiff' α _
 
 @[simp]
 theorem ofDual_compl (a : αᵒᵈ) : ofDual aᶜ = ￢ofDual a :=
@@ -1118,17 +1100,15 @@ theorem toDual_sdiff (a b : α) : toDual (a \ b) = toDual b ⇨ toDual a :=
   rfl
 #align to_dual_sdiff toDual_sdiff
 
-instance Prod.coheytingAlgebra [CoheytingAlgebra β] : CoheytingAlgebra (α × β) :=
-  { Prod.lattice α β, Prod.boundedOrder α β, Prod.sdiff α β, Prod.hnot α β with
-    sdiff_le_iff := fun _ _ _ => and_congr sdiff_le_iff sdiff_le_iff,
-    top_sdiff := fun a => Prod.ext_iff.2 ⟨top_sdiff' a.1, top_sdiff' a.2⟩ }
-#align prod.coheyting_algebra Prod.coheytingAlgebra
+instance Prod.instCoheytingAlgebra [CoheytingAlgebra β] : CoheytingAlgebra (α × β) where
+  sdiff_le_iff _ _ _ := and_congr sdiff_le_iff sdiff_le_iff
+  top_sdiff a := Prod.ext_iff.2 ⟨top_sdiff' a.1, top_sdiff' a.2⟩
+#align prod.coheyting_algebra Prod.instCoheytingAlgebra
 
-instance Pi.coheytingAlgebra {α : ι → Type*} [∀ i, CoheytingAlgebra (α i)] :
-    CoheytingAlgebra (∀ i, α i) :=
-  { Pi.orderTop, Pi.generalizedCoheytingAlgebra with
-    top_sdiff := fun f => funext fun i => top_sdiff' (f i) }
-#align pi.coheyting_algebra Pi.coheytingAlgebra
+instance Pi.instCoheytingAlgebra {α : ι → Type*} [∀ i, CoheytingAlgebra (α i)] :
+    CoheytingAlgebra (∀ i, α i) where
+  top_sdiff f := funext fun i ↦ top_sdiff' (f i)
+#align pi.coheyting_algebra Pi.instCoheytingAlgebra
 
 end CoheytingAlgebra
 
@@ -1183,6 +1163,20 @@ def LinearOrder.toBiheytingAlgebra [LinearOrder α] [BoundedOrder α] : Biheytin
       · rw [le_sup_iff, or_iff_right h],
     top_sdiff := fun a => if_congr top_le_iff rfl rfl }
 #align linear_order.to_biheyting_algebra LinearOrder.toBiheytingAlgebra
+
+instance OrderDual.instBiheytingAlgebra [BiheytingAlgebra α] : BiheytingAlgebra αᵒᵈ where
+  __ := instHeytingAlgebra
+  __ := instCoheytingAlgebra
+
+instance Prod.instBiheytingAlgebra [BiheytingAlgebra α] [BiheytingAlgebra β] :
+    BiheytingAlgebra (α × β) where
+  __ := instHeytingAlgebra
+  __ := instCoheytingAlgebra
+
+instance Pi.instBiheytingAlgebra {α : ι → Type*} [∀ i, BiheytingAlgebra (α i)] :
+    BiheytingAlgebra (∀ i, α i) where
+  __ := instHeytingAlgebra
+  __ := instCoheytingAlgebra
 
 section lift
 

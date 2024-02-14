@@ -60,42 +60,31 @@ universe u v w
 variable {α : Type u} {β : Type v} {ι : Sort w} {κ : ι → Sort w'}
 
 /-- A frame, aka complete Heyting algebra, is a complete lattice whose `⊓` distributes over `⨆`. -/
-class Order.Frame (α : Type*) extends CompleteLattice α where
+class Order.Frame (α : Type*) extends CompleteLattice α, HeytingAlgebra α where
+  /-- `⊓` distributes over `⨆`. -/
   inf_sSup_le_iSup_inf (a : α) (s : Set α) : a ⊓ sSup s ≤ ⨆ b ∈ s, a ⊓ b
 #align order.frame Order.Frame
 
-/-- In a frame, `⊓` distributes over `⨆`. -/
-add_decl_doc Order.Frame.inf_sSup_le_iSup_inf
-
 /-- A coframe, aka complete Brouwer algebra or complete co-Heyting algebra, is a complete lattice
 whose `⊔` distributes over `⨅`. -/
-class Order.Coframe (α : Type*) extends CompleteLattice α where
+class Order.Coframe (α : Type*) extends CompleteLattice α, CoheytingAlgebra α where
+  /-- `⊔` distributes over `⨅`. -/
   iInf_sup_le_sup_sInf (a : α) (s : Set α) : ⨅ b ∈ s, a ⊔ b ≤ a ⊔ sInf s
 #align order.coframe Order.Coframe
-
-/-- In a coframe, `⊔` distributes over `⨅`. -/
-add_decl_doc Order.Coframe.iInf_sup_le_sup_sInf
 
 open Order
 
 /-- A complete distributive lattice is a complete lattice whose `⊔` and `⊓` respectively
 distribute over `⨅` and `⨆`. -/
-class CompleteDistribLattice (α : Type*) extends Frame α where
-  iInf_sup_le_sup_sInf : ∀ a s, ⨅ b ∈ s, a ⊔ b ≤ a ⊔ sInf s
+class CompleteDistribLattice (α : Type*) extends Frame α, Coframe α
 #align complete_distrib_lattice CompleteDistribLattice
 
 /-- In a complete distributive lattice, `⊔` distributes over `⨅`. -/
 add_decl_doc CompleteDistribLattice.iInf_sup_le_sup_sInf
 
--- See note [lower instance priority]
-instance (priority := 100) CompleteDistribLattice.toCoframe [CompleteDistribLattice α] :
-    Coframe α :=
-  { ‹CompleteDistribLattice α› with }
-#align complete_distrib_lattice.to_coframe CompleteDistribLattice.toCoframe
-
 /-- A completely distributive lattice is a complete lattice whose `⨅` and `⨆`
 distribute over each other. -/
-class CompletelyDistribLattice (α : Type u) extends CompleteLattice α where
+class CompletelyDistribLattice (α : Type u) extends CompleteLattice α, BiheytingAlgebra α where
   protected iInf_iSup_eq {ι : Type u} {κ : ι → Type u} (f : ∀ a, κ a → α) :
     (⨅ a, ⨆ b, f a b) = ⨆ g : ∀ a, κ a, ⨅ a, f a (g a)
 
@@ -135,6 +124,7 @@ theorem iSup_iInf_eq [CompletelyDistribLattice α] {f : ∀ a, κ a → α} :
 
 instance (priority := 100) CompletelyDistribLattice.toCompleteDistribLattice
     [CompletelyDistribLattice α] : CompleteDistribLattice α where
+  __ := ‹CompletelyDistribLattice α›
   iInf_sup_le_sup_sInf a s := calc
     _ = ⨅ b : s, ⨆ x : Bool, cond x a b := by simp_rw [iInf_subtype, iSup_bool_eq, cond]
     _ = _ := iInf_iSup_eq
