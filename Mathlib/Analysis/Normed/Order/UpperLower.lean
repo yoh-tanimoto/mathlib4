@@ -4,9 +4,9 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Yaël Dillies
 -/
 import Mathlib.Algebra.Order.Field.Pi
+import Mathlib.Algebra.Order.UpperLower
 import Mathlib.Analysis.Normed.Group.Pointwise
 import Mathlib.Analysis.Normed.Order.Basic
-import Mathlib.Algebra.Order.UpperLower
 import Mathlib.Data.Real.Sqrt
 import Mathlib.Topology.Algebra.Order.UpperLower
 
@@ -63,17 +63,17 @@ protected theorem IsLowerSet.cthickening' (hs : IsLowerSet s) (ε : ℝ) :
 #align is_lower_set.cthickening' IsLowerSet.cthickening'
 #align is_lower_set.cthickening IsLowerSet.cthickening
 
-@[to_additive upper_closure_interior_subset] lemma upperClosure_interior_subset' (s : Set α) :
+@[to_additive upperClosure_interior_subset] lemma upperClosure_interior_subset' (s : Set α) :
     (upperClosure (interior s) : Set α) ⊆ interior (upperClosure s) :=
   upperClosure_min (interior_mono subset_upperClosure) (upperClosure s).upper.interior
 #align upper_closure_interior_subset' upperClosure_interior_subset'
-#align upper_closure_interior_subset upper_closure_interior_subset
+#align upper_closure_interior_subset upperClosure_interior_subset
 
-@[to_additive lower_closure_interior_subset] lemma lower_closure_interior_subset' (s : Set α) :
-    (upperClosure (interior s) : Set α) ⊆ interior (upperClosure s) :=
-  upperClosure_min (interior_mono subset_upperClosure) (upperClosure s).upper.interior
-#align lower_closure_interior_subset' lower_closure_interior_subset'
-#align lower_closure_interior_subset lower_closure_interior_subset
+@[to_additive lowerClosure_interior_subset] lemma lowerClosure_interior_subset' (s : Set α) :
+    (lowerClosure (interior s) : Set α) ⊆ interior (lowerClosure s) :=
+  lowerClosure_min (interior_mono subset_lowerClosure) (lowerClosure s).lower.interior
+#align lower_closure_interior_subset' lowerClosure_interior_subset'
+#align lower_closure_interior_subset lowerClosure_interior_subset
 
 end NormedOrderedGroup
 
@@ -159,47 +159,6 @@ lemma dist_le_dist_of_le (ha : a₂ ≤ a₁) (h₁ : a₁ ≤ b₁) (hb : b₁ 
     dist_anti_left (ha.trans $ h₁.trans hb) (h₁.trans hb) ha
 #align dist_le_dist_of_le dist_le_dist_of_le
 
-protected lemma Bornology.IsBounded.bddBelow : IsBounded s → BddBelow s := by
-  rw [isBounded_iff]
-  rintro ⟨r, hr⟩
-  obtain rfl | ⟨x, hx⟩ := s.eq_empty_or_nonempty
-  · exact bddBelow_empty
-  · exact ⟨(x · - r), fun y hy i ↦
-      sub_le_comm.1 (abs_sub_le_iff.1 $ (dist_le_pi_dist _ _ _).trans $ hr hx hy).1⟩
-#align metric.bounded.bdd_below Bornology.IsBounded.bddBelow
-
-protected lemma Bornology.IsBounded.bddAbove : IsBounded s → BddAbove s := by
-  rw [isBounded_iff]
-  rintro ⟨r, hr⟩
-  obtain rfl | ⟨x, hx⟩ := s.eq_empty_or_nonempty
-  · exact bddAbove_empty
-  · exact ⟨(x · + r), fun y hy i ↦
-      sub_le_iff_le_add'.1 $ (abs_sub_le_iff.1 $ (dist_le_pi_dist _ _ _).trans $ hr hx hy).2⟩
-#align metric.bounded.bdd_above Bornology.IsBounded.bddAbove
-
-protected lemma BddBelow.isBounded : BddBelow s → BddAbove s → IsBounded s := by
-  rintro ⟨a, ha⟩ ⟨b, hb⟩
-  refine isBounded_iff.2 ⟨dist a b, fun x hx y hy ↦ ?_⟩
-  rw [← dist_inf_sup]
-  exact dist_le_dist_of_le (le_inf (ha hx) $ ha hy) inf_le_sup (sup_le (hb hx) $ hb hy)
-#align bdd_below.bounded BddBelow.isBounded
-
-protected lemma BddAbove.isBounded : BddAbove s → BddBelow s → IsBounded s :=
-  flip BddBelow.isBounded
-#align bdd_above.bounded BddAbove.isBounded
-
-lemma isBounded_iff_bddBelow_bddAbove : IsBounded s ↔ BddBelow s ∧ BddAbove s :=
-  ⟨fun h ↦ ⟨h.bddBelow, h.bddAbove⟩, fun h ↦ h.1.isBounded h.2⟩
-#align bounded_iff_bdd_below_bdd_above isBounded_iff_bddBelow_bddAbove
-
-lemma BddBelow.isBounded_inter (hs : BddBelow s) (ht : BddAbove t) : IsBounded (s ∩ t) :=
-  (hs.mono $ inter_subset_left _ _).isBounded $ ht.mono $ inter_subset_right _ _
-#align bdd_below.bounded_inter BddBelow.isBounded_inter
-
-lemma BddAbove.isBounded_inter (hs : BddAbove s) (ht : BddBelow t) : IsBounded (s ∩ t) :=
-  (hs.mono $ inter_subset_left _ _).isBounded $ ht.mono $ inter_subset_right _ _
-#align bdd_above.bounded_inter BddAbove.isBounded_inter
-
 theorem IsUpperSet.exists_subset_ball (hs : IsUpperSet s) (hx : x ∈ closure s) (hδ : 0 < δ) :
     ∃ y, closedBall y (δ / 4) ⊆ closedBall x δ ∧ closedBall y (δ / 4) ⊆ interior s := by
   refine' ⟨x + const _ (3 / 4 * δ), closedBall_subset_closedBall' _, _⟩
@@ -241,7 +200,6 @@ theorem IsLowerSet.exists_subset_ball (hs : IsLowerSet s) (hx : x ∈ closure s)
 end Fintype
 
 section Finite
-
 variable [Finite ι] {s t : Set (ι → ℝ)} {a₁ a₂ b₁ b₂ x y : ι → ℝ} {δ : ℝ}
 
 /-!
@@ -252,8 +210,7 @@ of the open segments from `(0, 2)` to `(1, 1)` and from `(2, 1)` to `(3, 0)`. `(
 are comparable and both in the closure/frontier.
 -/
 
-
-protected theorem IsClosed.upperClosure (hs : IsClosed s) (hs' : BddBelow s) :
+protected lemma IsClosed.upperClosure (hs : IsClosed s) (hs' : BddBelow s) :
     IsClosed (upperClosure s : Set (ι → ℝ)) := by
   cases nonempty_fintype ι
   refine' IsSeqClosed.isClosed fun f x hf hx ↦ _

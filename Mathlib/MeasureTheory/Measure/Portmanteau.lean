@@ -7,7 +7,6 @@ import Mathlib.MeasureTheory.Measure.ProbabilityMeasure
 import Mathlib.MeasureTheory.Measure.Lebesgue.Basic
 import Mathlib.MeasureTheory.Integral.Layercake
 import Mathlib.MeasureTheory.Integral.BoundedContinuousFunction
-import Mathlib.Topology.Order.Bounded
 
 #align_import measure_theory.measure.portmanteau from "leanprover-community/mathlib"@"fd5edc43dc4f10b85abfe544b88f82cf13c5f844"
 
@@ -551,10 +550,12 @@ lemma tendsto_integral_of_forall_integral_le_liminf_integral {ι : Type*} {L : F
   rcases eq_or_neBot L with rfl|hL
   · simp only [tendsto_bot]
   have obs := BoundedContinuousFunction.isBounded_range_integral μs f
-  have bdd_above : IsBoundedUnder (· ≤ ·) L (fun i ↦ ∫ (x : Ω), f x ∂μs i) :=
-    isBounded_le_map_of_bounded_range _ obs
-  have bdd_below : IsBoundedUnder (· ≥ ·) L (fun i ↦ ∫ (x : Ω), f x ∂μs i) :=
-    isBounded_ge_map_of_bounded_range _ obs
+  have bdd_above : IsBoundedUnder (· ≤ ·) L (fun i ↦ ∫ (x : Ω), f x ∂μs i) := by
+    obtain ⟨c, hc⟩ := h.bddAbove
+    exact isBoundedUnder_of ⟨c, by simpa [mem_upperBounds] using hc⟩
+  have bdd_below : IsBoundedUnder (· ≥ ·) L (fun i ↦ ∫ (x : Ω), f x ∂μs i) := by
+    obtain ⟨c, hc⟩ := h.bddBelow
+    exact isBoundedUnder_of ⟨c, by simpa [mem_lowerBounds] using hc⟩
   apply @tendsto_of_le_liminf_of_limsup_le ℝ ι _ _ _ L (fun i ↦ ∫ x, (f x) ∂ (μs i)) (∫ x, (f x) ∂μ)
   · have key := h _ (f.add_norm_nonneg)
     simp_rw [f.integral_add_const ‖f‖] at key
