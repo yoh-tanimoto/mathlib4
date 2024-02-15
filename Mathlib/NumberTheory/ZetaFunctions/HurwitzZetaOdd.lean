@@ -357,13 +357,14 @@ lemma completedSinZeta_one_sub (a : UnitAddCircle) (s : ℂ) :
 -/
 
 /-- Formula for `completedSinZeta` as a Dirichlet series in the convergence range
-(first version, with sum over `ℤ - {0}`).
+(first version, with sum over `ℤ`).
 
 We need to assume a non-optimal bound on `re s` here (it should work for `1 < re s`) because our
 bounds on the norms of zeta kernels as `t → 0` are non-optimal. -/
-lemma completedSinZeta_eq_tsum_int (a : ℝ) {s : ℂ} (hs : 3 < re s) :
-    completedSinZeta a s = Gamma ((s + 1)/ 2) * π ^ (-(s + 1) / 2) *
-    (∑' (n : ℤ), (-I * n) * cexp (2 * π * I * a * n) / (↑|n| : ℂ) ^ (s + 1)) / 2 := by
+lemma hasSum_int_completedSinZeta (a : ℝ) {s : ℂ} (hs : 3 < re s) :
+    HasSum (fun n : ℤ ↦ Gamma ((s + 1)/ 2) * π ^ (-(s + 1) / 2) *
+    (-I) * n.sign * cexp (2 * π * I * a * n) / (↑|n| : ℂ) ^ s / 2)
+    (completedSinZeta a s) := by
   let μ : Measure ℝ := volume.restrict (Ioi 0)
   let F (n : ℤ) (t : ℝ) : ℂ :=
     t ^ ((s + 1) / 2 - 1) * (-I * n) * cexp (2 * π * I * a * n) * rexp (-π * n ^ 2 * t) / 2
@@ -418,20 +419,55 @@ lemma completedSinZeta_eq_tsum_int (a : ℝ) {s : ℂ} (hs : 3 < re s) :
       rw [rpow_neg ht.le, one_div, (by simp : (2 : ℝ) = ↑(2 : ℕ)), rpow_nat_cast]
     · rw [add_re, one_re]
       linarith
-  convert (hasSum_integral_of_dominated_convergence
-      bound hF_meas h_bound bound_summable bound_integrable h_lim).tsum_eq.symm using 1
-  · rw [completedSinZeta]
-    convert congr_arg (· / 2) ((hurwitzOddFEPair a).symm.hasMellin ((s + 1) / 2)).2.symm
-    simp only [f, mellin, integral_div]
-    rfl
-  · simp_rw [← tsum_mul_left, integral_div, tsum_div_const]
-    congr 2 with n
-    rcases eq_or_ne n 0 with rfl | hn
-    · simp only [Int.cast_zero, mul_zero, zero_mul, zero_div]
-      rw [integral_zero] -- why doesn't this work as `simp`?
-    · simp_rw [← mul_div_assoc, mul_assoc _ (-I * n), mul_comm _ (-I * n * _),
-        mul_assoc (-I * n * _), integral_mul_left, mul_div_assoc (-I * n * _)]
+  have step1 : HasSum (fun n : ℤ ↦ Gamma ((s + 1)/ 2) * π ^ (-(s + 1) / 2) *
+      (-I * n) * cexp (2 * π * I * a * n) / (↑|n| : ℂ) ^ (s + 1) / 2)
+      (completedSinZeta a s)
+  · convert (hasSum_integral_of_dominated_convergence
+      bound hF_meas h_bound bound_summable bound_integrable h_lim) using 2 with n
+    · simp_rw [integral_div]
       congr 1
-      have : 0 < (s + 1).re := by { rw [add_re, one_re]; linarith }
-      simpa only [← Int.cast_abs, ofReal_int_cast]
-        using (mellin_exp_neg_pi_mul_sq this (Int.cast_ne_zero.mpr hn)).symm
+      rcases eq_or_ne n 0 with rfl | hn
+      · simp only [Int.cast_zero, mul_zero, zero_mul, zero_div]
+        rw [integral_zero] -- why doesn't this work as `simp`?
+      · simp_rw [mul_assoc _ (-I * n), mul_comm _ (-I * n * _),
+          mul_assoc (-I * n * _), integral_mul_left, mul_div_assoc (-I * n * _)]
+        congr 1
+        have : 0 < (s + 1).re := by { rw [add_re, one_re]; linarith }
+        simpa only [← Int.cast_abs, ofReal_int_cast]
+          using (mellin_exp_neg_pi_mul_sq this (Int.cast_ne_zero.mpr hn)).symm
+    · rw [completedSinZeta]
+      convert congr_arg (· / 2) ((hurwitzOddFEPair a).symm.hasMellin ((s + 1) / 2)).2.symm
+      simp only [f, mellin, integral_div]
+      rfl
+  convert step1 using 3 with n
+  simp_rw [mul_comm _ (cexp _), mul_assoc, mul_div_assoc]
+  congr 4
+  rcases n with m | m
+  rcases m with rfl | m
+  · simp
+  · simp only [Int.ofNat_eq_coe, Nat.cast_succ, Int.sign_of_add_one, Int.cast_one]
+    rw [abs_of_nonneg (by positivity), cpow_add _ _ (Int.cast_ne_zero.mpr (by positivity)),
+      cpow_one, mul_comm, ← div_div,
+      div_self (Int.cast_ne_zero.mpr (by positivity : (m : ℤ) + 1 ≠ 0))]
+  · rw [Int.negSucc_eq, Int.sign_neg, Int.cast_neg, neg_div, Int.cast_neg, neg_div, abs_neg]
+    simp only [Int.ofNat_eq_coe, Nat.cast_succ, Int.sign_of_add_one, Int.cast_one]
+    rw [abs_of_nonneg (by positivity), cpow_add _ _ (Int.cast_ne_zero.mpr (by positivity)),
+      cpow_one, mul_comm, ← div_div,
+      div_self (Int.cast_ne_zero.mpr (by positivity : (m : ℤ) + 1 ≠ 0))]
+
+/-- Formula for `completedSinZeta` as a Dirichlet series in the convergence range
+(second version, with sum over `ℕ`). -/
+lemma hasSum_nat_completedSinZeta (a : ℝ) {s : ℂ} (hs : 3 < re s) :
+    HasSum (fun n : ℕ ↦ Gamma ((s + 1)/ 2) * π ^ (-(s + 1) / 2) *
+    Real.sin (2 * π * a * n) / (n : ℂ) ^ s) (completedSinZeta a s) := by
+  have := (hasSum_int_completedSinZeta a hs).sum_nat_of_sum_int
+  simp_rw [Int.sign_zero, Int.cast_zero, mul_zero, zero_mul, zero_div, add_zero, abs_neg,
+    Int.sign_neg, Nat.abs_cast, Int.cast_neg, Int.cast_ofNat, ← add_div] at this
+  convert this using 2 with n
+  rw [div_right_comm]
+  rcases eq_or_ne n 0 with rfl | h
+  · simp
+  simp_rw [Int.sign_coe_nat_of_nonzero h, Int.cast_one]
+  rw [ofReal_sin, Complex.sin]
+  cancel_denoms
+  ring_nf

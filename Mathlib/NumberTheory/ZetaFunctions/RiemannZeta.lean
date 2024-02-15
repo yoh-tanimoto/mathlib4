@@ -283,18 +283,18 @@ def RiemannHypothesis : Prop :=
 -/
 
 theorem completedZeta_eq_tsum_of_one_lt_re {s : ℂ} (hs : 1 < re s) :
-    completedRiemannZeta s =
-      (π : ℂ) ^ (-s / 2) * Gamma (s / 2) * ∑' n : ℕ, 1 / ((n : ℂ) + 1) ^ s := by
-  have := completedCosZeta_eq_tsum_nat 0 (hs : 1 < re s)
-  simpa only [completedCosZeta, QuotientAddGroup.mk_zero, hurwitzEvenFEPair_zero_symm,
-    mul_comm (Gamma (s / 2)), mul_zero, zero_mul, Real.cos_zero, ofReal_one]
+    completedRiemannZeta s = (π : ℂ) ^ (-s / 2) * Gamma (s / 2) *
+    ∑' n : ℕ, 1 / (n : ℂ) ^ s := by
+  simpa only [QuotientAddGroup.mk_zero, completedCosZeta_zero, mul_zero, zero_mul, Real.cos_zero,
+    ofReal_one, mul_div_assoc, tsum_mul_left, mul_comm (Gamma (s / 2))]
+    using (hasSum_nat_completedCosZeta 0 hs).tsum_eq.symm
 #align completed_zeta_eq_tsum_of_one_lt_re completedZeta_eq_tsum_of_one_lt_re
 
 /-- The Riemann zeta function agrees with the naive Dirichlet-series definition when the latter
 converges. (Note that this is false without the assumption: when `re s ≤ 1` the sum is divergent,
 and we use a different definition to obtain the analytic continuation to all `s`.) -/
-theorem zeta_eq_tsum_one_div_nat_add_one_cpow {s : ℂ} (hs : 1 < re s) :
-    riemannZeta s = ∑' n : ℕ, 1 / ((n : ℂ) + 1) ^ s := by
+theorem zeta_eq_tsum_one_div_nat_cpow {s : ℂ} (hs : 1 < re s) :
+    riemannZeta s = ∑' n : ℕ, 1 / (n : ℂ) ^ s := by
   have : s ≠ 0 := by contrapose! hs; rw [hs, zero_re]; exact zero_le_one
   rw [riemannZeta, Function.update_noteq this, completedZeta_eq_tsum_of_one_lt_re hs, ← mul_assoc,
     neg_div, cpow_neg, mul_inv_cancel_left₀, mul_div_cancel_left]
@@ -303,22 +303,22 @@ theorem zeta_eq_tsum_one_div_nat_add_one_cpow {s : ℂ} (hs : 1 < re s) :
     exact mul_pos (inv_pos_of_pos two_pos) (zero_lt_one.trans hs)
   · rw [Ne.def, cpow_eq_zero_iff, not_and_or, ← Ne.def, ofReal_ne_zero]
     exact Or.inl pi_pos.ne'
-#align zeta_eq_tsum_one_div_nat_add_one_cpow zeta_eq_tsum_one_div_nat_add_one_cpow
+#align zeta_eq_tsum_one_div_nat_cpow zeta_eq_tsum_one_div_nat_cpow
 
-/-- Alternate formulation of `zeta_eq_tsum_one_div_nat_add_one_cpow` without the `+ 1`, using the
-fact that for `s ≠ 0` we define `0 ^ s = 0`.  -/
-theorem zeta_eq_tsum_one_div_nat_cpow {s : ℂ} (hs : 1 < re s) :
-    riemannZeta s = ∑' n : ℕ, 1 / (n : ℂ) ^ s := by
+/-- Alternate formulation of `zeta_eq_tsum_one_div_nat_add_one_cpow` with a `+ 1` (to avoid relying
+on mathlib's conventions for `0 ^ s`).  -/
+theorem zeta_eq_tsum_one_div_nat_add_one_cpow {s : ℂ} (hs : 1 < re s) :
+    riemannZeta s = ∑' n : ℕ, 1 / (n + 1 : ℂ) ^ s := by
   have hs' : s ≠ 0 := by contrapose! hs; rw [hs, zero_re]; exact zero_le_one
-  rw [tsum_eq_zero_add]
-  · simp_rw [Nat.cast_zero, zero_cpow hs', div_zero, zero_add,
-      zeta_eq_tsum_one_div_nat_add_one_cpow hs, Nat.cast_add, Nat.cast_one]
+  have := zeta_eq_tsum_one_div_nat_cpow hs
+  rw [tsum_eq_zero_add] at this
+  · simpa [Nat.cast_zero, zero_cpow hs', div_zero, zero_add, Nat.cast_add, Nat.cast_one]
   · refine .of_norm ?_
     simp_rw [norm_div, norm_one, Complex.norm_eq_abs, ← ofReal_nat_cast,
       abs_cpow_eq_rpow_re_of_nonneg (Nat.cast_nonneg _) (zero_lt_one.trans hs).ne',
       summable_one_div_nat_rpow]
     assumption
-#align zeta_eq_tsum_one_div_nat_cpow zeta_eq_tsum_one_div_nat_cpow
+#align zeta_eq_tsum_one_div_nat_add_one_cpow zeta_eq_tsum_one_div_nat_add_one_cpow
 
 /-- Special case of `zeta_eq_tsum_one_div_nat_cpow` when the argument is in `ℕ`, so the power
 function can be expressed using naïve `pow` rather than `cpow`. -/

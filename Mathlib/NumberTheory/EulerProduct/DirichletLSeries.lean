@@ -74,7 +74,7 @@ theorem riemannZeta_eulerProduct (hs : 1 < s.re) :
       (𝓝 (riemannZeta s)) := by
   have hsum := summable_riemannZetaSummand hs
   convert eulerProduct_completely_multiplicative hsum
-  rw [zeta_eq_tsum_one_div_nat_add_one_cpow hs, tsum_eq_zero_add hsum.of_norm, map_zero, zero_add]
+  rw [zeta_eq_tsum_one_div_nat_cpow hs]
   simp [riemannZetaSummandHom, cpow_neg]
 
 /-- The Euler product for Dirichlet L-series, valid for `s.re > 1`. -/
