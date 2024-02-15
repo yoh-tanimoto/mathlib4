@@ -42,14 +42,8 @@ I haven't checked exactly what they are).
 
 ## Outline of proofs:
 
-We define a function `zetaKernel` on the reals, given by `t ↦ Θ (t * I)` where `θ` is Jacobi's
-theta function. This satisfies a functional equation relating its values at `t` and `1 / t`, and
-has the form `1 + O(t ^ (-r))` for every `r` as `t → ∞`. Thus its Mellin transform has meromorphic
-continuation and satisfies a functional equation, by general theory.
-
-On the other hand, since `zetaKernel` can be expanded in powers of `exp (-π * t)` and the Mellin
-transform integrated term-by-term for `1 < Re s`, we obtain the relation to the naive Dirichlet
-series `∑' (n : ℕ), 1 / (n + 1) ^ s`.
+These results are mostly special cases of more general results for Hurwitz zeta functions proved
+in `Mathlib.NumberTheory.ZetaFunctions.HurwitzZetaEven`.
 -/
 
 
@@ -305,7 +299,7 @@ theorem zeta_eq_tsum_one_div_nat_cpow {s : ℂ} (hs : 1 < re s) :
     exact Or.inl pi_pos.ne'
 #align zeta_eq_tsum_one_div_nat_cpow zeta_eq_tsum_one_div_nat_cpow
 
-/-- Alternate formulation of `zeta_eq_tsum_one_div_nat_add_one_cpow` with a `+ 1` (to avoid relying
+/-- Alternate formulation of `zeta_eq_tsum_one_div_nat_cpow` with a `+ 1` (to avoid relying
 on mathlib's conventions for `0 ^ s`).  -/
 theorem zeta_eq_tsum_one_div_nat_add_one_cpow {s : ℂ} (hs : 1 < re s) :
     riemannZeta s = ∑' n : ℕ, 1 / (n + 1 : ℂ) ^ s := by

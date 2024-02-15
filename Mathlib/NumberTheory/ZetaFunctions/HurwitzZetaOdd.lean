@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: David Loeffler
 -/
 import Mathlib.NumberTheory.ZetaFunctions.HurwitzZetaEven
+import Mathlib.Data.Real.Sign
 import Mathlib.NumberTheory.ModularForms.JacobiTheta.TwoVariable
 
 /-!
@@ -255,11 +256,8 @@ lemma isBigO_atTop_sinKernel (a : UnitAddCircle) :
 /-- The function `oddKernel a` has exponential decay at `+∞`, for any `a`. -/
 lemma isBigO_atTop_oddKernel (a : UnitAddCircle) :
     ∃ p, 0 < p ∧ IsBigO atTop (oddKernel a) (fun x ↦ Real.exp (-p * x)) := by
-  obtain ⟨b, hb, rfl⟩ : ∃ b : ℝ, b ∈ Ico 0 1 ∧ ↑b = a
-  · let b := (QuotientAddGroup.equivIcoMod zero_lt_one 0) a
-    exact ⟨b.1, by simpa only [zero_add] using b.2,
-      (QuotientAddGroup.equivIcoMod zero_lt_one 0).symm_apply_apply a⟩
-  let ⟨p, hp, hp'⟩ := HurwitzKernelBounds.isBigO_atTop_F_int_one (Ico_subset_Icc_self hb)
+  obtain ⟨b, _, rfl⟩ := a.eq_coe_Ico
+  let ⟨p, hp, hp'⟩ := HurwitzKernelBounds.isBigO_atTop_F_int_one b
   refine ⟨p, hp, (Eventually.isBigO ?_).trans hp'⟩
   filter_upwards [eventually_gt_atTop 0] with t ht
   simpa only [← (hasSum_int_oddKernel b ht).tsum_eq, Real.norm_eq_abs, HurwitzKernelBounds.F_int,
@@ -408,12 +406,11 @@ lemma hasSum_int_completedSinZeta (a : ℝ) {s : ℂ} (hs : 3 < re s) :
     let ⟨R, hR⟩ := exists_gt ((s + 1).re / 2)
     apply mellin_convergent_of_isBigO_scalar (hs_top := hR) (b := 2)
     · apply ContinuousOn.locallyIntegrableOn
-      exact HurwitzKernelBounds.continuousOn_F_int 1 (left_mem_Icc.mpr zero_le_one)
+      exact HurwitzKernelBounds.continuousOn_F_int 1 0
       exact measurableSet_Ioi
-    · let ⟨p, hp, hp'⟩ := HurwitzKernelBounds.isBigO_atTop_F_int_one (left_mem_Icc.mpr zero_le_one)
+    · let ⟨p, hp, hp'⟩ := HurwitzKernelBounds.isBigO_atTop_F_int_one 0
       exact hp'.trans (isLittleO_exp_neg_mul_rpow_atTop hp _).isBigO
-    · have := HurwitzKernelBounds.isBigO_nhds_zero_F_int_one (left_mem_Icc.mpr zero_le_one)
-      refine this.trans (EventuallyEq.isBigO ?_)
+    · refine (HurwitzKernelBounds.isBigO_nhds_zero_F_int_one 0).trans (EventuallyEq.isBigO ?_)
       rw [EventuallyEq, eventually_nhdsWithin_iff]
       filter_upwards with t (ht : 0 < t)
       rw [rpow_neg ht.le, one_div, (by simp : (2 : ℝ) = ↑(2 : ℕ)), rpow_nat_cast]
@@ -471,3 +468,88 @@ lemma hasSum_nat_completedSinZeta (a : ℝ) {s : ℂ} (hs : 3 < re s) :
   rw [ofReal_sin, Complex.sin]
   cancel_denoms
   ring_nf
+
+/-- Formula for `completedHurwitzZetaOdd` as a Dirichlet series in the convergence range.
+
+We need to assume a non-optimal bound on `re s` here (it should work for `1 < re s`) because our
+bounds on the norms of zeta kernels as `t → 0` are non-optimal. -/
+lemma hasSum_int_completedHurwitzZetaOdd (a : ℝ) {s : ℂ} (hs : 3 < re s) :
+    HasSum (fun n : ℤ ↦ Gamma ((s + 1)/ 2) * π ^ (-(s + 1) / 2) *
+    Real.sign (n + a) / (↑|n + a| : ℂ) ^ s / 2) (completedHurwitzZetaOdd a s) := by
+  let μ : Measure ℝ := volume.restrict (Ioi 0)
+  let F (n : ℤ) (t : ℝ) : ℂ :=
+    t ^ ((s + 1) / 2 - 1) * (n + a) * rexp (-π * (n + a) ^ 2 * t) / 2
+  let f (t : ℝ) : ℂ := (t : ℂ) ^ ((s + 1) / 2 - 1) * oddKernel a t / 2
+  let bound (n : ℤ) (t : ℝ) : ℝ :=
+    t ^ ((s + 1).re / 2 - 1) * |n + a| * rexp (-π * (n + a) ^ 2 * t) / 2
+  have hF_meas (n : ℤ) : AEStronglyMeasurable (F n) μ
+  · refine (((ContinuousOn.mul ?_ ?_).mul ?_).div_const _).aestronglyMeasurable measurableSet_Ioi
+    · refine ContinuousAt.continuousOn (fun x hx ↦ ?_)
+      exact continuousAt_ofReal_cpow_const _ _ (Or.inr <| ne_of_gt hx)
+    all_goals { apply Continuous.continuousOn; continuity }
+  have h_lim : ∀ᵐ (t : ℝ) ∂μ, HasSum (fun n ↦ F n t) (f t)
+  · rw [ae_restrict_iff' measurableSet_Ioi]
+    filter_upwards with t ht
+    simpa only [ofReal_mul, ofReal_add, ← mul_assoc] using
+      ((hasSum_ofReal.mpr (hasSum_int_oddKernel a ht)).mul_left _).div_const _
+  have h_bound (n : ℤ) : ∀ᵐ (t : ℝ) ∂μ, ‖F n t‖ ≤ bound n t
+  · rw [ae_restrict_iff' measurableSet_Ioi]
+    filter_upwards with t ht
+    simp_rw [norm_div, norm_mul, ← ofReal_ofNat, norm_real, ofReal_ofNat, norm_two,
+      div_le_div_right (α := ℝ) two_pos, norm_of_nonneg (exp_pos _).le,
+      mul_le_mul_iff_of_pos_right (exp_pos _), Complex.norm_eq_abs,
+      abs_cpow_eq_rpow_re_of_pos ht, sub_re, one_re, ← ofReal_ofNat, div_ofReal_re,
+      ← ofReal_int_cast, ← ofReal_add, abs_ofReal]
+    rfl
+  have bound_hasSum (t : ℝ) (ht : 0 < t) :
+      HasSum (bound · t) (t ^ ((s + 1).re / 2 - 1) * HurwitzKernelBounds.F_int 1 a t / 2)
+  · simp only [F, bound, HurwitzKernelBounds.F_int, mul_assoc (t ^ (_ : ℝ))]
+    refine (HasSum.mul_left _ ?_).div_const _
+    convert (HurwitzKernelBounds.summable_f_int 1 a ht).hasSum using 2 with n
+    simp only [HurwitzKernelBounds.f_int, add_zero, pow_one, Int.cast_abs]
+  have bound_summable : ∀ᵐ (t : ℝ) ∂μ, Summable fun (n : ℤ) ↦ bound n t
+  · rw [ae_restrict_iff' measurableSet_Ioi]
+    exact ae_of_all _ (fun t ht ↦ (bound_hasSum t ht).summable)
+  have bound_integrable : Integrable (fun (t : ℝ) ↦ ∑' (n : ℤ), bound n t) μ
+  · erw [← IntegrableOn,
+      integrableOn_congr_fun (fun t ht ↦ (bound_hasSum t ht).tsum_eq) measurableSet_Ioi]
+    apply Integrable.div_const
+    let ⟨R, hR⟩ := exists_gt ((s + 1).re / 2)
+    apply mellin_convergent_of_isBigO_scalar (hs_top := hR) (b := 2)
+    · exact (HurwitzKernelBounds.continuousOn_F_int 1 a).locallyIntegrableOn measurableSet_Ioi
+    · let ⟨p, hp, hp'⟩ := HurwitzKernelBounds.isBigO_atTop_F_int_one a
+      exact hp'.trans (isLittleO_exp_neg_mul_rpow_atTop hp _).isBigO
+    · refine (HurwitzKernelBounds.isBigO_nhds_zero_F_int_one a).trans (EventuallyEq.isBigO ?_)
+      rw [EventuallyEq, eventually_nhdsWithin_iff]
+      filter_upwards with t (ht : 0 < t)
+      rw [rpow_neg ht.le, one_div, (by simp : (2 : ℝ) = ↑(2 : ℕ)), rpow_nat_cast]
+    · rw [add_re, one_re]
+      linarith
+  have step1 : HasSum (fun n : ℤ ↦ Gamma ((s + 1)/ 2) * π ^ (-(s + 1) / 2) *
+      (n + a) / (↑|n + a| : ℂ) ^ (s + 1) / 2) (completedHurwitzZetaOdd a s)
+  · convert (hasSum_integral_of_dominated_convergence
+      bound hF_meas h_bound bound_summable bound_integrable h_lim) using 2 with n
+    · simp_rw [integral_div]
+      congr 1
+      rcases eq_or_ne ↑n (-a) with hn | hn
+      · simp_rw [← ofReal_int_cast, hn, ofReal_neg, neg_add_self, mul_zero, zero_mul, zero_div]
+        rw [integral_zero] -- why doesn't this work as `simp`?
+      · simp_rw [mul_comm _ ((n : ℂ) + a), mul_assoc ((n : ℂ) + a), integral_mul_left,
+          mul_div_assoc ((n : ℂ) + a)]
+        congr 1
+        have hs' : 0 < (s + 1).re := by { rw [add_re, one_re]; linarith }
+        refine (mellin_exp_neg_pi_mul_sq hs' (hn ∘ add_eq_zero_iff_eq_neg.mp)).symm
+    · rw [completedHurwitzZetaOdd]
+      convert congr_arg (· / 2) ((hurwitzOddFEPair a).hasMellin ((s + 1) / 2)).2.symm
+      simp only [f, mellin, integral_div]
+      rfl
+  convert step1 using 3 with n
+  simp_rw [mul_assoc, mul_div_assoc, ← ofReal_int_cast, ← ofReal_add]
+  generalize n + a = R
+  rcases lt_trichotomy R 0 with h | rfl | h
+  · rw [sign_of_neg h, ← abs_neg, abs_of_pos (neg_pos.mpr h),
+      cpow_add _ _ (ofReal_ne_zero.mpr (neg_ne_zero.mpr h.ne)), cpow_one, mul_comm _ (↑(-R) : ℂ),
+      ← div_div, ofReal_neg, ofReal_neg, ofReal_one, div_neg, div_self (ofReal_ne_zero.mpr h.ne)]
+  · simp
+  · rw [sign_of_pos h, ofReal_one, abs_of_pos h, cpow_add _ _ (ofReal_ne_zero.mpr h.ne'),
+      cpow_one, mul_comm _ (R : ℂ), ← div_div, div_self (ofReal_ne_zero.mpr h.ne')]

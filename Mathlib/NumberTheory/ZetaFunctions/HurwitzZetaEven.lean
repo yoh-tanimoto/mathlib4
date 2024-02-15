@@ -243,19 +243,13 @@ lemma isBigO_atTop_cosKernel_sub (a : UnitAddCircle) :
 `a = 0` and `L = 0` otherwise. -/
 lemma isBigO_atTop_evenKernel_sub (a : UnitAddCircle) : ∃ r : ℝ, 0 < r ∧
     (evenKernel a · - (if a = 0 then 1 else 0)) =O[atTop] (rexp <| -r * ·) := by
-  obtain ⟨b, hb, rfl⟩ : ∃ b : ℝ, b ∈ Ico 0 1 ∧ ↑b = a
-  · let b := (QuotientAddGroup.equivIcoMod (zero_lt_one' ℝ) 0) a
-    have hb : ↑b = a := (QuotientAddGroup.equivIcoMod (zero_lt_one' ℝ) 0).symm_apply_apply a
-    refine ⟨b.1, ⟨b.2.1, by simpa only [zero_add] using b.2.2⟩, hb⟩
-  obtain ⟨p, hp, hp'⟩ := HurwitzKernelBounds.isBigO_atTop_F_int_zero_sub hb
+  obtain ⟨b, _, rfl⟩ := a.eq_coe_Ico
+  obtain ⟨p, hp, hp'⟩ := HurwitzKernelBounds.isBigO_atTop_F_int_zero_sub b
   refine ⟨p, hp, (EventuallyEq.isBigO ?_).trans hp'⟩
   filter_upwards [eventually_gt_atTop 0] with t ht
   simp_rw [← (hasSum_int_evenKernel b ht).tsum_eq, HurwitzKernelBounds.F_int,
     HurwitzKernelBounds.f_int, pow_zero, one_mul]
-  congr 2
-  rw [← QuotientAddGroup.mk_zero, AddCircle.coe_eq_coe_iff_of_mem_Ico (hp := ⟨one_pos⟩) (a := 0)]
-  · simpa only [zero_add, mem_Ico] using hb
-  · simp only [zero_add, mem_Ico, le_refl, zero_lt_one, and_self]
+  rfl
 
 end asymp
 

@@ -274,34 +274,50 @@ lemma summable_f_int (k : ℕ) (a : ℝ) {t : ℝ} (ht : 0 < t) : Summable (f_in
   · simp only [f_int, f_nat, Int.cast_negSucc, norm_mul, norm_eq_abs, abs_pow, abs_abs,
       (by { push_cast; ring } : -↑(m + 1) + a = -(m + (1 - a))), abs_neg, neg_sq]
 
-/-- The sum to be bounded (`ℤ` version). -/
-def F_int (k : ℕ) (a t : ℝ) : ℝ := ∑' (n : ℤ), f_int k a t n
+lemma _root_.UnitAddCircle.eq_coe_Ico (a : UnitAddCircle) : ∃ b : ℝ, b ∈ Ico 0 1 ∧ ↑b = a := by
+  let b := (QuotientAddGroup.equivIcoMod zero_lt_one 0) a
+  exact ⟨b.1, by simpa only [zero_add] using b.2,
+    (QuotientAddGroup.equivIcoMod zero_lt_one 0).symm_apply_apply a⟩
 
-lemma F_int_eq (k : ℕ) {a : ℝ} (ha : a ∈ Icc 0 1) {t : ℝ} (ht : 0 < t) :
+/-- The sum to be bounded (`ℤ` version). -/
+def F_int (k : ℕ) (a : UnitAddCircle) (t : ℝ) : ℝ :=
+  (show Function.Periodic (fun b ↦ ∑' (n : ℤ), f_int k b t n) 1 by
+    intro b
+    simp_rw [← (Equiv.addRight (1 : ℤ)).tsum_eq (f := fun n ↦ f_int k b t n)]
+    simp only [f_int, ← add_assoc, add_comm, Equiv.coe_addRight, Int.cast_add, Int.cast_one]
+    ).lift a
+
+lemma F_int_eq_of_mem_Icc (k : ℕ) {a : ℝ} (ha : a ∈ Icc 0 1) {t : ℝ} (ht : 0 < t) :
     F_int k a t = (F_nat k a t) + (F_nat k (1 - a) t) := by
-  simp only [F_int, F_nat]
+  simp only [F_int, F_nat, Function.Periodic.lift_coe]
   convert ((summable_f_nat k a ht).hasSum.int_rec (summable_f_nat k (1 - a) ht).hasSum).tsum_eq
     using 3 with n
   rcases n with m | m
   · rw [f_int_ofNat _ ha.1]
   · rw [f_int_negSucc _ ha.2]
 
-lemma continuousOn_F_int (k : ℕ) {a : ℝ} (ha : a ∈ Icc 0 1) :
+lemma continuousOn_F_int (k : ℕ) (a : UnitAddCircle) :
     ContinuousOn (F_int k a) (Ioi 0) := by
-  refine (ContinuousOn.add ?_ ?_).congr (fun t ht ↦ F_int_eq k ha ht) <;>
-  exact continuousOn_F_nat k (by linarith [ha.1, ha.2])
+  obtain ⟨b, hb, rfl⟩ := a.eq_coe_Ico
+  refine (ContinuousOn.add ?_ ?_).congr (fun t ht ↦ F_int_eq_of_mem_Icc k ⟨hb.1, hb.2.le⟩ ht) <;>
+  exact continuousOn_F_nat k (by linarith [hb.1, hb.2])
 
-lemma isBigO_atTop_F_int_zero_sub {a : ℝ} (ha : a ∈ Ico 0 1) : ∃ p, 0 < p ∧
+lemma isBigO_atTop_F_int_zero_sub (a : UnitAddCircle) : ∃ p, 0 < p ∧
     (fun t ↦ F_int 0 a t - (if a = 0 then 1 else 0)) =O[atTop] fun t ↦ exp (-p * t) := by
+  obtain ⟨a, ha, rfl⟩ := a.eq_coe_Ico
   obtain ⟨p, hp, hp'⟩ := isBigO_atTop_F_nat_zero_sub ha.1
   obtain ⟨n, hn, hn'⟩ := isBigO_atTop_F_nat_zero_sub (sub_nonneg.mpr ha.2.le)
-  have : 1 - a ≠ 0 := by linarith [ha.2]
-  simp_rw [eq_false_intro this, if_false, sub_zero] at hn'
+  have ha' : (a : UnitAddCircle) = 0 ↔ a = 0
+  · rw [← AddCircle.coe_eq_coe_iff_of_mem_Ico (hp := ⟨zero_lt_one' ℝ⟩), QuotientAddGroup.mk_zero]
+    rw [zero_add]; exact ha
+    simp
+  simp_rw [ha']
+  simp_rw [eq_false_intro (by linarith [ha.2] : 1 - a ≠ 0), if_false, sub_zero] at hn'
   refine ⟨min p n, lt_min hp hn, ?_⟩
   have : (fun t ↦ F_int 0 a t - (if a = 0 then 1 else 0)) =ᶠ[atTop]
       fun t ↦ (F_nat 0 a t - (if a = 0 then 1 else 0)) + F_nat 0 (1 - a) t
   · filter_upwards [eventually_gt_atTop 0] with t ht
-    rw [F_int_eq 0 (Ico_subset_Icc_self ha) ht]
+    rw [F_int_eq_of_mem_Icc 0 (Ico_subset_Icc_self ha) ht]
     ring
   have aux1 {c d : ℝ} (hcd : c ≤ d) : (rexp <| -d * ·) =O[atTop] (rexp <| -c * ·)
   · apply Eventually.isBigO
@@ -311,14 +327,15 @@ lemma isBigO_atTop_F_int_zero_sub {a : ℝ} (ha : a ∈ Ico 0 1) : ∃ p, 0 < p 
   · exact aux1 (min_le_left _ _)
   · exact aux1 (min_le_right _ _)
 
-lemma isBigO_atTop_F_int_one {a : ℝ} (ha : a ∈ Icc 0 1) : ∃ p, 0 < p ∧
+lemma isBigO_atTop_F_int_one (a : UnitAddCircle) : ∃ p, 0 < p ∧
     F_int 1 a =O[atTop] fun t ↦ exp (-p * t) := by
+  obtain ⟨a, ha, rfl⟩ := a.eq_coe_Ico
   obtain ⟨p, hp, hp'⟩ := isBigO_atTop_F_nat_one ha.1
-  obtain ⟨n, hn, hn'⟩ := isBigO_atTop_F_nat_one (sub_nonneg.mpr ha.2)
+  obtain ⟨n, hn, hn'⟩ := isBigO_atTop_F_nat_one (sub_nonneg.mpr ha.2.le)
   refine ⟨min p n, lt_min hp hn, ?_⟩
   have : F_int 1 a =ᶠ[atTop] fun t ↦ F_nat 1 a t + F_nat 1 (1 - a) t
   · filter_upwards [eventually_gt_atTop 0] with t ht
-    exact F_int_eq 1 ha ht
+    exact F_int_eq_of_mem_Icc 1 (Ico_subset_Icc_self ha) ht
   have aux1 {c d : ℝ} (hcd : c ≤ d) : (rexp <| -d * ·) =O[atTop] (rexp <| -c * ·)
   · apply Eventually.isBigO
     filter_upwards [eventually_gt_atTop 0] with t ht
@@ -327,14 +344,15 @@ lemma isBigO_atTop_F_int_one {a : ℝ} (ha : a ∈ Icc 0 1) : ∃ p, 0 < p ∧
   · exact aux1 (min_le_left _ _)
   · exact aux1 (min_le_right _ _)
 
-lemma isBigO_nhds_zero_F_int_one {a : ℝ} (ha : a ∈ Icc 0 1) :
+lemma isBigO_nhds_zero_F_int_one (a : UnitAddCircle) :
     F_int 1 a =O[𝓝[>] 0] fun t ↦ 1 / t ^ 2 := by
+  obtain ⟨a, ha, rfl⟩ := a.eq_coe_Ico
   have hp := isBigO_nhds_zero_F_nat_one ha.1
-  have hn := isBigO_nhds_zero_F_nat_one (sub_nonneg.mpr ha.2)
+  have hn := isBigO_nhds_zero_F_nat_one (sub_nonneg.mpr ha.2.le)
   refine (EventuallyEq.isBigO ?_).trans (hp.add hn)
   rw [EventuallyEq, eventually_nhdsWithin_iff]
   filter_upwards with t ht
-  exact F_int_eq 1 ha ht
+  exact F_int_eq_of_mem_Icc 1 (Ico_subset_Icc_self ha) ht
 
 end int
 
