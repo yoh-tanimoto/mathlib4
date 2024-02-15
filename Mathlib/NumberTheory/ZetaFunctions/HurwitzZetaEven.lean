@@ -513,7 +513,7 @@ lemma completedCosZeta_eq_tsum_int (a : ℝ) {s : ℂ} (hs : 1 < re s) :
       refine ((ContinuousOn.mul ?_ ?_).div_const _).aestronglyMeasurable measurableSet_Ioi
       · exact ContinuousAt.continuousOn
           fun t ht ↦ continuousAt_ofReal_cpow_const _ _ (Or.inr (ne_of_gt ht))
-      . apply Continuous.continuousOn
+      · apply Continuous.continuousOn
         continuity
   have h_lim : ∀ᵐ (t : ℝ) ∂μ, HasSum (fun n ↦ F n t) (f t)
   · rw [ae_restrict_iff' measurableSet_Ioi]
@@ -624,7 +624,7 @@ lemma completedHurwitzZetaEven_eq_tsum_int (a : ℝ) (s : ℂ) (hs : 1 < re s) :
     · refine ((ContinuousOn.mul ?_ ?_).div_const _).aestronglyMeasurable measurableSet_Ioi
       · apply ContinuousAt.continuousOn
         exact fun t ht ↦ continuousAt_ofReal_cpow_const _ _ (Or.inr (ne_of_gt ht))
-      . exact Continuous.continuousOn (by continuity)
+      · exact Continuous.continuousOn (by continuity)
   have h_lim : ∀ᵐ (t : ℝ) ∂μ, HasSum (fun n ↦ F n t) (f t)
   · rw [ae_restrict_iff' measurableSet_Ioi]
     filter_upwards with t ht

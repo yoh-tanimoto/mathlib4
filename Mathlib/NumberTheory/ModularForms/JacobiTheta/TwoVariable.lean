@@ -478,7 +478,7 @@ lemma jacobiTheta₂'_conj (z τ : ℂ) :
 times `jacobiTheta₂ (x / τ) (-1 / τ)`. This is the key lemma behind the proof of the functional
 equation for L-series of even Dirichlet characters. -/
 theorem jacobiTheta₂_functional_equation (z τ : ℂ) : jacobiTheta₂ z τ =
-      1 / (-I * τ) ^ (1 / 2 : ℂ) * cexp (-π * I * z ^ 2 / τ) * jacobiTheta₂ (z / τ) (-1 / τ) := by
+    1 / (-I * τ) ^ (1 / 2 : ℂ) * cexp (-π * I * z ^ 2 / τ) * jacobiTheta₂ (z / τ) (-1 / τ) := by
   rcases le_or_lt (im τ) 0 with hτ | hτ
   · rw [jacobiTheta₂_undef z hτ, jacobiTheta₂_undef, mul_zero]
     rw [neg_div, neg_im, one_div, inv_im, neg_nonpos]
