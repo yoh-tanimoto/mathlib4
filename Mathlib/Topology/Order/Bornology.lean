@@ -26,7 +26,7 @@ variable [Lattice α] [Nonempty α]
 
 /-- Order-bornology on a nonempty lattice. The bounded sets are the sets that are bounded both above
 and below. -/
-@[simps!] def orderBornology : Bornology α := .ofBounded
+def orderBornology : Bornology α := .ofBounded
   {s | BddBelow s ∧ BddAbove s}
   (by simp)
   (fun s hs t hst ↦ ⟨hs.1.mono hst, hs.2.mono hst⟩)
