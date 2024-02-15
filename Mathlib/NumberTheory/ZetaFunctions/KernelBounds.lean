@@ -118,7 +118,7 @@ lemma F_nat_zero_le {a : ℝ} (ha : 0 ≤ a) {t : ℝ} (ht : 0 < t) :
   refine tsum_of_norm_bounded ?_ (f_le_g_nat 0 ha ht)
   have h0 : rexp (-π * t) < 1
   · simpa only [exp_lt_one_iff, neg_mul, neg_lt_zero] using mul_pos pi_pos ht
-  convert (hasSum_geometric_of_lt_1 (exp_pos _).le h0).mul_left _ using 1
+  convert (hasSum_geometric_of_lt_one (exp_pos _).le h0).mul_left _ using 1
   ext1 n
   simp only [g_nat]
   rw [← Real.exp_nat_mul, ← Real.exp_add]
@@ -173,12 +173,12 @@ lemma F_nat_one_le {a : ℝ} (ha : 0 ≤ a) {t : ℝ} (ht : 0 < t) :
   simp_rw [g_nat, pow_one, add_mul]
   apply HasSum.add
   · have h0' : ‖rexp (-π * t)‖ < 1 := by rwa [norm_eq_abs, abs_exp]
-    convert (hasSum_coe_mul_geometric_of_norm_lt_1 h0').mul_left (exp (-π * a ^ 2 * t)) using 1
+    convert (hasSum_coe_mul_geometric_of_norm_lt_one h0').mul_left (exp (-π * a ^ 2 * t)) using 1
     · ext1 n
       rw [mul_comm (exp _), ← Real.exp_nat_mul, mul_assoc (n : ℝ), ← Real.exp_add]
       ring_nf
     · rw [mul_add, add_mul, mul_one, exp_add, mul_div_assoc]
-  · convert (hasSum_geometric_of_lt_1 (exp_pos _).le h0).mul_left _ using 1
+  · convert (hasSum_geometric_of_lt_one (exp_pos _).le h0).mul_left _ using 1
     ext1 n
     rw [← Real.exp_nat_mul, mul_assoc _ (exp _), ← Real.exp_add]
     ring_nf
@@ -198,7 +198,7 @@ lemma isBigO_atTop_F_nat_one {a : ℝ} (ha : 0 ≤ a) : ∃ p, 0 < p ∧
   have aux' : IsBigO atTop (fun t : ℝ ↦ ((1 - rexp (-π * t)) ^ 2)⁻¹) (fun _ ↦ (1 : ℝ))
   · simpa only [inv_pow, one_pow] using aux.pow 2
   rcases eq_or_lt_of_le ha with rfl | ha'
-  · exact ⟨_, pi_pos, by simpa only [zero_pow two_pos, zero_add, mul_one, zero_mul, zero_div,
+  · exact ⟨_, pi_pos, by simpa only [zero_pow two_ne_zero, zero_add, mul_one, zero_mul, zero_div,
       add_zero] using (isBigO_refl _ _).mul aux'⟩
   · refine ⟨π * a ^ 2, mul_pos pi_pos <| pow_pos ha' _, IsBigO.add ?_ ?_⟩
     · conv_rhs => enter [t]; rw [← mul_one (rexp _)]
@@ -226,7 +226,7 @@ lemma isBigO_nhds_zero_F_nat_one {a : ℝ} (ha : 0 ≤ a) :
         eq_false_intro (neg_ne_zero.mpr pi_pos.ne'), false_or] at hx
     · simpa only [neg_inv, neg_neg] using tendsto_div_one_sub_exp (-π) (neg_ne_zero.mpr pi_pos.ne')
     · filter_upwards with x hx
-      rw [(pow_eq_zero_iff two_pos).mp hx, mul_zero, exp_zero, sub_self, zero_pow two_pos]
+      rw [(pow_eq_zero_iff two_ne_zero).mp hx, mul_zero, exp_zero, sub_self, zero_pow two_ne_zero]
   · exact (((Continuous.tendsto (by continuity) _).mono_left nhdsWithin_le_nhds)).isBigO_one _
   · refine ((?_ : IsBigO _ _ (fun x ↦ x)).trans
         ((isBigO_of_div_tendsto_nhds ?_ π⁻¹ ?_))).inv_rev ?_
@@ -240,7 +240,7 @@ lemma isBigO_nhds_zero_F_nat_one {a : ℝ} (ha : 0 ≤ a) :
         eq_false_intro (neg_ne_zero.mpr pi_pos.ne'), false_or] at hx
     · simpa only [neg_inv, neg_neg] using tendsto_div_one_sub_exp (-π) (neg_ne_zero.mpr pi_pos.ne')
     · filter_upwards with x hx
-      rw [(pow_eq_zero_iff two_pos).mp hx, mul_zero, exp_zero, sub_self]
+      rw [(pow_eq_zero_iff two_ne_zero).mp hx, mul_zero, exp_zero, sub_self]
 
 end k_eq_one
 

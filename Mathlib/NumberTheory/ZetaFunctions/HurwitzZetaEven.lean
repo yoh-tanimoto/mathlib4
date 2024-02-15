@@ -207,7 +207,7 @@ lemma hasSum_nat_cosKernel₀ (a : ℝ) {t : ℝ} (ht : 0 < t) :
   rw [← hasSum_ofReal, ofReal_sub, ofReal_one]
   have := (hasSum_int_cosKernel a ht).sum_nat_of_sum_int
   rw [← hasSum_nat_add_iff' 1] at this
-  simp_rw [Finset.sum_range_one, Nat.cast_zero, neg_zero, Int.cast_zero, zero_pow zero_lt_two,
+  simp_rw [Finset.sum_range_one, Nat.cast_zero, neg_zero, Int.cast_zero, zero_pow two_ne_zero,
     mul_zero, zero_mul, Complex.exp_zero, Real.exp_zero, ofReal_one, mul_one, Int.cast_neg,
     Int.cast_ofNat, neg_sq, ← add_mul, add_sub_assoc, ← sub_sub, sub_self, zero_sub,
     ← sub_eq_add_neg, mul_neg] at this
