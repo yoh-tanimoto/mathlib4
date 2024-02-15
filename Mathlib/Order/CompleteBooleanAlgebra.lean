@@ -345,10 +345,10 @@ theorem iInf_sup_of_antitone {ι : Type*} [Preorder ι] [IsDirected ι (· ≤ �
 #align infi_sup_of_antitone iInf_sup_of_antitone
 
 -- see Note [lower instance priority]
-instance (priority := 100) Coframe.toDistribLattice : DistribLattice α :=
-  { ‹Coframe α› with
-    le_sup_inf := fun a b c => by
-      rw [← sInf_pair, ← sInf_pair, sup_sInf_eq, ← sInf_image, image_pair] }
+instance (priority := 100) Coframe.toDistribLattice : DistribLattice α where
+  __ := ‹Coframe α›
+  le_sup_inf a b c := by
+    rw [← sInf_pair, ← sInf_pair, sup_sInf_eq, ← sInf_image, image_pair]
 #align coframe.to_distrib_lattice Coframe.toDistribLattice
 
 instance Prod.instCoframe [Coframe β] : Coframe (α × β) where
