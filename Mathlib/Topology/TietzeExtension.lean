@@ -200,9 +200,9 @@ theorem exists_extension_forall_exists_le_ge_of_closedEmbedding [Nonempty X] (f 
   inhabit X
   -- Put `a = ⨅ x, f x` and `b = ⨆ x, f x`
   obtain ⟨a, ha⟩ : ∃ a, IsGLB (range f) a
-  exact ⟨_, isGLB_ciInf f.isBounded_range.bddBelow.1⟩
+  exact ⟨_, isGLB_ciInf f.isBounded_range.bddBelow⟩
   obtain ⟨b, hb⟩ : ∃ b, IsLUB (range f) b
-  exact ⟨_, isLUB_ciSup f.isBounded_range.bddAbove.2⟩
+  exact ⟨_, isLUB_ciSup f.isBounded_range.bddAbove⟩
   -- Then `f x ∈ [a, b]` for all `x`
   have hmem : ∀ x, f x ∈ Icc a b := fun x => ⟨ha.1 ⟨x, rfl⟩, hb.1 ⟨x, rfl⟩⟩
   -- Rule out the trivial case `a = b`

@@ -347,7 +347,7 @@ theorem HD_candidatesBDist_le :
 prove separately inequalities controlling the two terms (relying too heavily on copy-paste...) -/
 private theorem HD_lipschitz_aux1 (f g : Cb X Y) :
     (⨆ x, ⨅ y, f (inl x, inr y)) ≤ (⨆ x, ⨅ y, g (inl x, inr y)) + dist f g := by
-  obtain ⟨cg, hcg⟩ := f.isBounded_range.bddBelow
+  obtain ⟨cg, hcg⟩ := g.isBounded_range.bddBelow
   have Hcg : ∀ x, cg ≤ g x := fun x => hcg (mem_range_self x)
   obtain ⟨cf, hcf⟩ := f.isBounded_range.bddBelow
   have Hcf : ∀ x, cf ≤ f x := fun x => hcf (mem_range_self x)
@@ -375,7 +375,7 @@ private theorem HD_lipschitz_aux1 (f g : Cb X Y) :
 
 private theorem HD_lipschitz_aux2 (f g : Cb X Y) :
     (⨆ y, ⨅ x, f (inl x, inr y)) ≤ (⨆ y, ⨅ x, g (inl x, inr y)) + dist f g := by
-  obtain ⟨cg, hcg⟩ := f.isBounded_range.bddBelow
+  obtain ⟨cg, hcg⟩ := g.isBounded_range.bddBelow
   have Hcg : ∀ x, cg ≤ g x := fun x => hcg (mem_range_self x)
   obtain ⟨cf, hcf⟩ := f.isBounded_range.bddBelow
   have Hcf : ∀ x, cf ≤ f x := fun x => hcf (mem_range_self x)

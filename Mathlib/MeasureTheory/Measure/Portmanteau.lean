@@ -551,10 +551,10 @@ lemma tendsto_integral_of_forall_integral_le_liminf_integral {ι : Type*} {L : F
   · simp only [tendsto_bot]
   have obs := BoundedContinuousFunction.isBounded_range_integral μs f
   have bdd_above : IsBoundedUnder (· ≤ ·) L (fun i ↦ ∫ (x : Ω), f x ∂μs i) := by
-    obtain ⟨c, hc⟩ := h.bddAbove
+    obtain ⟨c, hc⟩ := obs.bddAbove
     exact isBoundedUnder_of ⟨c, by simpa [mem_upperBounds] using hc⟩
   have bdd_below : IsBoundedUnder (· ≥ ·) L (fun i ↦ ∫ (x : Ω), f x ∂μs i) := by
-    obtain ⟨c, hc⟩ := h.bddBelow
+    obtain ⟨c, hc⟩ := obs.bddBelow
     exact isBoundedUnder_of ⟨c, by simpa [mem_lowerBounds] using hc⟩
   apply @tendsto_of_le_liminf_of_limsup_le ℝ ι _ _ _ L (fun i ↦ ∫ x, (f x) ∂ (μs i)) (∫ x, (f x) ∂μ)
   · have key := h _ (f.add_norm_nonneg)
