@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: David Loeffler
 -/
 import Mathlib.Analysis.SpecialFunctions.Gaussian
-import Mathlib.Analysis.Complex.LocallyUniformLimit
+import Mathlib.Analysis.Calculus.SmoothSeries
 
 /-!
 # The two-variable Jacobi theta function
@@ -30,7 +30,7 @@ lemma ContinuousLinearMap.norm_fst_le
     {𝕜 : Type*} [NontriviallyNormedField 𝕜] (E F : Type*)
     [SeminormedAddCommGroup E] [NormedSpace 𝕜 E] [SeminormedAddCommGroup F] [NormedSpace 𝕜 F] :
     ‖ContinuousLinearMap.fst 𝕜 E F‖ ≤ 1 := by
-  refine ContinuousLinearMap.op_norm_le_bound _ zero_le_one (fun ⟨e, f⟩ ↦ ?_)
+  refine ContinuousLinearMap.opNorm_le_bound _ zero_le_one (fun ⟨e, f⟩ ↦ ?_)
   simpa only [one_mul] using le_max_left ‖e‖ ‖f‖
 
 /-- The operator of the first projection `E × F → F` is at most 1. (It is 0 if `F` is zero, so
@@ -39,13 +39,13 @@ lemma ContinuousLinearMap.norm_snd_le
     {𝕜 : Type*} [NontriviallyNormedField 𝕜] (E F : Type*)
     [SeminormedAddCommGroup E] [NormedSpace 𝕜 E] [SeminormedAddCommGroup F] [NormedSpace 𝕜 F] :
     ‖ContinuousLinearMap.snd 𝕜 E F‖ ≤ 1 := by
-  refine ContinuousLinearMap.op_norm_le_bound _ zero_le_one (fun ⟨e, f⟩ ↦ ?_)
+  refine ContinuousLinearMap.opNorm_le_bound _ zero_le_one (fun ⟨e, f⟩ ↦ ?_)
   simpa only [one_mul] using le_max_right ‖e‖ ‖f‖
 
 lemma Real.summable_pow_mul_exp_neg_nat_mul (k : ℕ) {r : ℝ} (hr : 0 < r) :
     Summable fun n : ℕ ↦ n ^ k * Real.exp (-r * n) := by
   simp_rw [mul_comm (-r), Real.exp_nat_mul]
-  apply summable_pow_mul_geometric_of_norm_lt_1
+  apply summable_pow_mul_geometric_of_norm_lt_one
   rwa [norm_of_nonneg (exp_nonneg _), exp_lt_one_iff, neg_lt_zero]
 
 open Complex Real Asymptotics Filter Topology
@@ -118,7 +118,7 @@ lemma norm_jacobiTheta₂'_term_le {S T : ℝ} (hT : 0 < T) {z τ : ℂ}
   refine mul_le_mul (le_of_eq ?_) (norm_jacobiTheta₂_term_le hT hz hτ n)
     (norm_nonneg _) (by positivity)
   simp_rw [norm_mul, Complex.norm_eq_abs, Complex.abs_two, abs_I,
-    Complex.abs_of_nonneg pi_pos.le, ← int_cast_abs, mul_one, Int.cast_abs]
+    Complex.abs_of_nonneg pi_pos.le, abs_intCast, mul_one, Int.cast_abs]
 
 /-- The uniform bound we have given is summable, and remains so after multiplying by any fixed
 power of `|n|` (we shall need this for `k = 0, 1, 2`). -/
@@ -195,7 +195,7 @@ lemma norm_jacobiTheta₂_term_fderiv_le (n : ℤ) (z τ : ℂ) : ‖jacobiTheta
 lemma norm_jacobiTheta₂_term_fderiv_ge (n : ℤ) (z τ : ℂ) :
     π * |n| ^ 2 * ‖jacobiTheta₂_term n z τ‖ ≤ ‖jacobiTheta₂_term_fderiv n z τ‖ := by
   have : ‖(jacobiTheta₂_term_fderiv n z τ) (0, 1)‖ ≤ ‖jacobiTheta₂_term_fderiv n z τ‖
-  · refine (ContinuousLinearMap.le_op_norm _ _).trans ?_
+  · refine (ContinuousLinearMap.le_opNorm _ _).trans ?_
     simp_rw [Prod.norm_def, norm_one, norm_zero, max_eq_right zero_le_one, mul_one, le_refl]
   refine le_trans ?_ this
   simp_rw [jacobiTheta₂_term_fderiv, jacobiTheta₂_term, ContinuousLinearMap.coe_smul',
@@ -204,7 +204,7 @@ lemma norm_jacobiTheta₂_term_fderiv_ge (n : ℤ) (z τ : ℂ) :
     smul_eq_mul, mul_one, mul_comm _ ‖cexp _‖, norm_mul]
   refine mul_le_mul_of_nonneg_left (le_of_eq ?_) (norm_nonneg _)
   simp_rw [norm_real, norm_of_nonneg pi_pos.le, norm_I, mul_one,
-    Int.cast_abs, int_cast_abs, Complex.norm_eq_abs, Complex.abs_pow]
+    Int.cast_abs, ← abs_intCast, Complex.norm_eq_abs, Complex.abs_pow]
 
 lemma summable_jacobiTheta₂_term_fderiv_iff (z τ : ℂ) :
     Summable (jacobiTheta₂_term_fderiv · z τ) ↔ 0 < im τ := by
@@ -252,7 +252,7 @@ lemma summable_jacobiTheta₂'_term_iff (z τ : ℂ) :
     refine mul_le_mul (le_of_eq ?_) (norm_jacobiTheta₂_term_le hτ le_rfl le_rfl n)
       (norm_nonneg _) (by positivity)
     simp_rw [norm_mul, Complex.norm_eq_abs, Complex.abs_two, abs_I,
-      Complex.abs_of_nonneg pi_pos.le, ← int_cast_abs, mul_one, Int.cast_abs]
+      Complex.abs_of_nonneg pi_pos.le, abs_intCast, mul_one, Int.cast_abs]
 
 end term_bounds
 
