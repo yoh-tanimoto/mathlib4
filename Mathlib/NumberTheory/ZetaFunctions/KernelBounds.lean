@@ -42,8 +42,7 @@ lemma tendsto_div_one_sub_exp (a : ℝ) (ha : a ≠ 0) :
     constructor
     · apply Tendsto.mono_left _ nhdsWithin_le_nhds
       simpa using (by continuity : Continuous fun x ↦ (exp (a * x) - 1)).tendsto 0
-    · rw [eventually_nhdsWithin_iff]
-      filter_upwards with x hx
+    · filter_upwards [self_mem_nhdsWithin] with x hx
       contrapose! hx
       simpa only [not_mem_compl_iff, mem_singleton_iff, sub_eq_zero, exp_eq_one_iff, mul_eq_zero,
         eq_false_intro ha, false_or] using hx
@@ -233,7 +232,7 @@ lemma isBigO_nhds_zero_F_nat_one {a : ℝ} (ha : 0 ≤ a) :
   · exact (((Continuous.tendsto (by continuity) _).mono_left nhdsWithin_le_nhds)).isBigO_one _
   · refine ((?_ : IsBigO _ _ (fun x ↦ x)).trans
         ((isBigO_of_div_tendsto_nhds ?_ π⁻¹ ?_))).inv_rev ?_
-    · refine isBigO_norm_right.mp (eventually_nhdsWithin_iff.mpr ?_).isBigO
+    · refine isBigO_norm_right.mp ((eventually_nhdsWithin_iff.mpr ?_).isBigO)
       filter_upwards [eventually_ge_nhds neg_one_lt_zero, eventually_le_nhds zero_lt_one]
         with x hx hx' _
       rw [norm_pow, pow_two, norm_eq_abs]
@@ -350,8 +349,7 @@ lemma isBigO_nhds_zero_F_int_one (a : UnitAddCircle) :
   have hp := isBigO_nhds_zero_F_nat_one ha.1
   have hn := isBigO_nhds_zero_F_nat_one (sub_nonneg.mpr ha.2.le)
   refine (EventuallyEq.isBigO ?_).trans (hp.add hn)
-  rw [EventuallyEq, eventually_nhdsWithin_iff]
-  filter_upwards with t ht
+  filter_upwards [self_mem_nhdsWithin] with t ht
   exact F_int_eq_of_mem_Icc 1 (Ico_subset_Icc_self ha) ht
 
 end int

@@ -5,7 +5,7 @@ Authors: David Loeffler
 -/
 import Mathlib.NumberTheory.ZetaFunctions.AbstractFuncEq
 import Mathlib.NumberTheory.ZetaFunctions.KernelBounds
-import Mathlib.NumberTheory.ModularForms.JacobiTheta.TwoVariable
+import Mathlib.NumberTheory.ZetaFunctions.MellinEqDirichlet
 
 /-!
 # Even Hurwitz zeta functions
@@ -185,17 +185,17 @@ lemma hasSum_int_cosKernel (a : ℝ) {t : ℝ} (ht : 0 < t) :
 
 /-- Modified version of `hasSum_int_evenKernel` omitting the constant term at `∞`. -/
 lemma hasSum_int_evenKernel₀ (a : ℝ) {t : ℝ} (ht : 0 < t) :
-    HasSum (fun n : ℤ ↦ if n = -a then 0 else rexp (-π * (n + a) ^ 2 * t))
+    HasSum (fun n : ℤ ↦ if n + a = 0 then 0 else rexp (-π * (n + a) ^ 2 * t))
     (evenKernel a t - if (a : UnitAddCircle) = 0 then 1 else 0) := by
-  simp_rw [AddCircle.coe_eq_zero_iff]
+  simp_rw [AddCircle.coe_eq_zero_iff, zsmul_one]
   split_ifs with h
   · obtain ⟨k, rfl⟩ := h
-    simp_rw [zsmul_eq_mul, mul_one, ← Int.cast_neg, Int.cast_inj]
+    simp_rw [← Int.cast_add, Int.cast_eq_zero, add_eq_zero_iff_eq_neg]
     simpa using hasSum_ite_sub_hasSum (hasSum_int_evenKernel (k : ℝ) ht) (-k)
-  · suffices : ∀ (n : ℤ), ↑n ≠ -a; simpa [this] using hasSum_int_evenKernel a ht
+  · suffices : ∀ (n : ℤ), n + a ≠ 0; simpa [this] using hasSum_int_evenKernel a ht
     contrapose! h
     let ⟨n, hn⟩ := h
-    exact ⟨-n, by rwa [zsmul_one, Int.cast_neg, neg_eq_iff_eq_neg]⟩
+    exact ⟨-n, by rwa [Int.cast_neg, neg_eq_iff_add_eq_zero]⟩
 
 lemma hasSum_int_cosKernel₀ (a : ℝ) {t : ℝ} (ht : 0 < t) :
     HasSum (fun n : ℤ ↦ if n = 0 then 0 else cexp (2 * π * I * a * n) * rexp (-π * n ^ 2 * t))
@@ -469,6 +469,45 @@ end FEPair
 ## Relation to the Dirichlet series for `1 < re s`
 -/
 
+/-- Formula for `completedCosZeta` as a Dirichlet series in the convergence range
+(first version, with sum over `ℤ - {0}`). -/
+lemma hasSum_int_completedCosZeta (a : ℝ) {s : ℂ} (hs : 1 < re s) :
+    HasSum (fun n : ℤ ↦ if n = 0 then 0 else
+    Gamma (s / 2) * π ^ (-s / 2) * cexp (2 * π * I * a * n) / (↑|n| : ℂ) ^ s / 2)
+    (completedCosZeta a s) := by
+  let c (n : ℤ) : ℂ := cexp (2 * π * I * a * n) / 2
+  have hF t (ht : 0 < t) : HasSum (fun n : ℤ ↦ if n = 0 then 0 else c n * rexp (-π * n ^ 2 * t))
+      ((cosKernel a t - 1) / 2)
+  · convert (hasSum_int_cosKernel₀ a ht).div_const 2 using 2 with n
+    split_ifs with h <;> ring_nf
+  simp_rw [← Int.cast_eq_zero (α := ℝ)] at hF
+  convert hasSum_mellin_pi_mul_sq (zero_lt_one.trans hs) hF ?_ using 1
+  · simp only [Int.cast_eq_zero, ← Int.cast_abs, ofReal_int_cast, div_right_comm, mul_div_assoc]
+  · rw [mellin_div_const, completedCosZeta]
+    congr 1
+    refine ((hurwitzEvenFEPair a).symm.hasMellin (?_ : 1 / 2 < (s / 2).re)).2.symm
+    rwa [div_ofNat_re, div_lt_div_right two_pos]
+  · apply (((summable_one_div_int_add_rpow 0 s.re).mpr hs).div_const 2).of_norm_bounded
+    intro i
+    simp only [(by { push_cast; ring } : 2 * π * I * a * i = ↑(2 * π * a * i) * I), norm_div,
+      IsROrC.norm_ofNat, norm_norm, Complex.norm_exp_ofReal_mul_I, add_zero, norm_one,
+      norm_of_nonneg (by positivity : 0 ≤ |(i : ℝ)| ^ s.re), div_right_comm, le_rfl]
+
+/-- Formula for `completedCosZeta` as a Dirichlet series in the convergence range
+(second version, with sum over `ℕ`). -/
+lemma hasSum_nat_completedCosZeta (a : ℝ) {s : ℂ} (hs : 1 < re s) :
+    HasSum (fun n : ℕ ↦ Gamma (s / 2) * π ^ (-s / 2) * Real.cos (2 * π * a * n) / (n : ℂ) ^ s)
+    (completedCosZeta a s) := by
+  have := (hasSum_int_completedCosZeta a hs).sum_nat_of_sum_int
+  simp_rw [if_true, add_zero, neg_eq_zero, Nat.cast_eq_zero, abs_neg, Nat.abs_cast] at this
+  convert this using 2 with n
+  split_ifs with h
+  · have : s ≠ 0 := fun p ↦ (not_lt.mpr zero_le_one) (zero_re ▸ p ▸ hs)
+    simp_rw [h, Nat.cast_zero, zero_cpow this, div_zero, add_zero]
+  simp only [ofReal_cos, Complex.cos, push_cast]
+  ring_nf
+
+
 /-- Auxiliary lemma for `completedHurwitzZetaEven_eq_tsum_int`, computing the Mellin transform of an
 individual term in the series. -/
 theorem mellin_exp_neg_pi_mul_sq {s : ℂ} (hs : 0 < s.re) {n : ℝ} (hn : n ≠ 0) :
@@ -488,173 +527,23 @@ theorem mellin_exp_neg_pi_mul_sq {s : ℂ} (hs : 0 < s.re) {n : ℝ} (hn : n ≠
   rwa [ofReal_ne_zero, abs_ne_zero]
 #align integral_cpow_mul_exp_neg_pi_mul_sq mellin_exp_neg_pi_mul_sq
 
-/-- Formula for `completedCosZeta` as a Dirichlet series in the convergence range
-(first version, with sum over `ℤ - {0}`). -/
-lemma hasSum_int_completedCosZeta (a : ℝ) {s : ℂ} (hs : 1 < re s) :
-    HasSum (fun n : ℤ ↦ if n = 0 then 0 else
-    Gamma (s / 2) * π ^ (-s / 2) * cexp (2 * π * I * a * n) / (↑|n| : ℂ) ^ s / 2)
-    (completedCosZeta a s) := by
-  let μ : Measure ℝ := volume.restrict (Ioi 0)
-  let F (n : ℤ) (t : ℝ) : ℂ :=
-    t ^ (s / 2 - 1) * (if n = 0 then 0 else cexp (2 * π * I * a * n) * rexp (-π * n ^ 2 * t)) / 2
-  let f (t : ℝ) : ℂ := (t : ℂ) ^ (s / 2 - 1) * (cosKernel a t - 1) / 2
-  let bound (n : ℤ) (t : ℝ) : ℝ :=
-    if n = 0 then 0 else t ^ (s.re / 2 - 1) * rexp (-π * n ^ 2 * t) / 2
-  have hF_meas (n : ℤ) : AEStronglyMeasurable (F n) μ
-  · by_cases hn : n = 0
-    · simp_rw [hn, if_true, mul_zero, zero_div]
-      exact aestronglyMeasurable_const
-    · simp_rw [hn, if_false]
-      refine ((ContinuousOn.mul ?_ ?_).div_const _).aestronglyMeasurable measurableSet_Ioi
-      · exact ContinuousAt.continuousOn
-          fun t ht ↦ continuousAt_ofReal_cpow_const _ _ (Or.inr (ne_of_gt ht))
-      · apply Continuous.continuousOn
-        continuity
-  have h_lim : ∀ᵐ (t : ℝ) ∂μ, HasSum (fun n ↦ F n t) (f t)
-  · rw [ae_restrict_iff' measurableSet_Ioi]
-    filter_upwards with t ht
-    exact ((hasSum_int_cosKernel₀ a ht).mul_left _).div_const _
-  have h_bound (n : ℤ) : ∀ᵐ (t : ℝ) ∂μ, ‖F n t‖ ≤ bound n t
-  · rw [ae_restrict_iff' measurableSet_Ioi]
-    filter_upwards with t ht
-    by_cases hn : n = 0
-    · simp_rw [hn, if_true, mul_zero, zero_div, norm_zero, le_refl]
-    · simp_rw [hn, if_false]
-      rw [norm_div, ← ofReal_ofNat, norm_real, ofReal_ofNat, norm_two,
-        div_le_div_right two_pos, norm_mul, norm_mul, norm_real, norm_of_nonneg (exp_pos _).le,
-        ← mul_assoc, mul_le_mul_iff_of_pos_right (exp_pos _), Complex.norm_eq_abs,
-        abs_cpow_eq_rpow_re_of_pos ht, sub_re, one_re, ← ofReal_ofNat, div_ofReal_re,
-        (by { push_cast; ring } : (2 : ℝ) * π * I * a * n = ↑(2 * π * a * n : ℝ) * I),
-        Complex.norm_eq_abs, Complex.abs_exp, mul_I_re, ofReal_im, neg_zero, Real.exp_zero,
-        mul_one]
-  have bound_hasSum (t : ℝ) (ht : 0 < t) :
-      HasSum (bound · t) (t ^ (s.re / 2 - 1) * (cosKernel 0 t - 1) / 2)
-  · have := hasSum_int_evenKernel₀ 0 ht
-    simp_rw [add_zero, QuotientAddGroup.mk_zero, neg_zero, if_true,
-      evenKernel_eq_cosKernel_of_zero, Int.cast_eq_zero] at this
-    convert (this.mul_left (t ^ (s.re / 2 - 1))).div_const (2 : ℝ) using 2 with n
-    split_ifs with hn
-    · simp_rw [hn, if_true, mul_zero, zero_div]
-    · simp_rw [hn, if_false]
-  have bound_summable : ∀ᵐ (t : ℝ) ∂μ, Summable fun (n : ℤ) ↦ bound n t
-  · rw [ae_restrict_iff' measurableSet_Ioi]
-    filter_upwards with t ht
-    exact (bound_hasSum t ht).summable
-  have bound_integrable : Integrable (fun (t : ℝ) ↦ ∑' (n : ℤ), bound n t) μ
-  · erw [← IntegrableOn,
-      integrableOn_congr_fun (fun t ht ↦ (bound_hasSum t ht).tsum_eq) measurableSet_Ioi]
-    apply Integrable.div_const
-    have : 1 / 2 < ((s.re : ℂ) / 2).re
-    · rwa [← ofReal_ofNat, div_ofReal_re, ofReal_re, div_lt_div_right two_pos]
-    have := ((hurwitzEvenFEPair 0).symm.hasMellin this).1.re
-    refine IntegrableOn.congr_fun this (fun t (ht : 0 < t) ↦ ?_) measurableSet_Ioi
-    rw [smul_eq_mul, (by push_cast; rfl : (s.re : ℂ) / 2 - 1 = ↑(s.re / 2 - 1)),
-      ← ofReal_cpow ht.le, IsROrC.re_eq_complex_re, re_ofReal_mul]
-    rfl
-  convert (hasSum_integral_of_dominated_convergence
-      bound hF_meas h_bound bound_summable bound_integrable h_lim) using 2 with n
-  · -- show the individual terms match up
-    by_cases hn : n = 0
-    · simp_rw [hn, if_true, mul_zero, zero_div]
-      rw [integral_zero]
-    simp_rw [hn, if_false, integral_div]
-    congr 1
-    simp_rw [← mul_assoc _ (cexp _), mul_comm _ (cexp _), mul_assoc (cexp _),
-        integral_mul_left, mul_div_assoc _ (_ * _)]
-    congr 1
-    simpa only [← Int.cast_abs, ofReal_int_cast]
-      using (mellin_exp_neg_pi_mul_sq (zero_lt_one.trans hs) (Int.cast_ne_zero.mpr hn)).symm
-  · -- show ∫ f = Hurwitz zeta
-    rw [completedCosZeta]
-    have : 1 / 2 < re (s / 2) := by rwa [← ofReal_ofNat, div_ofReal_re, div_lt_div_right two_pos]
-    convert congr_arg (· / 2) ((hurwitzEvenFEPair a).symm.hasMellin this).2.symm
-    simp only [f, mellin, integral_div]
-    rfl
-
-/-- Formula for `completedCosZeta` as a Dirichlet series in the convergence range
-(second version, with sum over `ℕ`). -/
-lemma hasSum_nat_completedCosZeta (a : ℝ) {s : ℂ} (hs : 1 < re s) :
-    HasSum (fun n : ℕ ↦ Gamma (s / 2) * π ^ (-s / 2) * Real.cos (2 * π * a * n) / (n : ℂ) ^ s)
-    (completedCosZeta a s) := by
-  have := (hasSum_int_completedCosZeta a hs).sum_nat_of_sum_int
-  simp_rw [if_true, add_zero, neg_eq_zero, Nat.cast_eq_zero, abs_neg, Nat.abs_cast] at this
-  convert this using 2 with n
-  split_ifs with h
-  · have : s ≠ 0 := fun p ↦ (not_lt.mpr zero_le_one) (zero_re ▸ p ▸ hs)
-    simp_rw [h, Nat.cast_zero, zero_cpow this, div_zero, add_zero]
-  simp only [ofReal_cos, Complex.cos, push_cast]
-  ring_nf
-
 /-- Formula for `completedHurwitzZetaEven` as a Dirichlet series in the convergence range. -/
 lemma hasSum_int_completedHurwitzZetaEven (a : ℝ) (s : ℂ) (hs : 1 < re s) :
-    HasSum (fun n : ℤ ↦ if n = -a then 0 else
+    HasSum (fun n : ℤ ↦ if n + a = 0 then 0 else
     Gamma (s / 2) * π ^ (-s / 2) / (↑|n + a| : ℂ) ^ s / 2)
     (completedHurwitzZetaEven a s) := by
-  let μ : Measure ℝ := volume.restrict (Ioi 0)
-  let F (n : ℤ) (t : ℝ) : ℂ :=
-    if n = -a then 0 else t ^ (s / 2 - 1) * rexp (-π * (n + a) ^ 2 * t) / 2
-  let f (t : ℝ) : ℂ := (t : ℂ) ^ (s / 2 - 1) *
-    (evenKernel a t - (if (a : UnitAddCircle) = 0 then 1 else 0)) / 2
-  have hF_meas (n : ℤ) : AEStronglyMeasurable (F n) μ
-  · simp only [F]
-    split_ifs with h
-    · measurability
-    · refine ((ContinuousOn.mul ?_ ?_).div_const _).aestronglyMeasurable measurableSet_Ioi
-      · apply ContinuousAt.continuousOn
-        exact fun t ht ↦ continuousAt_ofReal_cpow_const _ _ (Or.inr (ne_of_gt ht))
-      · exact Continuous.continuousOn (by continuity)
-  have h_lim : ∀ᵐ (t : ℝ) ∂μ, HasSum (fun n ↦ F n t) (f t)
-  · rw [ae_restrict_iff' measurableSet_Ioi]
-    filter_upwards with t ht
-    have := hasSum_ofReal.mpr (hasSum_int_evenKernel₀ a ht)
-    convert (this.mul_left ((t : ℂ) ^ (s / 2 - 1))).div_const 2 with n
-    · simp only [F]
-      split_ifs <;> simp only [ofReal_zero, mul_zero, zero_div]
-    · split_ifs <;> simp only [ofReal_sub, ofReal_one, sub_zero]
-  let bound (n : ℤ) (t : ℝ) : ℝ :=
-    if n = -a then 0 else t ^ (s.re / 2 - 1) * rexp (-π * (n + a) ^ 2 * t) / 2
-  have h_bound (n : ℤ) : ∀ᵐ (t : ℝ) ∂μ, ‖F n t‖ ≤ bound n t
-  · rw [ae_restrict_iff' measurableSet_Ioi]
-    filter_upwards with t ht
-    simp only [F, bound]
+  have hF (t : ℝ) (ht : 0 < t) : HasSum (fun n : ℤ ↦ if n + a = 0 then 0
+      else (1 / 2 : ℂ) * rexp (-π * (n + a) ^ 2 * t)) ((evenKernel a t - _) / 2) := by
+    convert ofReal_sub _ _ ▸ (hasSum_ofReal.mpr (hasSum_int_evenKernel₀ a ht)).div_const 2 using 2
     split_ifs
-    · rw [norm_zero]
-    · rw [norm_div, ← ofReal_ofNat, norm_real 2, ofReal_ofNat, norm_two,
-        div_le_div_right two_pos, norm_mul, norm_real, norm_of_nonneg (exp_pos _).le,
-        mul_le_mul_iff_of_pos_right (exp_pos _), Complex.norm_eq_abs,
-        abs_cpow_eq_rpow_re_of_pos ht, sub_re, one_re, ← ofReal_ofNat, div_ofReal_re]
-  have bound_hasSum (t : ℝ) (ht : 0 < t) : HasSum (bound · t)
-      (t ^ (s.re / 2 - 1) * (evenKernel a t - (if (a : UnitAddCircle) = 0 then 1 else 0)) / 2)
-  · convert ((hasSum_int_evenKernel₀ a ht).mul_left _).div_const 2 using 2 with n
-    simp only [mul_ite, bound]
-    split_ifs with h <;> simp only [mul_zero, zero_div]
-  have bound_summable : ∀ᵐ (t : ℝ) ∂μ, Summable fun (n : ℤ) ↦ bound n t
-  · rw [ae_restrict_iff' measurableSet_Ioi]
-    filter_upwards with t ht
-    exact (bound_hasSum t ht).summable
-  have bound_integrable : Integrable (fun (t : ℝ) ↦ ∑' (n : ℤ), bound n t) μ
-  · erw [← IntegrableOn,
-      integrableOn_congr_fun (fun t ht ↦ (bound_hasSum t ht).tsum_eq) measurableSet_Ioi]
-    apply Integrable.div_const
-    have : 1 / 2 < ((s.re : ℂ) / 2).re
-    · rwa [← ofReal_ofNat, div_ofReal_re, ofReal_re, div_lt_div_right two_pos]
-    have := ((hurwitzEvenFEPair a).hasMellin this).1.re
-    refine IntegrableOn.congr_fun this (fun t (ht : 0 < t) ↦ ?_) measurableSet_Ioi
-    simp_rw [smul_eq_mul, (by push_cast; rfl : (s.re : ℂ) / 2 - 1 = ↑(s.re / 2 - 1)),
-      ← ofReal_cpow ht.le, IsROrC.re_eq_complex_re, re_ofReal_mul, sub_re]
-    simp only [hurwitzEvenFEPair, apply_ite re, one_re, zero_re, ofReal_re, Function.comp_apply]
-  convert MeasureTheory.hasSum_integral_of_dominated_convergence
-      bound hF_meas h_bound bound_summable bound_integrable h_lim using 2 with n
-  · -- show the individual terms match up
-    simp only [F]
-    split_ifs with h
-    · simp only [integral_zero]
-    · rw [integral_div]
-      exact congr_arg (· / 2) (mellin_exp_neg_pi_mul_sq (zero_lt_one.trans hs)
-        (h ∘ add_eq_zero_iff_eq_neg.mp)).symm
-  · -- show ∫ f = Hurwitz zeta
-    rw [completedHurwitzZetaEven]
-    have : 1 / 2 < re (s / 2) := by rwa [← ofReal_ofNat, div_ofReal_re, div_lt_div_right two_pos]
-    convert congr_arg (· / 2) ((hurwitzEvenFEPair a).hasMellin this).2.symm
-    simp only [integral_div]
-    rfl
+    · simp
+    · ring_nf
+  convert hasSum_mellin_pi_mul_sq (zero_lt_one.trans hs) hF ?_ using 1
+  · ext1 n
+    ring_nf
+  · simp_rw [mellin_div_const, apply_ite ofReal', ofReal_one, ofReal_zero]
+    refine congr_arg (· / 2) ((hurwitzEvenFEPair a).hasMellin (?_ : 1 / 2 < (s / 2).re)).2.symm
+    rwa [div_ofNat_re, div_lt_div_right two_pos]
+  · simp_rw [← mul_one_div ‖_‖]
+    apply Summable.mul_left
+    rwa [summable_one_div_int_add_rpow]
