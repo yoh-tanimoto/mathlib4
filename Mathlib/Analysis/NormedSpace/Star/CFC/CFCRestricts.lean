@@ -16,18 +16,6 @@ over the ring `R`.
 -/
 
 
-theorem spectrum.algebraMap_mem_iff (R S : Type*) {A : Type*} [CommSemiring R] [CommSemiring S]
-    [Ring A] [Algebra R S] [Algebra R A] [Algebra S A] [IsScalarTower R S A] {a : A} {r : R} :
-    algebraMap R S r ∈ spectrum S a ↔ r ∈ spectrum R a := by
-  simp only [spectrum.mem_iff, Algebra.algebraMap_eq_smul_one, smul_assoc, one_smul]
-
-alias ⟨spectrum.of_algebraMap_mem, spectrum.algebraMap_mem⟩ := spectrum.algebraMap_mem_iff
-
-theorem spectrum.preimage_algebraMap {R S A : Type*} [CommSemiring R] [CommSemiring S] [Ring A]
-    [Algebra R S] [Algebra R A] [Algebra S A] [IsScalarTower R S A] {a : A} :
-    algebraMap R S ⁻¹' spectrum S a = spectrum R a :=
-  Set.ext fun _ => spectrum.algebraMap_mem_iff _ _
-
 /-- Given an element `a : A` of an `S`-algebra, where `S` is itself an `R`-algebra, we say that
 the spectrum of `a` restricts via a function `f : S → R` if `f` is a left inverse of
 `algebraMap R S`, and `f` is a right inverse of `algebraMap R S` on `spectrum S a`.
@@ -57,7 +45,7 @@ theorem SpectrumRestricts.algebraMap_image : algebraMap R S '' spectrum R a = sp
   refine' Set.eq_of_subset_of_subset _ fun s hs => ⟨f s, _⟩
   simpa only [spectrum.preimage_algebraMap] using
     (spectrum S a).image_preimage_subset (algebraMap R S)
-  exact ⟨spectrum.of_algebraMap_mem R S ((h.rightInvOn hs).symm ▸ hs), h.rightInvOn hs⟩
+  exact ⟨spectrum.of_algebraMap_mem S ((h.rightInvOn hs).symm ▸ hs), h.rightInvOn hs⟩
 
 theorem SpectrumRestricts.image : f '' spectrum S a = spectrum R a := by
   simp only [← h.algebraMap_image, Set.image_image, h.left_inv _, Set.image_id']
