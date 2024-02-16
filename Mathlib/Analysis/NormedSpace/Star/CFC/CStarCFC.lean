@@ -54,8 +54,11 @@ instance : CFC ℂ (IsStarNormal : A → Prop) where
       AlgEquiv.spectrum_eq (continuousFunctionalCalculus a), ContinuousMap.spectrum_eq_range]
   predicate_hom {a} ha f := ⟨by rw [← map_star]; exact Commute.all (star f) f |>.map _⟩
 
-instance {a : A} [IsStarNormal a] {f : C(ℂ, ℂ)} : IsStarNormal (cfc a f) :=
-  cfc_predicate ‹_› f
+-- MOVE ME
+instance IsStarNormal.map {F R S : Type*} [Mul R] [Star R] [Mul S] [Star S] [FunLike F R S]
+    [MulHomClass F R S] [StarHomClass F R S] (f : F) (r : R) [hr : IsStarNormal r] :
+    IsStarNormal (f r) where
+  star_comm_self := by simpa [map_star] using congr(f $(hr.star_comm_self))
 
 -- this seems like interesting notation, food for thought
 -- notation3 "⇧" f "(" a ")" => cfc a f
