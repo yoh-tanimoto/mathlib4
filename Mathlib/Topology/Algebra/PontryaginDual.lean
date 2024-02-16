@@ -187,10 +187,6 @@ lemma smul_Icc {a b c : ℝ} (ha : 0 < a) : a • Set.Icc b c = Set.Icc (a • b
   rintro ⟨y, ⟨h1, h2⟩, rfl⟩
   exact ⟨(mul_le_mul_left ha).mpr h1, (mul_le_mul_left ha).mpr h2⟩
 
-instance : UniformGroup circle := by
-  convert topologicalGroup_is_uniform_of_compactSpace circle
-  exact unique_uniformity_of_compact rfl rfl
-
 instance {X : Type*} [TopologicalSpace X] [Group X] [TopologicalGroup X] [LocallyCompactSpace X] :
     LocallyCompactSpace (ContinuousMonoidHom X circle) := by
   let Vn : ℕ → Set circle := fun n ↦ expMapCircle '' Set.Icc (-(2 ^ n : ℝ)⁻¹) (2 ^ n : ℝ)⁻¹
