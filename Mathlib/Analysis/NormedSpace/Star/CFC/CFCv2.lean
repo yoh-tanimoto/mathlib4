@@ -1,39 +1,9 @@
 import Mathlib.Analysis.NormedSpace.Star.Spectrum
-import Mathlib.Tactic.FunProp.Continuous
 import Mathlib.Analysis.NormedSpace.Star.CFC.CFCRestricts
 
 /-!
 # Another approach with less DTT hell?
 -/
-
-section move
-
--- MOVE ME
-lemma map_mem_unitary {F R S : Type*} [Monoid R] [StarMul R] [Monoid S] [StarMul S] [FunLike F R S]
-    [StarHomClass F R S] [MonoidHomClass F R S] (f : F) {r : R} (hr : r ∈ unitary R) :
-    f r ∈ unitary S := by
-  rw [unitary.mem_iff] at hr
-  simpa [map_star, map_mul] using And.intro congr(f $(hr.1)) congr(f $(hr.2))
-
--- MOVE ME; also prove that it plays nice with `Units.map`
-/-- The group homomorphism between unitary subgroups of star monoids induced by a star
-homomorphism -/
-def unitary.map {F R S : Type*} [Monoid R] [StarMul R] [Monoid S] [StarMul S] [FunLike F R S]
-    [StarHomClass F R S] [MonoidHomClass F R S] (f : F) :
-    unitary R →* unitary S where
-  toFun := Subtype.map f (fun _ ↦ map_mem_unitary f)
-  map_one' := Subtype.ext <| map_one f
-  map_mul' _ _ := Subtype.ext <| map_mul f _ _
-
--- MOVE ME
--- currently, we can't phrase this nicely because `Units.map` takes a `MonoidHom`, not a
--- `MonoidHomClass`.
-lemma unitary.toUnits_comp_map {F R S : Type*} [Monoid R] [StarMul R] [Monoid S] [StarMul S]
-    [FunLike F R S] [StarHomClass F R S] [MonoidHomClass F R S] (f : F) :
-    unitary.toUnits.comp (unitary.map f) = (Units.map f).comp unitary.toUnits := by
-  ext; rfl
-
-end move
 
 section Basic
 
@@ -607,7 +577,7 @@ def cfc_of_spectrumRestricts [CompleteSpace R]
     exact ((h a).mp ha).2.rightInvOn x.2
   hom_map_spectrum {a} ha g := by
     rw [SpectrumRestricts.starAlgHom_apply]
-    simp only [← @spectrum.preimage_algebraMap R S, cfcSpec_map_spectrum]
+    simp only [← @spectrum.preimage_algebraMap (R := R) S, cfcSpec_map_spectrum]
     ext x
     constructor
     · rintro ⟨y, hy⟩
@@ -617,7 +587,7 @@ def cfc_of_spectrumRestricts [CompleteSpace R]
       exact ⟨_, this⟩
     · rintro ⟨y, rfl⟩
       rw [Set.mem_preimage]
-      refine' ⟨⟨algebraMap R S y, spectrum.algebraMap_mem R S y.prop⟩, _⟩
+      refine' ⟨⟨algebraMap R S y, spectrum.algebraMap_mem S y.prop⟩, _⟩
       simp only [ContinuousMap.coe_mk, ContinuousMap.comp_apply, StarAlgHom.ofId_apply]
       congr
       exact Subtype.ext (((h a).mp ha).2.left_inv y)
