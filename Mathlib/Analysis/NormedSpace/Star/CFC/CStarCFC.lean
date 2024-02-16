@@ -181,21 +181,6 @@ lemma spectrumRestricts_nnreal_iff_spectralRadius_le {A : Type*} [Ring A] [Algeb
     linarith [h_le.2]
 
 -- MOVE ME
-@[to_additive]
-theorem Isometry.nnnorm_map_of_map_one {E F : Type*} [SeminormedGroup E] [SeminormedGroup F]
-    {f : E → F} (hi : Isometry f) (h₁ : f 1 = 1) (x : E) :
-    ‖f x‖₊ = ‖x‖₊ :=
-  Subtype.ext <| hi.norm_map_of_map_one h₁ x
-
--- MOVE ME
-instance {E : Type*} [NormedAddCommGroup E] [NormedSpace ℂ E] : NormedSpace ℝ E :=
-  inferInstance
-
--- MOVE ME
-instance {A : Type*} [SeminormedRing A] [NormedAlgebra ℂ A] : NormedAlgebra ℝ A where
-  norm_smul_le r a := by simpa using norm_smul_le (r : ℂ) a
-
--- MOVE ME
 lemma SpectrumRestricts.spectralRadius_eq {𝕜₁ 𝕜₂ A : Type*} [NormedField 𝕜₁] [NormedField 𝕜₂]
     [NormedRing A] [NormedAlgebra 𝕜₁ A] [NormedAlgebra 𝕜₂ A] [Algebra 𝕜₁ 𝕜₂] [IsScalarTower 𝕜₁ 𝕜₂ A]
     {f : 𝕜₂ → 𝕜₁} (h_isom : Isometry (algebraMap 𝕜₁ 𝕜₂)) {a : A} (h : SpectrumRestricts a f) :
@@ -205,18 +190,11 @@ lemma SpectrumRestricts.spectralRadius_eq {𝕜₁ 𝕜₂ A : Type*} [NormedFie
   all_goals apply iSup₂_le fun x hx ↦ ?_
   · have := h_isom.nnnorm_map_of_map_zero (map_zero _) x
     refine (congr_arg ((↑) : ℝ≥0 → ℝ≥0∞) this).symm.trans_le <| le_iSup₂ (α := ℝ≥0∞) _ ?_
-    exact (spectrum.algebraMap_mem_iff _ _).mpr hx
+    exact (spectrum.algebraMap_mem_iff _).mpr hx
   · have ⟨y, hy, hy'⟩ := h.algebraMap_image.symm ▸ hx
     subst hy'
     rw [h_isom.nnnorm_map_of_map_zero (map_zero _)]
     exact le_iSup₂ (α := ℝ≥0∞) y hy
-
--- MOVE ME
-protected lemma IsSelfAdjoint.algebraMap {R : Type*} (A : Type*) [CommSemiring R] [Semiring A]
-    [Algebra R A] [StarRing R] [StarMul A] [StarModule R A] {r : R} (hr : IsSelfAdjoint r) :
-    IsSelfAdjoint (algebraMap R A r) := by
-  rw [isSelfAdjoint_iff, ← algebraMap_star_comm]
-  exact congr(algebraMap R A $(hr.star_eq))
 
 variable {A : Type*} [NormedRing A] [StarRing A] [CstarRing A] [CompleteSpace A]
 variable [NormedAlgebra ℂ A] [StarModule ℂ A]
@@ -250,18 +228,6 @@ lemma IsSelfAdjoint.sq_spectrumRestricts {a : A} (ha : IsSelfAdjoint a) :
   exact sq_nonneg x
 
 open ComplexStarModule
-
--- MOVE ME
-lemma star_mul_self_add_self_mul_star {A : Type*} [Ring A] [StarRing A]
-    [Algebra ℂ A] [StarModule ℂ A] (a : A) :
-    star a * a + a * star a = 2 • ((ℜ a) ^ 2 + (ℑ a) ^ 2) :=
-  have a_eq := (realPart_add_I_smul_imaginaryPart a).symm
-  calc
-    star a * a + a * star a = _ :=
-      congr((star $(a_eq)) * $(a_eq) + $(a_eq) * (star $(a_eq)))
-    _ = 2 • ((ℜ a) ^ 2 + (ℑ a) ^ 2) := by
-      simp [mul_add, add_mul, smul_smul, two_smul, sq]
-      abel
 
 lemma SpectrumRestricts.eq_zero_of_neg {a : A} (ha : IsSelfAdjoint a)
     (ha₁ : SpectrumRestricts a ContinuousMap.toNNReal) (ha₂ : SpectrumRestricts (-a) ContinuousMap.toNNReal) :
@@ -324,9 +290,10 @@ lemma spectrum_star_mul_self_nonneg {b : A} : ∀ x ∈ spectrum ℝ (star b * b
   have h_c_spec₁ : SpectrumRestricts (c * star c) ContinuousMap.toNNReal := by
     rw [c_eq]
     refine SpectrumRestricts.nnreal_add ?_ ?_ ?_ h_c_spec₀
-    · exact IsSelfAdjoint.smul (by rfl) <| ((ℜ c).prop.pow 2).add ((ℑ c).prop.pow 2)
+    · rw [← sq, ← sq]
+      exact IsSelfAdjoint.smul (by rfl) <| ((ℜ c).prop.pow 2).add ((ℑ c).prop.pow 2)
     · exact (IsSelfAdjoint.star_mul_self c).neg
-    · rw [nsmul_eq_smul_cast ℝ]
+    · rw [nsmul_eq_smul_cast ℝ, ← sq, ← sq]
       refine (ℜ c).2.sq_spectrumRestricts.nnreal_add ((ℜ c).2.pow 2) ((ℑ c).2.pow 2)
         (ℑ c).2.sq_spectrumRestricts |>.smul_of_nonneg <| by norm_num
   have h_c_spec₂ : SpectrumRestricts (star c * c) ContinuousMap.toNNReal := by
