@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: David Loeffler
 -/
 
-import Mathlib.Analysis.SpecialFunctions.Gamma.Basic
+import Mathlib.Analysis.SpecialFunctions.Gamma.Beta
 import Mathlib.Data.Real.Sign
 import Mathlib.Analysis.PSeries
 import Mathlib.NumberTheory.ZetaFunctions.SillySumLemma
@@ -68,6 +68,7 @@ lemma summable_one_div_int_add_rpow (a : ℝ) (s : ℝ) :
 
 variable {ι : Type*} [Countable ι]
 
+/-- Most basic version of the "Mellin transform = Dirichlet series" argument. -/
 lemma hasSum_mellin {a : ι → ℂ} {p : ι → ℝ} {F : ℝ → ℂ} {s : ℂ}
     (hp : ∀ i, a i = 0 ∨ 0 < p i) (hs : 0 < s.re)
     (hF : ∀ t ∈ Ioi 0, HasSum (fun i ↦ a i * rexp (-p i * t)) (F t))
@@ -158,20 +159,53 @@ lemma hasSum_mellin_pi_mul₀ {a : ι → ℂ} {p : ι → ℝ} {F : ℝ → ℂ
       have := hp i
       positivity
 
+
+/-- Deligne's archimedean Gamma factor for a real infinite place, see
+"Valeurs de fonctions L et periodes d'integrales" § 5.3. -/
+noncomputable def Gammaℝ (s : ℂ) := π ^ (-s / 2) * Complex.Gamma (s / 2)
+
+lemma Gammaℝ_ne_zero_of_re_pos {s : ℂ} (hs : 0 < re s) : Gammaℝ s ≠ 0 := by
+  apply mul_ne_zero
+  · simp [pi_pos.ne']
+  · apply Complex.Gamma_ne_zero_of_re_pos
+    rw [div_ofNat_re]
+    exact div_pos hs two_pos
+
+lemma differentiable_Gammaℝ_inv : Differentiable ℂ (fun s ↦ (Gammaℝ s)⁻¹) := by
+  conv => enter [2, s]; rw [Gammaℝ, mul_inv]
+  refine Differentiable.mul (fun s ↦ .inv ?_ (by simp [pi_pos.ne'])) ?_
+  · refine ((differentiableAt_id.neg.div_const (2 : ℂ)).const_cpow ?_)
+    exact Or.inl (ofReal_ne_zero.mpr pi_pos.ne')
+  · exact differentiable_one_div_Gamma.comp (differentiable_id.div_const _)
+
+lemma Gammaℝ_residue_zero : Tendsto (fun s ↦ s * Gammaℝ s) (𝓝[≠] 0) (𝓝 2) := by
+  have h : Tendsto (fun z : ℂ ↦ z / 2 * Gamma (z / 2)) (𝓝[≠] 0) (𝓝 1) := by
+    refine tendsto_self_mul_Gamma_nhds_zero.comp ?_
+    rw [tendsto_nhdsWithin_iff, (by simp : 𝓝 (0 : ℂ) = 𝓝 (0 / 2))]
+    exact ⟨(tendsto_id.div_const _).mono_left nhdsWithin_le_nhds,
+      eventually_of_mem self_mem_nhdsWithin fun x hx ↦ div_ne_zero hx two_ne_zero⟩
+  have h' : Tendsto (fun s : ℂ ↦ 2 * (π : ℂ) ^ (-s / 2)) (𝓝[≠] 0) (𝓝 2) := by
+    rw [(by simp : 𝓝 2 = 𝓝 (2 * (π : ℂ) ^ (-(0 : ℂ) / 2)))]
+    refine Tendsto.mono_left (ContinuousAt.tendsto ?_) nhdsWithin_le_nhds
+    exact continuousAt_const.mul ((continuousAt_const_cpow (ofReal_ne_zero.mpr pi_pos.ne')).comp
+      (continuousAt_id.neg.div_const _))
+  convert mul_one (2 : ℂ) ▸ (h'.mul h) using 2 with z
+  rw [Gammaℝ]
+  ring_nf
+
 /-- Tailored version for even Jacobi theta functions. -/
 lemma hasSum_mellin_pi_mul_sq {a : ι → ℂ} {r : ι → ℝ} {F : ℝ → ℂ} {s : ℂ} (hs : 0 < s.re)
     (hF : ∀ t ∈ Ioi 0, HasSum (fun i ↦ if r i = 0 then 0 else a i * rexp (-π * r i ^ 2 * t)) (F t))
     (h_sum : Summable fun i ↦ ‖a i‖ / |r i| ^ s.re) :
-    HasSum (fun i ↦ if r i = 0 then 0 else Gamma (s / 2) * π ^ (-s / 2) * (a i / |r i| ^ s))
+    HasSum (fun i ↦ if r i = 0 then 0 else Gammaℝ s * a i / |r i| ^ s)
     (mellin F (s / 2)) := by
   have hs' : 0 < (s / 2).re := by rw [div_ofNat_re]; positivity
-  simp_rw [neg_div, ← mul_div_assoc]
   have h (i) : r i ^ 2 = 0 ↔ r i = 0 := by simp
   simp_rw [← h] at hF
   have hp i : 0 ≤ (r i) ^ 2 := sq_nonneg _
   convert hasSum_mellin_pi_mul₀ hp hs' hF ?_ using 3 with i
   · rw [h]
-  · rw [← _root_.sq_abs, ofReal_pow, ← cpow_nat_mul']
+  · rw [Gammaℝ, ← _root_.sq_abs, ofReal_pow, ← cpow_nat_mul']
     ring_nf
     all_goals rw [arg_ofReal_of_nonneg (abs_nonneg _)]; linarith [pi_pos]
   · convert h_sum using 3 with i
@@ -183,7 +217,7 @@ lemma hasSum_mellin_pi_mul_sq' {a : ι → ℂ} {r : ι → ℝ} {F : ℝ → �
     (hs : 0 < (s + 1).re)
     (hF : ∀ t ∈ Ioi 0, HasSum (fun i ↦ a i * r i * rexp (-π * r i ^ 2 * t)) (F t))
     (h_sum : Summable fun i ↦ ‖a i‖ / |r i| ^ s.re) :
-    HasSum (fun i ↦ Gamma ((s + 1)/ 2) * π ^ (-(s + 1) / 2) * (a i * Real.sign (r i) / |r i| ^ s))
+    HasSum (fun i ↦ Gammaℝ (s + 1) * a i * Real.sign (r i) / |r i| ^ s)
     (mellin F ((s + 1) / 2)) := by
   have (i t) : (a i * r i * rexp (-π * r i ^ 2 * t)) = if r i = 0 then 0 else
     (a i * r i * rexp (-π * r i ^ 2 * t)) := by split_ifs with h <;> simp [h]
@@ -192,10 +226,11 @@ lemma hasSum_mellin_pi_mul_sq' {a : ι → ℂ} {r : ι → ℝ} {F : ℝ → �
   · rcases eq_or_ne (r i) 0 with h | h <;>
       simp only [h, ↓reduceIte, Real.sign_zero, ofReal_zero, mul_zero, zero_mul, zero_div]
     rw [cpow_add _ _ (ofReal_ne_zero.mpr <| abs_ne_zero.mpr h), cpow_one]
-    conv_rhs => enter [2, 1, 2]; rw [← (r i).sign_mul_abs, ofReal_mul]
+    conv_rhs => enter [1]; rw [← (r i).sign_mul_abs, ofReal_mul]
     field_simp [h]
     ring_nf
-  · -- this case is delicate because of terms with `r i = 0` when `re s = 0`
+  · -- this case is delicate because the conclusion specifically omits terms with `r i = 0`
+    -- but the hypothesis `hF` doesn't, so need to deal with `re s = 0` separately
     simp_rw [norm_mul, norm_real, Real.norm_eq_abs, mul_div_assoc]
     rcases eq_or_ne s.re 0 with hs' | hs'
     · simp only [hs', rpow_zero, div_one, add_re, one_re, zero_add, rpow_one] at h_sum ⊢

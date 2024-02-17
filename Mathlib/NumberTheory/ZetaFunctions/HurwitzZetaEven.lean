@@ -6,6 +6,8 @@ Authors: David Loeffler
 import Mathlib.NumberTheory.ZetaFunctions.AbstractFuncEq
 import Mathlib.NumberTheory.ZetaFunctions.KernelBounds
 import Mathlib.NumberTheory.ZetaFunctions.MellinEqDirichlet
+import Mathlib.Analysis.SpecialFunctions.Gamma.Beta
+import Mathlib.Analysis.Complex.RemovableSingularity
 
 /-!
 # Even Hurwitz zeta functions
@@ -463,6 +465,17 @@ lemma completedHurwitzZetaEven_residue_zero (a : UnitAddCircle) :
   rw [completedHurwitzZetaEven, Function.comp_apply]
   ring_nf
 
+lemma completedCosZeta_residue_zero (a : UnitAddCircle) :
+    Tendsto (fun s ↦ s * completedCosZeta a s) (𝓝[≠] 0) (𝓝 (-1)) := by
+  have h1 : Tendsto (fun s : ℂ ↦ s * _) (𝓝[≠] 0)
+    (𝓝 (-1)) := (hurwitzEvenFEPair a).symm.Λ_residue_zero
+  have h2 : Tendsto (fun s : ℂ ↦ s / 2) (𝓝[≠] 0) (𝓝[≠] (0 / 2)) :=
+    le_of_eq ((Homeomorph.mulRight₀ _ (inv_ne_zero (two_ne_zero' ℂ))).map_punctured_nhds_eq 0)
+  rw [zero_div] at h2
+  refine (h1.comp h2).congr (fun s ↦ ?_)
+  rw [completedCosZeta, Function.comp_apply]
+  ring_nf
+
 end FEPair
 
 /-!
@@ -472,9 +485,8 @@ end FEPair
 /-- Formula for `completedCosZeta` as a Dirichlet series in the convergence range
 (first version, with sum over `ℤ - {0}`). -/
 lemma hasSum_int_completedCosZeta (a : ℝ) {s : ℂ} (hs : 1 < re s) :
-    HasSum (fun n : ℤ ↦ if n = 0 then 0 else
-    Gamma (s / 2) * π ^ (-s / 2) * cexp (2 * π * I * a * n) / (↑|n| : ℂ) ^ s / 2)
-    (completedCosZeta a s) := by
+    HasSum (fun n : ℤ ↦ if n = 0 then 0
+    else Gammaℝ s * cexp (2 * π * I * a * n) / (↑|n| : ℂ) ^ s / 2) (completedCosZeta a s) := by
   let c (n : ℤ) : ℂ := cexp (2 * π * I * a * n) / 2
   have hF t (ht : 0 < t) : HasSum (fun n : ℤ ↦ if n = 0 then 0 else c n * rexp (-π * n ^ 2 * t))
       ((cosKernel a t - 1) / 2)
@@ -496,41 +508,19 @@ lemma hasSum_int_completedCosZeta (a : ℝ) {s : ℂ} (hs : 1 < re s) :
 /-- Formula for `completedCosZeta` as a Dirichlet series in the convergence range
 (second version, with sum over `ℕ`). -/
 lemma hasSum_nat_completedCosZeta (a : ℝ) {s : ℂ} (hs : 1 < re s) :
-    HasSum (fun n : ℕ ↦ Gamma (s / 2) * π ^ (-s / 2) * Real.cos (2 * π * a * n) / (n : ℂ) ^ s)
+    HasSum (fun n : ℕ ↦ if n = 0 then 0 else Gammaℝ s * Real.cos (2 * π * a * n) / (n : ℂ) ^ s)
     (completedCosZeta a s) := by
   have := (hasSum_int_completedCosZeta a hs).sum_nat_of_sum_int
   simp_rw [if_true, add_zero, neg_eq_zero, Nat.cast_eq_zero, abs_neg, Nat.abs_cast] at this
   convert this using 2 with n
   split_ifs with h
-  · have : s ≠ 0 := fun p ↦ (not_lt.mpr zero_le_one) (zero_re ▸ p ▸ hs)
-    simp_rw [h, Nat.cast_zero, zero_cpow this, div_zero, add_zero]
-  simp only [ofReal_cos, Complex.cos, push_cast]
-  ring_nf
-
-
-/-- Auxiliary lemma for `completedHurwitzZetaEven_eq_tsum_int`, computing the Mellin transform of an
-individual term in the series. -/
-theorem mellin_exp_neg_pi_mul_sq {s : ℂ} (hs : 0 < s.re) {n : ℝ} (hn : n ≠ 0) :
-    mellin (fun t ↦ rexp (-π * n ^ 2 * t) : ℝ → ℂ) (s / 2) =
-      Gamma (s / 2) * π ^ (-s / 2) / |n| ^ s := by
-  have : 0 < (s / 2).re
-  · simpa only [← ofReal_ofNat, div_ofReal_re] using div_pos hs two_pos
-  rw [Complex.Gamma_eq_integral this, GammaIntegral_eq_mellin]
-  have : 0 < π * n ^ 2 := by positivity
-  have := mellin_comp_mul_left (fun t ↦ ↑(rexp (-t)) : ℝ → ℂ) (s / 2) this
-  simp_rw [← neg_mul, smul_eq_mul] at this
-  rw [this, mul_div_assoc, mul_comm (mellin _ _), ofReal_mul,
-    mul_cpow_ofReal_nonneg pi_pos.le (sq_nonneg _), neg_div]
-  congr 2
-  rw [cpow_neg, ← _root_.sq_abs, pow_two, ofReal_mul, mul_cpow_ofReal_nonneg (abs_nonneg _)
-    (abs_nonneg _), ← cpow_add, add_halves']
-  rwa [ofReal_ne_zero, abs_ne_zero]
-#align integral_cpow_mul_exp_neg_pi_mul_sq mellin_exp_neg_pi_mul_sq
+  · simp
+  · simp only [ofReal_cos, Complex.cos, push_cast]
+    ring_nf
 
 /-- Formula for `completedHurwitzZetaEven` as a Dirichlet series in the convergence range. -/
-lemma hasSum_int_completedHurwitzZetaEven (a : ℝ) (s : ℂ) (hs : 1 < re s) :
-    HasSum (fun n : ℤ ↦ if n + a = 0 then 0 else
-    Gamma (s / 2) * π ^ (-s / 2) / (↑|n + a| : ℂ) ^ s / 2)
+lemma hasSum_int_completedHurwitzZetaEven (a : ℝ) {s : ℂ} (hs : 1 < re s) :
+    HasSum (fun n : ℤ ↦ if n + a = 0 then 0 else Gammaℝ s / (↑|n + a| : ℂ) ^ s / 2)
     (completedHurwitzZetaEven a s) := by
   have hF (t : ℝ) (ht : 0 < t) : HasSum (fun n : ℤ ↦ if n + a = 0 then 0
       else (1 / 2 : ℂ) * rexp (-π * (n + a) ^ 2 * t)) ((evenKernel a t - _) / 2) := by
@@ -547,3 +537,108 @@ lemma hasSum_int_completedHurwitzZetaEven (a : ℝ) (s : ℂ) (hs : 1 < re s) :
   · simp_rw [← mul_one_div ‖_‖]
     apply Summable.mul_left
     rwa [summable_one_div_int_add_rpow]
+
+/-!
+## Non-completed zeta functions
+-/
+
+/-- Technical lemma which will give us differentiability of Riemann zeta at `s = 0`. -/
+lemma differentiableAt_update_of_residue
+    {Λ : ℂ → ℂ} (hf : ∀ (s : ℂ) (_ : s ≠ 0) (_ : s ≠ 1), DifferentiableAt ℂ Λ s)
+    {L : ℂ} (h_lim : Tendsto (fun s ↦ s * Λ s) (𝓝[≠] 0) (𝓝 L))
+    (s : ℂ) (hs' : s ≠ 1) :
+    DifferentiableAt ℂ (Function.update (fun s ↦ Λ s / Gammaℝ s) 0 (L / 2)) s := by
+  have claim (t) (ht : t ≠ 0) (ht' : t ≠ 1) : DifferentiableAt ℂ (fun u : ℂ ↦ Λ u / Gammaℝ u) t :=
+    (hf t ht ht').mul differentiable_Gammaℝ_inv.differentiableAt
+  rcases ne_or_eq s 0 with hs | rfl
+  · -- Easy case 2 : `s ≠ 0`
+    refine (claim s hs hs').congr_of_eventuallyEq ?_
+    filter_upwards [isOpen_compl_singleton.mem_nhds hs] with x hx
+    simp_rw [Function.update_noteq hx]
+  -- now the hard case (Riemann zeta at `s = 0`)
+  have c2 : Tendsto (fun s : ℂ ↦ Λ s / Gammaℝ s) (𝓝[≠] 0) (𝓝 <| L / 2) := by
+    refine Tendsto.congr' ?_ (h_lim.div Gammaℝ_residue_zero two_ne_zero)
+    filter_upwards [self_mem_nhdsWithin] with s (hs : s ≠ 0)
+    rw [Pi.div_apply, ← div_div, mul_div_cancel_left _ hs]
+  · -- The hard case: `s = 0`.
+    simp_rw [← c2.limUnder_eq]
+    have S_nhds : {(1 : ℂ)}ᶜ ∈ 𝓝 (0 : ℂ) := isOpen_compl_singleton.mem_nhds hs'
+    refine ((Complex.differentiableOn_update_limUnder_of_isLittleO S_nhds
+      (fun t ht ↦ (claim t ht.2 ht.1).differentiableWithinAt) ?_) 0 hs').differentiableAt S_nhds
+    simp only [Gammaℝ, zero_div, div_zero, Complex.Gamma_zero, mul_zero, cpow_zero, sub_zero]
+    -- Remains to show completed zeta is `o (s ^ (-1))` near 0.
+    refine (isBigO_const_of_tendsto c2 <| one_ne_zero' ℂ).trans_isLittleO ?_
+    rw [isLittleO_iff_tendsto']
+    · exact Tendsto.congr (fun x ↦ by rw [← one_div, one_div_one_div]) nhdsWithin_le_nhds
+    · exact eventually_of_mem self_mem_nhdsWithin fun x hx hx' ↦ (hx <| inv_eq_zero.mp hx').elim
+
+/-- The even part of the Hurwitz zeta function, i.e. the meromorphic function of `s` which agrees
+with `1 / 2 * ∑' (n : ℤ), 1 / |n + a| ^ s` for `1 < re s`-/
+noncomputable def hurwitzZetaEven (a : UnitAddCircle) :=
+  Function.update (fun s : ℂ ↦ completedHurwitzZetaEven a s / Gammaℝ s)
+  0 (if a = 0 then -1 / 2 else 0)
+
+/-- The Hurwitz zeta function is differentiable everywhere except at `s = 1`. This is true
+even in the delicate case `a = 0` and `s = 0` (where the completed zeta has a pole, but this is
+cancelled out by the Gamma factor). -/
+lemma differentiableAt_hurwitzZetaEven (a : UnitAddCircle) {s : ℂ} (hs' : s ≠ 1) :
+    DifferentiableAt ℂ (hurwitzZetaEven a) s := by
+  have := differentiableAt_update_of_residue
+    (fun t ht ht' ↦ differentiableAt_completedHurwitzZetaEven a (Or.inl ht) ht')
+    (completedHurwitzZetaEven_residue_zero a) s hs'
+  simp_rw [div_eq_mul_inv, ite_mul, zero_mul, ← div_eq_mul_inv] at this
+  exact this
+
+/-- The cosine zeta function, i.e. the meromorphic function of `s` which agrees
+with `∑' (n : ℕ), cos (2 * π * a * n) / n ^ s` for `1 < re s`. -/
+noncomputable def cosZeta (a : UnitAddCircle) :=
+  Function.update (fun s : ℂ ↦ completedCosZeta a s / Gammaℝ s) 0 (-1 / 2)
+
+/-- The cosine zeta function is differentiable everywhere, except at `s = 1` if `a = 0`. -/
+lemma differentiableAt_cosZeta (a : UnitAddCircle) {s : ℂ} (hs' : s ≠ 1 ∨ a ≠ 0) :
+    DifferentiableAt ℂ (cosZeta a) s := by
+  rcases ne_or_eq s 1 with hs' | rfl
+  · exact differentiableAt_update_of_residue (fun _ ht ht' ↦
+      differentiableAt_completedCosZeta a ht (Or.inl ht')) (completedCosZeta_residue_zero a) s hs'
+  · apply ((differentiableAt_completedCosZeta a one_ne_zero hs').mul
+      (differentiable_Gammaℝ_inv.differentiableAt)).congr_of_eventuallyEq
+    filter_upwards [isOpen_compl_singleton.mem_nhds one_ne_zero] with x hx
+    simp_rw [cosZeta, Function.update_noteq hx, div_eq_mul_inv]
+
+/-- If `a ≠ 0` then the cosine zeta function is entire. -/
+lemma differentiable_cosZeta_of_ne_zero {a : UnitAddCircle} (ha : a ≠ 0) :
+    Differentiable ℂ (cosZeta a) :=
+  fun _ ↦ differentiableAt_cosZeta a (Or.inr ha)
+
+/-- Formula for `hurwitzZetaEven` as a Dirichlet series in the convergence range. -/
+lemma hasSum_int_hurwitzZetaEven (a : ℝ) {s : ℂ} (hs : 1 < re s) :
+    HasSum (fun n : ℤ ↦ if n + a = 0 then 0 else 1 / (↑|n + a| : ℂ) ^ s / 2)
+    (hurwitzZetaEven a s) := by
+  rw [hurwitzZetaEven, Function.update_noteq (not_lt.mpr zero_le_one <| zero_re ▸ · ▸ hs)]
+  convert (hasSum_int_completedHurwitzZetaEven a hs).div_const (Gammaℝ s) using 2 with n
+  split_ifs with h <;>
+  simp only [zero_div, div_right_comm _ _ (Gammaℝ _),
+    div_self (Gammaℝ_ne_zero_of_re_pos (zero_lt_one.trans hs))]
+
+/-- Formula for `cosZeta` as a Dirichlet series in the convergence range, with sum over `ℤ`. -/
+lemma hasSum_int_cosZeta (a : ℝ) {s : ℂ} (hs : 1 < re s) :
+    HasSum (fun n : ℤ ↦ if n = 0 then 0 else cexp (2 * π * I * a * n) / ↑|n| ^ s / 2)
+    (cosZeta a s) := by
+  rw [cosZeta, Function.update_noteq (not_lt.mpr zero_le_one <| zero_re ▸ · ▸ hs)]
+  convert (hasSum_int_completedCosZeta a hs).div_const (Gammaℝ s) using 2 with n
+  split_ifs
+  · simp only [zero_div]
+  · rw [mul_div_assoc _ (cexp _), div_right_comm _ (2 : ℂ),
+      mul_div_cancel_left _ (Gammaℝ_ne_zero_of_re_pos (zero_lt_one.trans hs))]
+
+/-- Formula for `cosZeta` as a Dirichlet series in the convergence range, with sum over `ℕ`. -/
+lemma hasSum_nat_cosZeta (a : ℝ) {s : ℂ} (hs : 1 < re s) :
+    HasSum (fun n : ℕ ↦ if n = 0 then 0 else Real.cos (2 * π * a * n) / (n : ℂ) ^ s)
+    (cosZeta a s) := by
+  have := (hasSum_int_cosZeta a hs).sum_nat_of_sum_int
+  simp_rw [neg_eq_zero, Nat.cast_eq_zero, if_true, add_zero, abs_neg, Int.cast_neg, Nat.abs_cast,
+    Int.cast_ofNat, mul_neg] at this
+  simp_rw [push_cast, Complex.cos]
+  convert this using 2 with n
+  split_ifs <;>
+  ring_nf
