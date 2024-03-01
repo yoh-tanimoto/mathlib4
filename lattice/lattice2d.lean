@@ -38,39 +38,13 @@ noncomputable def Z2Basis := Basis.restrictScalars ℤ (OrthonormalBasis.toBasis
 noncomputable def Z2 := Submodule.span ℤ (Set.range (R2Basis))
 noncomputable def Z2' := Submodule.span ℤ (Set.range (Z2Basis))
 noncomputable def Z2'' := AddSubgroup.closure (Set.range (R2Basis))
-#check Set.range (Z2Basis)
-#check Z2
-#check Z2
-#check Z2.carrier
-#check Z2'.carrier
-
 
 abbrev R2 : Type := (EuclideanSpace ℝ (Fin 2))
 variable (w : R2) (h : w ∈ Z2)
 
-lemma hw : ∀ (i : (Fin 2)), ((OrthonormalBasis.toBasis R2Basis).repr w) i ∈ Set.range ⇑(algebraMap ℤ ℝ) :=
- by exact (Basis.mem_span_iff_repr_mem ℤ (OrthonormalBasis.toBasis R2Basis) w).mp h
-
-example (s : ℝ) : s ∈ Set.range ⇑(algebraMap ℤ ℝ) → ∃ (n : ℤ), s = n := by
- simp
- intro n hn
- use n
- exact hn.symm
-
-
-
-#print R2
-
-variable (v : (EuclideanSpace ℝ (Fin 2)))
-variable (v2 : (EuclideanSpace ℝ (Fin 2)))
-variable (ι : Fin (FiniteDimensional.finrank ℝ (EuclideanSpace ℝ (Fin 2))))
-
-#check (w : (EuclideanSpace ℝ (Fin 2))) ι
-
 -- -- the ι-th coordinate of the vector v in the basis R2Basis
 -- #check R2Basis.repr v ι
 
-#check DiscreteTopology Z2
 
 -- want to prove that the ι-th coordinate of v is an integer.
 -- the definition of Z2 says that it is a Z module spanned by
@@ -109,11 +83,12 @@ lemma Eq_Int_dist_lt_one (x y : ℝ) (hx : isInteger x) (hy : isInteger y) : |x 
  exact congrArg Int.cast this
 
 lemma IsIntegerLimitSeqInteger (x : ℕ → ℝ) (p : ℝ) (hxint : ∀ (n : ℕ), isInteger (x n)) (hxconv : Filter.Tendsto x Filter.atTop (nhds p))
- : ∃ (m : ℤ), p = m := by
+ : isInteger p := by
  rw [Metric.tendsto_nhds] at hxconv
  simp at hxconv
  obtain ⟨N1, hN1⟩ := hxconv (1/2) one_half_pos
  obtain ⟨m, hm⟩ := hxint N1
+ unfold isInteger
  use m
  apply eq_of_forall_dist_le
  intro ε hε
@@ -141,22 +116,48 @@ lemma IsIntegerLimitSeqInteger (x : ℕ → ℝ) (p : ℝ) (hxint : ∀ (n : ℕ
   _ ≤ ε := by simp
  exact le_of_lt this
 
-
-#check (R2Basis).repr v2 ι
-#check v2 ι
-
-example : v2 ι = (R2Basis).repr v2 ι := by
- exact rfl
-
-
-lemma IsInteger_componentsZ2 (v : (EuclideanSpace ℝ (Fin 2))) : v ∈ Z2 ↔ ∀ (ι : Fin (FiniteDimensional.finrank ℝ (EuclideanSpace ℝ (Fin 2)))),
- isInteger (v ι) := by
+lemma IsInteger_iff_setrangeZR (s : ℝ) : s ∈ Set.range ⇑(algebraMap ℤ ℝ) ↔ ∃ (n : ℤ), s = n := by
  constructor
- intro hv ι
- rw [Basis.mem_submodule_iff (OrthonormalBasis.toBasis R2Basis)] at hv
- obtain ⟨c, hc⟩ := hv
+ · simp
+   intro n hn
+   use n
+   exact hn.symm
+ · intro hs
+   obtain ⟨n, hn⟩ := hs
+   use n
+   exact hn.symm
 
- sorry
+
+
+lemma IsInteger_componentsZ2
+  (v : R2) : v ∈ Z2.carrier ↔ ∀ (i : Fin 2), isInteger ((OrthonormalBasis.toBasis R2Basis).repr v i) := by
+ constructor
+ · intro hv i
+   have : ((OrthonormalBasis.toBasis R2Basis).repr v) i ∈ Set.range ⇑(algebraMap ℤ ℝ) := by
+    exact (Basis.mem_span_iff_repr_mem ℤ (OrthonormalBasis.toBasis R2Basis) v).mp hv i
+   simp
+   unfold isInteger
+   obtain ⟨n, hn⟩ := this
+   use n
+   simp at hn
+   exact hn.symm
+ · intro hv
+   unfold Z2
+   apply (Basis.mem_span_iff_repr_mem ℤ (OrthonormalBasis.toBasis R2Basis) v).mpr
+   intro i
+   rw [IsInteger_iff_setrangeZR _]
+   exact hv i
+
+-- lemma IsInteger_componentsZ2 (v : (EuclideanSpace ℝ (Fin 2))) : v ∈ Z2 ↔ ∀ (ι : Fin (FiniteDimensional.finrank ℝ (EuclideanSpace ℝ (Fin 2)))),
+--  isInteger (v ι) := by
+--  constructor
+--  intro hv ι
+--  rw [Basis.mem_submodule_iff (OrthonormalBasis.toBasis R2Basis)] at hv
+--  obtain ⟨c, hc⟩ := hv
+
+--  sorry
+
+
 --  intro hv ι
 --  have hv2floor: (Zspan.floor (OrthonormalBasis.toBasis R2Basis) v) = v := by
 --   apply Zspan.floor_eq_self_of_mem
@@ -190,10 +191,20 @@ lemma IsFiniteBoundedSetZ2 (M : ℝ) (hM : M > 0) : Set.Finite {x ∈ Z2 | ‖x�
    refine IsSeqClosed.isClosed ?hs
    unfold IsSeqClosed
    intro x p hx
-   rw [Metric.tendsto_nhds]
+--   rw [Metric.tendsto_nhds]
    intro hxtop
-   simp at hxtop
+--   simp at hxtop
+   have hxint : ∀ (n : ℕ), ∀ (i : Fin 2), isInteger ((x n) i) := by
+    intro n i
+    exact (IsInteger_componentsZ2 (x n)).mp (hx n) i
+   rw [IsInteger_componentsZ2 p]
+   intro i
+   have hpint : isInteger (p i) := by
 
+-- we need that if x is convergent to p, then
+-- x i is convergent to p i.
+-- it is unclear whether this is in mathlib
+-- nor whether the norm convergence -> weak convergence is in mathlib
 
   have BallDef : {x : (EuclideanSpace ℝ (Fin 2))| dist x 0 ≤ M} = {x : (EuclideanSpace ℝ (Fin 2))| ‖x‖ ≤ M} := by
    simp
