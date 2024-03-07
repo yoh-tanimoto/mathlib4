@@ -4,11 +4,10 @@ variable {𝕜 : Type*} [NontriviallyNormedField 𝕜]
 variable {E : Type*} [SeminormedAddCommGroup E] [NormedSpace 𝕜 E]
 
 
-open NormedSpace
-
+open NormedSpace Filter Set
 
 theorem norm_topology_le_weak_topology :
-(UniformSpace.toTopologicalSpace : TopologicalSpace E) ≤
+ (UniformSpace.toTopologicalSpace : TopologicalSpace E) ≤
   (WeakSpace.instTopologicalSpace : TopologicalSpace (WeakSpace 𝕜 E)) := by
   apply Continuous.le_induced
   refine continuous_pi ?h.h
@@ -19,3 +18,46 @@ theorem norm_topology_le_weak_topology :
    exact topDualPairing_apply y x
   rw [this]
   exact ContinuousLinearMap.continuous y
+
+
+theorem weak_convergence_of_norm_convergence
+ (x : ℕ → E) (p : E) (hx : Tendsto x atTop (nhds p)) :
+ Tendsto (fun n ↦ (x n : (WeakSpace 𝕜 E))) atTop (nhds (p : (WeakSpace 𝕜 E))) := by
+ sorry
+-- the statement is wrong, as x is always interpreted as E, not WeakSpace.
+
+lemma tendsto_continuous_tendsto {X Y Z : Type*} [TopologicalSpace Y] [TopologicalSpace Z]
+ {F : Filter X} {f : X → Y} {g : Y → Z}
+ (y : Y) (hf : Tendsto f F (nhds y)) (hg : Continuous g) :
+ Tendsto (g ∘ f) F (nhds (g y))  := by
+  exact Tendsto.comp (Continuous.tendsto hg y) hf
+
+theorem functional_convergence_of_norm_convergence
+ (x : ℕ → E) (p : E) (hx : Tendsto x atTop (nhds p)) :
+ ∀ (y : E →L[𝕜] 𝕜), Tendsto (fun n => y (x n)) atTop (nhds (y p)) := by
+ intro y
+ exact Tendsto.comp (Continuous.tendsto (ContinuousLinearMap.continuous y) p) hx
+
+
+variable (x : E)
+variable (z : WeakSpace 𝕜 E)
+variable (n : ℕ)
+#check (x : WeakSpace 𝕜 E)
+#check nhds (x : WeakSpace 𝕜 E)
+#check nhds z
+#check nhds n
+#check nhds (n : ℝ)
+#check (n : ℝ)
+
+variable (y : E →L[𝕜] 𝕜)
+variable (z : WeakDual 𝕜 E)
+#check nhds (y : WeakDual 𝕜 E)
+#check nhds z
+
+
+theorem norm_convergence_of_weak_convergence
+ (x : ℕ → (WeakSpace 𝕜 E)) (p : (WeakSpace 𝕜 E)) (hx : Tendsto x atTop (nhds p)) :
+ Tendsto (fun n ↦ (x n : E)) atTop (nhds (p : E)) := by
+ exact hx
+-- something is wrong. the statement is not interpreted as intended
+-- because this second claim cannot be true
