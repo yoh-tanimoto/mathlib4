@@ -128,14 +128,12 @@ lemma IsInteger_iff_setrangeZR (s : ℝ) : s ∈ Set.range ⇑(algebraMap ℤ �
    exact hn.symm
 
 
-
 lemma IsInteger_componentsZ2
-  (v : R2) : v ∈ Z2.carrier ↔ ∀ (i : Fin 2), isInteger ((OrthonormalBasis.toBasis R2Basis).repr v i) := by
+  (v : R2) : v ∈ Z2.carrier ↔ ∀ (i : Fin 2), isInteger (v i) := by
  constructor
  · intro hv i
-   have : ((OrthonormalBasis.toBasis R2Basis).repr v) i ∈ Set.range ⇑(algebraMap ℤ ℝ) := by
+   have : v i ∈ Set.range ⇑(algebraMap ℤ ℝ) := by
     exact (Basis.mem_span_iff_repr_mem ℤ (OrthonormalBasis.toBasis R2Basis) v).mp hv i
-   simp
    unfold isInteger
    obtain ⟨n, hn⟩ := this
    use n
@@ -188,33 +186,29 @@ lemma IsFiniteBoundedSetZ2 (M : ℝ) (hM : M > 0) : Set.Finite {x ∈ Z2 | ‖x�
   have hBall : {x ∈ Z2 | dist x 0 ≤ M} = Z2.carrier ∩ Metric.closedBall 0 M := by
    exact rfl
   have Z2Closed: IsClosed Z2.carrier := by
-   refine IsSeqClosed.isClosed ?hs
+   apply (isSeqClosed_iff_isClosed).mp
    unfold IsSeqClosed
-   intro x p hx
---   rw [Metric.tendsto_nhds]
-   intro hxtop
---   simp at hxtop
+   intro x p hx hxtop
    have hxint : ∀ (n : ℕ), ∀ (i : Fin 2), isInteger ((x n) i) := by
     intro n i
     exact (IsInteger_componentsZ2 (x n)).mp (hx n) i
    rw [IsInteger_componentsZ2 p]
+   have hpint : ∀ (i : Fin 2), isInteger (p i) := by
+    intro i
+    have hxiconvpi : Filter.Tendsto (fun n => (x n) i) Filter.atTop (nhds (p i)) := by
+     exact Filter.Tendsto.comp (Continuous.tendsto (ContinuousLinearMap.continuous (EuclideanSpace.proj i)) p) hxtop
+    apply IsIntegerLimitSeqInteger
+    · intro n
+      exact hxint n i
+    · exact hxiconvpi
    intro i
-   have hpint : isInteger (p i) := by
-
--- we need that if x is convergent to p, then
--- x i is convergent to p i.
--- it is unclear whether this is in mathlib
--- nor whether the norm convergence -> weak convergence is in mathlib
-
+   exact hpint i
   have BallDef : {x : (EuclideanSpace ℝ (Fin 2))| dist x 0 ≤ M} = {x : (EuclideanSpace ℝ (Fin 2))| ‖x‖ ≤ M} := by
    simp
   have BallClosed : IsClosed {x : (EuclideanSpace ℝ (Fin 2))| ‖x‖ ≤ M} := by
    rw [← BallDef]
    exact Metric.isClosed_ball
   exact IsClosed.inter Z2Closed BallClosed
-  --use IsClosedBall
-  -- unfold IsSeqClosed
-  -- intro x p hx hxp
   refine isBounded_iff_forall_norm_le.mpr ?hb.a
   use M
   simp
