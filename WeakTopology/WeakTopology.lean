@@ -40,14 +40,38 @@ theorem functional_convergence_of_norm_convergence
 
 
 variable (x : E)
-variable (z : WeakSpace 𝕜 E)
-variable (n : ℕ)
 #check (x : WeakSpace 𝕜 E)
-#check nhds (x : WeakSpace 𝕜 E)
-#check nhds z
-#check nhds n
-#check nhds (n : ℝ)
-#check (n : ℝ)
+variable (z : WeakSpace 𝕜 E)
+#check (z : E)
+
+
+def Rdisc := TopCat.discrete.obj ℝ
+lemma isDiscreteRdisc: DiscreteTopology (Rdisc) :=
+  ⟨rfl⟩
+
+variable (a : ℝ)
+#check (a : Rdisc)
+variable (b : Rdisc)
+#check (b : ℝ)
+
+variable (A : Set ℝ)
+#check (A : Set Rdisc)
+variable (B : Set Rdisc)
+#check (B : Set ℝ)
+def C := (A : Set Rdisc)
+#check C A
+#check (C A: Set ℝ)
+#check IsOpen (C A)
+
+#check isDiscreteRdisc
+
+example : IsOpen B := by
+ exact (forall_open_iff_discrete.mpr isDiscreteRdisc) B
+
+example : IsOpen (C A) := by
+ exact (forall_open_iff_discrete.mpr isDiscreteRdisc) (A : Set Rdisc)
+
+
 
 variable (y : E →L[𝕜] 𝕜)
 variable (z : WeakDual 𝕜 E)
