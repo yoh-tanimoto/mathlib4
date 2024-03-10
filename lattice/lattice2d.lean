@@ -1,11 +1,11 @@
 import Mathlib
 
-open Polynomial Classical
+open Polynomial Classical Filter
 
 variable (d : ℕ)
 variable (a : EuclideanSpace ℝ (Fin 2)→ ℝ)
 variable (δ : ℝ) (hδ : δ > 0)
-variable (c_del : ℝ) (hc_del : c_del ≥ 0)
+variable (c_δ : ℝ) (hc_δ : c_δ > 0)
 variable {K : ℝ}
 variable {M₀ : ℝ}
 noncomputable def b (a : EuclideanSpace ℝ (Fin 2)→ ℝ) (δ : ℝ) : (EuclideanSpace ℝ (Fin 2)) → ℝ
@@ -82,7 +82,7 @@ lemma Eq_Int_dist_lt_one (x y : ℝ) (hx : isInteger x) (hy : isInteger y) : |x 
  rw [← IsInteger_EqFloor x hx, ← IsInteger_EqFloor y hy]
  exact congrArg Int.cast this
 
-lemma IsIntegerLimitSeqInteger (x : ℕ → ℝ) (p : ℝ) (hxint : ∀ (n : ℕ), isInteger (x n)) (hxconv : Filter.Tendsto x Filter.atTop (nhds p))
+lemma IsIntegerLimitSeqInteger (x : ℕ → ℝ) (p : ℝ) (hxint : ∀ (n : ℕ), isInteger (x n)) (hxconv : Tendsto x atTop (nhds p))
  : isInteger p := by
  rw [Metric.tendsto_nhds] at hxconv
  simp at hxconv
@@ -180,46 +180,6 @@ lemma IsInteger_componentsZ2
 -- want to prove that a bounded set of Z2 is finite,
 -- by showing that it is discrete and compact.
 -- problem: I don't know how to characterize Z2 in
-lemma IsFiniteBoundedSetZ2 (M : ℝ) (hM : M > 0) : Set.Finite {x ∈ Z2 | ‖x‖ ≤ M} := by
- have hComp : IsCompact {x ∈ Z2 | ‖x‖ ≤ M} := by
-  refine Metric.isCompact_of_isClosed_isBounded ?hc ?hb
-  have hBall : {x ∈ Z2 | dist x 0 ≤ M} = Z2.carrier ∩ Metric.closedBall 0 M := by
-   exact rfl
-  have Z2Closed: IsClosed Z2.carrier := by
-   apply (isSeqClosed_iff_isClosed).mp
-   unfold IsSeqClosed
-   intro x p hx hxtop
-   have hxint : ∀ (n : ℕ), ∀ (i : Fin 2), isInteger ((x n) i) := by
-    intro n i
-    exact (IsInteger_componentsZ2 (x n)).mp (hx n) i
-   rw [IsInteger_componentsZ2 p]
-   have hpint : ∀ (i : Fin 2), isInteger (p i) := by
-    intro i
-    have hxiconvpi : Filter.Tendsto (fun n => (x n) i) Filter.atTop (nhds (p i)) := by
-     exact Filter.Tendsto.comp (Continuous.tendsto (ContinuousLinearMap.continuous (EuclideanSpace.proj i)) p) hxtop
-    apply IsIntegerLimitSeqInteger
-    · intro n
-      exact hxint n i
-    · exact hxiconvpi
-   intro i
-   exact hpint i
-  have BallDef : {x : (EuclideanSpace ℝ (Fin 2))| dist x 0 ≤ M} = {x : (EuclideanSpace ℝ (Fin 2))| ‖x‖ ≤ M} := by
-   simp
-  have BallClosed : IsClosed {x : (EuclideanSpace ℝ (Fin 2))| ‖x‖ ≤ M} := by
-   rw [← BallDef]
-   exact Metric.isClosed_ball
-  exact IsClosed.inter Z2Closed BallClosed
-  refine isBounded_iff_forall_norm_le.mpr ?hb.a
-  use M
-  simp
- refine IsCompact.finite hComp ?hs'
- apply DiscreteTopology.of_subset
- have hDisc : DiscreteTopology Z2 := by
-  exact Zspan.instDiscreteTopologySubtypeMemSubmoduleIntInstSemiringIntToAddCommMonoidToAddCommGroupIntModuleInstMembershipSetLikeSpanRangeCoeBasisRealSemiringToModuleNormedFieldToSeminormedAddCommGroupInstFunLikeInstTopologicalSpaceSubtypeToTopologicalSpaceToUniformSpaceToPseudoMetricSpace
-     (OrthonormalBasis.toBasis R2Basis)
- exact hDisc
- intro x hx
- exact hx.1
 
 namespace MeasureTheory.Measure
 open InnerProductSpace.Core
@@ -244,7 +204,7 @@ noncomputable def convolution_self2 : ℕ → ((EuclideanSpace ℝ (Fin 2) → �
 
 
 variable (P1 : ∀ (x : EuclideanSpace ℝ (Fin 2)), a x > 0)
-variable (P2 : ∀ (x : EuclideanSpace ℝ (Fin 2)), a x ≤ c_del * Real.exp (-2 * (d + δ) * Real.log (1 + ‖x‖)))
+variable (P2 : ∀ (x : EuclideanSpace ℝ (Fin 2)), a x ≤ c_δ * Real.exp (-2 * (d + δ) * Real.log (1 + ‖x‖)))
 variable (P3 : ∀ (x y : EuclideanSpace ℝ (Fin 2)) (hP3 : ‖y‖ ≤ 2 * NNReal.sqrt d),  b a δ (x + y) / b a δ x ≤ K)
 variable (P4 : ∃ (c ε : ℝ) (hP4 : ε > 0), ∀ (n : ℕ) (x : EuclideanSpace ℝ (Fin 2)), (convolution_self2 n) (b a δ) (x) ≤ c^n * (b a δ (ε • x)))
 variable (P5 : ∀ (x x' : EuclideanSpace ℝ (Fin 2)) (hP5 : M₀ ≤ ‖x‖ ∧ ‖x‖ ≤ ‖x'‖), b a δ x ≥ b a δ x')
@@ -252,15 +212,15 @@ variable (P5 : ∀ (x x' : EuclideanSpace ℝ (Fin 2)) (hP5 : M₀ ≤ ‖x‖ �
 
 lemma A2_1 : ∀ (p : ℝ[X]), ∃ (N : ℝ), ∀ (x : ℝ), x ≥ N → |p.eval x| < Real.exp x := by
  intro p
- have h1 : Filter.Tendsto (fun x ↦ eval x p / Real.exp x) Filter.atTop (nhds 0) := by
+ have h1 : Tendsto (fun x ↦ eval x p / Real.exp x) atTop (nhds 0) := by
   exact Polynomial.tendsto_div_exp_atTop p
  rw [tendsto_nhds] at h1
- have h2 : (fun x ↦ eval x p / Real.exp x) ⁻¹' (Metric.ball (0 : ℝ) 1) ∈ Filter.atTop := by
+ have h2 : (fun x ↦ eval x p / Real.exp x) ⁻¹' (Metric.ball (0 : ℝ) 1) ∈ atTop := by
   apply h1
   apply Metric.isOpen_ball
   apply Metric.mem_ball_self
   norm_num
- rw [Filter.mem_atTop_sets] at h2
+ rw [mem_atTop_sets] at h2
  obtain ⟨N, hN⟩ := h2
  use N
  intro x
@@ -332,41 +292,107 @@ lemma IsFiniteBoundedSetIntegers : ∀ (M : ℝ) (hM : 1 ≤ M), Set.Finite {n :
  rw [← Int.floor_pos] at hM
  exact neg_lt_self hM
 
-lemma A2_2 : ∀ (M : ℝ) (hM : 1 ≤ M), Set.Finite {x : EuclideanSpace ℝ (Fin 2)| x ∈ Z2 ∧ ‖x‖ ≤ M} := by
- intro M hM
- have hxleMi : {x : EuclideanSpace ℝ (Fin 2)| x ∈ Z2 ∧ ‖x‖ ≤ M} ⊆ {x : EuclideanSpace ℝ (Fin 2)| x ∈ Z2 ∧ ∀ (ι : (Fin 2)), |x ι| ≤ M} := by
--- this is a subset of all x with |x_i| < M
+-- lemma A2_2 : ∀ (M : ℝ) (hM : 1 ≤ M), Set.Finite {x : EuclideanSpace ℝ (Fin 2)| x ∈ Z2 ∧ ‖x‖ ≤ M} := by
+--  intro M hM
+--  have hxleMi : {x : EuclideanSpace ℝ (Fin 2)| x ∈ Z2 ∧ ‖x‖ ≤ M} ⊆ {x : EuclideanSpace ℝ (Fin 2)| x ∈ Z2 ∧ ∀ (ι : (Fin 2)), |x ι| ≤ M} := by
+-- -- this is a subset of all x with |x_i| < M
+--   simp
+--   intro x hxZ2 hx_M
+--   constructor
+--   exact hxZ2
+--   intro ι
+--   have : |x ι| ≤ ‖x‖ := by
+--    rw [EuclideanSpace.norm_eq]
+--    refine Real.le_sqrt_of_sq_le ?h
+--    rw [← Real.norm_eq_abs (x ι)]
+--    have hnorm : ∀ (ι : (Fin 2)) (hiota : ι ∈ Finset.univ), 0 ≤ ‖x ι‖ := by
+--     exact fun ι hiota => norm_nonneg (x ι)
+--    have hnorm2 : ∀ (ι : (Fin 2)) (hiota : ι ∈ Finset.univ), 0 ≤ ‖x ι‖^2 := by
+--     exact fun ι hiota => sq_nonneg ‖x ι‖
+--    exact Finset.single_le_sum hnorm2 (Finset.mem_univ ι)
+--   exact le_trans this hx_M
+
+--  have hleMifin : Set.Finite {x : EuclideanSpace ℝ (Fin 2)| x ∈ Z2 ∧ ∀ (ι : (Fin 2)), |x ι| ≤ M} := by
+-- -- the latter is a finite set : M^d
+--   simp
+
+--  exact Set.Finite.subset hleMifin hxleMi
+
+
+-- Bounded sets in Z2 are finite
+lemma A2_2 (M : ℝ) (hM : M > 0) : Set.Finite {x ∈ Z2 | ‖x‖ ≤ M} := by
+ have hComp : IsCompact {x ∈ Z2 | ‖x‖ ≤ M} := by
+  refine Metric.isCompact_of_isClosed_isBounded ?hc ?hb
+  have hBall : {x ∈ Z2 | dist x 0 ≤ M} = Z2.carrier ∩ Metric.closedBall 0 M := by
+   exact rfl
+  have Z2Closed: IsClosed Z2.carrier := by
+   apply (isSeqClosed_iff_isClosed).mp
+   unfold IsSeqClosed
+   intro x p hx hxtop
+   have hxint : ∀ (n : ℕ), ∀ (i : Fin 2), isInteger ((x n) i) := by
+    intro n i
+    exact (IsInteger_componentsZ2 (x n)).mp (hx n) i
+   rw [IsInteger_componentsZ2 p]
+   have hpint : ∀ (i : Fin 2), isInteger (p i) := by
+    intro i
+    have hxiconvpi : Tendsto (fun n => (x n) i) atTop (nhds (p i)) := by
+     exact Tendsto.comp (Continuous.tendsto (ContinuousLinearMap.continuous (EuclideanSpace.proj i)) p) hxtop
+    apply IsIntegerLimitSeqInteger
+    · intro n
+      exact hxint n i
+    · exact hxiconvpi
+   intro i
+   exact hpint i
+  have BallDef : {x : (EuclideanSpace ℝ (Fin 2))| dist x 0 ≤ M} = {x : (EuclideanSpace ℝ (Fin 2))| ‖x‖ ≤ M} := by
+   simp
+  have BallClosed : IsClosed {x : (EuclideanSpace ℝ (Fin 2))| ‖x‖ ≤ M} := by
+   rw [← BallDef]
+   exact Metric.isClosed_ball
+  exact IsClosed.inter Z2Closed BallClosed
+  refine isBounded_iff_forall_norm_le.mpr ?hb.a
+  use M
   simp
-  intro x hxZ2 hx_M
-  constructor
-  exact hxZ2
-  intro ι
-  have : |x ι| ≤ ‖x‖ := by
-   rw [EuclideanSpace.norm_eq]
-   refine Real.le_sqrt_of_sq_le ?h
-   rw [← Real.norm_eq_abs (x ι)]
-   have hnorm : ∀ (ι : (Fin 2)) (hiota : ι ∈ Finset.univ), 0 ≤ ‖x ι‖ := by
-    exact fun ι hiota => norm_nonneg (x ι)
-   have hnorm2 : ∀ (ι : (Fin 2)) (hiota : ι ∈ Finset.univ), 0 ≤ ‖x ι‖^2 := by
-    exact fun ι hiota => sq_nonneg ‖x ι‖
-   exact Finset.single_le_sum hnorm2 (Finset.mem_univ ι)
-  exact le_trans this hx_M
+ refine IsCompact.finite hComp ?hs'
+ apply DiscreteTopology.of_subset
+ have hDisc : DiscreteTopology Z2 := by
+  exact Zspan.instDiscreteTopologySubtypeMemSubmoduleIntInstSemiringIntToAddCommMonoidToAddCommGroupIntModuleInstMembershipSetLikeSpanRangeCoeBasisRealSemiringToModuleNormedFieldToSeminormedAddCommGroupInstFunLikeInstTopologicalSpaceSubtypeToTopologicalSpaceToUniformSpaceToPseudoMetricSpace
+     (OrthonormalBasis.toBasis R2Basis)
+ exact hDisc
+ intro x hx
+ exact hx.1
 
- have hleMifin : Set.Finite {x : EuclideanSpace ℝ (Fin 2)| x ∈ Z2 ∧ ∀ (ι : (Fin 2)), |x ι| ≤ M} := by
--- the latter is a finite set : M^d
-  simp
-
-  sorry
- exact Set.Finite.subset hleMifin hxleMi
-
+lemma A2_3 : ∀ (t : ℝ), 0 < t→
+∃ (S : ℝ), ∀ (s : ℝ), S < s →
+c_δ * Real.exp (- (d + δ) * Real.log (1 + s)) < t:= by
+ intro t ht
+ have A2_3_1: Tendsto (fun (s : ℝ) => 1 + s) atTop atTop := by
+  exact Filter.tendsto_atTop_add_const_left _ _ Filter.tendsto_id
+ have A2_3_2: Tendsto (fun (s : ℝ) => Real.log (1 + s)) atTop atTop := by
+  exact Tendsto.comp (Real.tendsto_log_atTop) A2_3_1
+ have A2_3_3: Tendsto (fun (s : ℝ) => - (d + δ) * Real.log (1 + s)) atTop atBot := by
+  apply Filter.Tendsto.neg_const_mul_atTop _ A2_3_2
+  rw [Left.neg_neg_iff]
+  exact add_pos_of_nonneg_of_pos (Nat.cast_nonneg d) hδ
+ have A2_3_4: Tendsto (fun (s : ℝ) => Real.exp (- (d + δ) * Real.log (1 + s))) atTop (nhds 0) := by
+  apply Tendsto.comp (Real.tendsto_exp_atBot) A2_3_3
+ rw [Metric.tendsto_nhds] at A2_3_4
+ obtain ⟨V, hV⟩ := Filter.Eventually.exists_mem (A2_3_4 (t / c_δ) (div_pos ht hc_δ))
+ simp at hV
+ obtain ⟨S, hS⟩ := hV.1
+ use S
+ intro s hs
+ rw [← (lt_div_iff' hc_δ)]
+ simp
+ exact hV.2 s (hS s (le_of_lt hs))
 
 lemma A2 : ∃ (M' : ℝ), ∀ (x : EuclideanSpace ℝ (Fin 2)), x ∈ Z2 → (b a δ (M' • x) ≤ b a δ x) := by
+ let M' = max 1
  sorry
 -- use by_cases
--- for x large, this is ok by P5. use M₀
+-- for x large, this is ok by P5. use 1
 -- for x small, there are finitely many such x.
 -- for each of such x, there is large enough Mx' by P2 P3.
--- for x = 0, trivial. use M₀
+-- for x = 0, trivial. use 1
 
 --  have hx_nonneg : ‖x‖ ≥ 0 := by exact norm_nonneg x
 --  by_cases hx_M : ‖x‖ ≥ M₀
