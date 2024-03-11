@@ -181,7 +181,7 @@ lemma IsInteger_componentsZ2
 -- by showing that it is discrete and compact.
 -- problem: I don't know how to characterize Z2 in
 
-namespace MeasureTheory.Measure
+open MeasureTheory.Measure
 open InnerProductSpace.Core
 
 -- -- the counting measure on the lattice Z^d
@@ -189,7 +189,7 @@ open InnerProductSpace.Core
 --  sum (fun x ↦ if x ∈ Z2 then dirac x else 0)
 
 -- the counting measure on the lattice Z^2
-noncomputable def countZ2 : Measure (EuclideanSpace ℝ (Fin 2)) :=
+noncomputable def countZ2 : MeasureTheory.Measure (EuclideanSpace ℝ (Fin 2)) :=
  sum (fun x ↦ if x ∈ Z2 then dirac x else 0)
 
 -- -- n-times convolution with itself
@@ -204,8 +204,8 @@ noncomputable def convolution_self2 : ℕ → ((EuclideanSpace ℝ (Fin 2) → �
 
 
 variable (P1 : ∀ (x : EuclideanSpace ℝ (Fin 2)), a x > 0)
-variable (P2 : ∀ (x : EuclideanSpace ℝ (Fin 2)), a x ≤ c_δ * Real.exp (-2 * (d + δ) * Real.log (1 + ‖x‖)))
-variable (P3 : ∀ (x y : EuclideanSpace ℝ (Fin 2)) (hP3 : ‖y‖ ≤ 2 * NNReal.sqrt d),  b a δ (x + y) / b a δ x ≤ K)
+variable (P2 : ∀ (x : EuclideanSpace ℝ (Fin 2)), a x ≤ c_δ * Real.exp (-2 * (2 + δ) * Real.log (1 + ‖x‖)))
+variable (P3 : ∀ (x y : EuclideanSpace ℝ (Fin 2)) (hP3 : ‖y‖ ≤ 2 * NNReal.sqrt 2),  b a δ (x + y) / b a δ x ≤ K)
 variable (P4 : ∃ (c ε : ℝ) (hP4 : ε > 0), ∀ (n : ℕ) (x : EuclideanSpace ℝ (Fin 2)), (convolution_self2 n) (b a δ) (x) ≤ c^n * (b a δ (ε • x)))
 variable (P5 : ∀ (x x' : EuclideanSpace ℝ (Fin 2)) (hP5 : M₀ ≤ ‖x‖ ∧ ‖x‖ ≤ ‖x'‖), b a δ x ≥ b a δ x')
 
@@ -363,17 +363,17 @@ lemma A2_2 (M : ℝ) (hM : M > 0) : Set.Finite {x ∈ Z2 | ‖x‖ ≤ M} := by
 
 lemma A2_3 : ∀ (t : ℝ), 0 < t→
 ∃ (S : ℝ), ∀ (s : ℝ), S < s →
-c_δ * Real.exp (- (d + δ) * Real.log (1 + s)) < t:= by
+c_δ * Real.exp (- (2 + δ) * Real.log (1 + s)) < t:= by
  intro t ht
  have A2_3_1: Tendsto (fun (s : ℝ) => 1 + s) atTop atTop := by
   exact Filter.tendsto_atTop_add_const_left _ _ Filter.tendsto_id
  have A2_3_2: Tendsto (fun (s : ℝ) => Real.log (1 + s)) atTop atTop := by
   exact Tendsto.comp (Real.tendsto_log_atTop) A2_3_1
- have A2_3_3: Tendsto (fun (s : ℝ) => - (d + δ) * Real.log (1 + s)) atTop atBot := by
+ have A2_3_3: Tendsto (fun (s : ℝ) => - (2 + δ) * Real.log (1 + s)) atTop atBot := by
   apply Filter.Tendsto.neg_const_mul_atTop _ A2_3_2
   rw [Left.neg_neg_iff]
-  exact add_pos_of_nonneg_of_pos (Nat.cast_nonneg d) hδ
- have A2_3_4: Tendsto (fun (s : ℝ) => Real.exp (- (d + δ) * Real.log (1 + s))) atTop (nhds 0) := by
+  exact add_pos_of_nonneg_of_pos (Nat.cast_nonneg 2) hδ
+ have A2_3_4: Tendsto (fun (s : ℝ) => Real.exp (- (2 + δ) * Real.log (1 + s))) atTop (nhds 0) := by
   apply Tendsto.comp (Real.tendsto_exp_atBot) A2_3_3
  rw [Metric.tendsto_nhds] at A2_3_4
  obtain ⟨V, hV⟩ := Filter.Eventually.exists_mem (A2_3_4 (t / c_δ) (div_pos ht hc_δ))
@@ -385,9 +385,53 @@ c_δ * Real.exp (- (d + δ) * Real.log (1 + s)) < t:= by
  simp
  exact hV.2 s (hS s (le_of_lt hs))
 
-lemma A2 : ∃ (M' : ℝ), ∀ (x : EuclideanSpace ℝ (Fin 2)), x ∈ Z2 → (b a δ (M' • x) ≤ b a δ x) := by
- let M' = max 1
+lemma A2_4 (x : R2) : 0 < b a δ x := by
+ unfold b
+ exact mul_pos (Real.exp_pos _) (P1 x)
+
+
+#check A2_3
+
+lemma A2 : ∃ (M' : ℝ), ∀ (x : R2), x ∈ Z2 → (b a δ (M' • x) ≤ b a δ x) := by
+ have hb1 (x : R2) : (2 + δ) * Real.log (1 + ‖x‖) + (-2 * (2 + δ) * Real.log (1 + ‖x‖)) = (- (2 + δ) * Real.log (1 + ‖x‖)):= by ring
+ have hb2 (x : R2) : b a δ x ≤ c_δ * Real.exp (- (2 + δ) * Real.log (1 + ‖x‖)) := by
+  unfold b
+  calc Real.exp ((2 + δ) * Real.log (1 + ‖x‖)) * a x ≤ Real.exp ((2 + δ) * Real.log (1 + ‖x‖)) * (c_δ * Real.exp (-2 * (2 + δ) * Real.log (1 + ‖x‖)))
+   := by exact (mul_le_mul_left (Real.exp_pos ((2 + δ) * Real.log (1 + ‖x‖)))).mpr (P2 x)
+  _ = c_δ * (Real.exp ((2 + δ) * Real.log (1 + ‖x‖)) * Real.exp (-2 * (2 + δ) * Real.log (1 + ‖x‖)))
+   := by ring
+  _ = c_δ * Real.exp ((2 + δ) * Real.log (1 + ‖x‖) + (-2 * (2 + δ) * Real.log (1 + ‖x‖))) := by rw [(Real.exp_add ((2 + δ) * Real.log (1 + ‖x‖)) (-2 * (2 + δ) * Real.log (1 + ‖x‖))).symm]
+  _ = c_δ * Real.exp (-(2 + δ) * Real.log (1 + ‖x‖))
+   := by rw [hb1]
+ have (x : R2) : x ∈ Z2 ∧ x ≠ 0 → ∃ (M1 : ℝ), b a δ (M1 • x) ≤ b a δ x := by
+  intro hx
+  have ⟨S, hS⟩ := A2_3 δ hδ c_δ hc_δ (b a δ x) (A2_4 a δ P1 x)
+  let s := (S+1) / ‖x‖
+  have hs : s = (S+1) / ‖x‖ := by rfl
+  use s
+  have hb3 : b a δ (s • x) ≤ c_δ * Real.exp (-(2 + δ) * Real.log (1 + ‖s • x‖)) := by
+   exact hb2 (s • x)
+  rw [norm_smul, norm_div, norm_norm, (div_mul_cancel ‖S + 1‖)] at hb3
+  have hb4 : S < ‖S + 1‖ := by
+   by_cases hS' : 0 ≤ S
+   · simp
+     rw [abs_eq_self.mpr]
+     exact lt_add_one S
+     linarith
+   · push_neg at hS'
+     exact lt_of_lt_of_le hS' (norm_nonneg _)
+  have : c_δ * Real.exp (-(2 + δ) * Real.log (1 + ‖S + 1‖)) < b a δ x := by
+   exact hS ‖S + 1‖ hb4
+  linarith
+  have : 0 < ‖x‖ := by exact norm_pos_iff.mpr hx.2
+  linarith
  sorry
+
+example (S : Set ℝ) [Nonempty S] (hS : Finite S) (f : S → ℝ) : ∃ x₀, ∀ (x : S), f x ≤ f x₀ := by
+ exact Finite.exists_max f
+
+-- let M' = max 1
+
 -- use by_cases
 -- for x large, this is ok by P5. use 1
 -- for x small, there are finitely many such x.
