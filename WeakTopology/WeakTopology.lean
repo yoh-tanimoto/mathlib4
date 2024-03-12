@@ -43,7 +43,9 @@ variable (x : E)
 #check (x : WeakSpace 𝕜 E)
 variable (z : WeakSpace 𝕜 E)
 #check (z : E)
-
+#check (id z : WeakSpace 𝕜 E)   -- id p : WeakSpace 𝕜 E -- :)
+-- thanks to Kalle Kytölä
+#check nhds (id z : WeakSpace 𝕜 E)
 
 def Rdisc := TopCat.discrete.obj ℝ
 lemma isDiscreteRdisc: DiscreteTopology (Rdisc) :=
@@ -53,22 +55,23 @@ variable (a : ℝ)
 #check (a : Rdisc)
 variable (b : Rdisc)
 #check (b : ℝ)
+#check (id a : Rdisc)
+#check (id b : ℝ)
+
 
 variable (A : Set ℝ)
 #check (A : Set Rdisc)
 variable (B : Set Rdisc)
 #check (B : Set ℝ)
-def C := (A : Set Rdisc)
-#check C A
-#check (C A: Set ℝ)
-#check IsOpen (C A)
+#check (id B : Set ℝ)
+#check (id A : Set Rdisc)
 
 #check isDiscreteRdisc
 
 example : IsOpen B := by
  exact (forall_open_iff_discrete.mpr isDiscreteRdisc) B
 
-example : IsOpen (C A) := by
+example : IsOpen (id A : Set Rdisc) := by
  exact (forall_open_iff_discrete.mpr isDiscreteRdisc) (A : Set Rdisc)
 
 
