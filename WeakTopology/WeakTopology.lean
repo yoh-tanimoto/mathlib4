@@ -22,9 +22,13 @@ theorem norm_topology_le_weak_topology :
 
 theorem weak_convergence_of_norm_convergence
  (x : ℕ → E) (p : E) (hx : Tendsto x atTop (nhds p)) :
- Tendsto (fun n ↦ (x n : (WeakSpace 𝕜 E))) atTop (nhds (p : (WeakSpace 𝕜 E))) := by
- sorry
--- the statement is wrong, as x is always interpreted as E, not WeakSpace.
+ Tendsto (fun n ↦ (id (x n) : (WeakSpace 𝕜 E))) atTop (nhds (p : (WeakSpace 𝕜 E))) := by
+ refine tendsto_atTop_nhds.mpr ?_
+ intro U hpU hU
+ have hUnorm : IsOpen (id U : Set E) := by
+  exact norm_topology_le_weak_topology (id U : Set E) hU
+ rw [tendsto_atTop_nhds] at hx
+ exact hx (id U : Set E) hpU hUnorm
 
 lemma tendsto_continuous_tendsto {X Y Z : Type*} [TopologicalSpace Y] [TopologicalSpace Z]
  {F : Filter X} {f : X → Y} {g : Y → Z}
@@ -46,6 +50,10 @@ variable (z : WeakSpace 𝕜 E)
 #check (id z : WeakSpace 𝕜 E)   -- id p : WeakSpace 𝕜 E -- :)
 -- thanks to Kalle Kytölä
 #check nhds (id z : WeakSpace 𝕜 E)
+#check IsOpen[UniformSpace.toTopologicalSpace : TopologicalSpace E]
+-- how can one use the notation IsOpen[s] in the definition of
+-- ≤ between TopologicalSpace?
+
 
 def Rdisc := TopCat.discrete.obj ℝ
 lemma isDiscreteRdisc: DiscreteTopology (Rdisc) :=
@@ -63,7 +71,6 @@ variable (A : Set ℝ)
 #check (A : Set Rdisc)
 variable (B : Set Rdisc)
 #check (B : Set ℝ)
-#check (id B : Set ℝ)
 #check (id A : Set Rdisc)
 
 #check isDiscreteRdisc
@@ -82,9 +89,16 @@ variable (z : WeakDual 𝕜 E)
 #check nhds z
 
 
-theorem norm_convergence_of_weak_convergence
- (x : ℕ → (WeakSpace 𝕜 E)) (p : (WeakSpace 𝕜 E)) (hx : Tendsto x atTop (nhds p)) :
- Tendsto (fun n ↦ (x n : E)) atTop (nhds (p : E)) := by
- exact hx
--- something is wrong. the statement is not interpreted as intended
--- because this second claim cannot be true
+theorem disc_topology_le_dist_topology (U : Set ℝ) : IsOpen U → IsOpen (id U : Set Rdisc):= by
+ exact fun a => trivial
+
+theorem dist_convergence_of_disc_convergence
+ (x : ℕ → Rdisc) (p : ℝ) (hx : Tendsto x atTop (nhds p)) :
+ Tendsto (fun n ↦ (id (x n) : ℝ)) atTop (nhds (p : ℝ)) := by
+ refine tendsto_atTop_nhds.mpr ?_
+ intro U hpU hU
+ have hU' : IsOpen (id U : Set ℝ) := by exact hU
+ have hUnorm : IsOpen (id U : Set Rdisc) := by
+  exact TopologicalSpace.le_def.mp disc_topology_le_dist_topology (id U) hU'
+ rw [tendsto_atTop_nhds] at hx
+ exact hx U hpU hUnorm
