@@ -7,7 +7,7 @@ variable (a : EuclideanSpace ℝ (Fin 2)→ ℝ)
 variable (δ : ℝ) (hδ : δ > 0)
 variable (c_δ : ℝ) (hc_δ : c_δ > 0)
 variable {K : ℝ}
-variable {M₀ : ℝ}
+variable (M₀ : ℝ) (hM₀ : M₀ > 1)
 noncomputable def b (a : EuclideanSpace ℝ (Fin 2)→ ℝ) (δ : ℝ) : (EuclideanSpace ℝ (Fin 2)) → ℝ
  := fun x ↦ Real.exp ((2 + δ) * Real.log (1 + ‖x‖)) * a x
 
@@ -292,6 +292,13 @@ lemma IsFiniteBoundedSetIntegers : ∀ (M : ℝ) (hM : 1 ≤ M), Set.Finite {n :
  rw [← Int.floor_pos] at hM
  exact neg_lt_self hM
 
+lemma single_le_sum_of_nonneg {ι : Type u_1}
+{N : Type u_5}[OrderedAddCommMonoid N] {f : ι → N} {t : Finset ι}
+(hf : ∀ (i : t), 0 ≤ f i) :
+  ∀ (i : t), f i ≤ Finset.sum t fun (i : ι) => f i := by
+ sorry
+
+
 -- lemma A2_2 : ∀ (M : ℝ) (hM : 1 ≤ M), Set.Finite {x : EuclideanSpace ℝ (Fin 2)| x ∈ Z2 ∧ ‖x‖ ≤ M} := by
 --  intro M hM
 --  have hxleMi : {x : EuclideanSpace ℝ (Fin 2)| x ∈ Z2 ∧ ‖x‖ ≤ M} ⊆ {x : EuclideanSpace ℝ (Fin 2)| x ∈ Z2 ∧ ∀ (ι : (Fin 2)), |x ι| ≤ M} := by
@@ -320,6 +327,7 @@ lemma IsFiniteBoundedSetIntegers : ∀ (M : ℝ) (hM : 1 ≤ M), Set.Finite {n :
 
 
 -- Bounded sets in Z2 are finite
+
 lemma A2_2 (M : ℝ) (hM : M > 0) : Set.Finite {x ∈ Z2 | ‖x‖ ≤ M} := by
  have hComp : IsCompact {x ∈ Z2 | ‖x‖ ≤ M} := by
   refine Metric.isCompact_of_isClosed_isBounded ?hc ?hb
@@ -361,8 +369,8 @@ lemma A2_2 (M : ℝ) (hM : M > 0) : Set.Finite {x ∈ Z2 | ‖x‖ ≤ M} := by
  intro x hx
  exact hx.1
 
-lemma A2_3 : ∀ (t : ℝ), 0 < t→
-∃ (S : ℝ), ∀ (s : ℝ), S < s →
+lemma A2_3 : ∀ (t : ℝ), 0 < t →
+∃ (S : ℝ), M₀ ≤ S ∧ ∀ (s : ℝ), S < s →
 c_δ * Real.exp (- (2 + δ) * Real.log (1 + s)) < t:= by
  intro t ht
  have A2_3_1: Tendsto (fun (s : ℝ) => 1 + s) atTop atTop := by
@@ -378,19 +386,44 @@ c_δ * Real.exp (- (2 + δ) * Real.log (1 + s)) < t:= by
  rw [Metric.tendsto_nhds] at A2_3_4
  obtain ⟨V, hV⟩ := Filter.Eventually.exists_mem (A2_3_4 (t / c_δ) (div_pos ht hc_δ))
  simp at hV
- obtain ⟨S, hS⟩ := hV.1
+ obtain ⟨S', hS⟩ := hV.1
+ let S := max M₀ S'
  use S
+ constructor
+ · exact le_max_left _ _
  intro s hs
  rw [← (lt_div_iff' hc_δ)]
  simp
- exact hV.2 s (hS s (le_of_lt hs))
-
+ apply hV.2 s (hS s _)
+ apply le_of_lt (lt_of_le_of_lt (le_max_right _ _) hs)
 lemma A2_4 (x : R2) : 0 < b a δ x := by
  unfold b
  exact mul_pos (Real.exp_pos _) (P1 x)
 
-
-#check A2_3
+lemma A2_5 (x : R2) : x ∈ Z2 ∧ x ≠ 0 → 1 ≤ ‖x‖ := by
+ intro hx
+ rw [← norm_ne_zero_iff, ne_eq _ _] at hx
+ have : ∃ (i : Fin 2), x i ≠ 0 := by
+  by_contra! hxn
+  have hxi0 : (fun i => ‖x i‖ ^ 2) = 0 := by
+   ext i
+   simp
+   exact hxn i
+  have : ‖x‖ = 0 := by
+   rw [EuclideanSpace.norm_eq x, hxi0]
+   simp
+  exact hx.2 this
+ obtain ⟨i ,hi⟩ := this
+ have hxiz : isInteger (x i) := by
+  apply (IsInteger_componentsZ2 x).mp
+  exact hx.1
+ obtain ⟨n, hn⟩ := hxiz
+ have hqnz : 1 ≤ |n| := by
+  by_contra! hnle
+  rw [Int.abs_lt_one_iff] at hnle
+  rw [hnle, Int.cast_zero] at hn
+  contradiction
+ sorry
 
 lemma A2 : ∃ (M' : ℝ), ∀ (x : R2), x ∈ Z2 → (b a δ (M' • x) ≤ b a δ x) := by
  have hb1 (x : R2) : (2 + δ) * Real.log (1 + ‖x‖) + (-2 * (2 + δ) * Real.log (1 + ‖x‖)) = (- (2 + δ) * Real.log (1 + ‖x‖)):= by ring
@@ -403,16 +436,15 @@ lemma A2 : ∃ (M' : ℝ), ∀ (x : R2), x ∈ Z2 → (b a δ (M' • x) ≤ b a
   _ = c_δ * Real.exp ((2 + δ) * Real.log (1 + ‖x‖) + (-2 * (2 + δ) * Real.log (1 + ‖x‖))) := by rw [(Real.exp_add ((2 + δ) * Real.log (1 + ‖x‖)) (-2 * (2 + δ) * Real.log (1 + ‖x‖))).symm]
   _ = c_δ * Real.exp (-(2 + δ) * Real.log (1 + ‖x‖))
    := by rw [hb1]
- have (x : R2) : x ∈ Z2 ∧ x ≠ 0 → ∃ (M1 : ℝ), b a δ (M1 • x) ≤ b a δ x := by
+ have hb3 (x : R2) : x ∈ Z2 ∧ x ≠ 0 → ∃ (M1 : ℝ),  b a δ (M1 • x) ≤ b a δ x := by
   intro hx
-  have ⟨S, hS⟩ := A2_3 δ hδ c_δ hc_δ (b a δ x) (A2_4 a δ P1 x)
-  let s := (S+1) / ‖x‖
-  have hs : s = (S+1) / ‖x‖ := by rfl
+  obtain ⟨S, hS⟩ := A2_3 δ hδ c_δ hc_δ M₀ (b a δ x) (A2_4 a δ P1 x)
+  let s := (S + 1) / ‖x‖
+  have hs : s = (S + 1) / ‖x‖ := by rfl
   use s
-  have hb3 : b a δ (s • x) ≤ c_δ * Real.exp (-(2 + δ) * Real.log (1 + ‖s • x‖)) := by
+  have hb4 : b a δ (s • x) ≤ c_δ * Real.exp (-(2 + δ) * Real.log (1 + ‖s • x‖)) := by
    exact hb2 (s • x)
-  rw [norm_smul, norm_div, norm_norm, (div_mul_cancel ‖S + 1‖)] at hb3
-  have hb4 : S < ‖S + 1‖ := by
+  have hb5 : S < ‖S + 1‖ := by
    by_cases hS' : 0 ≤ S
    · simp
      rw [abs_eq_self.mpr]
@@ -420,17 +452,73 @@ lemma A2 : ∃ (M' : ℝ), ∀ (x : R2), x ∈ Z2 → (b a δ (M' • x) ≤ b a
      linarith
    · push_neg at hS'
      exact lt_of_lt_of_le hS' (norm_nonneg _)
-  have : c_δ * Real.exp (-(2 + δ) * Real.log (1 + ‖S + 1‖)) < b a δ x := by
-   exact hS ‖S + 1‖ hb4
+  have bh6 : c_δ * Real.exp (-(2 + δ) * Real.log (1 + ‖S + 1‖)) < b a δ x := by
+   exact hS.2 ‖S + 1‖ hb5
+  have hb7 : b a δ (s • x) ≤ c_δ * Real.exp (-(2 + δ) * Real.log (1 + ‖S + 1‖)) := by
+   rw [norm_smul, norm_div, norm_norm, (div_mul_cancel ‖S + 1‖)] at hb4
+   linarith
+   have : 0 < ‖x‖ := by exact norm_pos_iff.mpr hx.2
+   linarith
   linarith
-  have : 0 < ‖x‖ := by exact norm_pos_iff.mpr hx.2
+ have hb8 : ∀ (x : R2), x ∈ Z2 ∧ x ≠ 0 → ∃ (M2 : ℝ), M2 > M₀ ∧ b a δ (M2 • x) ≤ b a δ x := by
+  intro x hx
+  obtain ⟨M1, hM1⟩ := hb3 x hx
+  sorry
+ let S := {x : R2 | x ∈ Z2 ∧ ‖x‖ ≤ M₀ ∧ x ≠ 0}
+ let S' := {x : R2 | x ∈ Z2 ∧ ‖x‖ ≤ M₀}
+ have hSS' : S ⊆ S' := by
+  intro x hx
+  simp
+  exact And.intro hx.1 hx.2.1
+ let hS' := A2_2 M₀ (lt_trans zero_lt_one hM₀)
+ let hS := Set.Finite.subset hS' hSS'
+ have hSne : Set.Nonempty S := by
+  use EuclideanSpace.single 0 1
+  constructor
+  · apply (IsInteger_componentsZ2 (EuclideanSpace.single 0 1)).mpr
+    intro i
+    by_cases hi : i = 0
+    · simp
+      rw [hi]
+      simp
+      use 1
+      simp
+    · simp
+      push_neg at hi
+      have : (if i = 0 then (1 : ℝ) else 0) = 0 := by
+       simp
+       push_neg
+       exact hi
+      rw [this]
+      use 0
+      simp
+  rw [← norm_ne_zero_iff]
+  rw [EuclideanSpace.norm_single]
+  simp
   linarith
- sorry
+ obtain ⟨x₀, hx₀⟩ := Set.Finite.exists_maximal_wrt
+  (fun (x : S) => Classical.choose (hb3 x (And.intro (Set.mem_setOf.mp (Subtype.mem x)).left (Set.mem_setOf.mp (Subtype.mem x)).2.2))) _ _ _
+ let M' := Classical.choose (hb3 x₀ (And.intro (Set.mem_setOf.mp (Subtype.mem x₀)).left (Set.mem_setOf.mp (Subtype.mem x₀)).2.2))
+ use M'
+ intro x hx
+ by_cases hxnorm : ‖x‖ > M₀
+ · have : 1 < M' := by
+    exact lt_of_lt_of_le hM₀
+    -- need to take M' > M₀, adding conditions to hb3
+   apply P5 x (M' • x)
+   constructor
+   · exact le_of_lt hxnorm
+   · rw [norm_smul, Real.norm_eq_abs, (abs_of_pos (lt_trans zero_lt_one this))]
+     nth_rw 1 [← mul_one ‖x‖, mul_comm _ 1]
+     exact mul_le_mul (le_of_lt this) (le_refl _) (norm_nonneg x) (le_of_lt (lt_trans zero_lt_one this))
+ push_neg at hxnorm
+ by_cases hxzero : ‖x‖ = 0
+ · rw [norm_eq_zero] at hxzero
+   rw [hxzero, smul_zero]
+ · push_neg at hxzero
+   rw [norm_ne_zero_iff] at hxzero
+   sorry
 
-example (S : Set ℝ) [Nonempty S] (hS : Finite S) (f : S → ℝ) : ∃ x₀, ∀ (x : S), f x ≤ f x₀ := by
- exact Finite.exists_max f
-
--- let M' = max 1
 
 -- use by_cases
 -- for x large, this is ok by P5. use 1
