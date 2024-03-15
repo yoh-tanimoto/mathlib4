@@ -42,8 +42,6 @@ noncomputable def Z2'' := AddSubgroup.closure (Set.range (R2Basis))
 abbrev R2 : Type := (EuclideanSpace ℝ (Fin 2))
 variable (w : R2) (h : w ∈ Z2)
 
--- -- the ι-th coordinate of the vector v in the basis R2Basis
--- #check R2Basis.repr v ι
 
 
 -- want to prove that the ι-th coordinate of v is an integer.
@@ -146,40 +144,6 @@ lemma IsInteger_componentsZ2
    rw [IsInteger_iff_setrangeZR _]
    exact hv i
 
--- lemma IsInteger_componentsZ2 (v : (EuclideanSpace ℝ (Fin 2))) : v ∈ Z2 ↔ ∀ (ι : Fin (FiniteDimensional.finrank ℝ (EuclideanSpace ℝ (Fin 2)))),
---  isInteger (v ι) := by
---  constructor
---  intro hv ι
---  rw [Basis.mem_submodule_iff (OrthonormalBasis.toBasis R2Basis)] at hv
---  obtain ⟨c, hc⟩ := hv
-
---  sorry
-
-
---  intro hv ι
---  have hv2floor: (Zspan.floor (OrthonormalBasis.toBasis R2Basis) v) = v := by
---   apply Zspan.floor_eq_self_of_mem
---   exact hv
---  have : ((OrthonormalBasis.toBasis R2Basis).repr (Zspan.floor (OrthonormalBasis.toBasis R2Basis) v)) ι = ⌊((OrthonormalBasis.toBasis R2Basis).repr v) ι⌋ := by
---   simp
---  unfold isInteger
---  use ⌊((OrthonormalBasis.toBasis R2Basis).repr v) ι⌋
---  have h : ((OrthonormalBasis.toBasis R2Basis).repr v) ι = v ι := by
---   simp
-
---  exact this
--- --  rw [← this]
--- --  rw [hv2floor]
--- --  intro hcomp
-
---  intro hv
---  rw [Basis.mem_submodule_iff]
--- -- use R2Basis.repr v2
-
-
--- want to prove that a bounded set of Z2 is finite,
--- by showing that it is discrete and compact.
--- problem: I don't know how to characterize Z2 in
 
 open MeasureTheory.Measure
 open InnerProductSpace.Core
@@ -292,11 +256,6 @@ lemma IsFiniteBoundedSetIntegers : ∀ (M : ℝ) (hM : 1 ≤ M), Set.Finite {n :
  rw [← Int.floor_pos] at hM
  exact neg_lt_self hM
 
-lemma single_le_sum_of_nonneg {ι : Type u_1}
-{N : Type u_5}[OrderedAddCommMonoid N] {f : ι → N} {t : Finset ι}
-(hf : ∀ (i : t), 0 ≤ f i) :
-  ∀ (i : t), f i ≤ Finset.sum t fun (i : ι) => f i := by
- sorry
 
 
 -- lemma A2_2 : ∀ (M : ℝ) (hM : 1 ≤ M), Set.Finite {x : EuclideanSpace ℝ (Fin 2)| x ∈ Z2 ∧ ‖x‖ ≤ M} := by
@@ -325,6 +284,30 @@ lemma single_le_sum_of_nonneg {ι : Type u_1}
 
 --  exact Set.Finite.subset hleMifin hxleMi
 
+theorem norm_sq_eq {𝕜 : Type u_8} [IsROrC 𝕜] {n : Type u_9} [Fintype n] (x : EuclideanSpace 𝕜 n)
+ : ‖x‖ ^ 2 = Finset.sum Finset.univ fun (i : n) => ‖x i‖ ^ 2 := by
+ have : ‖x‖ = Real.sqrt (Finset.sum Finset.univ fun (i : n) => ‖x i‖ ^ 2) := by
+  exact EuclideanSpace.norm_eq x
+ rw [← sq_eq_sq, Real.sq_sqrt] at this
+ exact this
+ have : ∀ (i : n), 0 ≤ ‖x i‖ ^ 2 := by
+  intro i
+  exact sq_nonneg _
+ apply Finset.sum_nonneg
+ intro i hi
+ exact this i
+ exact norm_nonneg _
+ exact Real.sqrt_nonneg _
+
+theorem single_le_norm --{𝕜 : Type u_8} [IsROrC 𝕜]
+{n : Type u_9} [Fintype n] (i : n) (x : EuclideanSpace ℝ n)
+ : |x i| ≤ ‖x‖ := by
+ rw [← Real.norm_eq_abs, ← (abs_of_nonneg (norm_nonneg _)), ← (abs_of_nonneg (norm_nonneg x))]
+ rw [← sq_le_sq, norm_sq_eq]
+ have hnorm : ∀ k ∈ Finset.univ, 0 ≤ ‖x k‖ ^ 2 := by
+  intro k hk
+  exact sq_nonneg _
+ apply (Finset.single_le_sum hnorm (Finset.mem_univ i))
 
 -- Bounded sets in Z2 are finite
 
@@ -370,7 +353,7 @@ lemma A2_2 (M : ℝ) (hM : M > 0) : Set.Finite {x ∈ Z2 | ‖x‖ ≤ M} := by
  exact hx.1
 
 lemma A2_3 : ∀ (t : ℝ), 0 < t →
-∃ (S : ℝ), M₀ ≤ S ∧ ∀ (s : ℝ), S < s →
+∃ (S : ℝ), M₀ ≤ S ∧ ∀ (s : ℝ), S ≤ s →
 c_δ * Real.exp (- (2 + δ) * Real.log (1 + s)) < t:= by
  intro t ht
  have A2_3_1: Tendsto (fun (s : ℝ) => 1 + s) atTop atTop := by
@@ -395,7 +378,8 @@ c_δ * Real.exp (- (2 + δ) * Real.log (1 + s)) < t:= by
  rw [← (lt_div_iff' hc_δ)]
  simp
  apply hV.2 s (hS s _)
- apply le_of_lt (lt_of_le_of_lt (le_max_right _ _) hs)
+ apply le_trans (le_max_right _ _) hs
+
 lemma A2_4 (x : R2) : 0 < b a δ x := by
  unfold b
  exact mul_pos (Real.exp_pos _) (P1 x)
@@ -418,12 +402,29 @@ lemma A2_5 (x : R2) : x ∈ Z2 ∧ x ≠ 0 → 1 ≤ ‖x‖ := by
   apply (IsInteger_componentsZ2 x).mp
   exact hx.1
  obtain ⟨n, hn⟩ := hxiz
- have hqnz : 1 ≤ |n| := by
+ have hqnz : (1 : ℤ) ≤ |(n : ℝ)| := by
+  rw [← Int.cast_abs, Int.cast_le]
   by_contra! hnle
   rw [Int.abs_lt_one_iff] at hnle
   rw [hnle, Int.cast_zero] at hn
   contradiction
- sorry
+ have : |(n : ℝ)| ≤ ‖x‖ := by
+  rw [← hn]
+  exact single_le_norm i x
+ rw [← Int.cast_abs] at this
+ rw [← Int.cast_abs, Int.cast_one] at hqnz
+ linarith
+
+lemma A2_6 (s t : ℝ) : 0 < s ∧ 0 < t ∧ s ≤ t →
+ c_δ * Real.exp (- (2 + δ) * Real.log (1 + t)) ≤ c_δ * Real.exp (- (2 + δ) * Real.log (1 + s)) := by
+  intro hst
+  have hs : 0 < 1 + s := by exact add_pos zero_lt_one hst.left
+  have ht : 0 < 1 + t := by exact add_pos zero_lt_one hst.right.left
+  have : -(2 + δ) < 0 := by linarith
+  rw [mul_le_mul_left hc_δ, Real.exp_le_exp, mul_le_mul_left_of_neg this]
+  rw [Real.log_le_log_iff hs ht]
+  linarith
+
 
 lemma A2 : ∃ (M' : ℝ), ∀ (x : R2), x ∈ Z2 → (b a δ (M' • x) ≤ b a δ x) := by
  have hb1 (x : R2) : (2 + δ) * Real.log (1 + ‖x‖) + (-2 * (2 + δ) * Real.log (1 + ‖x‖)) = (- (2 + δ) * Real.log (1 + ‖x‖)):= by ring
@@ -436,35 +437,40 @@ lemma A2 : ∃ (M' : ℝ), ∀ (x : R2), x ∈ Z2 → (b a δ (M' • x) ≤ b a
   _ = c_δ * Real.exp ((2 + δ) * Real.log (1 + ‖x‖) + (-2 * (2 + δ) * Real.log (1 + ‖x‖))) := by rw [(Real.exp_add ((2 + δ) * Real.log (1 + ‖x‖)) (-2 * (2 + δ) * Real.log (1 + ‖x‖))).symm]
   _ = c_δ * Real.exp (-(2 + δ) * Real.log (1 + ‖x‖))
    := by rw [hb1]
- have hb3 (x : R2) : x ∈ Z2 ∧ x ≠ 0 → ∃ (M1 : ℝ),  b a δ (M1 • x) ≤ b a δ x := by
+ have hb3 (x : R2) : x ∈ Z2 ∧ x ≠ 0 → ∃ (M1 : ℝ), M₀ ≤ M1 ∧ ∀ (M : ℝ), M1 ≤ M → b a δ (M • x) ≤ b a δ x := by
   intro hx
   obtain ⟨S, hS⟩ := A2_3 δ hδ c_δ hc_δ M₀ (b a δ x) (A2_4 a δ P1 x)
-  let s := (S + 1) / ‖x‖
-  have hs : s = (S + 1) / ‖x‖ := by rfl
-  use s
-  have hb4 : b a δ (s • x) ≤ c_δ * Real.exp (-(2 + δ) * Real.log (1 + ‖s • x‖)) := by
-   exact hb2 (s • x)
-  have hb5 : S < ‖S + 1‖ := by
-   by_cases hS' : 0 ≤ S
-   · simp
-     rw [abs_eq_self.mpr]
-     exact lt_add_one S
-     linarith
-   · push_neg at hS'
-     exact lt_of_lt_of_le hS' (norm_nonneg _)
-  have bh6 : c_δ * Real.exp (-(2 + δ) * Real.log (1 + ‖S + 1‖)) < b a δ x := by
-   exact hS.2 ‖S + 1‖ hb5
-  have hb7 : b a δ (s • x) ≤ c_δ * Real.exp (-(2 + δ) * Real.log (1 + ‖S + 1‖)) := by
-   rw [norm_smul, norm_div, norm_norm, (div_mul_cancel ‖S + 1‖)] at hb4
+  let M1 := max S M₀
+  use M1
+  constructor
+  · exact le_max_right _ _
+  intro M hM
+  have hM1 : 0 < M :=
+   calc 0 < M₀ := by linarith
+   _ ≤ M1 := by exact le_max_right _ _
+   _ ≤ M := by exact hM
+  have hM2 : M ≤ M * ‖x‖ := by
+   nth_rw 1 [← one_mul M]
+   nth_rw 1 [mul_comm]
+   rw [mul_le_mul_left hM1]
+   exact A2_5 x hx
+  have hM3 : 0 < M * ‖x‖ := by
    linarith
-   have : 0 < ‖x‖ := by exact norm_pos_iff.mpr hx.2
-   linarith
-  linarith
- have hb8 : ∀ (x : R2), x ∈ Z2 ∧ x ≠ 0 → ∃ (M2 : ℝ), M2 > M₀ ∧ b a δ (M2 • x) ≤ b a δ x := by
-  intro x hx
-  obtain ⟨M1, hM1⟩ := hb3 x hx
-  sorry
+  calc b a δ (M • x) ≤ c_δ * Real.exp (- (2 + δ) * Real.log (1 + ‖M • x‖)) := by exact hb2 (M • x)
+  _ = c_δ * Real.exp (- (2 + δ) * Real.log (1 + ‖M‖ * ‖x‖)) := by rw [norm_smul _ _]
+  _ = c_δ * Real.exp (- (2 + δ) * Real.log (1 + |M| * ‖x‖)) := by simp
+  _ = c_δ * Real.exp (- (2 + δ) * Real.log (1 + M * ‖x‖)) := by rw [abs_of_pos hM1]
+  _ ≤ c_δ * Real.exp (- (2 + δ) * Real.log (1 + M)) := by exact A2_6 δ hδ c_δ hc_δ M (M * ‖x‖) (And.intro hM1 (And.intro hM3 hM2))
+  _ ≤ b a δ x := by exact le_of_lt (hS.2 M (le_trans (le_max_left _ _) hM))
+
  let S := {x : R2 | x ∈ Z2 ∧ ‖x‖ ≤ M₀ ∧ x ≠ 0}
+ have hxS (x : R2) : x ∈ S → x ∈ Z2 ∧ ‖x‖ ≤ M₀ ∧ x ≠ 0 := by
+  exact fun a => a
+ have hxS' (x : R2) : x ∈ S → x ∈ Z2 ∧ x ≠ 0 := by
+  intro hx
+  constructor
+  exact (hxS x hx).1
+  exact (hxS x hx).2.2
  let S' := {x : R2 | x ∈ Z2 ∧ ‖x‖ ≤ M₀}
  have hSS' : S ⊆ S' := by
   intro x hx
@@ -496,15 +502,17 @@ lemma A2 : ∃ (M' : ℝ), ∀ (x : R2), x ∈ Z2 → (b a δ (M' • x) ≤ b a
   rw [EuclideanSpace.norm_single]
   simp
   linarith
- obtain ⟨x₀, hx₀⟩ := Set.Finite.exists_maximal_wrt
-  (fun (x : S) => Classical.choose (hb3 x (And.intro (Set.mem_setOf.mp (Subtype.mem x)).left (Set.mem_setOf.mp (Subtype.mem x)).2.2))) _ _ _
- let M' := Classical.choose (hb3 x₀ (And.intro (Set.mem_setOf.mp (Subtype.mem x₀)).left (Set.mem_setOf.mp (Subtype.mem x₀)).2.2))
+ obtain ⟨x₀, hx₀⟩ := Set.Finite.exists_maximal_wrt (fun (x : R2) => if hf : x ∈ S then Classical.choose (hb3 x (hxS' x hf)) else 0) S hS hSne
+ let M' := Classical.choose (hb3 x₀ (hxS' x₀ hx₀.1))
+ let hM' := Classical.choose_spec (hb3 x₀ (hxS' x₀ hx₀.1))
+ have hM'1 : M' = choose (_ : ∃ M1, M₀ ≤ M1 ∧ ∀ (M : ℝ), M1 ≤ M → b a δ (M • x₀) ≤ b a δ x₀) := by
+  rfl
  use M'
  intro x hx
  by_cases hxnorm : ‖x‖ > M₀
  · have : 1 < M' := by
-    exact lt_of_lt_of_le hM₀
-    -- need to take M' > M₀, adding conditions to hb3
+    apply lt_of_lt_of_le hM₀
+    exact (Classical.choose_spec (hb3 x₀ (hxS' x₀ hx₀.1))).1
    apply P5 x (M' • x)
    constructor
    · exact le_of_lt hxnorm
@@ -517,14 +525,42 @@ lemma A2 : ∃ (M' : ℝ), ∀ (x : R2), x ∈ Z2 → (b a δ (M' • x) ≤ b a
    rw [hxzero, smul_zero]
  · push_neg at hxzero
    rw [norm_ne_zero_iff] at hxzero
-   sorry
-
-
--- use by_cases
--- for x large, this is ok by P5. use 1
--- for x small, there are finitely many such x.
--- for each of such x, there is large enough Mx' by P2 P3.
--- for x = 0, trivial. use 1
-
---  have hx_nonneg : ‖x‖ ≥ 0 := by exact norm_nonneg x
---  by_cases hx_M : ‖x‖ ≥ M₀
+   let Mx := Classical.choose (hb3 x (And.intro hx hxzero))
+   let hMx := Classical.choose_spec (hb3 x (And.intro hx hxzero))
+   have hM1 : Mx = Classical.choose (hb3 x (And.intro hx hxzero)) := by
+    rfl
+   have hM₀M : M₀ ≤ Mx := by
+    exact hMx.1
+   have hMM : Mx ≤ M' := by
+    have hxinS : x ∈ S := by
+     exact And.intro hx (And.intro hxnorm hxzero)
+    have : M' ≤ Mx → M' = Mx := by
+     let hX := hx₀.2 x hxinS
+     rw [dif_pos hx₀.1, dif_pos hxinS] at hX
+     exact hX
+    by_contra! P
+    push_neg
+    have eP : M' = Mx := by exact this (le_of_lt P)
+    linarith
+   have hMM' : ‖Mx • x‖ ≤ ‖M' • x‖ := by
+    rw [norm_smul, norm_smul]
+    apply mul_le_mul
+    rw [Real.norm_eq_abs, Real.norm_eq_abs, abs_of_pos, abs_of_pos]
+    exact hMM
+    exact lt_of_lt_of_le (lt_trans zero_lt_one hM₀) (le_trans hM₀M hMM)
+    exact lt_of_lt_of_le (lt_trans zero_lt_one hM₀) hM₀M
+    exact le_refl _
+    exact norm_nonneg _
+    exact norm_nonneg _
+   have hMxx : M₀ ≤ ‖Mx • x‖ := by
+    nth_rw 1 [← mul_one M₀]
+    rw [norm_smul, Real.norm_eq_abs, abs_of_pos, mul_comm, mul_comm Mx ‖x‖]
+    apply mul_le_mul
+    exact A2_5 x (And.intro hx hxzero)
+    exact hM₀M
+    exact le_of_lt (lt_trans zero_lt_one hM₀)
+    exact norm_nonneg x
+    exact lt_of_lt_of_le (lt_trans zero_lt_one hM₀) hM₀M
+   calc
+    b a δ (M' • x) ≤ b a δ (Mx • x) := by exact P5 (Mx • x) (M' • x) (And.intro hMxx hMM')
+    _ ≤ b a δ x := by exact hMx.2 Mx (le_refl _)
