@@ -2,17 +2,19 @@ import Mathlib
 
 open Polynomial Classical Filter
 
+abbrev R2 : Type := EuclideanSpace ℝ (Fin 2)
+
 variable (d : ℕ)
-variable (a : EuclideanSpace ℝ (Fin 2)→ ℝ)
+variable (a : R2→ ℝ)
 variable (δ : ℝ) (hδ : δ > 0)
 variable (c_δ : ℝ) (hc_δ : c_δ > 0)
 variable {K : ℝ}
 variable (M₀ : ℝ) (hM₀ : M₀ > 1)
-noncomputable def b (a : EuclideanSpace ℝ (Fin 2)→ ℝ) (δ : ℝ) : (EuclideanSpace ℝ (Fin 2)) → ℝ
+noncomputable def b (a : R2→ ℝ) (δ : ℝ) : (R2) → ℝ
  := fun x ↦ Real.exp ((2 + δ) * Real.log (1 + ‖x‖)) * a x
 
 -- -- the orthonormal basis on R^d
--- noncomputable def R2Basis {d : ℕ} := stdOrthonormalBasis ℝ (EuclideanSpace ℝ (Fin 2))
+-- noncomputable def R2Basis {d : ℕ} := stdOrthonormalBasis ℝ (R2)
 -- the orthonormal basis on R^2.
 -- no implicit variable d
 noncomputable def R2Basis := EuclideanSpace.basisFun (Fin 2) ℝ
@@ -39,7 +41,6 @@ noncomputable def Z2 := Submodule.span ℤ (Set.range (R2Basis))
 noncomputable def Z2' := Submodule.span ℤ (Set.range (Z2Basis))
 noncomputable def Z2'' := AddSubgroup.closure (Set.range (R2Basis))
 
-abbrev R2 : Type := (EuclideanSpace ℝ (Fin 2))
 variable (w : R2) (h : w ∈ Z2)
 
 
@@ -149,29 +150,29 @@ open MeasureTheory.Measure
 open InnerProductSpace.Core
 
 -- -- the counting measure on the lattice Z^d
--- noncomputable def countZ2 : Measure (EuclideanSpace ℝ (Fin 2)) :=
+-- noncomputable def countZ2 : Measure (R2) :=
 --  sum (fun x ↦ if x ∈ Z2 then dirac x else 0)
 
 -- the counting measure on the lattice Z^2
-noncomputable def countZ2 : MeasureTheory.Measure (EuclideanSpace ℝ (Fin 2)) :=
+noncomputable def countZ2 : MeasureTheory.Measure (R2) :=
  sum (fun x ↦ if x ∈ Z2 then dirac x else 0)
 
 -- -- n-times convolution with itself
--- noncomputable def convolution_self : ℕ → ((EuclideanSpace ℝ (Fin 2) → ℝ) → (EuclideanSpace ℝ (Fin 2) → ℝ))
+-- noncomputable def convolution_self : ℕ → ((R2 → ℝ) → (R2 → ℝ))
 --   | 0 => fun f ↦ (fun x ↦ 1)
 --   | n + 1 => fun f ↦ (convolution f ((convolution_self n) f) (ContinuousLinearMap.lsmul ℝ ℝ) (countZ2 d))
 
 -- n-times convolution with itself on Z2
-noncomputable def convolution_self2 : ℕ → ((EuclideanSpace ℝ (Fin 2) → ℝ) → (EuclideanSpace ℝ (Fin 2) → ℝ))
+noncomputable def convolution_self2 : ℕ → ((R2 → ℝ) → (R2 → ℝ))
   | 0 => fun f ↦ (fun x ↦ 1)
   | n + 1 => fun f ↦ (convolution f ((convolution_self2 n) f) (ContinuousLinearMap.lsmul ℝ ℝ) countZ2)
 
 
-variable (P1 : ∀ (x : EuclideanSpace ℝ (Fin 2)), a x > 0)
-variable (P2 : ∀ (x : EuclideanSpace ℝ (Fin 2)), a x ≤ c_δ * Real.exp (-2 * (2 + δ) * Real.log (1 + ‖x‖)))
-variable (P3 : ∀ (x y : EuclideanSpace ℝ (Fin 2)) (hP3 : ‖y‖ ≤ 2 * NNReal.sqrt 2),  b a δ (x + y) / b a δ x ≤ K)
-variable (P4 : ∃ (c ε : ℝ) (hP4 : ε > 0), ∀ (n : ℕ) (x : EuclideanSpace ℝ (Fin 2)), (convolution_self2 n) (b a δ) (x) ≤ c^n * (b a δ (ε • x)))
-variable (P5 : ∀ (x x' : EuclideanSpace ℝ (Fin 2)) (hP5 : M₀ ≤ ‖x‖ ∧ ‖x‖ ≤ ‖x'‖), b a δ x ≥ b a δ x')
+variable (P1 : ∀ (x : R2), a x > 0)
+variable (P2 : ∀ (x : R2), a x ≤ c_δ * Real.exp (-2 * (2 + δ) * Real.log (1 + ‖x‖)))
+variable (P3 : ∀ (x y : R2) (hP3 : ‖y‖ ≤ 2 * NNReal.sqrt 2),  b a δ (x + y) / b a δ x ≤ K)
+variable (P4 : ∃ (c ε : ℝ) (hP4 : ε > 0), ∀ (n : ℕ) (x : R2), (convolution_self2 n) (b a δ) (x) ≤ c^n * (b a δ (ε • x)))
+variable (P5 : ∀ (x x' : R2) (hP5 : M₀ ≤ ‖x‖ ∧ ‖x‖ ≤ ‖x'‖), b a δ x ≥ b a δ x')
 
 
 lemma A2_1 : ∀ (p : ℝ[X]), ∃ (N : ℝ), ∀ (x : ℝ), x ≥ N → |p.eval x| < Real.exp x := by
@@ -258,9 +259,9 @@ lemma IsFiniteBoundedSetIntegers : ∀ (M : ℝ) (hM : 1 ≤ M), Set.Finite {n :
 
 
 
--- lemma A2_2 : ∀ (M : ℝ) (hM : 1 ≤ M), Set.Finite {x : EuclideanSpace ℝ (Fin 2)| x ∈ Z2 ∧ ‖x‖ ≤ M} := by
+-- lemma A2_2 : ∀ (M : ℝ) (hM : 1 ≤ M), Set.Finite {x : R2| x ∈ Z2 ∧ ‖x‖ ≤ M} := by
 --  intro M hM
---  have hxleMi : {x : EuclideanSpace ℝ (Fin 2)| x ∈ Z2 ∧ ‖x‖ ≤ M} ⊆ {x : EuclideanSpace ℝ (Fin 2)| x ∈ Z2 ∧ ∀ (ι : (Fin 2)), |x ι| ≤ M} := by
+--  have hxleMi : {x : R2| x ∈ Z2 ∧ ‖x‖ ≤ M} ⊆ {x : R2| x ∈ Z2 ∧ ∀ (ι : (Fin 2)), |x ι| ≤ M} := by
 -- -- this is a subset of all x with |x_i| < M
 --   simp
 --   intro x hxZ2 hx_M
@@ -278,7 +279,7 @@ lemma IsFiniteBoundedSetIntegers : ∀ (M : ℝ) (hM : 1 ≤ M), Set.Finite {n :
 --    exact Finset.single_le_sum hnorm2 (Finset.mem_univ ι)
 --   exact le_trans this hx_M
 
---  have hleMifin : Set.Finite {x : EuclideanSpace ℝ (Fin 2)| x ∈ Z2 ∧ ∀ (ι : (Fin 2)), |x ι| ≤ M} := by
+--  have hleMifin : Set.Finite {x : R2| x ∈ Z2 ∧ ∀ (ι : (Fin 2)), |x ι| ≤ M} := by
 -- -- the latter is a finite set : M^d
 --   simp
 
@@ -334,9 +335,9 @@ lemma A2_2 (M : ℝ) (hM : M > 0) : Set.Finite {x ∈ Z2 | ‖x‖ ≤ M} := by
     · exact hxiconvpi
    intro i
    exact hpint i
-  have BallDef : {x : (EuclideanSpace ℝ (Fin 2))| dist x 0 ≤ M} = {x : (EuclideanSpace ℝ (Fin 2))| ‖x‖ ≤ M} := by
+  have BallDef : {x : (R2)| dist x 0 ≤ M} = {x : (R2)| ‖x‖ ≤ M} := by
    simp
-  have BallClosed : IsClosed {x : (EuclideanSpace ℝ (Fin 2))| ‖x‖ ≤ M} := by
+  have BallClosed : IsClosed {x : (R2)| ‖x‖ ≤ M} := by
    rw [← BallDef]
    exact Metric.isClosed_ball
   exact IsClosed.inter Z2Closed BallClosed
@@ -474,7 +475,6 @@ lemma A2 : ∃ (M' : ℝ), ∀ (x : R2), x ∈ Z2 → (b a δ (M' • x) ≤ b a
  let S' := {x : R2 | x ∈ Z2 ∧ ‖x‖ ≤ M₀}
  have hSS' : S ⊆ S' := by
   intro x hx
-  simp
   exact And.intro hx.1 hx.2.1
  let hS' := A2_2 M₀ (lt_trans zero_lt_one hM₀)
  let hS := Set.Finite.subset hS' hSS'
