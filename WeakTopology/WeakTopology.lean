@@ -279,17 +279,20 @@ def toOriginalSpace : WeakSpace 𝕜 E ≃ₗ[𝕜] E :=
 
 variable (x : E) (U : Set E)
 #check toWeakSpace x
-#check toWeakSpace U
+-- #check toWeakSpace U
 
-theorem isOpen_of_isOpen_WeakSpace (U : Set E) :
-    IsOpen[(WeakSpace.instTopologicalSpace : TopologicalSpace (WeakSpace 𝕜 E))]
-    (id U : Set (WeakSpace 𝕜 E)) → IsOpen U := by
-  intro hU
+
+/-- A weakly open set is open in the original topology. -/
+theorem isOpen_of_isOpen_WeakSpace (U : Set E)
+    (hU : IsOpen[(WeakSpace.instTopologicalSpace : TopologicalSpace (WeakSpace 𝕜 E))]
+    (id U : Set (WeakSpace 𝕜 E))) : IsOpen U := by
   apply Continuous.le_induced _ U hU
   refine continuous_pi ?h.h
   intro y
   exact ContinuousLinearMap.continuous y
 
+/-- If `f : α → E` is convergent in the original topology,
+then it is convergent in the weak topology. -/
 theorem tendsto_WeakSpace_of_tendsto
     {α : Type*} {l : Filter α} {f : α → E} {p : E} (hf : Tendsto f l (nhds p)) :
     Tendsto (fun x ↦ (id (f x) : (WeakSpace 𝕜 E))) l (nhds (p : (WeakSpace 𝕜 E))) := by
@@ -298,10 +301,11 @@ theorem tendsto_WeakSpace_of_tendsto
   rw [tendsto_nhds] at hf
   exact hf (id U : Set E) (isOpen_of_isOpen_WeakSpace (id U : Set E) hpU) hU
 
+/-- If `f : α → E` is convergent in the original topology,
+then `y ∘ f` is convergent for any `y : E →L[𝕜] 𝕜`. -/
 theorem eval_tendsto_of_tendsto
-    {α : Type*} {l : Filter α} {f : α → E} {p : E} (hf : Tendsto f l (nhds p)) :
-    ∀ (y : E →L[𝕜] 𝕜), Tendsto (fun x => y (f x)) l (nhds (y p)) := by
-  intro y
+    {α : Type*} {l : Filter α} {f : α → E} {p : E}
+    (hf : Tendsto f l (nhds p)) (y : E →L[𝕜] 𝕜) : Tendsto (fun x => y (f x)) l (nhds (y p)) := by
   exact Tendsto.comp (Continuous.tendsto (ContinuousLinearMap.continuous y) p) hf
 
 end WeakSpace
