@@ -200,10 +200,18 @@ open BoundedContinuousFunction Topology Bornology
 
 open Filter Metric
 
+open ZeroAtInfty
+
+/-- `C_c(α, β)` is the type of continuous functions `α → β` which have compact support from a
+topological space to a metric space with a zero element.
+
+When possible, instead of parametrizing results over `(f : C_c(α, β))`,
+you should parametrize over `(F : Type*) [CompactlySupportedContinuousMap F α β] (f : F)`.
+
+When you extend this structure, make sure to extend `CompactlySupportedContinuousMap`. -/
 structure CompactlySupportedContinuousMap (α : Type u) (β : Type v) [TopologicalSpace α] [Zero β]
     [TopologicalSpace β] extends ZeroAtInftyContinuousMap α β : Type max u v where
   compactly_supported' : IsCompact (closure (Function.support toFun))
-#align compactly_supported_continuous_map CompactlySupportedContinuousMap
 
 
 @[inherit_doc]
@@ -212,7 +220,7 @@ scoped[CompactlySupported] notation (priority := 2000) "C_c(" α ", " β ")" => 
 @[inherit_doc]
 scoped[CompactlySupported] notation α " →C_c " β => CompactlySupportedContinuousMap α β
 
-open CompactlySupported ZeroAtInfty
+open CompactlySupported
 
 section
 
