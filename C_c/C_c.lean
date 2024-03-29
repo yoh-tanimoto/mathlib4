@@ -69,13 +69,20 @@ example (g : C(X, 𝕂)) (hG : HasCompactSupport g)
  intro x
  rfl
 
-variable (f1 : X → ℂ) (f2 : X → ℝ)
+variable (f1 : C₀(X, ℂ)) (f2 : X →ᵇ ℝ)
 variable (x1 : 𝕂) (x2 : ℝ)
 #check f1 * f1
-#check f1 * f2
+#check f2 • f1.toBCF
+
+#check f1 * ((f2 ·) : X → ℂ)
 def f3 := fun x => f1 x * f2 x
 #check f3 f1 f2
 #check x1 * x2
+
+lemma zero_at_infty_mul_BCF_ZeroAtInfty (f : X →ᵇ ℝ) (g : C₀(X, ℝ)) :
+    Filter.Tendsto (f * g.toBCF) (Filter.cocompact X) (nhds 0):= by
+  sorry
+
 
 -- helped by Filippo Nuccio
 lemma exist_HasCompactSupport_and_Tendsto' (f : C₀(X, ℂ)) : ∃ (g : ℕ → C₀(X ,ℂ)),
