@@ -23,7 +23,6 @@ structure CompactlySupportedContinuousMap (α : Type u) (β : Type v) [Topologic
     [TopologicalSpace β] extends ZeroAtInftyContinuousMap α β : Type max u v where
   hasCompactSupport' : HasCompactSupport toFun
 
-
 @[inherit_doc]
 scoped[CompactlySupported] notation (priority := 2000) "C_c(" α ", " β ")" => CompactlySupportedContinuousMap α β
 
@@ -46,45 +45,29 @@ class CompactlySupportedContinuousMapClass (F : Type*) (α β : outParam <| Type
 variable {X : Type*} [TopologicalSpace X] [LocallyCompactSpace X]
  [T2Space X]
 
-#check RCLike
+variable {K : Type*} [IsROrC K]
 
-variable {𝕜 : semiOutParam (Type*)} [RCLike 𝕜]
-variable (k : C(X, ℝ))
-def CoR : C(ℝ, ℂ) := ⟨Complex.ofReal', Complex.continuous_ofReal⟩
-
-lemma CompactSupportZeroAtInfty (f : C(X, ℂ)) (hf : HasCompactSupport f)
- : Filter.Tendsto f (Filter.cocompact X) (nhds 0) := by
+lemma zero_at_infty_of_hasCompactSupport (f : C(X, ℂ)) (hf : HasCompactSupport f) :
+    Filter.Tendsto f (Filter.cocompact X) (nhds 0) := by
  rw [Metric.tendsto_nhds]
  intro ε hε
  rw [Filter.eventually_iff, Filter.mem_cocompact]
  use tsupport f
  constructor
- exact hf
- intro x hx
- rw [← Set.not_mem_compl_iff, compl_compl] at hx
- have hfx : f x = 0 := by
-  exact image_eq_zero_of_nmem_tsupport hx
- have hxz : dist (f x) 0 < ε := by
-  rw [hfx, dist_self]
-  exact hε
- exact hxz
+ · exact hf
+ · intro x hx
+   rw [← Set.not_mem_compl_iff, compl_compl] at hx
+   rw [Set.mem_setOf_eq, image_eq_zero_of_nmem_tsupport hx, dist_self]
+   exact hε
 
 example (g : C(X, ℂ)) (hG : HasCompactSupport g)
  : ∃ (g' : C₀(X, ℂ)), ∀ (x : X), g x = g' x := by
- let g' : C₀(X, ℂ) := ⟨g, (CompactSupportZeroAtInfty g hG)⟩
+ let g' : C₀(X, ℂ) := ⟨g, (zero_at_infty_of_hasCompactSupport g hG)⟩
  use g'
  intro x
  rfl
 
 
-lemma CompactNeightbourhood (K : Set X) (h : IsCompact K)
- : ∃ (U : Set X), IsOpen U ∧ K ⊆ U ∧ IsCompact (closure U) :=
-  exists_isOpen_superset_and_isCompact_closure h
-
--- instance : Semiring C₀(X, ℂ) := by sorry
-instance : StarRing C₀(X, ℂ) := by infer_instance
-
--- def StarAlegbraCC : (StarSubalgebra ℂ C₀(X, ℂ)) := by sorry
 
 -- helped by Filippo Nuccio
 lemma ApproximatedByCompactlySuppportedFunctions (f : C₀(X, ℂ))
@@ -107,18 +90,21 @@ lemma ApproximatedByCompactlySuppportedFunctions (f : C₀(X, ℂ))
    rw [Set.compl_subset_comm] at ht
    exact ht
   obtain ⟨K, hK⟩ := h3
-  obtain ⟨U, hU⟩ := CompactNeightbourhood K hK.left
+  obtain ⟨U, hU⟩ := exists_isOpen_superset_and_isCompact_closure hK.left
   obtain ⟨k, hk⟩ := exists_continuous_one_zero_of_isCompact hK.left (IsOpen.isClosed_compl hU.left) (LE.le.disjoint_compl_right hU.right.left)
-  have hkcp : HasCompactSupport (ContinuousMap.comp CoR k) := by
-   have hk1 : CoR 0 = 0 := by rfl
-   have hk2 : Function.support (ContinuousMap.comp CoR k) ⊆ Function.support k := by
+  have hkcp : HasCompactSupport (ContinuousMap.comp ⟨Complex.ofRealCLM, Complex.ofRealCLM.cont⟩ k) := by
+   have hk1 : Complex.ofRealCLM 0 = 0 := by rfl
+   have hk2 : Function.support (ContinuousMap.comp ⟨Complex.ofRealCLM, Complex.ofRealCLM.cont⟩ k) ⊆ Function.support k := by
     apply Function.support_comp_subset hk1
---   have hk3 : IsCompact (closure (Function.support (ContinuousMap.comp CoR k))) := by
+--   have hk3 : IsCompact (closure (Function.support (ContinuousMap.comp Complex.ofRealCLM k))) := by
    unfold HasCompactSupport
    exact IsCompact.closure_of_subset hk.right.right.left (subset_trans hk2 subset_closure)
 
    --Function.support_comp_subset
-  let gn : C₀(X, ℂ) := ⟨f.1 * (ContinuousMap.comp CoR k), (CompactSupportZeroAtInfty (f.1 * (ContinuousMap.comp CoR k)) hkcp.mul_left)⟩
+  let gn : C₀(X, ℂ)
+    := ⟨f.1 * (ContinuousMap.comp ⟨Complex.ofRealCLM, Complex.ofRealCLM.cont⟩ k),
+       (zero_at_infty_of_hasCompactSupport (f.1 * (ContinuousMap.comp
+       ⟨Complex.ofRealCLM, Complex.ofRealCLM.cont⟩ k)) hkcp.mul_left)⟩
   use gn
   constructor
   exact hkcp.mul_left
