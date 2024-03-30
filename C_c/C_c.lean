@@ -77,38 +77,30 @@ lemma zero_at_infty_of_hasCompactSupport (f : C(X, 𝕂)) (hf : HasCompactSuppor
    rw [← Set.not_mem_compl_iff, compl_compl] at hx
    rw [Set.mem_setOf_eq, image_eq_zero_of_nmem_tsupport hx, dist_self]
    exact hε
-
-example (g : C(X, 𝕂)) (hG : HasCompactSupport g)
- : ∃ (g' : C₀(X, 𝕂)), ∀ (x : X), g x = g' x := by
- let g' : C₀(X, 𝕂) := ⟨g, (zero_at_infty_of_hasCompactSupport g hG)⟩
- use g'
- intro x
- rfl
+ done
 
 
+variable {α : Type*} [TopologicalSpace α] [LocallyCompactSpace α]
+variable [NonUnitalSeminormedRing β] [NonUnitalSeminormedRing (α →ᵇ β)]
 
 
-
-lemma zero_at_infty_mul_BCF_ZeroAtInfty (f : X →ᵇ ℝ) (g : C₀(X, ℝ)) :
-    Filter.Tendsto (f * g.toBCF) (Filter.cocompact X) (nhds 0) := by
-  have : Filter.Tendsto (fun x => g.toBCF x) (Filter.cocompact X) (nhds 0) := by
-    exact g.2
-  have : Filter.Tendsto (fun x => ‖g.toBCF x‖) (Filter.cocompact X) (nhds ‖(0 : ℝ)‖) := by
-    exact Filter.Tendsto.norm this
-  have : Filter.Tendsto (fun x => ‖f‖ * ‖g.toBCF x‖) (Filter.cocompact X) (nhds (‖f‖ * ‖(0 : ℝ)‖)) := by
-    exact Tendsto.const_mul ‖f‖ this
+lemma zero_at_infty_mul_BCF_ZeroAtInfty (f : α →ᵇ β) (g : C₀(α, β)) :
+    Filter.Tendsto (f * g.toBCF) (Filter.cocompact α) (nhds 0) := by
+  have : Filter.Tendsto
+      (fun x => ‖f‖ * ‖g.toContinuousMap.toFun x‖) (Filter.cocompact α) (nhds (‖f‖ * ‖(0 : β)‖)) := by
+    exact Tendsto.const_mul ‖f‖ (Filter.Tendsto.norm g.2)
   rw [norm_zero, mul_zero] at this
   apply squeeze_zero_norm _ this
   intro x
-  have h : (f * g.toBCF) x = (f x) * (g.toBCF x) := by
-    exact rfl
-  rw [h]
-  calc ‖f x * (g.toBCF) x‖ ≤ ‖f x‖ * ‖(g.toBCF) x‖ := by exact norm_mul_le _ _
-  _ ≤  ‖f‖ * ‖(g.toBCF) x‖ := by exact mul_le_mul_of_nonneg_right (BoundedContinuousFunction.norm_coe_le_norm f x) (norm_nonneg ((g.toBCF) x))
+  calc ‖(f * (g.toBCF)) x‖ = ‖f x * (g.toBCF x)‖ := rfl
+  _ ≤ ‖f x‖ * ‖g.toBCF x‖ := norm_mul_le (f x) (g.toBCF x)
+  _ ≤  ‖f‖ * ‖g.toBCF x‖ :=
+    mul_le_mul_of_nonneg_right (BoundedContinuousFunction.norm_coe_le_norm f x)
+      (norm_nonneg (g.toBCF x))
+  _ = ‖f‖ * ‖g.toContinuousMap.toFun x‖ := rfl
 
 
 
--- -- helped by Filippo Nuccio
 -- lemma exist_HasCompactSupport_and_Tendsto' (f : C₀(X, ℂ)) : ∃ (g : ℕ → C₀(X ,ℂ)),
 --     (∀ (n : ℕ), HasCompactSupport (g n)) ∧ Filter.Tendsto g Filter.atTop (nhds f) := by
 --  have h : ∀ (n : ℕ), ∃ (gn : C₀(X, ℂ)), HasCompactSupport gn ∧ ‖f - gn‖ ≤ 1/((n : ℝ)+1) := by
@@ -191,7 +183,7 @@ lemma zero_at_infty_mul_BCF_ZeroAtInfty (f : X →ᵇ ℝ) (g : C₀(X, ℝ)) :
 --   exact lt_of_le_of_lt hn (lt_add_one (n : ℝ))
 --  exact lt_of_le_of_lt (hg n).right h5
 
-
+-- -- helped by Filippo Nuccio
 lemma exist_HasCompactSupport_and_Tendsto (f : C₀(X, 𝕂)) : ∃ (g : ℕ → C₀(X ,𝕂)),
     (∀ (n : ℕ), HasCompactSupport (g n)) ∧ Filter.Tendsto g Filter.atTop (nhds f) := by
  have h : ∀ (n : ℕ), ∃ (gn : C₀(X, 𝕂)), HasCompactSupport gn ∧ ‖f - gn‖ ≤ 1/((n : ℝ)+1) := by
@@ -206,10 +198,10 @@ lemma exist_HasCompactSupport_and_Tendsto (f : C₀(X, 𝕂)) : ∃ (g : ℕ →
   obtain ⟨U, hU⟩ := exists_isOpen_superset_and_isCompact_closure hK.left
   obtain ⟨k, hk⟩ := exists_continuous_one_zero_of_isCompact hK.left (IsOpen.isClosed_compl hU.left) (LE.le.disjoint_compl_right hU.right.left)
   have hkcp : HasCompactSupport (ContinuousMap.comp ⟨(IsROrC.ofRealCLM : ℝ →L[ℝ] 𝕂), IsROrC.ofRealCLM.cont⟩ k) := by
-   have hk2 : Function.support (ContinuousMap.comp ⟨(IsROrC.ofRealCLM : ℝ →L[ℝ] 𝕂), IsROrC.ofRealCLM.cont⟩ k) ⊆ Function.support k := by
+   have hkcp1 : Function.support (ContinuousMap.comp ⟨(IsROrC.ofRealCLM : ℝ →L[ℝ] 𝕂), IsROrC.ofRealCLM.cont⟩ k) ⊆ Function.support k := by
     apply Function.support_comp_subset IsROrC.ofReal_zero
    unfold HasCompactSupport
-   exact IsCompact.closure_of_subset hk.right.right.left (subset_trans hk2 subset_closure)
+   exact IsCompact.closure_of_subset hk.right.right.left (subset_trans hkcp1 subset_closure)
 
   let gn : C₀(X, 𝕂)
     := ⟨f.1 * (ContinuousMap.comp ⟨(IsROrC.ofRealCLM : ℝ →L[ℝ] 𝕂), IsROrC.ofRealCLM.cont⟩ k),
