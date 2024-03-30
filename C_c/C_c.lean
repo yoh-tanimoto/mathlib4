@@ -13,26 +13,6 @@ open Filter Metric
 variable [TopologicalSpace α] [LocallyCompactSpace α]
 
 
-/-- The product of a bounded continuous function and a function vanishing at infinity vanishes
-at infinity. -/
-lemma zero_at_infty_mul_BCF_ZeroAtInfty
-    [NonUnitalSeminormedRing β] [NonUnitalSeminormedRing (α →ᵇ β)](f : α →ᵇ β) (g : C₀(α, β)) :
-    Filter.Tendsto (f * g.toBCF) (Filter.cocompact α) (nhds 0) := by
-  have : Filter.Tendsto (fun x => ‖f‖ * ‖g.toContinuousMap.toFun x‖)
-      (Filter.cocompact α) (nhds (‖f‖ * ‖(0 : β)‖)) := by
-    exact Tendsto.const_mul ‖f‖ (Filter.Tendsto.norm g.2)
-  rw [norm_zero, mul_zero] at this
-  apply squeeze_zero_norm _ this
-  intro x
-  calc ‖(f * (g.toBCF)) x‖ = ‖f x * (g.toBCF x)‖ := rfl
-  _ ≤ ‖f x‖ * ‖g.toBCF x‖ := norm_mul_le (f x) (g.toBCF x)
-  _ ≤  ‖f‖ * ‖g.toBCF x‖ :=
-    mul_le_mul_of_nonneg_right (BoundedContinuousFunction.norm_coe_le_norm f x)
-      (norm_nonneg (g.toBCF x))
-  _ = ‖f‖ * ‖g.toContinuousMap.toFun x‖ := rfl
-
-
-
 -- lemma exist_HasCompactSupport_and_Tendsto' (f : C₀(X, ℂ)) : ∃ (g : ℕ → C₀(X ,ℂ)),
 --     (∀ (n : ℕ), HasCompactSupport (g n)) ∧ Filter.Tendsto g Filter.atTop (nhds f) := by
 --  have h : ∀ (n : ℕ), ∃ (gn : C₀(X, ℂ)), HasCompactSupport gn ∧ ‖f - gn‖ ≤ 1/((n : ℝ)+1) := by
@@ -116,35 +96,60 @@ lemma zero_at_infty_mul_BCF_ZeroAtInfty
 --  exact lt_of_le_of_lt (hg n).right h5
 
 
-variable {X : Type*} [TopologicalSpace X] [LocallyCompactSpace X]
- [T2Space X] {𝕂 : Type*} [IsROrC 𝕂]
+/-- The product of a bounded continuous function and a function vanishing at infinity vanishes
+at infinity. -/
+lemma zero_at_infty_mul_BCF_ZeroAtInfty
+    [NonUnitalSeminormedRing β] [NonUnitalSeminormedRing (α →ᵇ β)](f : α →ᵇ β) (g : C₀(α, β)) :
+    Filter.Tendsto (f * g.toBCF) (Filter.cocompact α) (nhds 0) := by
+  have : Filter.Tendsto (fun x => ‖f‖ * ‖g.toContinuousMap.toFun x‖)
+      (Filter.cocompact α) (nhds (‖f‖ * ‖(0 : β)‖)) := by
+    exact Tendsto.const_mul ‖f‖ (Filter.Tendsto.norm g.2)
+  rw [norm_zero, mul_zero] at this
+  apply squeeze_zero_norm _ this
+  intro x
+  calc ‖(f * (g.toBCF)) x‖ = ‖f x * (g.toBCF x)‖ := rfl
+  _ ≤ ‖f x‖ * ‖g.toBCF x‖ := norm_mul_le (f x) (g.toBCF x)
+  _ ≤  ‖f‖ * ‖g.toBCF x‖ :=
+    mul_le_mul_of_nonneg_right (BoundedContinuousFunction.norm_coe_le_norm f x)
+      (norm_nonneg (g.toBCF x))
+  _ = ‖f‖ * ‖g.toContinuousMap.toFun x‖ := rfl
+
 
 /-- A function which has compact support vanishes at infinity. -/
-lemma zero_at_infty_of_hasCompactSupport (f : C(X, 𝕂)) (hf : HasCompactSupport f) :
-    Filter.Tendsto f (Filter.cocompact X) (nhds 0) := by
- rw [Metric.tendsto_nhds]
- intro ε hε
- rw [Filter.eventually_iff, Filter.mem_cocompact]
- use tsupport f
- constructor
- · exact hf
- · intro x hx
-   rw [← Set.not_mem_compl_iff, compl_compl] at hx
-   rw [Set.mem_setOf_eq, image_eq_zero_of_nmem_tsupport hx, dist_self]
-   exact hε
- done
+lemma zero_at_infty_of_hasCompactSupport [TopologicalSpace β] [Zero β]
+    (f : C(α, β)) (hf : HasCompactSupport f) :
+    Filter.Tendsto f (Filter.cocompact α) (nhds 0) := by
+  rw [_root_.tendsto_nhds]
+  intro s _ hzero
+  rw [Filter.mem_cocompact]
+  use tsupport f
+  constructor
+  · exact hf
+  · intro x hx
+    simp only [Set.mem_preimage]
+    rw [← Set.not_mem_compl_iff, compl_compl] at hx
+    rw [image_eq_zero_of_nmem_tsupport hx]
+    exact hzero
 
+/-! ### The case with β : IsROrC
+
+Whenever `β : IsROrC`, one can apply Urysohn's lemma to show that any function vanishing at infinity
+can be approximated by functions with compact support.
+-/
+
+open Urysohns
 
 -- -- helped by Filippo Nuccio
 /-- For a function which vanishes at infinity there is a sequence of functions with compact support
 that tend to the given function. -/
-lemma exist_HasCompactSupport_and_Tendsto (f : C₀(X, 𝕂)) : ∃ (g : ℕ → C₀(X ,𝕂)),
+lemma exist_HasCompactSupport_and_Tendsto [LocallyCompactSpace α] [T2Space α]
+    {𝕂 : Type*} [IsROrC 𝕂](f : C₀(α, 𝕂)) : ∃ (g : ℕ → C₀(α ,𝕂)),
     (∀ (n : ℕ), HasCompactSupport (g n)) ∧ Filter.Tendsto g Filter.atTop (nhds f) := by
 -- find a function gn for each n
-  have h : ∀ (n : ℕ), ∃ (gn : C₀(X, 𝕂)), HasCompactSupport gn ∧ ‖f - gn‖ ≤ 1/((n : ℝ)+1) := by
+  have h : ∀ (n : ℕ), ∃ (gn : C₀(α, 𝕂)), HasCompactSupport gn ∧ ‖f - gn‖ ≤ 1/((n : ℝ)+1) := by
     intro n
 -- take a set such that f is small outside it
-    have h1 : {x : X | dist (f x) 0 < 1/((n : ℝ)+1)} ∈ Filter.cocompact X := by
+    have h1 : {x : α | dist (f x) 0 < 1/((n : ℝ)+1)} ∈ Filter.cocompact α := by
       apply Filter.eventually_iff.mp
       apply Metric.tendsto_nhds.mp (ZeroAtInftyContinuousMap.zero_at_infty' f)
       exact Nat.one_div_pos_of_nat
@@ -167,7 +172,7 @@ lemma exist_HasCompactSupport_and_Tendsto (f : C₀(X, 𝕂)) : ∃ (g : ℕ →
       unfold HasCompactSupport
       exact IsCompact.closure_of_subset hk.right.right.left (subset_trans hkcp1 subset_closure)
 -- define gn as the product of f and k
-    let gn : C₀(X, 𝕂)
+    let gn : C₀(α, 𝕂)
       := ⟨f.1 * (ContinuousMap.comp ⟨(IsROrC.ofRealCLM : ℝ →L[ℝ] 𝕂), IsROrC.ofRealCLM.cont⟩ k),
         (zero_at_infty_of_hasCompactSupport (f.1 * (ContinuousMap.comp
         ⟨(IsROrC.ofRealCLM : ℝ →L[ℝ] 𝕂), IsROrC.ofRealCLM.cont⟩ k)) hkcp.mul_left)⟩
@@ -176,7 +181,7 @@ lemma exist_HasCompactSupport_and_Tendsto (f : C₀(X, 𝕂)) : ∃ (g : ℕ →
 -- gn is compact
     exact hkcp.mul_left
 -- gn is close to f
-    have h2 : ∀ (x : X), ‖(f - gn) x‖ ≤ 1 / (↑n + 1) := by
+    have h2 : ∀ (x : α), ‖(f - gn) x‖ ≤ 1 / (↑n + 1) := by
       intro x
       have h21 : gn x = f x * k x := by rfl
       have h22 : (f - gn) x = f x - gn x := by rfl
