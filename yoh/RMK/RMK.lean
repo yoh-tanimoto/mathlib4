@@ -167,8 +167,34 @@ def M (Λ : (X →ᵇ ℝ) →ₗ[ℝ] ℝ) : Set (Set X) :=
 -- P.42 of Rudin "Real and Complex analysis"
 -- Continue with "Proof that μ and M have the required properties"
 
+
+
+/-- rieszContent' is monotone. -/
 lemma rieszContent'_mono {E₁ E₂ : Set X} (h : E₁ ⊆ E₂) : rieszContent' Λ E₁ ≤ rieszContent' Λ E₂ := by
-  sorry
+  apply sInf_le_sInf
+  apply Set.image_subset
+  intro V
+  simp only [mem_setOf_eq]
+  exact fun a ⦃a_1⦄ a_2 => a (h a_2)
+
+/-- rieszContent' coincides with rieszContentAux' on open sets. -/
+lemma rieszContent'_eq_rieszContentAux'_open (V : Opens X) :
+    rieszContent' Λ V = rieszContentAux' Λ V := by
+  have hle : rieszContent' Λ V ≤ rieszContentAux' Λ V := by
+    apply sInf_le_of_le
+    use V
+    simp only [SetLike.coe_subset_coe, mem_setOf_eq, le_refl, true_and]
+    rfl
+    exact rieszContentAux'_mono Λ fun ⦃a⦄ a => a
+  have hge : rieszContentAux' Λ V ≤ rieszContent' Λ V := by
+    apply le_sInf
+    intro x hx
+    simp only [SetLike.coe_subset_coe, mem_image, mem_setOf_eq] at hx
+    obtain ⟨V', hV'⟩ := hx
+    rw [← hV'.2]
+    exact rieszContentAux'_mono Λ hV'.1
+  exact le_antisymm hle hge
+
 
 lemma in_M_F_of_rieszContent'_zero {E : Set X} (h : rieszContent' Λ E = 0) : E ∈ M_F Λ := by
   sorry
@@ -178,8 +204,13 @@ lemma in_M_of_rieszContent'_zero {E : Set X} (h : rieszContent' Λ E = 0) : E �
 
 /-- The Riesz content μ associated to a given positive linear functional Λ is
 finitely subadditive for open sets : `μ (V₁ ∪ V₂) ≤ μ(V₁) + μ(V₂)`. -/
-theorem rieszContentAux'_sup_le (V₁ V₂ : Opens X) :
+lemma rieszContentAux'_sup_le (V₁ V₂ : Opens X) :
     rieszContentAux' Λ (V₁ ⊔ V₂) ≤ rieszContentAux' Λ V₁ + rieszContentAux' Λ V₂ := by
+  sorry
+
+/-- The Riesz content can be approximated arbitrarily well from outside by open sets. -/
+lemma exists_lt_rieszContent'_add_pos {E : Set X} (hE : rieszContent' Λ E < ∞)
+    {ε : ℝ≥0} (εpos : 0 < ε) : ∃ (V : Opens X), rieszContent' Λ V < rieszContent' Λ E + ε := by
   sorry
 
 
