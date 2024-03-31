@@ -158,17 +158,6 @@ riesContent' V such that E ⊆ V. -/
 def rieszContent' : Set X → ℝ≥0∞ := fun E  =>
   sInf (rieszContentAux' Λ '' { V : Opens X | E ⊆ V })
 
-def M_F (Λ : (X →ᵇ ℝ) →ₗ[ℝ] ℝ) : Set (Set X) := {E : Set X | rieszContent' Λ E < ∞
-  ∧ rieszContent' Λ E = sSup (rieszContent' Λ '' {K : Set X | IsCompact K ∧ K ⊂ E })}
-
-def M (Λ : (X →ᵇ ℝ) →ₗ[ℝ] ℝ) : Set (Set X) :=
-  {E : Set X | ∀ (K : Set X), IsCompact K → (E ∩ K) ∈ M_F Λ}
-
--- P.42 of Rudin "Real and Complex analysis"
--- Continue with "Proof that μ and M have the required properties"
-
-
-
 /-- rieszContent' is monotone. -/
 lemma rieszContent'_mono {E₁ E₂ : Set X} (h : E₁ ⊆ E₂) : rieszContent' Λ E₁ ≤ rieszContent' Λ E₂ := by
   apply sInf_le_sInf
@@ -180,27 +169,49 @@ lemma rieszContent'_mono {E₁ E₂ : Set X} (h : E₁ ⊆ E₂) : rieszContent'
 /-- rieszContent' coincides with rieszContentAux' on open sets. -/
 lemma rieszContent'_eq_rieszContentAux'_open (V : Opens X) :
     rieszContent' Λ V = rieszContentAux' Λ V := by
-  have hle : rieszContent' Λ V ≤ rieszContentAux' Λ V := by
-    apply sInf_le_of_le
-    use V
-    simp only [SetLike.coe_subset_coe, mem_setOf_eq, le_refl, true_and]
-    rfl
-    exact rieszContentAux'_mono Λ fun ⦃a⦄ a => a
-  have hge : rieszContentAux' Λ V ≤ rieszContent' Λ V := by
-    apply le_sInf
-    intro x hx
-    simp only [SetLike.coe_subset_coe, mem_image, mem_setOf_eq] at hx
-    obtain ⟨V', hV'⟩ := hx
-    rw [← hV'.2]
-    exact rieszContentAux'_mono Λ hV'.1
-  exact le_antisymm hle hge
+  apply le_antisymm
+  apply sInf_le_of_le
+  use V
+  simp only [SetLike.coe_subset_coe, mem_setOf_eq, le_refl, true_and]
+  rfl
+  exact rieszContentAux'_mono Λ fun ⦃a⦄ a => a
+  apply le_sInf
+  intro x hx
+  simp only [SetLike.coe_subset_coe, mem_image, mem_setOf_eq] at hx
+  obtain ⟨V', hV'⟩ := hx
+  rw [← hV'.2]
+  exact rieszContentAux'_mono Λ hV'.1
 
+def M_F (Λ : (X →ᵇ ℝ) →ₗ[ℝ] ℝ) : Set (Set X) := {E : Set X | rieszContent' Λ E < ∞
+  ∧ rieszContent' Λ E = sSup (rieszContent' Λ '' {K : Set X | IsCompact K ∧ K ⊆ E })}
+
+def M (Λ : (X →ᵇ ℝ) →ₗ[ℝ] ℝ) : Set (Set X) :=
+  {E : Set X | ∀ (K : Set X), IsCompact K → (E ∩ K) ∈ M_F Λ}
+
+-- P.42 of Rudin "Real and Complex analysis"
+-- Continue with "Proof that μ and M have the required properties"
 
 lemma in_M_F_of_rieszContent'_zero {E : Set X} (h : rieszContent' Λ E = 0) : E ∈ M_F Λ := by
   sorry
 
 lemma in_M_of_rieszContent'_zero {E : Set X} (h : rieszContent' Λ E = 0) : E ∈ M Λ := by
-  sorry
+  intro K _
+  have : rieszContent' Λ (E ∩ K) = 0 := by
+    apply le_antisymm
+    rw [← h]
+    exact rieszContent'_mono Λ (Set.inter_subset_left E K)
+    exact zero_le (rieszContent' Λ (E ∩ K))
+  constructor
+  · rw [this]
+    exact zero_lt_top
+  · apply le_antisymm
+    rw [this]
+    exact zero_le (sSup (rieszContent' Λ '' {K_1 | IsCompact K_1 ∧ K_1 ⊆ E ∩ K}))
+    apply sSup_le
+    intro x hx
+    obtain ⟨E', hE'⟩ := hx
+    rw [← hE'.2]
+    exact rieszContent'_mono Λ hE'.1.2
 
 /-- The Riesz content μ associated to a given positive linear functional Λ is
 finitely subadditive for open sets : `μ (V₁ ∪ V₂) ≤ μ(V₁) + μ(V₂)`. -/
