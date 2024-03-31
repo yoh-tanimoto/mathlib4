@@ -131,9 +131,9 @@ lemma zero_at_infty_of_hasCompactSupport [TopologicalSpace β] [Zero β]
     rw [image_eq_zero_of_nmem_tsupport hx]
     exact hzero
 
-/-! ### The case with β : IsROrC
+/-! ### The case with β : RCLike
 
-Whenever `β : IsROrC`, one can apply Urysohn's lemma to show that any function vanishing at infinity
+Whenever `β : RCLike`, one can apply Urysohn's lemma to show that any function vanishing at infinity
 can be approximated by functions with compact support.
 -/
 
@@ -143,7 +143,7 @@ open Urysohns
 /-- For a function which vanishes at infinity there is a sequence of functions with compact support
 that tend to the given function. -/
 lemma exist_HasCompactSupport_and_Tendsto [LocallyCompactSpace α] [T2Space α]
-    {𝕂 : Type*} [IsROrC 𝕂](f : C₀(α, 𝕂)) : ∃ (g : ℕ → C₀(α ,𝕂)),
+    {𝕂 : Type*} [RCLike 𝕂](f : C₀(α, 𝕂)) : ∃ (g : ℕ → C₀(α ,𝕂)),
     (∀ (n : ℕ), HasCompactSupport (g n)) ∧ Filter.Tendsto g Filter.atTop (nhds f) := by
 -- find a function gn for each n
   have h : ∀ (n : ℕ), ∃ (gn : C₀(α, 𝕂)), HasCompactSupport gn ∧ ‖f - gn‖ ≤ 1/((n : ℝ)+1) := by
@@ -164,18 +164,18 @@ lemma exist_HasCompactSupport_and_Tendsto [LocallyCompactSpace α] [T2Space α]
       (IsOpen.isClosed_compl hU.left) (LE.le.disjoint_compl_right hU.right.left)
 -- k is ℝ-valued, so need to compose with `ofRealCLM`
     have hkcp : HasCompactSupport
-        (ContinuousMap.comp ⟨(IsROrC.ofRealCLM : ℝ →L[ℝ] 𝕂), IsROrC.ofRealCLM.cont⟩ k) := by
+        (ContinuousMap.comp ⟨(RCLike.ofRealCLM : ℝ →L[ℝ] 𝕂), RCLike.ofRealCLM.cont⟩ k) := by
       have hkcp1 : Function.support
-          (ContinuousMap.comp ⟨(IsROrC.ofRealCLM : ℝ →L[ℝ] 𝕂), IsROrC.ofRealCLM.cont⟩ k) ⊆
+          (ContinuousMap.comp ⟨(RCLike.ofRealCLM : ℝ →L[ℝ] 𝕂), RCLike.ofRealCLM.cont⟩ k) ⊆
           Function.support k := by
-        apply Function.support_comp_subset IsROrC.ofReal_zero
+        apply Function.support_comp_subset RCLike.ofReal_zero
       unfold HasCompactSupport
       exact IsCompact.closure_of_subset hk.right.right.left (subset_trans hkcp1 subset_closure)
 -- define gn as the product of f and k
     let gn : C₀(α, 𝕂)
-      := ⟨f.1 * (ContinuousMap.comp ⟨(IsROrC.ofRealCLM : ℝ →L[ℝ] 𝕂), IsROrC.ofRealCLM.cont⟩ k),
+      := ⟨f.1 * (ContinuousMap.comp ⟨(RCLike.ofRealCLM : ℝ →L[ℝ] 𝕂), RCLike.ofRealCLM.cont⟩ k),
         (zero_at_infty_of_hasCompactSupport (f.1 * (ContinuousMap.comp
-        ⟨(IsROrC.ofRealCLM : ℝ →L[ℝ] 𝕂), IsROrC.ofRealCLM.cont⟩ k)) hkcp.mul_left)⟩
+        ⟨(RCLike.ofRealCLM : ℝ →L[ℝ] 𝕂), RCLike.ofRealCLM.cont⟩ k)) hkcp.mul_left)⟩
     use gn
     constructor
 -- gn is compact
@@ -201,9 +201,9 @@ lemma exist_HasCompactSupport_and_Tendsto [LocallyCompactSpace α] [T2Space α]
       · rw [Set.compl_subset_comm] at hK
         rw [norm_mul, mul_comm]
         apply mul_le_mul
-        · have h26 : (1 - (k x : 𝕂)) = ((1 - k x) : ℝ) := by simp only [IsROrC.ofReal_sub,
+        · have h26 : (1 - (k x : 𝕂)) = ((1 - k x) : ℝ) := by simp only [RCLike.ofReal_sub,
             algebraMap.coe_one]
-          rw [h26, IsROrC.norm_ofReal]
+          rw [h26, RCLike.norm_ofReal]
           have h27 : 0 ≤ 1 - k x ∧ 1 - k x ≤ 1 := by
             constructor
             · nth_rw 1 [← sub_self 1]

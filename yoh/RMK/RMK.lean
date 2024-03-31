@@ -111,7 +111,7 @@ lemma Λ_mono {f g : X →ᵇ ℝ} (h : f ≤ g) : Λ f ≤ Λ g := by
   have : 0 ≤ g - f := by exact sub_nonneg.mpr h
   calc Λ f ≤ Λ f + Λ (g - f) := by exact le_add_of_nonneg_right (hΛ (g - f) this)
   _ = Λ (f + (g - f)) := by rw [← LinearMap.map_add Λ f (g - f)]
-  _ = Λ g := by simp only [add_sub_cancel'_right]
+  _ = Λ g := by simp only [add_sub_cancel]
 
 
 -- /-! ### Construction of the content: -/
@@ -174,6 +174,12 @@ lemma in_M_F_of_rieszContent'_zero {E : Set X} (h : rieszContent' Λ E = 0) : E 
   sorry
 
 lemma in_M_of_rieszContent'_zero {E : Set X} (h : rieszContent' Λ E = 0) : E ∈ M Λ := by
+  sorry
+
+/-- The Riesz content μ associated to a given positive linear functional Λ is
+finitely subadditive for open sets : `μ (V₁ ∪ V₂) ≤ μ(V₁) + μ(V₂)`. -/
+theorem rieszContentAux'_sup_le (V₁ V₂ : Opens X) :
+    rieszContentAux' Λ (V₁ ⊔ V₂) ≤ rieszContentAux' Λ V₁ + rieszContentAux' Λ V₂ := by
   sorry
 
 

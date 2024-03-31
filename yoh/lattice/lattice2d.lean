@@ -285,7 +285,7 @@ lemma IsFiniteBoundedSetIntegers : ∀ (M : ℝ) (hM : 1 ≤ M), Set.Finite {n :
 
 --  exact Set.Finite.subset hleMifin hxleMi
 
-theorem norm_sq_eq {𝕜 : Type u_8} [IsROrC 𝕜] {n : Type u_9} [Fintype n] (x : EuclideanSpace 𝕜 n)
+theorem norm_sq_eq {𝕜 : Type u_8} [RCLike 𝕜] {n : Type u_9} [Fintype n] (x : EuclideanSpace 𝕜 n)
  : ‖x‖ ^ 2 = Finset.sum Finset.univ fun (i : n) => ‖x i‖ ^ 2 := by
  have : ‖x‖ = Real.sqrt (Finset.sum Finset.univ fun (i : n) => ‖x i‖ ^ 2) := by
   exact EuclideanSpace.norm_eq x
