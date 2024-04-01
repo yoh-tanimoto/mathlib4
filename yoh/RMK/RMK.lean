@@ -237,9 +237,16 @@ lemma exists_lt_rieszContent'_add_pos {E : Set X} (hE : rieszContent' Λ E < ∞
       have : f.toFun = 0 := by
         exact tsupport_eq_empty_iff.mp (Set.eq_empty_of_subset_empty (Set.mem_setOf.mp hf.1).1)
       simp only [ContinuousMap.toFun_eq_coe, coe_to_continuous_fun] at this
-    -- f = 0, so Λ f = 0. problem of coercion
-      sorry
-    sorry
+      have : f = 0 := by
+        apply (BoundedContinuousFunction.forall_coe_zero_iff_zero f).mp
+        intro x
+        exact congrFun this x
+      rw [this, LinearMap.map_zero Λ]
+      simp only [Opens.mk_empty, zero_le]
+    constructor
+    · exact Set.empty_subset E
+    · rw [this]
+      exact zero_le (rieszContent' Λ E + ↑ε)
   · push_neg
     sorry
 
