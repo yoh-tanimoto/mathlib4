@@ -221,8 +221,27 @@ lemma rieszContentAux'_sup_le (V₁ V₂ : Opens X) :
 
 /-- The Riesz content can be approximated arbitrarily well from outside by open sets. -/
 lemma exists_lt_rieszContent'_add_pos {E : Set X} (hE : rieszContent' Λ E < ∞)
-    {ε : ℝ≥0} (εpos : 0 < ε) : ∃ (V : Opens X), rieszContent' Λ V < rieszContent' Λ E + ε := by
-  sorry
+    {ε : ℝ≥0} (εpos : 0 < ε) : ∃ (V : Opens X), (V : Set X) ⊆ E ∧ rieszContent' Λ V ≤ rieszContent' Λ E + ε := by
+  by_cases hinf : rieszContent' Λ E = ∞
+  · use ⟨∅, isOpen_empty⟩
+    have : rieszContent' Λ ((Opens.mk (∅ : Set X) isOpen_empty) : Set X) = 0 := by
+      rw [rieszContent'_eq_rieszContentAux'_open Λ ⟨∅, isOpen_empty⟩]
+      apply le_antisymm
+      apply sSup_le
+      simp only [nonpos_iff_eq_zero]
+      intro x hx
+      obtain ⟨z, hz⟩ := hx
+      obtain ⟨f, hf⟩ := hz.1
+      rw [← hz.right, ← hf.right]
+      simp only [ofReal_eq_zero, ge_iff_le]
+      have : f.toFun = 0 := by
+        exact tsupport_eq_empty_iff.mp (Set.eq_empty_of_subset_empty (Set.mem_setOf.mp hf.1).1)
+      simp only [ContinuousMap.toFun_eq_coe, coe_to_continuous_fun] at this
+    -- f = 0, so Λ f = 0. problem of coercion
+      sorry
+    sorry
+  · push_neg
+    sorry
 
 
 open ZeroAtInfty
