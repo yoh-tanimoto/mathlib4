@@ -219,6 +219,54 @@ lemma rieszContentAux'_sup_le (V₁ V₂ : Opens X) :
     rieszContentAux' Λ (V₁ ⊔ V₂) ≤ rieszContentAux' Λ V₁ + rieszContentAux' Λ V₂ := by
   sorry
 
+
+-- to mathlib NEEReal??
+
+lemma sInf_diff_singleton_eq_sInf {s : Set ENNReal} {b : ENNReal} (h : ∃ (a : ENNReal), a ∈ s ∧ a < b)
+    : sInf (s \ {b}) = sInf s := by
+  apply le_antisymm
+  apply sInf_le_sInf_of_forall_exists_le
+  intro x hxins
+  obtain ⟨a, ha⟩ := h
+  by_cases hx : x = b
+  · use a
+    constructor
+    · constructor
+      · exact ha.1
+      · simp only [mem_singleton_iff]
+        exact ne_of_lt ha.2
+    · rw [hx]
+      exact le_of_lt ha.2
+  · use x
+    constructor
+    · constructor
+      exact hxins
+      simp only [mem_singleton_iff]
+      exact hx
+    · exact Preorder.le_refl x
+  exact sInf_le_sInf (Set.diff_subset _ _)
+
+variable (s : Set ℝ≥0∞)
+#check s \ ({⊤} : Set ℝ≥0∞)
+
+lemma ENNReal.toNNReal_sInf' (s : Set ℝ≥0∞) (hs : ∃ r ∈ s, r ≠ ⊤)
+    : (sInf s).toNNReal = sInf (ENNReal.toNNReal '' (s \ {⊤})) := by
+  have : Set.Nonempty (s \ ({⊤} : Set ℝ≥0∞)) := by
+    exact hs
+  have : sInf (s \ ({⊤} : Set ℝ≥0∞)) = sInf s := by
+    apply sInf_diff_singleton_eq_sInf
+    obtain ⟨r, hr⟩ := hs
+    use r
+    constructor
+    · exact hr.1
+    · exact Ne.lt_top hr.2
+  rw [← this]
+-- use ENNReal.neTopEquivNNReal
+
+lemma ex_in_add_pos_lt {s : Set ℝ≥0∞} (hs : Nonempty s) (hsinf : sInf s < ⊤) (ε : ℝ≥0) :
+    ∃ (a : ℝ≥0), ENNReal.ofNNReal a ∈ s ∧ a < ENNReal.toNNReal (sInf s) + ε := by
+  sorry
+
 /-- The Riesz content can be approximated arbitrarily well from outside by open sets. -/
 lemma exists_lt_rieszContent'_add_pos {E : Set X} (hE : rieszContent' Λ E < ∞)
     {ε : ℝ≥0} (εpos : 0 < ε) : ∃ (V : Opens X), (V : Set X) ⊆ E ∧ rieszContent' Λ V ≤ rieszContent' Λ E + ε := by
@@ -247,8 +295,13 @@ lemma exists_lt_rieszContent'_add_pos {E : Set X} (hE : rieszContent' Λ E < ∞
     · exact Set.empty_subset E
     · rw [this]
       exact zero_le (rieszContent' Λ E + ↑ε)
-  · push_neg
-    sorry
+  · have : ∃ (a : ℝ≥0), rieszContent' Λ E = a := by
+      use (rieszContent' Λ E).toNNReal
+      exact (coe_toNNReal hinf).symm
+    obtain ⟨a, ha⟩ := this
+    rw [ha,]
+
+
 
 
 open ZeroAtInfty
