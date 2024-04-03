@@ -246,13 +246,9 @@ lemma sInf_diff_singleton_eq_sInf {s : Set ENNReal} {b : ENNReal} (h : ∃ (a : 
     · exact Preorder.le_refl x
   exact sInf_le_sInf (Set.diff_subset _ _)
 
-variable (s : Set ℝ≥0∞)
-#check s \ ({⊤} : Set ℝ≥0∞)
-
 lemma ENNReal.toNNReal_sInf' (s : Set ℝ≥0∞) (hs : ∃ r ∈ s, r ≠ ⊤)
     : (sInf s).toNNReal = sInf (ENNReal.toNNReal '' (s \ {⊤})) := by
-  have : Set.Nonempty (s \ ({⊤} : Set ℝ≥0∞)) := by
-    exact hs
+  rw [← ENNReal.toNNReal_sInf]
   have : sInf (s \ ({⊤} : Set ℝ≥0∞)) = sInf s := by
     apply sInf_diff_singleton_eq_sInf
     obtain ⟨r, hr⟩ := hs
@@ -261,11 +257,13 @@ lemma ENNReal.toNNReal_sInf' (s : Set ℝ≥0∞) (hs : ∃ r ∈ s, r ≠ ⊤)
     · exact hr.1
     · exact Ne.lt_top hr.2
   rw [← this]
--- use ENNReal.neTopEquivNNReal
+  intro x hx
+  exact (Set.mem_diff_singleton.mp hx).right
 
 lemma ex_in_add_pos_lt {s : Set ℝ≥0∞} (hs : Nonempty s) (hsinf : sInf s < ⊤) (ε : ℝ≥0) :
     ∃ (a : ℝ≥0), ENNReal.ofNNReal a ∈ s ∧ a < ENNReal.toNNReal (sInf s) + ε := by
   sorry
+-- use Real.lt_sInf_add_pos
 
 /-- The Riesz content can be approximated arbitrarily well from outside by open sets. -/
 lemma exists_lt_rieszContent'_add_pos {E : Set X} (hE : rieszContent' Λ E < ∞)
