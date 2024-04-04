@@ -279,10 +279,11 @@ lemma ex_in_add_pos_lt {s : Set ℝ≥0∞} (hsinf : sInf s < ⊤) (ε : ℝ≥0
       intro x hx
       exact eq_top_iff.mp (h x hx)
     exact LT.lt.false (lt_of_le_of_lt this hsinf)
-  have : Set.Nonempty (ENNReal.toReal '' s) := by
+  have : Set.Nonempty (ENNReal.toReal '' (s \ {⊤})) := by
     simp only [image_nonempty]
     obtain ⟨x, hx⟩ := this
-    exact Set.nonempty_of_mem hx.1
+    sorry
+--    exact Set.nonempty_of_mem hx.1
   obtain ⟨a, ha⟩ := Real.lt_sInf_add_pos this hε
   obtain ⟨b, hb⟩ := ha.1
   use b.toNNReal
