@@ -192,7 +192,17 @@ def M (Λ : (X →ᵇ ℝ) →ₗ[ℝ] ℝ) : Set (Set X) :=
 -- Continue with "Proof that μ and M have the required properties"
 
 lemma in_M_F_of_rieszContent'_zero {E : Set X} (h : rieszContent' Λ E = 0) : E ∈ M_F Λ := by
-  sorry
+  constructor
+  · rw [h]
+    simp only [zero_lt_top]
+  · apply le_antisymm
+    rw [h]
+    simp only [zero_le]
+    apply sSup_le
+    intro b hb
+    obtain ⟨K, hK⟩ := hb
+    rw [← hK.2]
+    exact rieszContent'_mono Λ (Set.mem_setOf.mp hK.1).2
 
 lemma in_M_of_rieszContent'_zero {E : Set X} (h : rieszContent' Λ E = 0) : E ∈ M Λ := by
   intro K _
@@ -260,10 +270,26 @@ lemma ENNReal.toNNReal_sInf' (s : Set ℝ≥0∞) (hs : ∃ r ∈ s, r ≠ ⊤)
   intro x hx
   exact (Set.mem_diff_singleton.mp hx).right
 
-lemma ex_in_add_pos_lt {s : Set ℝ≥0∞} (hs : Nonempty s) (hsinf : sInf s < ⊤) (ε : ℝ≥0) :
+lemma ex_in_add_pos_lt {s : Set ℝ≥0∞} (hsinf : sInf s < ⊤) (ε : ℝ≥0) (hε : 0 < ε) :
     ∃ (a : ℝ≥0), ENNReal.ofNNReal a ∈ s ∧ a < ENNReal.toNNReal (sInf s) + ε := by
+  have : ∃ (x : ℝ≥0∞), x ∈ s ∧ x ≠ ⊤ := by
+    by_contra! h
+    have : ⊤ ≤ sInf s := by
+      apply le_sInf
+      intro x hx
+      exact eq_top_iff.mp (h x hx)
+    exact LT.lt.false (lt_of_le_of_lt this hsinf)
+  have : Set.Nonempty (ENNReal.toReal '' s) := by
+    simp only [image_nonempty]
+    obtain ⟨x, hx⟩ := this
+    exact Set.nonempty_of_mem hx.1
+  obtain ⟨a, ha⟩ := Real.lt_sInf_add_pos this hε
+  obtain ⟨b, hb⟩ := ha.1
+  use b.toNNReal
   sorry
--- use Real.lt_sInf_add_pos
+
+
+
 
 /-- The Riesz content can be approximated arbitrarily well from outside by open sets. -/
 lemma exists_lt_rieszContent'_add_pos {E : Set X} (hE : rieszContent' Λ E < ∞)
@@ -298,7 +324,7 @@ lemma exists_lt_rieszContent'_add_pos {E : Set X} (hE : rieszContent' Λ E < ∞
       exact (coe_toNNReal hinf).symm
     obtain ⟨a, ha⟩ := this
     rw [ha,]
-
+    sorry
 
 
 
