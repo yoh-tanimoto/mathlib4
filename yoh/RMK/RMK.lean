@@ -256,8 +256,8 @@ lemma sInf_diff_singleton_eq_sInf {s : Set ENNReal} {b : ENNReal} (h : ∃ (a : 
     · exact Preorder.le_refl x
   exact sInf_le_sInf (Set.diff_subset _ _)
 
-lemma ENNReal.toNNReal_sInf' (s : Set ℝ≥0∞) (hs : ∃ r ∈ s, r ≠ ⊤)
-    : (sInf s).toNNReal = sInf (ENNReal.toNNReal '' (s \ {⊤})) := by
+lemma ENNReal.toNNReal_sInf' {s : Set ℝ≥0∞} (hs : ∃ (r : ℝ≥0∞), r ∈ s ∧ r ≠ ⊤) :
+    (sInf s).toNNReal = sInf (ENNReal.toNNReal '' (s \ {⊤})) := by
   rw [← ENNReal.toNNReal_sInf]
   have : sInf (s \ ({⊤} : Set ℝ≥0∞)) = sInf s := by
     apply sInf_diff_singleton_eq_sInf
@@ -269,6 +269,40 @@ lemma ENNReal.toNNReal_sInf' (s : Set ℝ≥0∞) (hs : ∃ r ∈ s, r ≠ ⊤)
   rw [← this]
   intro x hx
   exact (Set.mem_diff_singleton.mp hx).right
+
+lemma toReal_eq_toReal_toNNReal (x : ℝ≥0∞) : x.toReal = (x.toNNReal).toReal := by
+  exact rfl
+
+variable {s : Set ℝ≥0}
+
+#check (toReal '' s)
+
+
+lemma NNReal.bddBelow (s : Set ℝ≥0) : BddBelow s := by
+  exact OrderBot.bddBelow s
+
+lemma toReal_sInf_eq_sInf_toReal {s : Set ℝ≥0} (hs : Set.Nonempty s): (sInf s).toReal = sInf (toReal '' s) := by
+  apply le_antisymm
+  have : ∀ (b : ℝ), b ∈ (toReal '' s) → (sInf s).toReal ≤ b := by
+    intro b hb
+    obtain ⟨a, ha⟩ := hb
+    rw [← ha.2]
+    simp only [NNReal.coe_le_coe]
+    apply csInf_le (OrderBot.bddBelow s) ha.1
+  exact le_csInf (Set.image_nonempty.mpr hs) this
+  rw [(csInf_le_iff (NNReal.bddBelow_coe s) (Set.image_nonempty.mpr hs))]
+  intro b hb
+  rw [mem_lowerBounds] at hb
+  by_cases hbnonneg : 0 ≤ b
+  rw [(Real.coe_toNNReal b hbnonneg).symm, NNReal.coe_le_coe]
+  apply le_csInf hs
+  intro b1 hb1
+  exact Real.toNNReal_le_iff_le_coe.mpr (hb b1.toReal (Set.mem_image_of_mem toReal hb1))
+  push_neg at hbnonneg
+  exact le_of_lt (lt_of_lt_of_le hbnonneg zero_le_coe)
+
+
+
 
 lemma ex_in_add_pos_lt {s : Set ℝ≥0∞} (hsinf : sInf s < ⊤) (ε : ℝ≥0) (hε : 0 < ε) :
     ∃ (a : ℝ≥0), ENNReal.ofNNReal a ∈ s ∧ a < ENNReal.toNNReal (sInf s) + ε := by
@@ -282,12 +316,31 @@ lemma ex_in_add_pos_lt {s : Set ℝ≥0∞} (hsinf : sInf s < ⊤) (ε : ℝ≥0
   have : Set.Nonempty (ENNReal.toReal '' (s \ {⊤})) := by
     simp only [image_nonempty]
     obtain ⟨x, hx⟩ := this
-    sorry
---    exact Set.nonempty_of_mem hx.1
+    use x
+    constructor
+    · exact hx.1
+    · exact not_mem_of_mem_diff hx
   obtain ⟨a, ha⟩ := Real.lt_sInf_add_pos this hε
   obtain ⟨b, hb⟩ := ha.1
   use b.toNNReal
-  sorry
+  have hbnottop : b ≠ ⊤ := by
+    exact (Set.mem_diff_singleton.mpr hb.1).2
+  constructor
+  · rw [ENNReal.coe_toNNReal (Set.mem_diff_singleton.mpr hb.1).2]
+    exact ((Set.mem_diff b).mp hb.1).1
+  · have : ∃ (r : ℝ≥0∞), r ∈ s ∧ r ≠ ⊤ := by
+      use b
+      constructor
+      · exact ((Set.mem_diff b).mp hb.1).1
+      · exact hbnottop
+    rw [ENNReal.toNNReal_sInf' this, ← NNReal.coe_lt_coe]
+    rw [← toReal_eq_toReal_toNNReal b, hb.2]
+    simp
+
+#check OrderIso.map_csInf'
+
+
+
 
 
 
