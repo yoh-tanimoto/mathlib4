@@ -239,13 +239,14 @@ lemma exists_tsupport_one_of_isOpen_isClosed [NormalSpace X] {s t : Set X}
       apply (IsClosed.closure_subset_iff (IsOpen.isClosed_compl hUV.2.1)).mpr
       exact Set.subset_compl_iff_disjoint_right.mpr hUV.2.2.2.2
     obtain ⟨f, hf⟩ := exists_continuous_zero_one_of_isClosed isClosed_closure ht this
-
     use f
     constructor
-    sorry
-    exact hf.2
-
-
+    · apply _root_.subset_trans _ (Set.compl_subset_comm.mp hUV.2.2.1)
+      rw [← IsClosed.closure_eq (IsOpen.isClosed_compl hUV.1)]
+      apply closure_mono
+      rw [Set.subset_compl_iff_disjoint_left, Function.disjoint_support_iff]
+      exact Set.EqOn.mono subset_closure hf.1
+    · exact hf.2
 
 
 lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed [NormalSpace X] (n : ℕ) {t : Set X}
