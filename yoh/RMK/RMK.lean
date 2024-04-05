@@ -223,6 +223,23 @@ lemma in_M_of_rieszContent'_zero {E : Set X} (h : rieszContent' Λ E = 0) : E �
     rw [← hE'.2]
     exact rieszContent'_mono Λ hE'.1.2
 
+
+-- to mathlib UrysohnsLemma?
+
+open BigOperators
+
+lemma exists_tsupport_one_of_isOpen_isClosed [NormalSpace X] {s t : Set X}
+    (hs : IsOpen s) (ht : IsClosed t) (hst : t ⊆ s) : ∃ f : C(X, ℝ), tsupport f ⊆ s ∧ EqOn f 1 t
+    ∧ ∀ x, f x ∈ Icc (0 : ℝ) 1 := by
+    sorry
+
+lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed [NormalSpace X] (n : ℕ) {t : Set X}
+    {s : Fin n → Set X} (hs : ∀ (i : Fin n), IsOpen (s i)) (ht : IsClosed t) (hst : t ⊆ ⋃ i, s i) :
+    ∃ f : Fin n → C(X, ℝ), ∀ (i : Fin n), tsupport (f i) ⊆ s i ∧ EqOn (∑ i, f i) 1 t
+    ∧ ∀ (i : Fin n), ∀ (x : X), f i x ∈ Icc (0 : ℝ) 1 := by
+    sorry
+
+
 /-- The Riesz content μ associated to a given positive linear functional Λ is
 finitely subadditive for open sets : `μ (V₁ ∪ V₂) ≤ μ(V₁) + μ(V₂)`. -/
 lemma rieszContentAux'_sup_le (V₁ V₂ : Opens X) :
