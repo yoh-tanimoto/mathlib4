@@ -382,41 +382,37 @@ lemma ex_in_add_pos_lt {s : Set ℝ≥0∞} (hsinf : sInf s < ⊤) (ε : ℝ≥0
     · exact ((Set.mem_diff b).mp hb.1).1
     · exact hbnottop
 
+lemma ex_in_add_pos_lt' {s : Set ℝ≥0∞} (hsinf : sInf s < ⊤) (ε : ℝ≥0) (hε : 0 < ε) :
+    ∃ (a : ℝ≥0), ENNReal.ofNNReal a ∈ s ∧ ENNReal.ofNNReal a < (sInf s) + ε := by
+  obtain ⟨a, ha⟩ := ex_in_add_pos_lt hsinf ε hε
+  use a
+  have : sInf s ≠ ⊤ := by
+    exact LT.lt.ne_top hsinf
+  constructor
+  · exact ha.1
+  · rw [← ENNReal.coe_toNNReal this]
+    rw [← ENNReal.coe_add, ENNReal.coe_lt_coe]
+    exact ha.2
+
+
 
 /-- The Riesz content can be approximated arbitrarily well from outside by open sets. -/
-lemma exists_lt_rieszContent'_add_pos {E : Set X} (hE : rieszContent' Λ E < ∞)
-    {ε : ℝ≥0} (εpos : 0 < ε) : ∃ (V : Opens X), (V : Set X) ⊆ E ∧ rieszContent' Λ V ≤ rieszContent' Λ E + ε := by
+lemma exists_lt_rieszContent'_add_pos {E : Set X} {ε : ℝ≥0} (εpos : 0 < ε) :
+    ∃ (V : Opens X), E ⊆ (V : Set X) ∧ rieszContent' Λ V ≤ rieszContent' Λ E + ε := by
   by_cases hinf : rieszContent' Λ E = ∞
-  · use ⟨∅, isOpen_empty⟩
-    have : rieszContent' Λ ((Opens.mk (∅ : Set X) isOpen_empty) : Set X) = 0 := by
-      rw [rieszContent'_eq_rieszContentAux'_open Λ ⟨∅, isOpen_empty⟩]
-      apply le_antisymm
-      apply sSup_le
-      simp only [nonpos_iff_eq_zero]
-      intro x hx
-      obtain ⟨z, hz⟩ := hx
-      obtain ⟨f, hf⟩ := hz.1
-      rw [← hz.right, ← hf.right]
-      simp only [ofReal_eq_zero, ge_iff_le]
-      have : f.toFun = 0 := by
-        exact tsupport_eq_empty_iff.mp (Set.eq_empty_of_subset_empty (Set.mem_setOf.mp hf.1).1)
-      simp only [ContinuousMap.toFun_eq_coe, coe_to_continuous_fun] at this
-      have : f = 0 := by
-        apply (BoundedContinuousFunction.forall_coe_zero_iff_zero f).mp
-        intro x
-        exact congrFun this x
-      rw [this, LinearMap.map_zero Λ]
-      simp only [Opens.mk_empty, zero_le]
+  · use ⊤
     constructor
-    · exact Set.empty_subset E
-    · rw [this]
-      exact zero_le (rieszContent' Λ E + ↑ε)
-  · have : ∃ (a : ℝ≥0), rieszContent' Λ E = a := by
-      use (rieszContent' Λ E).toNNReal
-      exact (coe_toNNReal hinf).symm
-    obtain ⟨a, ha⟩ := this
-    rw [ha,]
-    sorry
+    exact le_top
+    rw [hinf]
+    exact sup_eq_left.mp rfl
+  · obtain ⟨b, hb⟩ := ex_in_add_pos_lt' (Ne.lt_top hinf) ε εpos
+    obtain ⟨V, hV⟩ := hb.1
+    use V
+    constructor
+    exact Set.mem_setOf.mp hV.1
+    rw [rieszContent'_eq_rieszContentAux'_open Λ V, hV.2]
+    apply le_of_lt
+    exact hb.2
 
 
 
