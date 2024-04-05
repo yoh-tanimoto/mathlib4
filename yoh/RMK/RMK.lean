@@ -273,15 +273,11 @@ lemma ENNReal.toNNReal_sInf' {s : Set ℝ≥0∞} (hs : ∃ (r : ℝ≥0∞), r 
 lemma toReal_eq_toReal_toNNReal (x : ℝ≥0∞) : x.toReal = (x.toNNReal).toReal := by
   exact rfl
 
-variable {s : Set ℝ≥0}
-
-#check (toReal '' s)
-
-
 lemma NNReal.bddBelow (s : Set ℝ≥0) : BddBelow s := by
   exact OrderBot.bddBelow s
 
-lemma toReal_sInf_eq_sInf_toReal {s : Set ℝ≥0} (hs : Set.Nonempty s): (sInf s).toReal = sInf (toReal '' s) := by
+lemma toReal_sInf_eq_sInf_toReal {s : Set ℝ≥0} (hs : Set.Nonempty s) :
+    (sInf s).toReal = sInf (toReal '' s) := by
   apply le_antisymm
   have : ∀ (b : ℝ), b ∈ (toReal '' s) → (sInf s).toReal ≤ b := by
     intro b hb
@@ -301,8 +297,50 @@ lemma toReal_sInf_eq_sInf_toReal {s : Set ℝ≥0} (hs : Set.Nonempty s): (sInf 
   push_neg at hbnonneg
   exact le_of_lt (lt_of_lt_of_le hbnonneg zero_le_coe)
 
-
-
+lemma toReal_sInf_eq_sInf_toReal' {s : Set ℝ≥0∞} (hs : ∃ (r : ℝ≥0∞), r ∈ s ∧ r ≠ ⊤) :
+    (sInf (s \ {⊤})).toReal = sInf (ENNReal.toReal '' (s \ {⊤})) := by
+  obtain ⟨r, hr⟩ := hs
+  apply le_antisymm
+  have hble : ∀ (b : ℝ), b ∈ (ENNReal.toReal '' (s \ {⊤})) → (sInf (s \ {⊤})).toReal ≤ b := by
+    intro b hb
+    obtain ⟨a, ha⟩ := hb
+    rw [← ha.2, ENNReal.toReal_le_toReal]
+    exact sInf_le ha.1
+    simp only [sInf_diff_singleton_top, ne_eq, sInf_eq_top, not_forall, exists_prop]
+    use r
+    exact (Set.mem_diff_singleton.mp ha.1).2
+  apply (le_csInf_iff _ _).mpr hble
+  use 0
+  intro x hx
+  obtain ⟨y, hy⟩ := hx
+  rw [← hy.2]
+  exact ENNReal.toReal_nonneg
+  use r.toReal
+  exact mem_image_of_mem ENNReal.toReal hr
+  apply (csInf_le_iff _ _).mpr
+  intro b hb
+  rw [@mem_lowerBounds] at hb
+  by_cases hbnonneg : 0 ≤ b
+  rw [← ENNReal.toReal_ofReal hbnonneg, ENNReal.toReal_le_toReal]
+  apply (le_csInf_iff _ _).mpr
+  intro y hy
+  rw [← ENNReal.ofReal_toReal_eq_iff.mpr (Set.mem_diff_singleton.mp hy).2]
+  simp only [toReal_nonneg, ofReal_le_ofReal_iff]
+  exact (hb y.toReal) (Set.mem_image_of_mem ENNReal.toReal hy)
+  exact OrderBot.bddBelow (s \ {⊤})
+  exact nonempty_of_mem hr
+  exact ofReal_ne_top
+  simp only [sInf_diff_singleton_top, ne_eq, sInf_eq_top, not_forall, exists_prop]
+  use r
+  push_neg at hbnonneg
+  exact le_of_lt (lt_of_lt_of_le hbnonneg zero_le_coe)
+  use 0
+  intro x hx
+  obtain ⟨y, hy⟩ := hx
+  rw [← hy.2]
+  exact ENNReal.toReal_nonneg
+  use r.toReal
+  exact mem_image_of_mem ENNReal.toReal hr
 
 lemma ex_in_add_pos_lt {s : Set ℝ≥0∞} (hsinf : sInf s < ⊤) (ε : ℝ≥0) (hε : 0 < ε) :
     ∃ (a : ℝ≥0), ENNReal.ofNNReal a ∈ s ∧ a < ENNReal.toNNReal (sInf s) + ε := by
@@ -336,13 +374,13 @@ lemma ex_in_add_pos_lt {s : Set ℝ≥0∞} (hsinf : sInf s < ⊤) (ε : ℝ≥0
     rw [ENNReal.toNNReal_sInf' this, ← NNReal.coe_lt_coe]
     rw [← toReal_eq_toReal_toNNReal b, hb.2]
     simp
-
-#check OrderIso.map_csInf'
-
-
-
-
-
+    rw [← ENNReal.toNNReal_sInf' this, ← toReal_eq_toReal_toNNReal (sInf s)]
+    rw [← sInf_diff_singleton_eq_sInf (sInf_lt_iff.mp hsinf), toReal_sInf_eq_sInf_toReal']
+    exact ha.2
+    use b
+    constructor
+    · exact ((Set.mem_diff b).mp hb.1).1
+    · exact hbnottop
 
 
 /-- The Riesz content can be approximated arbitrarily well from outside by open sets. -/
