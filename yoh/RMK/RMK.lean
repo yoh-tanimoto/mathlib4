@@ -231,7 +231,22 @@ open BigOperators
 lemma exists_tsupport_one_of_isOpen_isClosed [NormalSpace X] {s t : Set X}
     (hs : IsOpen s) (ht : IsClosed t) (hst : t ⊆ s) : ∃ f : C(X, ℝ), tsupport f ⊆ s ∧ EqOn f 1 t
     ∧ ∀ x, f x ∈ Icc (0 : ℝ) 1 := by
+    obtain ⟨U, V, hUV⟩ := normal_separation (IsOpen.isClosed_compl hs) ht
+      (HasSubset.Subset.disjoint_compl_left hst)
+    have : Disjoint (closure U) t := by
+      apply le_compl_iff_disjoint_right.mp
+      apply _root_.subset_trans _ (Set.compl_subset_compl.mpr hUV.2.2.2.1)
+      apply (IsClosed.closure_subset_iff (IsOpen.isClosed_compl hUV.2.1)).mpr
+      exact Set.subset_compl_iff_disjoint_right.mpr hUV.2.2.2.2
+    obtain ⟨f, hf⟩ := exists_continuous_zero_one_of_isClosed isClosed_closure ht this
+
+    use f
+    constructor
     sorry
+    exact hf.2
+
+
+
 
 lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed [NormalSpace X] (n : ℕ) {t : Set X}
     {s : Fin n → Set X} (hs : ∀ (i : Fin n), IsOpen (s i)) (ht : IsClosed t) (hst : t ⊆ ⋃ i, s i) :
