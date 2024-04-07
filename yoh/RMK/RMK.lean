@@ -249,11 +249,43 @@ lemma exists_tsupport_one_of_isOpen_isClosed [NormalSpace X] {s t : Set X}
     · exact hf.2
 
 
-lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed [NormalSpace X] (n : ℕ) {t : Set X}
-    {s : Fin n → Set X} (hs : ∀ (i : Fin n), IsOpen (s i)) (ht : IsClosed t) (hst : t ⊆ ⋃ i, s i) :
-    ∃ f : Fin n → C(X, ℝ), ∀ (i : Fin n), tsupport (f i) ⊆ s i ∧ EqOn (∑ i, f i) 1 t
+
+lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed [NormalSpace X] {n : ℕ}
+    {t : Set X} {s : Fin n → Set X} (hs : ∀ (i : Fin n), IsOpen (s i))
+    (ht : IsClosed t) (hst : t ⊆ ⋃ i, s i) :
+    ∃ f : Fin n → C(X, ℝ), (∀ (i : Fin n), tsupport (f i) ⊆ s i) ∧ EqOn (∑ i, f i) 1 t
     ∧ ∀ (i : Fin n), ∀ (x : X), f i x ∈ Icc (0 : ℝ) 1 := by
-    sorry
+  rcases n with _ | n
+  · simp only [Nat.zero_eq, Finset.univ_eq_empty, Finset.sum_empty, mem_Icc, IsEmpty.forall_iff,
+    and_true, exists_const]
+  induction' n with n ih
+  · simp only [Nat.zero_eq, Finset.univ_unique, Fin.default_eq_zero, Fin.isValue,
+    Finset.sum_singleton, mem_Icc]
+    obtain ⟨g, hg⟩ := exists_tsupport_one_of_isOpen_isClosed (isOpen_iUnion hs) ht hst
+    set f := fun (i : Fin 1) => g with hf
+    use f
+    have : ∀ (i : Fin 1), s i = ⋃ j, s j := by
+      intro i
+      apply subset_antisymm
+      · exact Set.subset_iUnion _ _
+      · apply Set.iUnion_subset
+        intro j
+        have : j = i := Eq.trans (Fin.eq_zero j) (Eq.symm (Fin.eq_zero i))
+        apply subset_of_eq
+        rw [← this]
+    constructor
+    · intro i
+      rw [hf]
+      simp only
+      rw [this i]
+      exact hg.1
+    constructor
+    · exact hg.2.1
+    · intro i
+      rw [hf]
+      simp only
+      exact hg.2.2
+  · sorry
 
 
 /-- The Riesz content μ associated to a given positive linear functional Λ is
