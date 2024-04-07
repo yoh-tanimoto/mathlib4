@@ -258,6 +258,14 @@ lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed [NormalSpace X
   rcases n with _ | n
   · simp only [Nat.zero_eq, Finset.univ_eq_empty, Finset.sum_empty, mem_Icc, IsEmpty.forall_iff,
     and_true, exists_const]
+    have : t = ∅ := by
+      rw [Set.iUnion_of_empty s] at hst
+      exact subset_eq_empty hst rfl
+    constructor
+    · exact trivial
+    · intro x
+      rw [this]
+      exact fun a => a.elim
   induction' n with n ih
   · simp only [Nat.zero_eq, Finset.univ_unique, Fin.default_eq_zero, Fin.isValue,
     Finset.sum_singleton, mem_Icc]
