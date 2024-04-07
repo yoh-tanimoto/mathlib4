@@ -312,14 +312,23 @@ lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed [NormalSpace X
         apply _root_.subset_trans _ hWx.2.2
         nth_rw 2 [← closure_eq_iff_isClosed.mpr (IsCompact.isClosed hWx.1)]
         exact closure_mono interior_subset
-    let W : X → Set X := fun x => if hx : x ∈ t then Classical.choose (this x hx) else ∅
-    have : ∃ (m : ℕ), ∃ (x : Fin m → X), t ⊆ ⋃ x, W x := by
-      sorry
-    obtain ⟨m, hm⟩ := this
-    obtain ⟨x, hx⟩ := hm
-    let Wx : Fin n → Fin m → Set X := fun i j =>
-      if hmV : closure (W (x j)) ⊆ s i then closure (W (x j)) else ∅
-    let H : Fin n → Set X := fun i => ⋃ j, (Wx i j)
+    set W : X → Set X := fun x => if hx : x ∈ t then Classical.choose (this x hx) else default with hW
+    have : ∀ (x : X), x ∈ t → W x ∈ nhds x := by
+      intro x hx
+      apply mem_nhds_iff.mpr
+      use W x
+      constructor
+      · exact fun ⦃a⦄ a => a
+      · rw [hW]
+        simp only
+        rw [dif_pos hx]
+        exact And.intro (Classical.choose_spec (this x hx)).2.1 (Classical.choose_spec (this x hx)).1
+    obtain ⟨ι, hι⟩ := IsCompact.elim_nhds_subcover htcp W this
+    let Wx : Fin n → ι → Set X := fun i xj =>
+      if hmV : closure (W xj) ⊆ s i then closure (W xj) else ∅
+    let H : Fin n → Set X := fun i => ⋃ xj, (Wx i xj)
+
+
 
 
     sorry
