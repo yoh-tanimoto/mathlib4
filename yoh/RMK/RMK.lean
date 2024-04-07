@@ -250,7 +250,7 @@ lemma exists_tsupport_one_of_isOpen_isClosed [NormalSpace X] {s t : Set X}
 
 open Classical
 
-lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed [NormalSpace X]
+lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed [NormalSpace X] [T2Space X]
     [LocallyCompactSpace X] {n : ℕ} {t : Set X} {s : Fin n → Set X}
     (hs : ∀ (i : Fin n), IsOpen (s i))
     (ht : IsClosed t) (htcp : IsCompact t) (hst : t ⊆ ⋃ i, s i) :
@@ -295,8 +295,23 @@ lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed [NormalSpace X
       simp only
       exact hg.2.2
   · have : ∀ (x : X), x ∈ t → ∃ (Wx : Set X), x ∈ Wx ∧ IsOpen Wx ∧ IsCompact (closure Wx)
-        ∧ ∃ (i : Fin n), (closure Wx) ⊆ s i := by
-      sorry
+        ∧ ∃ (i : Fin (n+2)), (closure Wx) ⊆ s i := by
+      intro x hx
+      obtain ⟨i, hi⟩ := Set.mem_iUnion.mp ((Set.mem_of_subset_of_mem hst) hx)
+      obtain ⟨cWx, hWx⟩ := exists_compact_subset (hs i) hi
+      use interior cWx
+      constructor
+      · exact hWx.2.1
+      constructor
+      · simp only [isOpen_interior]
+      constructor
+      · apply IsCompact.of_isClosed_subset hWx.1 isClosed_closure
+        nth_rw 2 [← closure_eq_iff_isClosed.mpr (IsCompact.isClosed hWx.1)]
+        exact closure_mono interior_subset
+      · use i
+        apply _root_.subset_trans _ hWx.2.2
+        nth_rw 2 [← closure_eq_iff_isClosed.mpr (IsCompact.isClosed hWx.1)]
+        exact closure_mono interior_subset
     let W : X → Set X := fun x => if hx : x ∈ t then Classical.choose (this x hx) else ∅
     have : ∃ (m : ℕ), ∃ (x : Fin m → X), t ⊆ ⋃ x, W x := by
       sorry
