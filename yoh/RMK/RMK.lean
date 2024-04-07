@@ -248,11 +248,12 @@ lemma exists_tsupport_one_of_isOpen_isClosed [NormalSpace X] {s t : Set X}
       exact Set.EqOn.mono subset_closure hf.1
     · exact hf.2
 
+open Classical
 
-
-lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed [NormalSpace X] {n : ℕ}
-    {t : Set X} {s : Fin n → Set X} (hs : ∀ (i : Fin n), IsOpen (s i))
-    (ht : IsClosed t) (hst : t ⊆ ⋃ i, s i) :
+lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed [NormalSpace X]
+    [LocallyCompactSpace X] {n : ℕ} {t : Set X} {s : Fin n → Set X}
+    (hs : ∀ (i : Fin n), IsOpen (s i))
+    (ht : IsClosed t) (htcp : IsCompact t) (hst : t ⊆ ⋃ i, s i) :
     ∃ f : Fin n → C(X, ℝ), (∀ (i : Fin n), tsupport (f i) ⊆ s i) ∧ EqOn (∑ i, f i) 1 t
     ∧ ∀ (i : Fin n), ∀ (x : X), f i x ∈ Icc (0 : ℝ) 1 := by
   rcases n with _ | n
@@ -293,8 +294,21 @@ lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed [NormalSpace X
       rw [hf]
       simp only
       exact hg.2.2
-  · sorry
+  · have : ∀ (x : X), x ∈ t → ∃ (Wx : Set X), x ∈ Wx ∧ IsOpen Wx ∧ IsCompact (closure Wx)
+        ∧ ∃ (i : Fin n), (closure Wx) ⊆ s i := by
+      sorry
+    let W : X → Set X := fun x => if hx : x ∈ t then Classical.choose (this x hx) else ∅
+    have : ∃ (m : ℕ), ∃ (x : Fin m → X), t ⊆ ⋃ x, W x := by
+      sorry
+    obtain ⟨m, hm⟩ := this
+    obtain ⟨x, hx⟩ := hm
+    let Wx : Fin n → Fin m → Set X := fun i j =>
+      if hmV : closure (W (x j)) ⊆ s i then closure (W (x j)) else ∅
+    let H : Fin n → Set X := fun i => ⋃ j, (Wx i j)
 
+
+    sorry
+  -- use exists_compact_subset
 
 /-- The Riesz content μ associated to a given positive linear functional Λ is
 finitely subadditive for open sets : `μ (V₁ ∪ V₂) ≤ μ(V₁) + μ(V₂)`. -/
