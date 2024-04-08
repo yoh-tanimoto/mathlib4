@@ -324,15 +324,15 @@ lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed [NormalSpace X
         rw [dif_pos hx]
         exact And.intro (Classical.choose_spec (this x hx)).2.1 (Classical.choose_spec (this x hx)).1
     obtain ⟨ι, hι⟩ := IsCompact.elim_nhds_subcover htcp W this
-    set Wx : Fin n → ι → Set X := fun i xj =>
+    set Wx : Fin (n+2) → ι → Set X := fun i xj =>
       if hmV : closure (W xj) ⊆ s i then closure (W xj) else ∅ with hWx
-    set H : Fin n → Set X := fun i => ⋃ xj, closure (Wx i xj) with hH
-    have IsClosedH : ∀ (i : Fin n), IsClosed (H i) := by
+    set H : Fin (n+2) → Set X := fun i => ⋃ xj, closure (Wx i xj) with hH
+    have IsClosedH : ∀ (i : Fin (n+2)), IsClosed (H i) := by
       intro i
       rw [hH]
       simp only
       exact isClosed_iUnion_of_finite (fun (xj : ι) => isClosed_closure)
-    have IsHSubS : ∀ (i : Fin n), H i ⊆ s i := by
+    have IsHSubS : ∀ (i : Fin (n+2)), H i ⊆ s i := by
       intro i
       rw [hH]
       simp only
@@ -345,9 +345,11 @@ lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed [NormalSpace X
         exact hmV
       · rw [dif_neg hmV, closure_empty]
         exact Set.empty_subset _
-    let g : Fin n → C(X, ℝ) := fun i => Classical.choose
+    let g : Fin (n+2) → C(X, ℝ) := fun i => Classical.choose
       (exists_tsupport_one_of_isOpen_isClosed (hs i) (IsClosedH i) (IsHSubS i))
-    sorry
+    set f : Fin (n+2) → C(X, ℝ) := fun i => if i.1 = 1 then g i
+      else (∏ j in {j : Fin n| j < i}.toFinset, (1 - g j)) * g i with hf
+    use f
   -- use exists_compact_subset
 
 /-- The Riesz content μ associated to a given positive linear functional Λ is
