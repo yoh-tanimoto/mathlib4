@@ -324,13 +324,27 @@ lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed [NormalSpace X
         rw [dif_pos hx]
         exact And.intro (Classical.choose_spec (this x hx)).2.1 (Classical.choose_spec (this x hx)).1
     obtain ⟨ι, hι⟩ := IsCompact.elim_nhds_subcover htcp W this
-    let Wx : Fin n → ι → Set X := fun i xj =>
-      if hmV : closure (W xj) ⊆ s i then closure (W xj) else default
-    let H : Fin n → Set X := fun i => ⋃ xj, (Wx i xj)
+    set Wx : Fin n → ι → Set X := fun i xj =>
+      if hmV : closure (W xj) ⊆ s i then closure (W xj) else ∅ with hWx
+    set H : Fin n → Set X := fun i => ⋃ xj, closure (Wx i xj) with hH
     have IsClosedH : ∀ (i : Fin n), IsClosed (H i) := by
-      sorry
+      intro i
+      rw [hH]
+      simp only
+      exact isClosed_iUnion_of_finite (fun (xj : ι) => isClosed_closure)
     have IsHSubS : ∀ (i : Fin n), H i ⊆ s i := by
-      sorry
+      intro i
+      rw [hH]
+      simp only
+      apply Set.iUnion_subset
+      intro xj
+      rw [hWx]
+      simp only
+      by_cases hmV : closure (W xj) ⊆ s i
+      · rw [dif_pos hmV, closure_closure]
+        exact hmV
+      · rw [dif_neg hmV, closure_empty]
+        exact Set.empty_subset _
     let g : Fin n → C(X, ℝ) := fun i => Classical.choose
       (exists_tsupport_one_of_isOpen_isClosed (hs i) (IsClosedH i) (IsHSubS i))
     sorry
