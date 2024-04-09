@@ -345,11 +345,22 @@ lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed [NormalSpace X
         exact hmV
       · rw [dif_neg hmV, closure_empty]
         exact Set.empty_subset _
-    let g : Fin (n+2) → C(X, ℝ) := fun i => Classical.choose
-      (exists_tsupport_one_of_isOpen_isClosed (hs i) (IsClosedH i) (IsHSubS i))
-    set f : Fin (n+2) → C(X, ℝ) := fun i => if i.1 = 1 then g i
-      else (∏ j in {j : Fin n| j < i}.toFinset, (1 - g j)) * g i with hf
+    set g : Fin (n+2) → C(X, ℝ) := fun i => Classical.choose
+      (exists_tsupport_one_of_isOpen_isClosed (hs i) (IsClosedH i) (IsHSubS i)) with hg
+    set f : Fin (n+2) → C(X, ℝ) := fun i => (∏ j in {j : Fin n| j < i}.toFinset, (1 - g j)) * g i with hf
     use f
+    constructor
+    · rw [hf]
+      simp only
+      intro i
+      apply _root_.subset_trans tsupport_mul_subset_right
+      exact (Classical.choose_spec
+        (exists_tsupport_one_of_isOpen_isClosed (hs i) (IsClosedH i) (IsHSubS i))).1
+    constructor
+    · sorry
+    · sorry
+
+
   -- use exists_compact_subset
 
 /-- The Riesz content μ associated to a given positive linear functional Λ is
