@@ -267,7 +267,7 @@ lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed [NormalSpace X
     · intro x
       rw [this]
       exact fun a => a.elim
-  induction' n with n ih
+  induction' n with n ihn
   · simp only [Nat.zero_eq, Finset.univ_unique, Fin.default_eq_zero, Fin.isValue,
     Finset.sum_singleton, mem_Icc]
     obtain ⟨g, hg⟩ := exists_tsupport_one_of_isOpen_isClosed (isOpen_iUnion hs) ht hst
@@ -357,7 +357,12 @@ lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed [NormalSpace X
       exact (Classical.choose_spec
         (exists_tsupport_one_of_isOpen_isClosed (hs i) (IsClosedH i) (IsHSubS i))).1
     constructor
-    · sorry
+    · have (m : Fin n) : ∑ j in {j : Fin n| j < m.1}.toFinset, f j
+          = 1 - (∏ j in {j : Fin n| j.1 < m.1 - 1}.toFinset, (1 - g j)) * g m := by
+        sorry -- how to do induction over Fin n?
+      intro x hx
+      simp
+      rw [hf]
     · sorry
 
 
