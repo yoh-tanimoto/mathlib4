@@ -1,3 +1,4 @@
+import LeanCopilot
 import Mathlib.Data.Set.Basic
 import Mathlib.Topology.Basic
 import Mathlib.Order.Filter.Basic
@@ -359,7 +360,7 @@ lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed [NormalSpace X
     constructor
     · have (m : Fin n) : ∑ j in {j : Fin n| j < m.1}.toFinset, f j
           = 1 - (∏ j in {j : Fin n| j.1 < m.1 - 1}.toFinset, (1 - g j)) * g m := by
-        sorry -- how to do induction over Fin n?
+        sorry
       intro x hx
       simp
       rw [hf]
