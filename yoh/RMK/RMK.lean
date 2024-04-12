@@ -358,14 +358,36 @@ lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed [NormalSpace X
       exact (Classical.choose_spec
         (exists_tsupport_one_of_isOpen_isClosed (hs i) (IsClosedH i) (IsHSubS i))).1
     constructor
-    · have (m : ℕ) (hm : m < n) : ∑ j in { j : Fin (n+2) | j ≤ m }.toFinset, f j
+    · have (m : ℕ) (hm : m < n+2) : ∑ j in { j : Fin (n+2) | j ≤ m }.toFinset, f j
           = 1 - (∏ j in { j : Fin (n+2) | j ≤ m }.toFinset, (1 - g j)) := by
         induction' m with m ihm
         · simp only [Nat.zero_eq, Nat.cast_zero, Fin.le_zero_iff, setOf_eq_eq_singleton,
             toFinset_singleton, Finset.sum_singleton, Finset.prod_singleton, _root_.sub_sub_cancel]
           rw [hf]
           simp only [Fin.not_lt_zero, setOf_false, toFinset_empty, Finset.prod_empty, one_mul]
-        · sorry
+        · have hUnion: { j : Fin (n+2) | j ≤ (m + 1 : ℕ)} = { j : Fin (n+2) | j ≤ m } ∪ {⟨m+1, hm⟩} := by
+            simp only [union_singleton]
+            ext j
+            simp only [Nat.cast_add, Nat.cast_one, mem_setOf_eq, mem_insert_iff]
+            constructor
+            · sorry
+            · sorry
+          simp_rw [hUnion]
+          simp only [union_singleton, toFinset_insert, mem_setOf_eq, toFinset_setOf]
+          rw [Finset.sum_insert _] -- same premise
+          rw [Finset.prod_insert _]
+          sorry
+          simp only [Finset.mem_filter, Finset.mem_univ, true_and, not_le]
+          rw [Fin.lt_def]
+          simp only [Fin.val_nat_cast]
+          rw [Nat.mod_eq_of_lt (lt_trans (Nat.lt.base m) hm)]
+          exact lt_add_one m -- same proofs
+          simp only [Finset.mem_filter, Finset.mem_univ, true_and, not_le]
+          rw [Fin.lt_def]
+          simp only [Fin.val_nat_cast]
+          rw [Nat.mod_eq_of_lt (lt_trans (Nat.lt.base m) hm)]
+          exact lt_add_one m
+
       intro x hx
       simp
       rw [hf]
