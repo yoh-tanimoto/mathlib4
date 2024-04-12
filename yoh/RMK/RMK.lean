@@ -358,8 +358,8 @@ lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed [NormalSpace X
       exact (Classical.choose_spec
         (exists_tsupport_one_of_isOpen_isClosed (hs i) (IsClosedH i) (IsHSubS i))).1
     constructor
-    · have (m : Fin n) : ∑ j in {j : Fin n| j < m.1}.toFinset, f j
-          = 1 - (∏ j in {j : Fin n| j.1 < m.1 - 1}.toFinset, (1 - g j)) * g m := by
+    · have (m : Fin n) : ∑ j in {j : Fin n| j ≤ m.1}.toFinset, f j
+          = 1 - (∏ j in {j : Fin n| j.1 ≤ m.1 - 1}.toFinset, (1 - g j)) := by
         sorry
       intro x hx
       simp
