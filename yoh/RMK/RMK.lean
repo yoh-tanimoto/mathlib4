@@ -348,7 +348,7 @@ lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed [NormalSpace X
         exact Set.empty_subset _
     set g : Fin (n+2) → C(X, ℝ) := fun i => Classical.choose
       (exists_tsupport_one_of_isOpen_isClosed (hs i) (IsClosedH i) (IsHSubS i)) with hg
-    set f : Fin (n+2) → C(X, ℝ) := fun i => (∏ j in {j : Fin n| j < i}.toFinset, (1 - g j)) * g i with hf
+    set f : Fin (n+2) → C(X, ℝ) := fun i => (∏ j in { j : Fin (n+2) | j < i }.toFinset, (1 - g j)) * g i with hf
     use f
     constructor
     · rw [hf]
@@ -358,12 +358,18 @@ lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed [NormalSpace X
       exact (Classical.choose_spec
         (exists_tsupport_one_of_isOpen_isClosed (hs i) (IsClosedH i) (IsHSubS i))).1
     constructor
-    · have (m : Fin n) : ∑ j in {j : Fin n| j ≤ m.1}.toFinset, f j
-          = 1 - (∏ j in {j : Fin n| j.1 ≤ m.1 - 1}.toFinset, (1 - g j)) := by
-        sorry
+    · have (m : ℕ) (hm : m < n) : ∑ j in { j : Fin (n+2) | j ≤ m }.toFinset, f j
+          = 1 - (∏ j in { j : Fin (n+2) | j ≤ m }.toFinset, (1 - g j)) := by
+        induction' m with m ihm
+        · simp only [Nat.zero_eq, Nat.cast_zero, Fin.le_zero_iff, setOf_eq_eq_singleton,
+            toFinset_singleton, Finset.sum_singleton, Finset.prod_singleton, _root_.sub_sub_cancel]
+          rw [hf]
+          simp only [Fin.not_lt_zero, setOf_false, toFinset_empty, Finset.prod_empty, one_mul]
+        · sorry
       intro x hx
       simp
       rw [hf]
+      sorry
     · sorry
 
 
