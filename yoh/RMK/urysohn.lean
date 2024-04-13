@@ -1,4 +1,4 @@
--- import LeanCopilot
+import LeanCopilot
 import Mathlib.Data.Set.Basic
 import Mathlib.Topology.Basic
 import Mathlib.Order.Filter.Basic
@@ -19,8 +19,37 @@ import Mathlib.MeasureTheory.Integral.Bochner
 noncomputable section
 
 open BoundedContinuousFunction Set Function TopologicalSpace BigOperators
+open Classical
 
 variable {X : Type*} [TopologicalSpace X]
+
+lemma icc_mul_Icc (x y : ℝ) (h : x ∈ Icc 0 1 ∧ y ∈ Icc 0 1) : x * y ∈ Icc 0 1 := by
+  simp only [mem_Icc]
+  simp only [mem_Icc] at h
+  constructor
+  · exact mul_nonneg h.1.1 h.2.1
+  · rw [← mul_one 1]
+    exact mul_le_mul h.1.2 h.2.2 h.2.1 zero_le_one
+
+lemma icc_prod_Icc (m n : ℕ) (s : Finset (Fin m)) (x : ℕ → ℝ)
+    (h : ∀ (i : Fin m), i ∈ s → x i ∈ Icc 0 1) : s.card = n → ∏ i in s, x i ∈ Icc 0 1 := by
+  induction' n with n ih
+  · intro hcard
+    rw [Finset.card_eq_zero.mp hcard]
+    simp only [Finset.prod_empty, mem_Icc, zero_le_one, le_refl, and_self]
+  · intro hcard
+    have : 0 < s.card := by
+      rw [hcard]
+      exact Nat.succ_pos n
+    obtain ⟨a, ha⟩ := Finset.card_pos.mp this
+    have : (s \ {a}).card = n := by
+      rw [Finset.card_sdiff]
+      simp only [Finset.card_singleton]
+      rw [hcard]
+      simp only [Nat.succ_sub_succ_eq_sub, tsub_zero]
+      simp only [Finset.singleton_subset_iff]
+      exact ha
+
 
 lemma exists_tsupport_one_of_isOpen_isClosed [NormalSpace X] {s t : Set X}
     (hs : IsOpen s) (ht : IsClosed t) (hst : t ⊆ s) : ∃ f : C(X, ℝ), tsupport f ⊆ s ∧ EqOn f 1 t
@@ -193,7 +222,7 @@ lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed [NormalSpace X
           simp only [Finset.mem_filter, Finset.mem_univ, true_and, not_le]
           rw [Fin.lt_def]
           simp only [Fin.val_nat_cast]
-          exact lt_add_one m
+          exact lt_add_one m -- same proof repeated
           simp only [Finset.mem_filter, Finset.mem_univ, true_and, not_le]
           rw [Fin.lt_def]
           simp only [Fin.val_nat_cast]
