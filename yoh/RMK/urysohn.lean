@@ -23,16 +23,19 @@ open Classical
 
 variable {X : Type*} [TopologicalSpace X]
 
-lemma icc_mul_Icc (x y : ℝ) (h : x ∈ Icc 0 1 ∧ y ∈ Icc 0 1) : x * y ∈ Icc 0 1 := by
+lemma icc_mul_Icc {x y : ℝ} (hx : x ∈ Icc 0 1) (hy : y ∈ Icc 0 1) : x * y ∈ Icc 0 1 := by
   simp only [mem_Icc]
-  simp only [mem_Icc] at h
+  simp only [mem_Icc] at hx
+  simp only [mem_Icc] at hy
   constructor
-  · exact mul_nonneg h.1.1 h.2.1
+  · exact mul_nonneg hx.1 hy.1
   · rw [← mul_one 1]
-    exact mul_le_mul h.1.2 h.2.2 h.2.1 zero_le_one
+    exact mul_le_mul hx.2 hy.2 hy.1 zero_le_one
 
-lemma icc_prod_Icc (m n : ℕ) (s : Finset (Fin m)) (x : ℕ → ℝ)
-    (h : ∀ (i : Fin m), i ∈ s → x i ∈ Icc 0 1) : s.card = n → ∏ i in s, x i ∈ Icc 0 1 := by
+open Classical
+
+lemma icc_prod_Icc {ι : Type*} (n : ℕ) (s : Finset ι) (x : ι → ℝ)
+    (h : ∀ (i : ι), i ∈ s → x i ∈ Icc 0 1) : s.card = n → ∏ i in s, x i ∈ Icc 0 1 := by
   induction' n with n ih
   · intro hcard
     rw [Finset.card_eq_zero.mp hcard]
@@ -49,6 +52,16 @@ lemma icc_prod_Icc (m n : ℕ) (s : Finset (Fin m)) (x : ℕ → ℝ)
       simp only [Nat.succ_sub_succ_eq_sub, tsub_zero]
       simp only [Finset.singleton_subset_iff]
       exact ha
+    have hUnion : s = (s \ {a}) ∪ {a} := by
+      apply Eq.symm
+      apply Finset.sdiff_union_of_subset
+      simp only [Finset.singleton_subset_iff]
+      exact ha
+    have hDisjoint : Disjoint (s \ {a}) {a} := by
+      simp only [Finset.disjoint_singleton_right, Finset.mem_sdiff, Finset.mem_singleton,
+        not_true_eq_false, and_false, not_false_eq_true]
+    rw [hUnion, Finset.prod_union hDisjoint]
+    exact icc_prod_Icc (ih this)
 
 
 lemma exists_tsupport_one_of_isOpen_isClosed [NormalSpace X] {s t : Set X}
