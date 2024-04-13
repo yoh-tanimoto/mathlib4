@@ -34,21 +34,21 @@ lemma icc_mul_Icc {x y : ℝ} (hx : x ∈ Icc 0 1) (hy : y ∈ Icc 0 1) : x * y 
 
 open Classical
 
-lemma icc_prod_Icc {ι : Type*} (n : ℕ) (s : Finset ι) (x : ι → ℝ)
-    (h : ∀ (i : ι), i ∈ s → x i ∈ Icc 0 1) : s.card = n → ∏ i in s, x i ∈ Icc 0 1 := by
+lemma icc_prod_Icc {ι : Type*} (n : ℕ) (x : ι → ℝ) : ∀ (s : Finset ι),
+    ((∀ (i : ι), i ∈ s → x i ∈ Icc 0 1) ∧ s.card = n) → ∏ i in s, x i ∈ Icc 0 1 := by
   induction' n with n ih
-  · intro hcard
-    rw [Finset.card_eq_zero.mp hcard]
+  · intro s hs
+    rw [Finset.card_eq_zero.mp hs.2]
     simp only [Finset.prod_empty, mem_Icc, zero_le_one, le_refl, and_self]
-  · intro hcard
+  · intro s hs
     have : 0 < s.card := by
-      rw [hcard]
+      rw [hs.2]
       exact Nat.succ_pos n
     obtain ⟨a, ha⟩ := Finset.card_pos.mp this
     have : (s \ {a}).card = n := by
       rw [Finset.card_sdiff]
       simp only [Finset.card_singleton]
-      rw [hcard]
+      rw [hs.2]
       simp only [Nat.succ_sub_succ_eq_sub, tsub_zero]
       simp only [Finset.singleton_subset_iff]
       exact ha
@@ -60,8 +60,11 @@ lemma icc_prod_Icc {ι : Type*} (n : ℕ) (s : Finset ι) (x : ι → ℝ)
     have hDisjoint : Disjoint (s \ {a}) {a} := by
       simp only [Finset.disjoint_singleton_right, Finset.mem_sdiff, Finset.mem_singleton,
         not_true_eq_false, and_false, not_false_eq_true]
-    rw [hUnion, Finset.prod_union hDisjoint]
-    exact icc_prod_Icc (ih this)
+    rw [hUnion, Finset.prod_union hDisjoint, Finset.prod_singleton _ _]
+    have hsdiffa : ∀ (i : ι), i ∈ s \ {a} → x i ∈ Icc 0 1 := by
+      intro j hj
+      exact hs.1 j (Finset.mem_of_subset (Finset.sdiff_subset s {a}) hj)
+    exact icc_mul_Icc (ih (s \ {a}) (And.intro hsdiffa this)) (hs.1 a ha)
 
 
 lemma exists_tsupport_one_of_isOpen_isClosed [NormalSpace X] {s t : Set X}
