@@ -202,8 +202,7 @@ lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed [NormalSpace X
         · simp only [Nat.zero_eq, Fin.zero_eta, Fin.le_zero_iff, setOf_eq_eq_singleton,
           toFinset_singleton, Finset.sum_singleton, Finset.prod_singleton, sub_sub_cancel]
           rw [hf]
-          simp only [Fin.le_zero_iff, toFinset_setOf]
-
+          simp only [Fin.not_lt_zero, setOf_false, toFinset_empty, Finset.prod_empty, one_mul]
         · have hmlt : m < n + 2 := by
             exact Nat.lt_of_succ_lt hm
           have hUnion: { j : Fin (n+2) | j ≤ ⟨m + 1, hm⟩} = { j : Fin (n+2) | j ≤ ⟨m, hmlt⟩ } ∪ {⟨m+1, hm⟩} := by
@@ -273,10 +272,5 @@ lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed [NormalSpace X
           simp only [Fin.val_nat_cast]
           exact lt_add_one m
       intro x hx
-      simp
-      rw [hf]
       sorry
     · sorry
-
-
-  -- use exists_compact_subset
