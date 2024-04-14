@@ -199,10 +199,11 @@ lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed [NormalSpace X
     · have (m : ℕ) (hm : m < n+2) : ∑ j in { j : Fin (n+2) | j ≤ ⟨m, hm⟩ }.toFinset, f j
           = 1 - (∏ j in { j : Fin (n+2) | j ≤ ⟨m, hm⟩ }.toFinset, (1 - g j)) := by
         induction' m with m ihm
-        · simp only [Nat.zero_eq, Nat.cast_zero, Fin.le_zero_iff, setOf_eq_eq_singleton,
-            toFinset_singleton, Finset.sum_singleton, Finset.prod_singleton, _root_.sub_sub_cancel]
+        · simp only [Nat.zero_eq, Fin.zero_eta, Fin.le_zero_iff, setOf_eq_eq_singleton,
+          toFinset_singleton, Finset.sum_singleton, Finset.prod_singleton, sub_sub_cancel]
           rw [hf]
-          simp only [Fin.not_lt_zero, setOf_false, toFinset_empty, Finset.prod_empty, one_mul]
+          simp only [Fin.le_zero_iff, toFinset_setOf]
+
         · have hmlt : m < n + 2 := by
             exact Nat.lt_of_succ_lt hm
           have hUnion: { j : Fin (n+2) | j ≤ ⟨m + 1, hm⟩} = { j : Fin (n+2) | j ≤ ⟨m, hmlt⟩ } ∪ {⟨m+1, hm⟩} := by
@@ -234,7 +235,35 @@ lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed [NormalSpace X
           simp only [union_singleton, toFinset_insert, mem_setOf_eq, toFinset_setOf]
           rw [Finset.sum_insert _] -- same premise
           rw [Finset.prod_insert _]
-          sorry
+          simp only [mem_setOf_eq, toFinset_setOf] at ihm
+          rw [ihm hmlt]
+          rw [sub_mul, one_mul, hf]
+          ring_nf
+          simp only [mem_setOf_eq, toFinset_setOf]
+          have : 1+m < n+2 := by
+            rw [add_comm 1 m]
+            exact hm
+          have : Finset.filter (fun (x : Fin (n+2)) => x < { val := 1+m, isLt := this }) = Finset.filter (fun (x : Fin (n+2)) => x ≤ { val := m, isLt := hmlt }) := by
+            ext Finset.univ a
+            simp only [Finset.mem_filter, and_congr_right_iff]
+            intro hauniv
+            constructor
+            · intro ha
+              rw [Fin.le_def]
+              rw [Fin.lt_def] at ha
+              simp only at ha
+              simp only
+              rw [add_comm 1 m] at ha
+              exact Nat.le_of_lt_succ ha
+            · intro ha
+              rw [Fin.le_def] at ha
+              rw [Fin.lt_def]
+              simp only at ha
+              simp only
+              rw [add_comm 1 m]
+              exact Nat.lt_succ_of_le ha
+          rw [this]
+          ring
           simp only [Finset.mem_filter, Finset.mem_univ, true_and, not_le]
           rw [Fin.lt_def]
           simp only [Fin.val_nat_cast]
