@@ -311,11 +311,13 @@ lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed [NormalSpace X
         simp only
         rw [dif_pos (hι.1 xj hxj.1)]
         apply Set.mem_of_mem_of_subset _ subset_closure
-        rw [dif_pos hi] --why?
-
+        simp only [mem_ite_empty_right]
+        exact And.intro hi (Set.mem_of_mem_of_subset hxj.2 subset_closure)
       simp at huniv
       rw [huniv]
-
-      -- use hW
-      sorry
+      apply Finset.prod_eq_zero (Finset.mem_univ i)
+      rw [hg]
+      simp only [mem_Icc]
+      rw [(Classical.choose_spec (exists_tsupport_one_of_isOpen_isClosed (hs i) (IsClosedH i) (IsHSubS i))).2.1 hxHi]
+      simp only [Pi.one_apply, sub_self]
     · sorry
