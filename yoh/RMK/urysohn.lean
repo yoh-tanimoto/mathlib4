@@ -196,7 +196,7 @@ lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed [NormalSpace X
       exact (Classical.choose_spec
         (exists_tsupport_one_of_isOpen_isClosed (hs i) (IsClosedH i) (IsHSubS i))).1
     constructor
-    · have (m : ℕ) (hm : m < n+2) : ∑ j in { j : Fin (n+2) | j ≤ ⟨m, hm⟩ }.toFinset, f j
+    · have hsumf(m : ℕ) (hm : m < n+2) : ∑ j in { j : Fin (n+2) | j ≤ ⟨m, hm⟩ }.toFinset, f j
           = 1 - (∏ j in { j : Fin (n+2) | j ≤ ⟨m, hm⟩ }.toFinset, (1 - g j)) := by
         induction' m with m ihm
         · simp only [Nat.zero_eq, Fin.zero_eta, Fin.le_zero_iff, setOf_eq_eq_singleton,
@@ -272,5 +272,36 @@ lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed [NormalSpace X
           simp only [Fin.val_nat_cast]
           exact lt_add_one m
       intro x hx
+      have huniv : {j : Fin (n+2) | j ≤ ⟨n+1, (lt_add_one (n+1))⟩ }.toFinset = Finset.univ := by
+        ext j
+        constructor
+        · intro _
+          simp only [Finset.mem_univ]
+        · intro _
+          simp only [Nat.zero_eq, mem_setOf_eq, toFinset_setOf, Finset.mem_filter, Finset.mem_univ,
+            true_and]
+          apply Fin.mk_le_of_le_val
+          simp only
+          exact Nat.lt_succ_iff.mp j.isLt
+      rw [← huniv]
+      have (x : X) : (∑ j in { j : Fin (n+2) | j ≤ ⟨n+1, (lt_add_one (n+1))⟩ }.toFinset, f j) x
+          = (1 - (∏ j in { j : Fin (n+2) | j ≤ ⟨n+1, (lt_add_one (n+1))⟩ }.toFinset, (1 - g j))) x := by
+        apply Function.funext_iff.mp
+        sorry --exact (hsumf (n+1) (lt_add_one (n+1)))
+      simp only [Nat.zero_eq, mem_setOf_eq, toFinset_setOf, ContinuousMap.coe_sum, Finset.sum_apply,
+        ContinuousMap.sub_apply, ContinuousMap.one_apply, ContinuousMap.coe_prod,
+        ContinuousMap.coe_sub, ContinuousMap.coe_one, Finset.prod_apply, Pi.sub_apply,
+        Pi.one_apply] at this
+      simp only [Nat.zero_eq, mem_setOf_eq, toFinset_setOf, Finset.sum_apply, Pi.one_apply]
+      rw [this]
+      simp only [sub_eq_self]
+      obtain ⟨xj, hxj⟩ := exists_exists_eq_and.mp (hι.2 hx)
+      simp only at hxj
+      simp at huniv
+      rw [huniv]
+      -- use hW
+
+
+
       sorry
     · sorry
