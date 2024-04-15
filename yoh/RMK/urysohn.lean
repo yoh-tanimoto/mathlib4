@@ -133,7 +133,7 @@ lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed [NormalSpace X
       rw [hf]
       simp only
       exact hg.2.2
-  · have : ∀ (x : X), x ∈ t → ∃ (Wx : Set X), x ∈ Wx ∧ IsOpen Wx ∧ IsCompact (closure Wx)
+  · have htW : ∀ (x : X), x ∈ t → ∃ (Wx : Set X), x ∈ Wx ∧ IsOpen Wx ∧ IsCompact (closure Wx)
         ∧ ∃ (i : Fin (n+2)), (closure Wx) ⊆ s i := by
       intro x hx
       obtain ⟨i, hi⟩ := Set.mem_iUnion.mp ((Set.mem_of_subset_of_mem hst) hx)
@@ -151,8 +151,8 @@ lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed [NormalSpace X
         apply _root_.subset_trans _ hWx.2.2
         nth_rw 2 [← closure_eq_iff_isClosed.mpr (IsCompact.isClosed hWx.1)]
         exact closure_mono interior_subset
-    set W : X → Set X := fun x => if hx : x ∈ t then Classical.choose (this x hx) else default with hW
-    have : ∀ (x : X), x ∈ t → W x ∈ nhds x := by
+    set W : X → Set X := fun x => if hx : x ∈ t then Classical.choose (htW x hx) else default with hW
+    have htWnhds : ∀ (x : X), x ∈ t → W x ∈ nhds x := by
       intro x hx
       apply mem_nhds_iff.mpr
       use W x
@@ -161,8 +161,8 @@ lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed [NormalSpace X
       · rw [hW]
         simp only
         rw [dif_pos hx]
-        exact And.intro (Classical.choose_spec (this x hx)).2.1 (Classical.choose_spec (this x hx)).1
-    obtain ⟨ι, hι⟩ := IsCompact.elim_nhds_subcover htcp W this
+        exact And.intro (Classical.choose_spec (htW x hx)).2.1 (Classical.choose_spec (htW x hx)).1
+    obtain ⟨ι, hι⟩ := IsCompact.elim_nhds_subcover htcp W htWnhds
     set Wx : Fin (n+2) → ι → Set X := fun i xj =>
       if hmV : closure (W xj) ⊆ s i then closure (W xj) else ∅ with hWx
     set H : Fin (n+2) → Set X := fun i => ⋃ xj, closure (Wx i xj) with hH
@@ -284,24 +284,38 @@ lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed [NormalSpace X
           simp only
           exact Nat.lt_succ_iff.mp j.isLt
       rw [← huniv]
-      have (x : X) : (∑ j in { j : Fin (n+2) | j ≤ ⟨n+1, (lt_add_one (n+1))⟩ }.toFinset, f j) x
+      have heqfun (x : X) : (∑ j in { j : Fin (n+2) | j ≤ ⟨n+1, (lt_add_one (n+1))⟩ }.toFinset, f j) x
           = (1 - (∏ j in { j : Fin (n+2) | j ≤ ⟨n+1, (lt_add_one (n+1))⟩ }.toFinset, (1 - g j))) x := by
         apply Function.funext_iff.mp
         sorry --exact (hsumf (n+1) (lt_add_one (n+1)))
       simp only [Nat.zero_eq, mem_setOf_eq, toFinset_setOf, ContinuousMap.coe_sum, Finset.sum_apply,
         ContinuousMap.sub_apply, ContinuousMap.one_apply, ContinuousMap.coe_prod,
         ContinuousMap.coe_sub, ContinuousMap.coe_one, Finset.prod_apply, Pi.sub_apply,
-        Pi.one_apply] at this
+        Pi.one_apply] at heqfun
       simp only [Nat.zero_eq, mem_setOf_eq, toFinset_setOf, Finset.sum_apply, Pi.one_apply]
-      rw [this]
+      rw [heqfun]
       simp only [sub_eq_self]
       obtain ⟨xj, hxj⟩ := exists_exists_eq_and.mp (hι.2 hx)
-      simp only at hxj
+      simp only [mem_iUnion, exists_prop] at hxj
+      rw [hW] at hxj
+      simp at hxj
+      rw [dif_pos (hι.1 xj hxj.1)] at hxj
+      obtain ⟨i, hi⟩ := (Classical.choose_spec (htW xj (hι.1 xj hxj.1))).2.2.2
+      have hxHi : x ∈ H i := by
+        rw [hH]
+        simp only [mem_iUnion]
+        use ⟨xj, hxj.1⟩
+        rw [hWx]
+        simp only [dite_eq_ite]
+        rw [hW]
+        simp only
+        rw [dif_pos (hι.1 xj hxj.1)]
+        apply Set.mem_of_mem_of_subset _ subset_closure
+        rw [dif_pos hi] --why?
+
       simp at huniv
       rw [huniv]
+
       -- use hW
-
-
-
       sorry
     · sorry
