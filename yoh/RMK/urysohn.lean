@@ -15,6 +15,7 @@ import Mathlib.Topology.ContinuousFunction.ZeroAtInfty
 import Mathlib.Topology.Sets.Compacts
 import Mathlib.MeasureTheory.Constructions.BorelSpace.Basic
 import Mathlib.MeasureTheory.Integral.Bochner
+import Mathlib.Data.Set.Intervals.Instances
 
 noncomputable section
 
@@ -23,16 +24,12 @@ open Classical
 
 variable {X : Type*} [TopologicalSpace X]
 
-lemma icc_mul_Icc {x y : ℝ} (hx : x ∈ Icc 0 1) (hy : y ∈ Icc 0 1) : x * y ∈ Icc 0 1 := by
-  simp only [mem_Icc]
-  simp only [mem_Icc] at hx
-  simp only [mem_Icc] at hy
-  constructor
-  · exact mul_nonneg hx.1 hy.1
-  · rw [← mul_one 1]
-    exact mul_le_mul hx.2 hy.2 hy.1 zero_le_one
-
 open Classical
+
+-- add mul_mem to Mathlib.Data.Set.Intervals.Instances
+
+
+-- generalize this to a set which is closed under product
 
 lemma icc_prod_Icc {ι : Type*} (n : ℕ) (x : ι → ℝ) : ∀ (s : Finset ι),
     ((∀ (i : ι), i ∈ s → x i ∈ Icc 0 1) ∧ s.card = n) → ∏ i in s, x i ∈ Icc 0 1 := by
@@ -64,7 +61,7 @@ lemma icc_prod_Icc {ι : Type*} (n : ℕ) (x : ι → ℝ) : ∀ (s : Finset ι)
     have hsdiffa : ∀ (i : ι), i ∈ s \ {a} → x i ∈ Icc 0 1 := by
       intro j hj
       exact hs.1 j (Finset.mem_of_subset (Finset.sdiff_subset s {a}) hj)
-    exact icc_mul_Icc (ih (s \ {a}) (And.intro hsdiffa this)) (hs.1 a ha)
+    exact unitInterval.mul_mem (ih (s \ {a}) (And.intro hsdiffa this)) (hs.1 a ha)
 
 
 lemma exists_tsupport_one_of_isOpen_isClosed [NormalSpace X] {s t : Set X}
@@ -106,7 +103,7 @@ lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed [NormalSpace X
     · intro x
       rw [this]
       exact fun a => a.elim
-  induction' n with n ihn
+  induction' n with n _
   · simp only [Nat.zero_eq, Finset.univ_unique, Fin.default_eq_zero, Fin.isValue,
     Finset.sum_singleton, mem_Icc]
     obtain ⟨g, hg⟩ := exists_tsupport_one_of_isOpen_isClosed (isOpen_iUnion hs) ht hst
@@ -245,7 +242,7 @@ lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed [NormalSpace X
           have : Finset.filter (fun (x : Fin (n+2)) => x < { val := 1+m, isLt := this }) = Finset.filter (fun (x : Fin (n+2)) => x ≤ { val := m, isLt := hmlt }) := by
             ext Finset.univ a
             simp only [Finset.mem_filter, and_congr_right_iff]
-            intro hauniv
+            intro _
             constructor
             · intro ha
               rw [Fin.le_def]
@@ -287,7 +284,8 @@ lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed [NormalSpace X
       have heqfun (x : X) : (∑ j in { j : Fin (n+2) | j ≤ ⟨n+1, (lt_add_one (n+1))⟩ }.toFinset, f j) x
           = (1 - (∏ j in { j : Fin (n+2) | j ≤ ⟨n+1, (lt_add_one (n+1))⟩ }.toFinset, (1 - g j))) x := by
         apply Function.funext_iff.mp
-        sorry --exact (hsumf (n+1) (lt_add_one (n+1)))
+        ext z
+        exact congrFun (congrArg DFunLike.coe (hsumf (n + 1) (lt_add_one (n + 1)))) z
       simp only [Nat.zero_eq, mem_setOf_eq, toFinset_setOf, ContinuousMap.coe_sum, Finset.sum_apply,
         ContinuousMap.sub_apply, ContinuousMap.one_apply, ContinuousMap.coe_prod,
         ContinuousMap.coe_sub, ContinuousMap.coe_one, Finset.prod_apply, Pi.sub_apply,
@@ -320,4 +318,32 @@ lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed [NormalSpace X
       simp only [mem_Icc]
       rw [(Classical.choose_spec (exists_tsupport_one_of_isOpen_isClosed (hs i) (IsClosedH i) (IsHSubS i))).2.1 hxHi]
       simp only [Pi.one_apply, sub_self]
-    · sorry
+    · intro i x
+      rw [hf]
+      simp only [mem_setOf_eq, toFinset_setOf, ContinuousMap.mul_apply, ContinuousMap.coe_prod,
+        ContinuousMap.coe_sub, ContinuousMap.coe_one, Finset.prod_apply, Pi.sub_apply, Pi.one_apply]
+      apply unitInterval.mul_mem
+      · apply icc_prod_Icc i.val
+        constructor
+        · rw [hg]
+          simp only [Finset.mem_filter, Finset.mem_univ, true_and, sub_nonneg,
+            tsub_le_iff_right, le_add_iff_nonneg_right]
+          intro j _
+          apply Set.Icc.one_sub_mem
+          exact (Classical.choose_spec (exists_tsupport_one_of_isOpen_isClosed (hs j) (IsClosedH j) (IsHSubS j))).2.2 x
+        · have : Finset.filter (fun x => x < i) Finset.univ = Finset.Ico 0 i := by
+            ext j
+            constructor
+            · intro hj
+              simp only [Finset.mem_filter, Finset.mem_univ, true_and] at hj
+              simp only [Finset.mem_Ico, Fin.zero_le, true_and]
+              exact hj
+            · intro hj
+              simp only [Finset.mem_filter, Finset.mem_univ, true_and]
+              simp only [Finset.mem_Ico, Fin.zero_le, true_and] at hj
+              exact hj
+          rw [this]
+          simp only [Fin.card_Ico, Fin.val_zero, tsub_zero]
+      · rw [hg]
+        simp only
+        exact (Classical.choose_spec (exists_tsupport_one_of_isOpen_isClosed (hs i) (IsClosedH i) (IsHSubS i))).2.2 x
