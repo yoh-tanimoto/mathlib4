@@ -362,7 +362,7 @@ lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed [NormalSpace X
 -- for refactoring
 
 lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed' [NormalSpace X] [T2Space X]
-    [LocallyCompactSpace X] {n : ℕ} {t : Set X} {s : Fin n → Set X}
+    [LocallyCompactSpace X] {n : ℕ} {t : Set X} {s : Fin n → Set X} (hn : 0 < n)
     (hs : ∀ (i : Fin n), IsOpen (s i))
     (ht : IsClosed t) (htcp : IsCompact t) (hst : t ⊆ ⋃ i, s i) :
     ∃ f : Fin n → C(X, ℝ), (∀ (i : Fin n), tsupport (f i) ⊆ s i) ∧ EqOn (∑ i, f i) 1 t
@@ -378,35 +378,8 @@ lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed' [NormalSpace 
     · intro x
       rw [this]
       exact fun a => a.elim
-  induction' n with n _
-  · simp only [Nat.zero_eq, Finset.univ_unique, Fin.default_eq_zero, Fin.isValue,
-    Finset.sum_singleton, mem_Icc]
-    obtain ⟨g, hg⟩ := exists_tsupport_one_of_isOpen_isClosed (isOpen_iUnion hs) ht hst
-    set f := fun (i : Fin 1) => g with hf
-    use f
-    have : ∀ (i : Fin 1), s i = ⋃ j, s j := by
-      intro i
-      apply subset_antisymm
-      · exact Set.subset_iUnion _ _
-      · apply Set.iUnion_subset
-        intro j
-        have : j = i := Eq.trans (Fin.eq_zero j) (Eq.symm (Fin.eq_zero i))
-        apply subset_of_eq
-        rw [← this]
-    constructor
-    · intro i
-      rw [hf]
-      simp only
-      rw [this i]
-      exact hg.1
-    constructor
-    · exact hg.2.1
-    · intro i
-      rw [hf]
-      simp only
-      exact hg.2.2
   · have htW : ∀ (x : X), x ∈ t → ∃ (Wx : Set X), x ∈ Wx ∧ IsOpen Wx ∧ IsCompact (closure Wx)
-        ∧ ∃ (i : Fin (n+2)), (closure Wx) ⊆ s i := by
+        ∧ ∃ (i : Fin (Nat.succ n)), (closure Wx) ⊆ s i := by
       intro x hx
       obtain ⟨i, hi⟩ := Set.mem_iUnion.mp ((Set.mem_of_subset_of_mem hst) hx)
       obtain ⟨cWx, hWx⟩ := exists_compact_subset (hs i) hi
@@ -435,15 +408,15 @@ lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed' [NormalSpace 
         rw [dif_pos hx]
         exact And.intro (Classical.choose_spec (htW x hx)).2.1 (Classical.choose_spec (htW x hx)).1
     obtain ⟨ι, hι⟩ := IsCompact.elim_nhds_subcover htcp W htWnhds
-    set Wx : Fin (n+2) → ι → Set X := fun i xj =>
+    set Wx : Fin (Nat.succ n) → ι → Set X := fun i xj =>
       if hmV : closure (W xj) ⊆ s i then closure (W xj) else ∅ with hWx
-    set H : Fin (n+2) → Set X := fun i => ⋃ xj, closure (Wx i xj) with hH
-    have IsClosedH : ∀ (i : Fin (n+2)), IsClosed (H i) := by
+    set H : Fin (Nat.succ n) → Set X := fun i => ⋃ xj, closure (Wx i xj) with hH
+    have IsClosedH : ∀ (i : Fin (Nat.succ n)), IsClosed (H i) := by
       intro i
       rw [hH]
       simp only
       exact isClosed_iUnion_of_finite (fun (xj : ι) => isClosed_closure)
-    have IsHSubS : ∀ (i : Fin (n+2)), H i ⊆ s i := by
+    have IsHSubS : ∀ (i : Fin (Nat.succ n)), H i ⊆ s i := by
       intro i
       rw [hH]
       simp only
@@ -456,9 +429,9 @@ lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed' [NormalSpace 
         exact hmV
       · rw [dif_neg hmV, closure_empty]
         exact Set.empty_subset _
-    set g : Fin (n+2) → C(X, ℝ) := fun i => Classical.choose
+    set g : Fin (Nat.succ n) → C(X, ℝ) := fun i => Classical.choose
       (exists_tsupport_one_of_isOpen_isClosed (hs i) (IsClosedH i) (IsHSubS i)) with hg
-    set f : Fin (n+2) → C(X, ℝ) := fun i => (∏ j in { j : Fin (n+2) | j < i }.toFinset, (1 - g j)) * g i with hf
+    set f : Fin (Nat.succ n) → C(X, ℝ) := fun i => (∏ j in { j : Fin (Nat.succ n) | j < i }.toFinset, (1 - g j)) * g i with hf
     use f
     constructor
     · rw [hf]
@@ -468,16 +441,16 @@ lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed' [NormalSpace 
       exact (Classical.choose_spec
         (exists_tsupport_one_of_isOpen_isClosed (hs i) (IsClosedH i) (IsHSubS i))).1
     constructor
-    · have hsumf(m : ℕ) (hm : m < n+2) : ∑ j in { j : Fin (n+2) | j ≤ ⟨m, hm⟩ }.toFinset, f j
-          = 1 - (∏ j in { j : Fin (n+2) | j ≤ ⟨m, hm⟩ }.toFinset, (1 - g j)) := by
+    · have hsumf(m : ℕ) (hm : m < Nat.succ n) : ∑ j in { j : Fin (Nat.succ n) | j ≤ ⟨m, hm⟩ }.toFinset, f j
+          = 1 - (∏ j in { j : Fin (Nat.succ n) | j ≤ ⟨m, hm⟩ }.toFinset, (1 - g j)) := by
         induction' m with m ihm
         · simp only [Nat.zero_eq, Fin.zero_eta, Fin.le_zero_iff, setOf_eq_eq_singleton,
           toFinset_singleton, Finset.sum_singleton, Finset.prod_singleton, sub_sub_cancel]
           rw [hf]
           simp only [Fin.not_lt_zero, setOf_false, toFinset_empty, Finset.prod_empty, one_mul]
-        · have hmlt : m < n + 2 := by
+        · have hmlt : m < n + 1 := by
             exact Nat.lt_of_succ_lt hm
-          have hUnion: { j : Fin (n+2) | j ≤ ⟨m + 1, hm⟩} = { j : Fin (n+2) | j ≤ ⟨m, hmlt⟩ } ∪ {⟨m+1, hm⟩} := by
+          have hUnion: { j : Fin (Nat.succ n) | j ≤ ⟨m + 1, hm⟩} = { j : Fin (Nat.succ n) | j ≤ ⟨m, hmlt⟩ } ∪ {⟨m+1, hm⟩} := by
             simp only [union_singleton]
             ext j
             simp only [Nat.cast_add, Nat.cast_one, mem_setOf_eq, mem_insert_iff]
@@ -511,10 +484,10 @@ lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed' [NormalSpace 
           rw [sub_mul, one_mul, hf]
           ring_nf
           simp only [mem_setOf_eq, toFinset_setOf]
-          have : 1+m < n+2 := by
+          have : 1+m < Nat.succ n := by
             rw [add_comm 1 m]
             exact hm
-          have : Finset.filter (fun (x : Fin (n+2)) => x < { val := 1+m, isLt := this }) = Finset.filter (fun (x : Fin (n+2)) => x ≤ { val := m, isLt := hmlt }) := by
+          have : Finset.filter (fun (x : Fin (Nat.succ n)) => x < { val := 1+m, isLt := this }) = Finset.filter (fun (x : Fin (Nat.succ n)) => x ≤ { val := m, isLt := hmlt }) := by
             ext Finset.univ a
             simp only [Finset.mem_filter, and_congr_right_iff]
             intro _
@@ -544,7 +517,7 @@ lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed' [NormalSpace 
           simp only [Fin.val_nat_cast]
           exact lt_add_one m
       intro x hx
-      have huniv : {j : Fin (n+2) | j ≤ ⟨n+1, (lt_add_one (n+1))⟩ }.toFinset = Finset.univ := by
+      have huniv : {j : Fin (Nat.succ n) | j ≤ ⟨n, (lt_add_one n)⟩ }.toFinset = Finset.univ := by
         ext j
         constructor
         · intro _
@@ -556,11 +529,11 @@ lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed' [NormalSpace 
           simp only
           exact Nat.lt_succ_iff.mp j.isLt
       rw [← huniv]
-      have heqfun (x : X) : (∑ j in { j : Fin (n+2) | j ≤ ⟨n+1, (lt_add_one (n+1))⟩ }.toFinset, f j) x
-          = (1 - (∏ j in { j : Fin (n+2) | j ≤ ⟨n+1, (lt_add_one (n+1))⟩ }.toFinset, (1 - g j))) x := by
+      have heqfun (x : X) : (∑ j in { j : Fin (Nat.succ n) | j ≤ ⟨n, (lt_add_one n)⟩ }.toFinset, f j) x
+          = (1 - (∏ j in { j : Fin (Nat.succ n) | j ≤ ⟨n, (lt_add_one n)⟩ }.toFinset, (1 - g j))) x := by
         apply Function.funext_iff.mp
         ext z
-        exact congrFun (congrArg DFunLike.coe (hsumf (n + 1) (lt_add_one (n + 1)))) z
+        exact congrFun (congrArg DFunLike.coe (hsumf n (lt_add_one n))) z
       simp only [Nat.zero_eq, mem_setOf_eq, toFinset_setOf, ContinuousMap.coe_sum, Finset.sum_apply,
         ContinuousMap.sub_apply, ContinuousMap.one_apply, ContinuousMap.coe_prod,
         ContinuousMap.coe_sub, ContinuousMap.coe_one, Finset.prod_apply, Pi.sub_apply,
