@@ -295,7 +295,7 @@ lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed [NormalSpace X
           = (1 - (∏ j in { j : Fin (n+2) | j ≤ ⟨n+1, (lt_add_one (n+1))⟩ }.toFinset, (1 - g j))) x := by
         apply Function.funext_iff.mp
         ext z
-        exact congrFun (congrArg DFunLike.coe (hsumf (n + 1) (lt_add_one (n + 1)))) z
+        exact congrFun (congrArg DFunLike.coe (hsumf (Nat.succ n) (lt_add_one (Nat.succ n)))) z
       simp only [Nat.zero_eq, mem_setOf_eq, toFinset_setOf, ContinuousMap.coe_sum, Finset.sum_apply,
         ContinuousMap.sub_apply, ContinuousMap.one_apply, ContinuousMap.coe_prod,
         ContinuousMap.coe_sub, ContinuousMap.coe_one, Finset.prod_apply, Pi.sub_apply,
@@ -364,7 +364,7 @@ lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed [NormalSpace X
 lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed' [NormalSpace X] [T2Space X]
     [LocallyCompactSpace X] {n : ℕ} {t : Set X} {s : Fin n → Set X} (hn : 0 < n)
     (hs : ∀ (i : Fin n), IsOpen (s i))
-    (ht : IsClosed t) (htcp : IsCompact t) (hst : t ⊆ ⋃ i, s i) :
+    (htcp : IsCompact t) (hst : t ⊆ ⋃ i, s i) :
     ∃ f : Fin n → C(X, ℝ), (∀ (i : Fin n), tsupport (f i) ⊆ s i) ∧ EqOn (∑ i, f i) 1 t
     ∧ ∀ (i : Fin n), ∀ (x : X), f i x ∈ Icc (0 : ℝ) 1 := by
   rcases n with _ | n
@@ -409,7 +409,7 @@ lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed' [NormalSpace 
         exact And.intro (Classical.choose_spec (htW x hx)).2.1 (Classical.choose_spec (htW x hx)).1
     obtain ⟨ι, hι⟩ := IsCompact.elim_nhds_subcover htcp W htWnhds
     set Wx : Fin (Nat.succ n) → ι → Set X := fun i xj =>
-      if hmV : closure (W xj) ⊆ s i then closure (W xj) else ∅ with hWx
+      if closure (W xj) ⊆ s i then closure (W xj) else ∅ with hWx
     set H : Fin (Nat.succ n) → Set X := fun i => ⋃ xj, closure (Wx i xj) with hH
     have IsClosedH : ∀ (i : Fin (Nat.succ n)), IsClosed (H i) := by
       intro i
@@ -425,9 +425,9 @@ lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed' [NormalSpace 
       rw [hWx]
       simp only
       by_cases hmV : closure (W xj) ⊆ s i
-      · rw [dif_pos hmV, closure_closure]
+      · rw [if_pos hmV, closure_closure]
         exact hmV
-      · rw [dif_neg hmV, closure_empty]
+      · rw [if_neg hmV, closure_empty]
         exact Set.empty_subset _
     set g : Fin (Nat.succ n) → C(X, ℝ) := fun i => Classical.choose
       (exists_tsupport_one_of_isOpen_isClosed (hs i) (IsClosedH i) (IsHSubS i)) with hg
@@ -448,7 +448,7 @@ lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed' [NormalSpace 
           toFinset_singleton, Finset.sum_singleton, Finset.prod_singleton, sub_sub_cancel]
           rw [hf]
           simp only [Fin.not_lt_zero, setOf_false, toFinset_empty, Finset.prod_empty, one_mul]
-        · have hmlt : m < n + 1 := by
+        · have hmlt : m < Nat.succ n := by
             exact Nat.lt_of_succ_lt hm
           have hUnion: { j : Fin (Nat.succ n) | j ≤ ⟨m + 1, hm⟩} = { j : Fin (Nat.succ n) | j ≤ ⟨m, hmlt⟩ } ∪ {⟨m+1, hm⟩} := by
             simp only [union_singleton]
