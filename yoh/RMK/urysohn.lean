@@ -362,7 +362,7 @@ lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed [NormalSpace X
 -- for refactoring
 
 lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed' [NormalSpace X] [T2Space X]
-    [LocallyCompactSpace X] {n : ℕ} {t : Set X} {s : Fin n → Set X} (hn : 0 < n)
+    [LocallyCompactSpace X] {n : ℕ} {t : Set X} {s : Fin n → Set X}
     (hs : ∀ (i : Fin n), IsOpen (s i))
     (htcp : IsCompact t) (hst : t ⊆ ⋃ i, s i) :
     ∃ f : Fin n → C(X, ℝ), (∀ (i : Fin n), tsupport (f i) ⊆ s i) ∧ EqOn (∑ i, f i) 1 t
@@ -396,21 +396,24 @@ lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed' [NormalSpace 
         apply _root_.subset_trans _ hWx.2.2
         nth_rw 2 [← closure_eq_iff_isClosed.mpr (IsCompact.isClosed hWx.1)]
         exact closure_mono interior_subset
-    set W : X → Set X := fun x => if hx : x ∈ t then Classical.choose (htW x hx) else default with hW
+    set W : X → Set X := fun x => if hx : x ∈ t then Classical.choose (htW x hx) else default
+      with hW
     have htWnhds : ∀ (x : X), x ∈ t → W x ∈ nhds x := by
       intro x hx
       apply mem_nhds_iff.mpr
       use W x
       constructor
-      · exact fun ⦃a⦄ a => a
+      · exact subset_refl (W x)
       · rw [hW]
         simp only
         rw [dif_pos hx]
         exact And.intro (Classical.choose_spec (htW x hx)).2.1 (Classical.choose_spec (htW x hx)).1
     obtain ⟨ι, hι⟩ := IsCompact.elim_nhds_subcover htcp W htWnhds
     set Wx : Fin (Nat.succ n) → ι → Set X := fun i xj =>
-      if closure (W xj) ⊆ s i then closure (W xj) else ∅ with hWx
-    set H : Fin (Nat.succ n) → Set X := fun i => ⋃ xj, closure (Wx i xj) with hH
+      if closure (W xj) ⊆ s i then closure (W xj) else ∅
+      with hWx
+    set H : Fin (Nat.succ n) → Set X := fun i => ⋃ xj, closure (Wx i xj)
+      with hH
     have IsClosedH : ∀ (i : Fin (Nat.succ n)), IsClosed (H i) := by
       intro i
       rw [hH]
@@ -430,8 +433,11 @@ lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed' [NormalSpace 
       · rw [if_neg hmV, closure_empty]
         exact Set.empty_subset _
     set g : Fin (Nat.succ n) → C(X, ℝ) := fun i => Classical.choose
-      (exists_tsupport_one_of_isOpen_isClosed (hs i) (IsClosedH i) (IsHSubS i)) with hg
-    set f : Fin (Nat.succ n) → C(X, ℝ) := fun i => (∏ j in { j : Fin (Nat.succ n) | j < i }.toFinset, (1 - g j)) * g i with hf
+      (exists_tsupport_one_of_isOpen_isClosed (hs i) (IsClosedH i) (IsHSubS i))
+      with hg
+    set f : Fin (Nat.succ n) → C(X, ℝ) :=
+      fun i => (∏ j in { j : Fin (Nat.succ n) | j < i }.toFinset, (1 - g j)) * g i
+      with hf
     use f
     constructor
     · rw [hf]
@@ -441,7 +447,8 @@ lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed' [NormalSpace 
       exact (Classical.choose_spec
         (exists_tsupport_one_of_isOpen_isClosed (hs i) (IsClosedH i) (IsHSubS i))).1
     constructor
-    · have hsumf(m : ℕ) (hm : m < Nat.succ n) : ∑ j in { j : Fin (Nat.succ n) | j ≤ ⟨m, hm⟩ }.toFinset, f j
+    · have hsumf (m : ℕ) (hm : m < Nat.succ n) :
+          ∑ j in { j : Fin (Nat.succ n) | j ≤ ⟨m, hm⟩ }.toFinset, f j
           = 1 - (∏ j in { j : Fin (Nat.succ n) | j ≤ ⟨m, hm⟩ }.toFinset, (1 - g j)) := by
         induction' m with m ihm
         · simp only [Nat.zero_eq, Fin.zero_eta, Fin.le_zero_iff, setOf_eq_eq_singleton,
@@ -450,7 +457,8 @@ lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed' [NormalSpace 
           simp only [Fin.not_lt_zero, setOf_false, toFinset_empty, Finset.prod_empty, one_mul]
         · have hmlt : m < Nat.succ n := by
             exact Nat.lt_of_succ_lt hm
-          have hUnion: { j : Fin (Nat.succ n) | j ≤ ⟨m + 1, hm⟩} = { j : Fin (Nat.succ n) | j ≤ ⟨m, hmlt⟩ } ∪ {⟨m+1, hm⟩} := by
+          have hUnion: { j : Fin (Nat.succ n) | j ≤ ⟨m + 1, hm⟩}
+              = { j : Fin (Nat.succ n) | j ≤ ⟨m, hmlt⟩ } ∪ {⟨m+1, hm⟩} := by
             simp only [union_singleton]
             ext j
             simp only [Nat.cast_add, Nat.cast_one, mem_setOf_eq, mem_insert_iff]
@@ -477,17 +485,16 @@ lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed' [NormalSpace 
                 exact hjmle
           simp_rw [hUnion]
           simp only [union_singleton, toFinset_insert, mem_setOf_eq, toFinset_setOf]
-          rw [Finset.sum_insert _] -- same premise
-          rw [Finset.prod_insert _]
+          rw [Finset.sum_insert _, Finset.prod_insert _]
           simp only [mem_setOf_eq, toFinset_setOf] at ihm
-          rw [ihm hmlt]
-          rw [sub_mul, one_mul, hf]
+          rw [ihm hmlt, sub_mul, one_mul, hf]
           ring_nf
           simp only [mem_setOf_eq, toFinset_setOf]
-          have : 1+m < Nat.succ n := by
+          have honeaddm: 1+m < Nat.succ n := by
             rw [add_comm 1 m]
             exact hm
-          have : Finset.filter (fun (x : Fin (Nat.succ n)) => x < { val := 1+m, isLt := this }) = Finset.filter (fun (x : Fin (Nat.succ n)) => x ≤ { val := m, isLt := hmlt }) := by
+          have hxlem : Finset.filter (fun (x : Fin (Nat.succ n)) => x < { val := 1+m, isLt := honeaddm })
+              = Finset.filter (fun (x : Fin (Nat.succ n)) => x ≤ { val := m, isLt := hmlt }) := by
             ext Finset.univ a
             simp only [Finset.mem_filter, and_congr_right_iff]
             intro _
@@ -506,16 +513,13 @@ lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed' [NormalSpace 
               simp only
               rw [add_comm 1 m]
               exact Nat.lt_succ_of_le ha
-          rw [this]
+          rw [hxlem]
           ring
-          simp only [Finset.mem_filter, Finset.mem_univ, true_and, not_le]
-          rw [Fin.lt_def]
-          simp only [Fin.val_nat_cast]
-          exact lt_add_one m -- same proof repeated
-          simp only [Finset.mem_filter, Finset.mem_univ, true_and, not_le]
-          rw [Fin.lt_def]
-          simp only [Fin.val_nat_cast]
-          exact lt_add_one m
+          all_goals
+            simp only [Finset.mem_filter, Finset.mem_univ, true_and, not_le]
+            rw [Fin.lt_def]
+            simp only [Fin.val_nat_cast]
+            exact lt_add_one m
       intro x hx
       have huniv : {j : Fin (Nat.succ n) | j ≤ ⟨n, (lt_add_one n)⟩ }.toFinset = Finset.univ := by
         ext j
@@ -579,18 +583,10 @@ lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed' [NormalSpace 
           intro j _
           apply Set.Icc.one_sub_mem
           exact (Classical.choose_spec (exists_tsupport_one_of_isOpen_isClosed (hs j) (IsClosedH j) (IsHSubS j))).2.2 x
-        · have : Finset.filter (fun x => x < i) Finset.univ = Finset.Ico 0 i := by
+        · have hFinIcc: Finset.filter (fun x => x < i) Finset.univ = Finset.Ico 0 i := by
             ext j
-            constructor
-            · intro hj
-              simp only [Finset.mem_filter, Finset.mem_univ, true_and] at hj
-              simp only [Finset.mem_Ico, Fin.zero_le, true_and]
-              exact hj
-            · intro hj
-              simp only [Finset.mem_filter, Finset.mem_univ, true_and]
-              simp only [Finset.mem_Ico, Fin.zero_le, true_and] at hj
-              exact hj
-          rw [this]
+            simp only [Finset.mem_filter, Finset.mem_univ, true_and, Finset.mem_Ico, Fin.zero_le]
+          rw [hFinIcc]
           simp only [Fin.card_Ico, Fin.val_zero, tsub_zero]
       · rw [hg]
         simp only
