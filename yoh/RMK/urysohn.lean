@@ -96,6 +96,9 @@ lemma exists_tsupport_one_of_isOpen_isClosed [NormalSpace X] {s t : Set X}
 
 open Classical
 
+/-- A variation of Urysohn's lemma. In a normal T2 space `X`, for a compact set `t` and a finite
+family of open sets `{s i}` such that `t ⊆ ⋃ i, s i`, there is a family of continuous function
+`{f i}` supported in `s i`, `∑ i, f i x = 1` on `t` and `0 ≤ f x ≤ 1`. -/
 lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed [NormalSpace X] [T2Space X]
     [LocallyCompactSpace X] {n : ℕ} {t : Set X} {s : Fin n → Set X}
     (hs : ∀ (i : Fin n), IsOpen (s i))
