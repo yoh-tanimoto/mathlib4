@@ -32,7 +32,14 @@ open BoundedContinuousFunction NNReal ENNReal
 open Set Function TopologicalSpace
 
 variable {X : Type*} [TopologicalSpace X] [LocallyCompactSpace X] [T2Space X] [NormalSpace X]
-variable (Λ : C(X, ℝ) →ₗ[ℝ] ℝ)
+variable (Λ : C(X, ℝ) →ₗ[ℝ] ℝ) (hΛ : ∀ (f : C(X, ℝ)), 0 ≤ f → 0 ≤ Λ f)
+
+lemma Λ_mono {f g : C(X, ℝ)} (h : f ≤ g) : Λ f ≤ Λ g := by
+  have : 0 ≤ g - f := by exact sub_nonneg.mpr h
+  calc Λ f ≤ Λ f + Λ (g - f) := by exact le_add_of_nonneg_right (hΛ (g - f) this)
+  _ = Λ (f + (g - f)) := by rw [← LinearMap.map_add Λ f (g - f)]
+  _ = Λ g := by simp only [add_sub_cancel]
+
 
 /-! ### Construction of the content: -/
 
@@ -51,10 +58,20 @@ def rieszContentAux : Compacts X → ℝ := fun K =>
 
 section RieszMonotone
 
+lemma rieszContentAux_zero_in_lowerBounds (K : Compacts X) :
+    0 ∈ lowerBounds (Λ '' { f : C(X, ℝ) | HasCompactSupport f ∧ (∀ (x : X), 0 ≤ f x)
+      ∧ (∀ (x : X), x ∈ K → 1 ≤ f x) }) := by
+    intro b
+    simp only [mem_image, mem_setOf_eq, forall_exists_index, and_imp]
+    intro f _ hf _ hb
+    rw [← hb]
+    exact hΛ f hf
+
 /-- For any compact subset `K ⊆ X`, there exist some bounded continuous nonnegative
 functions f on X such that `f ≥ 1` on K. -/
 theorem rieszContentAux_image_nonempty (K : Compacts X) :
-    (Λ '' { f : C(X, ℝ) | HasCompactSupport f ∧ (∀ (x : X), 0 ≤ f x) ∧ (∀ (x : X), x ∈ K → 1 ≤ f x) }).Nonempty := by
+    (Λ '' { f : C(X, ℝ) | HasCompactSupport f ∧ (∀ (x : X), 0 ≤ f x) ∧ (∀ (x : X),
+      x ∈ K → 1 ≤ f x) }).Nonempty := by
   rw [image_nonempty]
   obtain ⟨V, hV⟩ := exists_compact_superset K.2
   obtain ⟨f, hf⟩ := exists_tsupport_one_of_isOpen_isClosed isOpen_interior (IsCompact.isClosed K.2)
@@ -69,17 +86,30 @@ theorem rieszContentAux_image_nonempty (K : Compacts X) :
     exact (Set.mem_Icc.mp (hf.2.2 x)).1
   · intro x hx
     apply le_of_eq
-    exact hf.2.1 hx
-
-
+    rw [← ContinuousMap.one_apply x]
+    exact (hf.2.1 hx).symm
 
 /-- Riesz content λ (associated with a positive linear functional Λ) is
 monotone: if `K₁ ⊆ K₂` are compact subsets in X, then `λ(K₁) ≤ λ(K₂)`. -/
 theorem rieszContentAux_mono {K₁ K₂ : Compacts X} (h : K₁ ≤ K₂) :
-    rieszContentAux Λ K₁ ≤ rieszContentAux Λ K₂ :=
-  csInf_le_csInf (OrderBot.bddBelow _) (rieszContentAux_image_nonempty Λ K₂)
-    (image_subset Λ (setOf_subset_setOf.mpr fun _ f_hyp x x_in_K₁ => f_hyp x (h x_in_K₁)))
-#align riesz_content_aux_mono rieszContentAux_mono
+    rieszContentAux Λ K₁ ≤ rieszContentAux Λ K₂ := by
+  apply csInf_le_csInf
+  · use 0
+    exact rieszContentAux_zero_in_lowerBounds Λ hΛ K₁
+  · exact rieszContentAux_image_nonempty Λ K₂
+  · simp only [image_subset_iff]
+    intro f hf
+    simp only [mem_setOf_eq] at hf
+    simp only [mem_preimage, mem_image, mem_setOf_eq]
+    use f
+    constructor
+    constructor
+    · exact hf.1
+    constructor
+    · exact hf.2.1
+    · intro x hx
+      exact hf.2.2 x (Set.mem_of_subset_of_mem h hx)
+    rfl
 
 end RieszMonotone
 
@@ -87,67 +117,93 @@ section RieszSubadditive
 
 /-- Any bounded continuous nonnegative f such that `f ≥ 1` on K gives an upper bound on the
 content of K; namely `λ(K) ≤ Λ f`. -/
-theorem rieszContentAux_le {K : Compacts X} {f : X →ᵇ ℝ≥0} (h : ∀ x ∈ K, (1 : ℝ≥0) ≤ f x) :
-    rieszContentAux Λ K ≤ Λ f :=
-  csInf_le (OrderBot.bddBelow _) ⟨f, ⟨h, rfl⟩⟩
-#align riesz_content_aux_le rieszContentAux_le
+theorem rieszContentAux_le {K : Compacts X} {f : C(X, ℝ)}
+    (h : HasCompactSupport f ∧ (∀ (x : X), 0 ≤ f x) ∧ ∀ (x : X), x ∈ K → 1 ≤ f x) :
+    rieszContentAux Λ K ≤ Λ f := by
+  apply csInf_le
+  · use 0
+    exact rieszContentAux_zero_in_lowerBounds Λ hΛ K
+  · simp only [mem_image, mem_setOf_eq]
+    use f
 
 /-- The Riesz content can be approximated arbitrarily well by evaluating the positive linear
 functional on test functions: for any `ε > 0`, there exists a bounded continuous nonnegative
 function f on X such that `f ≥ 1` on K and such that `λ(K) ≤ Λ f < λ(K) + ε`. -/
-theorem exists_lt_rieszContentAux_add_pos (K : Compacts X) {ε : ℝ≥0} (εpos : 0 < ε) :
-    ∃ f : X →ᵇ ℝ≥0, (∀ x ∈ K, (1 : ℝ≥0) ≤ f x) ∧ Λ f < rieszContentAux Λ K + ε := by
+theorem exists_lt_rieszContentAux_add_pos (K : Compacts X) {ε : ℝ} (εpos : 0 < ε) :
+    ∃ f : C(X, ℝ), HasCompactSupport f ∧ (∀ (x : X), 0 ≤ f x) ∧ (∀ x ∈ K, 1 ≤ f x)
+    ∧ Λ f < rieszContentAux Λ K + ε := by
   --choose a test function `f` s.t. `Λf = α < λ(K) + ε`
   obtain ⟨α, ⟨⟨f, f_hyp⟩, α_hyp⟩⟩ :=
     exists_lt_of_csInf_lt (rieszContentAux_image_nonempty Λ K)
       (lt_add_of_pos_right (rieszContentAux Λ K) εpos)
-  refine' ⟨f, f_hyp.left, _⟩
-  rw [f_hyp.right]
-  exact α_hyp
-#align exists_lt_riesz_content_aux_add_pos exists_lt_rieszContentAux_add_pos
+  use f
+  simp only [mem_setOf_eq] at f_hyp
+  constructor
+  · exact f_hyp.1.1
+  constructor
+  · exact f_hyp.1.2.1
+  constructor
+  · exact f_hyp.1.2.2
+  · rw [f_hyp.2]
+    exact α_hyp
 
 /-- The Riesz content λ associated to a given positive linear functional Λ is
 finitely subadditive: `λ(K₁ ∪ K₂) ≤ λ(K₁) + λ(K₂)` for any compact subsets `K₁, K₂ ⊆ X`. -/
-theorem rieszContentAux_sup_le (K1 K2 : Compacts X) :
-    rieszContentAux Λ (K1 ⊔ K2) ≤ rieszContentAux Λ K1 + rieszContentAux Λ K2 := by
-  apply NNReal.le_of_forall_pos_le_add
+theorem rieszContentAux_sup_le (K₁ K₂ : Compacts X) :
+    rieszContentAux Λ (K₁ ⊔ K₂) ≤ rieszContentAux Λ K₁ + rieszContentAux Λ K₂ := by
+  apply le_of_forall_pos_lt_add'
   intro ε εpos
   --get test functions s.t. `λ(Ki) ≤ Λfi ≤ λ(Ki) + ε/2, i=1,2`
-  obtain ⟨f1, f_test_function_K1⟩ := exists_lt_rieszContentAux_add_pos Λ K1 (half_pos εpos)
-  obtain ⟨f2, f_test_function_K2⟩ := exists_lt_rieszContentAux_add_pos Λ K2 (half_pos εpos)
+  obtain ⟨f1, f_test_function_K₁⟩ := exists_lt_rieszContentAux_add_pos Λ K₁ (half_pos εpos)
+  obtain ⟨f2, f_test_function_K₂⟩ := exists_lt_rieszContentAux_add_pos Λ K₂ (half_pos εpos)
   --let `f := f1 + f2` test function for the content of `K`
-  have f_test_function_union : ∀ x ∈ K1 ⊔ K2, (1 : ℝ≥0) ≤ (f1 + f2) x := by
-    rintro x (x_in_K1 | x_in_K2)
-    · exact le_add_right (f_test_function_K1.left x x_in_K1)
-    · exact le_add_left (f_test_function_K2.left x x_in_K2)
-  --use that `Λf` is an upper bound for `λ(K1⊔K2)`
-  apply (rieszContentAux_le Λ f_test_function_union).trans (le_of_lt _)
-  rw [map_add]
+  have f_test_function_union : ∀ x ∈ K₁ ⊔ K₂, 1 ≤ (f1 + f2) x := by
+    rintro x (x_in_K₁ | x_in_K₂)
+    · simp only [ContinuousMap.add_apply]
+      apply le_add_of_le_of_nonneg
+      · exact f_test_function_K₁.2.2.1 x x_in_K₁
+      · exact f_test_function_K₂.2.1 x
+    · simp only [ContinuousMap.add_apply]
+      rw [add_comm]
+      apply le_add_of_le_of_nonneg
+      · exact f_test_function_K₂.2.2.1 x x_in_K₂
+      · exact f_test_function_K₁.2.1 x
+  --use that `Λf` is an upper bound for `λ(K₁⊔K₂)`
+  set f := f1 + f2 with hf
+  have f_HasCompactSupport : HasCompactSupport f := by
+    exact HasCompactSupport.add f_test_function_K₁.1 f_test_function_K₂.1
+  have f_nonneg : ∀ (x : X), 0 ≤ f x := by
+    intro x
+    rw [hf]
+    simp only [ContinuousMap.add_apply]
+    exact add_nonneg (f_test_function_K₁.2.1 x) (f_test_function_K₂.2.1 x)
+  apply lt_of_le_of_lt (rieszContentAux_le Λ hΛ
+    (And.intro f_HasCompactSupport (And.intro f_nonneg f_test_function_union)))
+  rw [hf]
+  simp only [map_add]
   --use that `Λfi` are lower bounds for `λ(Ki) + ε/2`
-  apply lt_of_lt_of_le (_root_.add_lt_add f_test_function_K1.right f_test_function_K2.right)
+  apply lt_of_lt_of_le (_root_.add_lt_add f_test_function_K₁.2.2.2 f_test_function_K₂.2.2.2)
     (le_of_eq _)
   rw [add_assoc, add_comm (ε / 2), add_assoc, add_halves ε, add_assoc]
-#align riesz_content_aux_sup_le rieszContentAux_sup_le
 
 end RieszSubadditive
 
 section RieszSubadditive
 
-theorem rieszContentAux_eq_add [T2Space X] (K1 K2 : Compacts X) (h : Disjoint K1 K2) :
-    rieszContentAux Λ (K1 ⊔ K2) = rieszContentAux Λ K1 + rieszContentAux Λ K2 := by
+theorem rieszContentAux_eq_add [T2Space X] (K₁ K₂ : Compacts X) (h : Disjoint K₁ K₂) :
+    rieszContentAux Λ (K₁ ⊔ K₂) = rieszContentAux Λ K₁ + rieszContentAux Λ K₂ := by
   apply le_antisymm
-  · exact rieszContentAux_sup_le Λ K1 K2
+  · exact rieszContentAux_sup_le Λ hΛ K₁ K₂
   · apply le_csInf
-    · exact rieszContentAux_image_nonempty Λ (K1 ⊔ K2)
+    · exact rieszContentAux_image_nonempty Λ (K₁ ⊔ K₂)
     · intro b hb
       obtain ⟨f, fh⟩ := hb
-      have hDisjoint : Disjoint K1.carrier K2.carrier := by
+      have hDisjoint : Disjoint K₁.carrier K₂.carrier := by
         sorry
-      obtain ⟨g, hg⟩ := exists_continuous_zero_one_of_isCompact K1.isCompact'
-        (IsCompact.isClosed K2.isCompact') hDisjoint
-      have hboundedg : ∃ (C : ℝ), ∀ (x y : X), dist (g x) (g y) ≤ C := by
+      obtain ⟨g, hg⟩ := exists_continuous_zero_one_of_isCompact K₁.isCompact'
+        (IsCompact.isClosed K₂.isCompact') hDisjoint
+      simp only [Compacts.carrier_eq_coe, mem_Icc] at hg
+      have h1 : rieszContentAux Λ K₁ ≤ Λ (f * (1 - g)) := by
         sorry
-      have h2 : rieszContentAux Λ K2 ≤ f * g := by
-        sorry
-      have h2 : rieszContentAux Λ K2 ≤ f * (1 - g) := by
+      have h2 : rieszContentAux Λ K₂ ≤ Λ (f * g) := by
         sorry
