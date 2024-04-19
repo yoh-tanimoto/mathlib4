@@ -245,7 +245,7 @@ lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed [NormalSpace X
           all_goals
             simp only [Finset.mem_filter, Finset.mem_univ, true_and, not_le]
             rw [Fin.lt_def]
-            simp only [Fin.val_nat_cast]
+            simp only [Fin.val_natCast]
             exact lt_add_one m
       intro x hx
       have huniv : {j : Fin (Nat.succ n) | j ≤ ⟨n, (lt_add_one n)⟩ }.toFinset = Finset.univ := by
@@ -301,20 +301,21 @@ lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed [NormalSpace X
       simp only [mem_setOf_eq, toFinset_setOf, ContinuousMap.mul_apply, ContinuousMap.coe_prod,
         ContinuousMap.coe_sub, ContinuousMap.coe_one, Finset.prod_apply]
       apply unitInterval.mul_mem
-      · apply icc_prod_Icc i.val
-        constructor
-        · rw [hg]
-          simp only [Finset.mem_filter, Finset.mem_univ, true_and, sub_nonneg,
-            tsub_le_iff_right, le_add_iff_nonneg_right]
-          intro j _
-          apply Set.Icc.one_sub_mem
-          exact (Classical.choose_spec (exists_tsupport_one_of_isOpen_isClosed
-            (hs j) (IsClosedH j) (IsHSubS j))).2.2 x
-        · have hFinIcc: Finset.filter (fun x => x < i) Finset.univ = Finset.Ico 0 i := by
-            ext j
-            simp only [Finset.mem_filter, Finset.mem_univ, true_and, Finset.mem_Ico, Fin.zero_le]
-          rw [hFinIcc]
-          simp only [Fin.card_Ico, Fin.val_zero, tsub_zero]
+      · apply prod_mem
+      -- · apply icc_prod_Icc i.val
+      --   constructor
+      --   · rw [hg]
+      --     simp only [Finset.mem_filter, Finset.mem_univ, true_and, sub_nonneg,
+      --       tsub_le_iff_right, le_add_iff_nonneg_right]
+      --     intro j _
+      --     apply Set.Icc.one_sub_mem
+      --     exact (Classical.choose_spec (exists_tsupport_one_of_isOpen_isClosed
+      --       (hs j) (IsClosedH j) (IsHSubS j))).2.2 x
+      --   · have hFinIcc: Finset.filter (fun x => x < i) Finset.univ = Finset.Ico 0 i := by
+      --       ext j
+      --       simp only [Finset.mem_filter, Finset.mem_univ, true_and, Finset.mem_Ico, Fin.zero_le]
+      --     rw [hFinIcc]
+      --     simp only [Fin.card_Ico, Fin.val_zero, tsub_zero]
       · rw [hg]
         simp only
         exact (Classical.choose_spec (exists_tsupport_one_of_isOpen_isClosed (hs i) (IsClosedH i) (IsHSubS i))).2.2 x
