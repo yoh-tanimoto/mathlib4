@@ -1,7 +1,7 @@
 /-
-Copyright (c) 2022 Jesse Reimann. All rights reserved.
+Copyright (c) 2024 Yoh Tanimoto. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Jesse Reimann, Kalle Kytölä
+Authors: Yoh Tanimoto
 -/
 import Mathlib.Topology.ContinuousFunction.Bounded
 import Mathlib.Topology.Sets.Compacts
@@ -11,9 +11,10 @@ import Mathlib.Topology.UrysohnsLemma
 /-!
 #  Riesz–Markov–Kakutani representation theorem
 
-This file will prove different versions of the Riesz-Markov-Kakutani representation theorem.
-The theorem is first proven for compact spaces, from which the statements about linear functionals
-on bounded continuous functions or compactly supported functions on locally compact spaces follow.
+This file will prove a version of the Riesz-Markov-Kakutani representation theorem.
+The theorem is first proven for locally compact Hausdorff (T2) spaces.
+A large part of the file is an adaptation of the `EEReal` version by Jesse Reimann, Kalle Kytölä
+to `ℝ` version.
 
 To make use of the existing API, the measure is constructed from a content `λ` on the
 compact subsets of the space X, rather than the usual construction of open sets in the literature.
@@ -58,9 +59,10 @@ def rieszContentAux : Compacts X → ℝ := fun K =>
 
 section RieszMonotone
 
-lemma rieszContentAux_zero_in_lowerBounds (K : Compacts X) :
-    0 ∈ lowerBounds (Λ '' { f : C(X, ℝ) | HasCompactSupport f ∧ (∀ (x : X), 0 ≤ f x)
+lemma rieszContentAux_BddBelow (K : Compacts X) :
+    BddBelow (Λ '' { f : C(X, ℝ) | HasCompactSupport f ∧ (∀ (x : X), 0 ≤ f x)
       ∧ (∀ (x : X), x ∈ K → 1 ≤ f x) }) := by
+    use 0
     intro b
     simp only [mem_image, mem_setOf_eq, forall_exists_index, and_imp]
     intro f _ hf _ hb
@@ -93,23 +95,20 @@ theorem rieszContentAux_image_nonempty (K : Compacts X) :
 monotone: if `K₁ ⊆ K₂` are compact subsets in X, then `λ(K₁) ≤ λ(K₂)`. -/
 theorem rieszContentAux_mono {K₁ K₂ : Compacts X} (h : K₁ ≤ K₂) :
     rieszContentAux Λ K₁ ≤ rieszContentAux Λ K₂ := by
-  apply csInf_le_csInf
-  · use 0
-    exact rieszContentAux_zero_in_lowerBounds Λ hΛ K₁
-  · exact rieszContentAux_image_nonempty Λ K₂
-  · simp only [image_subset_iff]
-    intro f hf
-    simp only [mem_setOf_eq] at hf
-    simp only [mem_preimage, mem_image, mem_setOf_eq]
-    use f
-    constructor
-    constructor
-    · exact hf.1
-    constructor
-    · exact hf.2.1
-    · intro x hx
-      exact hf.2.2 x (Set.mem_of_subset_of_mem h hx)
-    rfl
+  apply csInf_le_csInf (rieszContentAux_BddBelow Λ hΛ K₁) (rieszContentAux_image_nonempty Λ K₂)
+  simp only [image_subset_iff]
+  intro f hf
+  simp only [mem_setOf_eq] at hf
+  simp only [mem_preimage, mem_image, mem_setOf_eq]
+  use f
+  constructor
+  constructor
+  · exact hf.1
+  constructor
+  · exact hf.2.1
+  · intro x hx
+    exact hf.2.2 x (Set.mem_of_subset_of_mem h hx)
+  rfl
 
 end RieszMonotone
 
@@ -120,11 +119,9 @@ content of K; namely `λ(K) ≤ Λ f`. -/
 theorem rieszContentAux_le {K : Compacts X} {f : C(X, ℝ)}
     (h : HasCompactSupport f ∧ (∀ (x : X), 0 ≤ f x) ∧ ∀ (x : X), x ∈ K → 1 ≤ f x) :
     rieszContentAux Λ K ≤ Λ f := by
-  apply csInf_le
-  · use 0
-    exact rieszContentAux_zero_in_lowerBounds Λ hΛ K
-  · simp only [mem_image, mem_setOf_eq]
-    use f
+  apply csInf_le (rieszContentAux_BddBelow Λ hΛ K)
+  simp only [mem_image, mem_setOf_eq]
+  use f
 
 /-- The Riesz content can be approximated arbitrarily well by evaluating the positive linear
 functional on test functions: for any `ε > 0`, there exists a bounded continuous nonnegative
@@ -188,7 +185,7 @@ theorem rieszContentAux_sup_le (K₁ K₂ : Compacts X) :
 
 end RieszSubadditive
 
-section RieszSubadditive
+section RieszAdditive
 
 theorem rieszContentAux_eq_add [T2Space X] (K₁ K₂ : Compacts X) (h : Disjoint K₁ K₂) :
     rieszContentAux Λ (K₁ ⊔ K₂) = rieszContentAux Λ K₁ + rieszContentAux Λ K₂ := by
@@ -197,13 +194,86 @@ theorem rieszContentAux_eq_add [T2Space X] (K₁ K₂ : Compacts X) (h : Disjoin
   · apply le_csInf
     · exact rieszContentAux_image_nonempty Λ (K₁ ⊔ K₂)
     · intro b hb
-      obtain ⟨f, fh⟩ := hb
+      obtain ⟨f, hf⟩ := hb
+      simp only [mem_setOf_eq] at hf
       have hDisjoint : Disjoint K₁.carrier K₂.carrier := by
-        sorry
+        rw [disjoint_iff]
+        rw [disjoint_iff] at h
+        simp only [inf_eq_inter, bot_eq_empty]
+        simp only [Compacts.carrier_eq_coe]
+        rw [← TopologicalSpace.Compacts.coe_inf]
+        rw [← Compacts.carrier_eq_coe]
+        rw [h]
+        exact rfl
       obtain ⟨g, hg⟩ := exists_continuous_zero_one_of_isCompact K₁.isCompact'
         (IsCompact.isClosed K₂.isCompact') hDisjoint
       simp only [Compacts.carrier_eq_coe, mem_Icc] at hg
       have h1 : rieszContentAux Λ K₁ ≤ Λ (f * (1 - g)) := by
-        sorry
+        apply csInf_le (rieszContentAux_BddBelow Λ hΛ K₁)
+        simp only [mem_image, mem_setOf_eq]
+        use f * (1 - g)
+        constructor
+        constructor
+        exact HasCompactSupport.mul_right hf.1.1
+        constructor
+        · intro x
+          simp only [ContinuousMap.mul_apply, ContinuousMap.sub_apply, ContinuousMap.one_apply]
+          exact mul_nonneg (hf.1.2.1 x) (unitInterval.one_minus_nonneg ⟨(g x), hg.2.2 x⟩)
+        · intro x hx
+          simp only [ContinuousMap.mul_apply, ContinuousMap.sub_apply, ContinuousMap.one_apply]
+          have hgx : g x = 0 := by
+            rw [hg.1 hx]
+            simp only [Pi.zero_apply]
+          rw [hgx]
+          simp only [sub_zero, mul_one, ge_iff_le]
+          exact hf.1.2.2 x ((Set.mem_union x K₁ K₂).mpr (Or.inl hx))
+        · rfl
       have h2 : rieszContentAux Λ K₂ ≤ Λ (f * g) := by
-        sorry
+        apply csInf_le (rieszContentAux_BddBelow Λ hΛ K₂)
+        simp only [mem_image, mem_setOf_eq]
+        use f * g
+        constructor
+        constructor
+        exact HasCompactSupport.mul_right hf.1.1
+        constructor
+        · intro x
+          simp only [ContinuousMap.mul_apply, ContinuousMap.sub_apply, ContinuousMap.one_apply]
+          exact mul_nonneg (hf.1.2.1 x) (hg.2.2 x).1
+        · intro x hx
+          simp only [ContinuousMap.mul_apply, ContinuousMap.sub_apply, ContinuousMap.one_apply]
+          have hgx : g x = 1 := by
+            rw [hg.2.1 hx]
+            simp only [Pi.one_apply]
+          rw [hgx]
+          simp only [sub_zero, mul_one, ge_iff_le]
+          exact hf.1.2.2 x ((Set.mem_union x K₁ K₂).mpr (Or.inr hx))
+        · rfl
+      have hb : b = Λ (f * (1 - g) + f * g) := by
+        ring_nf
+        exact (hf.2).symm
+      rw [hb]
+      simp only [map_add, ge_iff_le]
+      exact add_le_add h1 h2
+
+end RieszAdditive
+
+lemma restrictPos (f : C(X, ℝ≥0)) : 0 ≤ f.1 := by
+  intro x
+  simp only [Pi.zero_apply, ContinuousMap.toFun_eq_coe, zero_le]
+
+def ExtendToReal (f : C(X, ℝ≥0)) : X → ℝ := fun x => f x
+
+
+lemma IsContinuous_ExtendToReal {f : C(X, ℝ≥0)} : Continuous (ExtendToReal f) := by
+  refine { isOpen_preimage := ?isOpen_preimage }
+  intro s hs
+  sorry
+
+def continuousExtendToReal (f : C(X, ℝ≥0)) : C(X, ℝ) := ⟨fun x => f x, IsContinuous_ExtendToReal⟩
+
+def RestrictPos (Λ : C(X, ℝ) →ₗ[ℝ] ℝ)  (hΛ : ∀ (f : C(X, ℝ)), 0 ≤ f → 0 ≤ Λ f) : C(X, ℝ≥0) → ℝ≥0 :=
+  fun f => ⟨Λ (continuousExtendToReal f), hΛ (continuousExtendToReal f) (restrictPos f)⟩
+
+def rieszContent : Compacts X → ℝ≥0 := fun K =>
+  sInf (RestrictPos Λ hΛ '' { f : C(X, ℝ≥0) | HasCompactSupport f ∧ (∀ (x : X), 0 ≤ f x)
+    ∧ (∀ (x : X), x ∈ K → 1 ≤ f x) })
