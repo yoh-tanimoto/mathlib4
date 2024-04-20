@@ -6,6 +6,7 @@ Authors: Yoh Tanimoto
 import Mathlib.Topology.ContinuousFunction.Bounded
 import Mathlib.Topology.Sets.Compacts
 import Mathlib.Topology.UrysohnsLemma
+import Mathlib.MeasureTheory.Measure.Content
 
 
 /-!
@@ -55,25 +56,15 @@ lemma exists_tsupport_one_of_isOpen_isClosed [NormalSpace X] {s t : Set X}
 content, and will be shown to agree with the Riesz measure on the compact subsets `K ⊆ X`. -/
 def rieszContentAux : Compacts X → ℝ := fun K =>
   sInf (Λ '' { f : C(X, ℝ) | HasCompactSupport f ∧ (∀ (x : X), 0 ≤ f x)
-    ∧ (∀ (x : X), x ∈ K → 1 ≤ f x) })
+  ∧ (∀ (x : X), x ∈ K → 1 ≤ f x) })
 
 section RieszMonotone
-
-lemma rieszContentAux_BddBelow (K : Compacts X) :
-    BddBelow (Λ '' { f : C(X, ℝ) | HasCompactSupport f ∧ (∀ (x : X), 0 ≤ f x)
-      ∧ (∀ (x : X), x ∈ K → 1 ≤ f x) }) := by
-    use 0
-    intro b
-    simp only [mem_image, mem_setOf_eq, forall_exists_index, and_imp]
-    intro f _ hf _ hb
-    rw [← hb]
-    exact hΛ f hf
 
 /-- For any compact subset `K ⊆ X`, there exist some bounded continuous nonnegative
 functions f on X such that `f ≥ 1` on K. -/
 theorem rieszContentAux_image_nonempty (K : Compacts X) :
     (Λ '' { f : C(X, ℝ) | HasCompactSupport f ∧ (∀ (x : X), 0 ≤ f x) ∧ (∀ (x : X),
-      x ∈ K → 1 ≤ f x) }).Nonempty := by
+    x ∈ K → 1 ≤ f x) }).Nonempty := by
   rw [image_nonempty]
   obtain ⟨V, hV⟩ := exists_compact_superset K.2
   obtain ⟨f, hf⟩ := exists_tsupport_one_of_isOpen_isClosed isOpen_interior (IsCompact.isClosed K.2)
@@ -91,11 +82,30 @@ theorem rieszContentAux_image_nonempty (K : Compacts X) :
     rw [← ContinuousMap.one_apply x]
     exact (hf.2.1 hx).symm
 
+lemma rieszContentAux_nonneg {K : Compacts X} : 0 ≤ rieszContentAux Λ K := by
+  apply le_csInf
+  exact rieszContentAux_image_nonempty Λ K
+  intro b
+  simp only [mem_image, mem_setOf_eq, forall_exists_index, and_imp]
+  intro f _ hf _ hb
+  rw [← hb]
+  exact hΛ f hf
+
+lemma rieszContentAux_image_BddBelow (K : Compacts X) :
+    BddBelow (Λ '' { f : C(X, ℝ) | HasCompactSupport f ∧ (∀ (x : X), 0 ≤ f x)
+    ∧ (∀ (x : X), x ∈ K → 1 ≤ f x) }) := by
+  use 0
+  intro b
+  simp only [mem_image, mem_setOf_eq, forall_exists_index, and_imp]
+  intro f _ hf _ hb
+  rw [← hb]
+  exact hΛ f hf
+
 /-- Riesz content λ (associated with a positive linear functional Λ) is
 monotone: if `K₁ ⊆ K₂` are compact subsets in X, then `λ(K₁) ≤ λ(K₂)`. -/
 theorem rieszContentAux_mono {K₁ K₂ : Compacts X} (h : K₁ ≤ K₂) :
     rieszContentAux Λ K₁ ≤ rieszContentAux Λ K₂ := by
-  apply csInf_le_csInf (rieszContentAux_BddBelow Λ hΛ K₁) (rieszContentAux_image_nonempty Λ K₂)
+  apply csInf_le_csInf (rieszContentAux_image_BddBelow Λ hΛ K₁) (rieszContentAux_image_nonempty Λ K₂)
   simp only [image_subset_iff]
   intro f hf
   simp only [mem_setOf_eq] at hf
@@ -119,7 +129,7 @@ content of K; namely `λ(K) ≤ Λ f`. -/
 theorem rieszContentAux_le {K : Compacts X} {f : C(X, ℝ)}
     (h : HasCompactSupport f ∧ (∀ (x : X), 0 ≤ f x) ∧ ∀ (x : X), x ∈ K → 1 ≤ f x) :
     rieszContentAux Λ K ≤ Λ f := by
-  apply csInf_le (rieszContentAux_BddBelow Λ hΛ K)
+  apply csInf_le (rieszContentAux_image_BddBelow Λ hΛ K)
   simp only [mem_image, mem_setOf_eq]
   use f
 
@@ -209,7 +219,7 @@ theorem rieszContentAux_eq_add [T2Space X] (K₁ K₂ : Compacts X) (h : Disjoin
         (IsCompact.isClosed K₂.isCompact') hDisjoint
       simp only [Compacts.carrier_eq_coe, mem_Icc] at hg
       have h1 : rieszContentAux Λ K₁ ≤ Λ (f * (1 - g)) := by
-        apply csInf_le (rieszContentAux_BddBelow Λ hΛ K₁)
+        apply csInf_le (rieszContentAux_image_BddBelow Λ hΛ K₁)
         simp only [mem_image, mem_setOf_eq]
         use f * (1 - g)
         constructor
@@ -229,7 +239,7 @@ theorem rieszContentAux_eq_add [T2Space X] (K₁ K₂ : Compacts X) (h : Disjoin
           exact hf.1.2.2 x ((Set.mem_union x K₁ K₂).mpr (Or.inl hx))
         · rfl
       have h2 : rieszContentAux Λ K₂ ≤ Λ (f * g) := by
-        apply csInf_le (rieszContentAux_BddBelow Λ hΛ K₂)
+        apply csInf_le (rieszContentAux_image_BddBelow Λ hΛ K₂)
         simp only [mem_image, mem_setOf_eq]
         use f * g
         constructor
@@ -257,23 +267,107 @@ theorem rieszContentAux_eq_add [T2Space X] (K₁ K₂ : Compacts X) (h : Disjoin
 
 end RieszAdditive
 
-lemma restrictPos (f : C(X, ℝ≥0)) : 0 ≤ f.1 := by
+lemma restrictNonneg (f : C(X, ℝ≥0)) : 0 ≤ f.1 := by
   intro x
   simp only [Pi.zero_apply, ContinuousMap.toFun_eq_coe, zero_le]
 
-def ExtendToReal (f : C(X, ℝ≥0)) : X → ℝ := fun x => f x
+def continuousToReal : C(ℝ≥0, ℝ) := ⟨NNReal.toReal, NNReal.continuous_coe⟩
 
+def ExtendToReal (f : C(X, ℝ≥0)) : C(X, ℝ) :=
+  ⟨NNReal.toReal ∘ f, Continuous.comp continuousToReal.2 f.2⟩
 
-lemma IsContinuous_ExtendToReal {f : C(X, ℝ≥0)} : Continuous (ExtendToReal f) := by
-  refine { isOpen_preimage := ?isOpen_preimage }
-  intro s hs
+@[simp]
+theorem map_apply (f : C(X, ℝ≥0)) (x : X) : ExtendToReal f x = f x :=
+  rfl
+
+@[simp]
+theorem coe_map (f : C(X, ℝ≥0)) : ExtendToReal f = fun x => (f x : ℝ) := by
+  rfl
+
+def continuousExtendToReal (f : C(X, ℝ≥0)) : C(X, ℝ) :=
+  ⟨NNReal.toReal ∘ f, Continuous.comp continuousToReal.2 f.2⟩
+
+def continuousRestrictionToNNReal (f : C(X, ℝ)) : C(X, ℝ≥0) :=
+  ⟨Real.toNNReal ∘ f, Continuous.comp continuous_real_toNNReal f.2⟩
+
+-- to Continuous?
+def RestrictNonneg (Λ : C(X, ℝ) →ₗ[ℝ] ℝ)  (hΛ : ∀ (f : C(X, ℝ)), 0 ≤ f → 0 ≤ Λ f) :
+  C(X, ℝ≥0) → ℝ≥0 := fun f => ⟨Λ (continuousExtendToReal f), hΛ (continuousExtendToReal f) (restrictNonneg f)⟩
+
+def rieszContentNonneg : Compacts X → ℝ≥0 := fun K =>
+  sInf (RestrictNonneg Λ hΛ '' { f : C(X, ℝ≥0) | HasCompactSupport f ∧ (∀ (x : X), 0 ≤ f x)
+  ∧ (∀ (x : X), x ∈ K → 1 ≤ f x) })
+
+theorem rieszContentNonneg_image_nonempty (K : Compacts X) :
+    (RestrictNonneg Λ hΛ '' { f : C(X, ℝ≥0) | HasCompactSupport f ∧ (∀ (x : X), 0 ≤ f x) ∧
+    (∀ (x : X), x ∈ K → 1 ≤ f x) }).Nonempty := by
+  rw [image_nonempty]
+  obtain ⟨V, hV⟩ := exists_compact_superset K.2
+  obtain ⟨f, hf⟩ := exists_tsupport_one_of_isOpen_isClosed isOpen_interior (IsCompact.isClosed K.2)
+    hV.2
+  use (continuousRestrictionToNNReal f)
+  simp only [zero_le, implies_true, true_and, mem_setOf_eq]
+  sorry
+  -- constructor
+  -- · exact IsCompact.of_isClosed_subset hV.1 (isClosed_tsupport f)
+  --     (_root_.subset_trans hf.1 interior_subset)
+  -- constructor
+  -- · intro x
+  --   exact (Set.mem_Icc.mp (hf.2.2 x)).1
+  -- · intro x hx
+  --   apply le_of_eq
+  --   rw [← ContinuousMap.one_apply x]
+  --   exact (hf.2.1 hx).symm
+
+lemma rieszContentNonneg_image_BddBelow (K : Compacts X) :
+    BddBelow (RestrictNonneg Λ hΛ '' { f : C(X, ℝ≥0) | HasCompactSupport f ∧ (∀ (x : X), 0 ≤ f x)
+    ∧ (∀ (x : X), x ∈ K → 1 ≤ f x) }) := by
+  use 0
+  simp only [zero_le, implies_true, true_and]
+  intro b _
+  exact b.2
+
+lemma rieszContentAux_eq_rieszContentNonneg {K : Compacts X} :
+    ⟨rieszContentAux Λ K, rieszContentAux_nonneg Λ hΛ⟩ = rieszContentNonneg Λ hΛ K  := by
+  apply le_antisymm
+  · rw [← NNReal.coe_le_coe]
+    simp only [coe_mk]
+    apply (csInf_le_iff (rieszContentAux_image_BddBelow Λ hΛ K)
+      (rieszContentAux_image_nonempty Λ K)).mpr
+    · intro b hb
+      by_cases hbzero : 0 ≤ b
+      · rw [← Real.coe_toNNReal b hbzero]
+        rw [NNReal.coe_le_coe]
+        apply (le_csInf_iff (rieszContentNonneg_image_BddBelow Λ hΛ K) (rieszContentNonneg_image_nonempty Λ hΛ K)).mpr
+        sorry
+      · push_neg at hbzero
+        apply le_of_lt (lt_of_lt_of_le hbzero _)
+        simp only [zero_le_coe]
+  · apply (csInf_le_iff (rieszContentNonneg_image_BddBelow Λ hΛ K) (rieszContentNonneg_image_nonempty Λ hΛ K)).mpr
+    sorry
+
+theorem rieszContentNonneg_mono {K₁ K₂ : Compacts X} (h : K₁ ≤ K₂) :
+    rieszContentNonneg Λ hΛ K₁ ≤ rieszContentNonneg Λ hΛ K₂ := by
   sorry
 
-def continuousExtendToReal (f : C(X, ℝ≥0)) : C(X, ℝ) := ⟨fun x => f x, IsContinuous_ExtendToReal⟩
+theorem rieszContentNonneg_eq_add [T2Space X] (K₁ K₂ : Compacts X) (h : Disjoint K₁ K₂) :
+    rieszContentNonneg Λ hΛ (K₁ ⊔ K₂) = rieszContentNonneg Λ hΛ K₁ + rieszContentNonneg Λ hΛ K₂ := by
+  sorry
 
-def RestrictPos (Λ : C(X, ℝ) →ₗ[ℝ] ℝ)  (hΛ : ∀ (f : C(X, ℝ)), 0 ≤ f → 0 ≤ Λ f) : C(X, ℝ≥0) → ℝ≥0 :=
-  fun f => ⟨Λ (continuousExtendToReal f), hΛ (continuousExtendToReal f) (restrictPos f)⟩
+theorem rieszContentNonneg_sup_le {K₁ K₂ : Compacts X} :
+    rieszContentNonneg Λ hΛ (K₁ ⊔ K₂) ≤ rieszContentNonneg Λ hΛ K₁ + rieszContentNonneg Λ hΛ K₂ := by
+  sorry
 
-def rieszContent : Compacts X → ℝ≥0 := fun K =>
-  sInf (RestrictPos Λ hΛ '' { f : C(X, ℝ≥0) | HasCompactSupport f ∧ (∀ (x : X), 0 ≤ f x)
-    ∧ (∀ (x : X), x ∈ K → 1 ≤ f x) })
+def rieszContent : MeasureTheory.Content X where
+  toFun := rieszContentNonneg Λ hΛ
+  mono' := by
+    intro K₁ K₂ h
+    exact rieszContentNonneg_mono Λ hΛ h
+  sup_disjoint' := by
+    intro K₁ K₂ hDisjoint _ _
+    have : Disjoint K₁ K₂ := by
+      sorry
+    exact rieszContentNonneg_eq_add Λ hΛ K₁ K₂ this
+  sup_le' := by
+    intro K₁ K₂
+    exact rieszContentNonneg_sup_le Λ hΛ
