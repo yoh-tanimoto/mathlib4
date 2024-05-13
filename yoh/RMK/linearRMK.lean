@@ -3,6 +3,7 @@ Copyright (c) 2024 Yoh Tanimoto. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Jesse Reimann, Kalle Kytölä, Yoh Tanimoto
 -/
+import Mathlib.Algebra.Order.Group.DenselyOrdered
 import Mathlib.Topology.ContinuousFunction.Bounded
 import Mathlib.Topology.Sets.Compacts
 import Mathlib.Topology.UrysohnsLemma
@@ -522,7 +523,8 @@ lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed [T2Space X]
     [LocallyCompactSpace X] {n : ℕ} {t : Set X} {s : Fin n → Set X}
     (hs : ∀ (i : Fin n), IsOpen (s i))
     (htcp : IsCompact t) (hst : t ⊆ ⋃ i, s i) :
-    ∃ f : Fin n → C(X, ℝ), (∀ (i : Fin n), tsupport (f i) ⊆ s i) ∧ EqOn (∑ i, f i) 1 t
+    ∃ f : Fin n → C(X, ℝ), (∀ (i : Fin n), tsupport (f i) ⊆ s i) ∧
+    (∀ (i : Fin n), HasCompactSupport (f i)) ∧ EqOn (∑ i, f i) 1 t
     ∧ ∀ (i : Fin n), ∀ (x : X), f i x ∈ Icc (0 : ℝ) 1 := by
   sorry
 
@@ -557,7 +559,7 @@ theorem RMK [Nonempty X] : ∀ (f : C_c(X, ℝ)), ∫ (x : X), f x ∂(μ Λ hΛ
       apply le_trans _ (add_le_add_right (neg_le_abs a) b)
       simp only [le_neg_add_iff_add_le, add_zero]
       exact hab
-    apply le_iff_forall_pos_lt_add.mpr
+    apply le_iff_forall_pos_le_add.mpr
     intro ε hε
     have hltε : ∃ (ε' : ℝ), 0 < ε' ∧
         ε' * (2 * (rieszContent Λ hΛ (⟨tsupport f, f.2⟩)).toReal + |a| + b + ε') < ε := by
@@ -600,7 +602,7 @@ theorem RMK [Nonempty X] : ∀ (f : C_c(X, ℝ)), ∫ (x : X), f x ∂(μ Λ hΛ
         nth_rw 7 [← add_halves' ε]
         exact add_lt_add h1 h4
     obtain ⟨ε', hε'⟩ := hltε
-    apply lt_trans _ (add_lt_add_left hε'.2 _)
+    apply le_of_lt (lt_of_le_of_lt _ (add_lt_add_left hε'.2 _))
     simp only [coe_toReal]
     set δ := ε / 2 with hδ
     have hδpos : 0 < δ := by
@@ -610,6 +612,14 @@ theorem RMK [Nonempty X] : ∀ (f : C_c(X, ℝ)), ∫ (x : X), f x ∂(μ Λ hΛ
     have hNNonneg : 0 ≤ N :=
       by exact div_nonneg (sub_nonneg.mpr hab) (le_of_lt hδpos)
     set y : ℤ → ℝ := fun n => b + δ * (n - (⌈N⌉₊+1)) with hy
+    have ymono : ∀ (j k : ℤ), y j < y k → j < k := by
+      intro j k
+      rw [hy]
+      simp only [add_lt_add_iff_left]
+      intro h
+      apply (@Int.cast_lt ℝ).mp
+      apply @lt_of_tsub_lt_tsub_right ℝ j k (⌈N⌉₊ + 1)
+      exact lt_of_mul_lt_mul_left h (le_of_lt hδpos)
     have hy0 : y 0 < a := by
       rw [hy, hN]
       simp only [Int.cast_zero, Int.ceil_add_one, Int.cast_add, Int.cast_one, zero_sub, neg_add_rev]
@@ -666,11 +676,28 @@ theorem RMK [Nonempty X] : ∀ (f : C_c(X, ℝ)), ∫ (x : X), f x ∂(μ Λ hΛ
         rw [this]
         exact trivial
       obtain ⟨j, hj⟩ := mem_iUnion.mp this
-      have hjnonneg : 0 ≤ j := by sorry
-      have hjltceil : j < ⌈N⌉₊ := by sorry
+      have hjnonneg : 0 ≤ j := by
+        apply (Int.add_le_add_iff_right 1).mp
+        apply Int.le_of_sub_one_lt
+        simp only [zero_add, sub_self]
+        apply ymono
+        apply lt_of_lt_of_le hy0
+        simp only [mem_Ioc] at hj
+        apply le_trans _ hj.2
+        apply ha
+        rw [hLdef]
+        exact hz
+      have hjltceil : j < ⌈N⌉₊ + 1 := by
+        apply ymono
+        simp only [mem_Ioc] at hj
+        apply lt_of_lt_of_le hj.1 _
+        rw [hy]
+        simp only [Int.cast_add, Int.cast_natCast, Int.cast_one, sub_self, mul_zero, add_zero]
+        apply hb
+        rw [hLdef]
+        exact hz
       have hnltceil : j.toNat < ⌈N⌉₊ + 1 := by
-        apply (Int.toNat_lt hjnonneg).mpr (lt_trans hjltceil _)
-        simp only [Nat.cast_add, Nat.cast_one, lt_add_iff_pos_right, zero_lt_one]
+        exact (Int.toNat_lt hjnonneg).mpr hjltceil
       rw [mem_iUnion]
       use ⟨j.toNat, hnltceil⟩
       simp only
@@ -685,72 +712,6 @@ theorem RMK [Nonempty X] : ∀ (f : C_c(X, ℝ)), ∫ (x : X), f x ∂(μ Λ hΛ
       constructor
       · use j
       · exact hx
-    --   simp only [mem_iUnion]
-    --   have hnonnegfxsuby0: 0 < (f x - y 0) / δ := by
-    --     have : a ≤ f x := hafx x
-    --     apply div_pos _ hδpos
-    --     linarith
-    --   have hfxsuby0ltnaddone : ⌈(f x - y 0) / δ - 1⌉ < ⌈N⌉ + 1 := by
-    --     rw [Int.ceil_sub_one]
-    --     apply sub_right_lt_of_lt_add
-    --     apply (@Int.cast_lt ℝ).mp
-    --     apply lt_of_lt_of_le (Int.ceil_lt_add_one _) _
-    --     rw [hy]
-    --     simp only [Int.cast_zero, zero_sub, neg_add_rev, Int.cast_add, Int.cast_one,
-    --       add_le_add_iff_right]
-    --     rw [_root_.sub_div, add_div, mul_comm, mul_div_assoc, div_self (Ne.symm (ne_of_lt hδpos))]
-    --     simp only [mul_one, tsub_le_iff_right]
-    --     rw [add_comm, add_assoc, add_assoc]
-    --     simp only [neg_add_cancel_left, add_left_neg, add_zero]
-    --     apply div_le_div_of_nonneg_right _ (le_of_lt hδpos)
-    --     exact hfxb x
-    --   have hfxsuby0ltnaddone' : ⌈(f x - y 0) / δ - 1⌉₊ < ⌈N⌉₊ + 1 := by
-    --     apply (@Nat.cast_lt ℤ).mp
-    --     simp only [Nat.cast_add, Nat.cast_one]
-    --     rw [Int.ofNat_ceil_eq_ceil hNNonneg]
-    --     by_cases hn : (f x - y 0) / δ - 1 ≤ 0
-    --     · rw [Nat.ceil_eq_zero.mpr hn]
-    --       simp only [CharP.cast_eq_zero]
-    --       exact add_pos_of_nonneg_of_pos (Int.ceil_nonneg hNNonneg) one_pos
-    --     · push_neg at hn
-    --       rw [Int.ofNat_ceil_eq_ceil (le_of_lt hn)]
-    --       exact hfxsuby0ltnaddone
-    --   use ⟨⌈(f x - y 0) / δ - 1⌉₊, hfxsuby0ltnaddone'⟩
-    --   constructor
-    --   · simp only [mem_preimage, mem_Ioc]
-    --     constructor
-    --     · sorry
-    --     · sorry
-    --     -- rw [hy]
-    --     -- simp only [Int.cast_zero, zero_sub, neg_add_rev, Int.cast_sub, Int.cast_natCast,
-    --     --   Int.cast_one]
-    --     -- constructor
-    --     -- · apply add_lt_of_lt_sub_left
-    --     --   rw [← lt_div_iff' hε]
-    --     --   apply sub_right_lt_of_lt_add
-    --     --   apply sub_right_lt_of_lt_add
-    --     --   simp only [Int.cast_natCast]
-    --     --   apply lt_of_lt_of_le (Int.ceil_lt_add_one _) _
-    --     --   apply add_le_add_right _ 1
-    --     --   rw [div_le_iff' hε, mul_add, mul_add, mul_add, ← mul_div_assoc, ← mul_div_assoc, mul_comm,
-    --     --     mul_div_assoc, div_self (Ne.symm (ne_of_lt hε))]
-    --     --   simp only [mul_one, neg_add_rev, neg_sub]
-    --     --   rw [mul_comm, mul_div_assoc, div_self (Ne.symm (ne_of_lt hε))]
-    --     --   linarith
-    --     -- · apply le_add_of_sub_left_le
-    --     --   rw [← div_le_iff' hε]
-    --     --   apply le_sub_right_of_add_le
-    --     --   apply le_trans _ (Int.le_ceil _)
-    --     --   rw [le_div_iff' hε, mul_add, ← mul_div_assoc, mul_comm, mul_div_assoc,
-    --     --     div_self (Ne.symm (ne_of_lt hε))]
-    --     --   linarith
-    --   · exact hx
-    -- -- have htsupportsubErest : tsupport f ⊆ ⋃ n, Erest n := by
-    -- --   intro x hx
-    -- --   rw [hErest]
-    -- --   simp only [mem_iUnion]
-    -- --   sorry
-
     set SpecV := fun (n : Fin (⌈N⌉₊ + 1)) =>
       MeasureTheory.Content.outerMeasure_exists_open (rieszContent Λ hΛ)
       (ne_of_lt (lt_of_le_of_lt ((rieszContent Λ hΛ).outerMeasure.mono (hErestsubtsupport n))
@@ -776,6 +737,24 @@ theorem RMK [Nonempty X] : ∀ (f : C_c(X, ℝ)), ∫ (x : X), f x ∂(μ Λ hΛ
         exact lt_of_le_of_lt hz.2 (lt_add_of_pos_right (y (n + 1)) hε)
     obtain ⟨g, hg⟩ := exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed
       (fun n => (V n).2) f.2 htsupportsubV
+
+    have hf : f = ∑ n, f * g n := by
+      ext x
+      simp only [ContinuousMap.coe_coe, ContinuousMap.coe_sum, ContinuousMap.coe_mul,
+        Finset.sum_apply, Pi.mul_apply]
+      rw [← Finset.mul_sum, ← Finset.sum_apply]
+      by_cases hx : x ∈ tsupport f
+      · rw [hg.2.2.1 hx]
+        simp only [Pi.one_apply, mul_one]
+      · rw [image_eq_zero_of_nmem_tsupport hx]
+        simp only [Finset.sum_apply, zero_mul]
+    have hgsum : (μ Λ hΛ (tsupport f)).toReal ≤ Λ (∑ n, ⟨g n, hg.2.1 n⟩) := by
+      sorry
+    have : ∀ (n : Fin (⌈N⌉₊ + 1)), ∀ (x : X), x ∈ Erest n → y n - ε < f x := by
+      sorry
+    have : ∀ (n : Fin (⌈N⌉₊ + 1)), g n • f ≤ (y n + ε) • g n := by
+      sorry
+
 
 
     sorry
