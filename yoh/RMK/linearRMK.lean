@@ -515,6 +515,10 @@ def rieszContent : MeasureTheory.Content X where
 lemma rieszContent_neq_top {K : Compacts X} : rieszContent Λ hΛ K ≠ ⊤ := by
   simp only [ne_eq, coe_ne_top, not_false_eq_true]
 
+
+lemma rieszContent_regular : (rieszContent Λ hΛ).ContentRegular := by
+  sorry
+
 variable [MeasurableSpace X] [BorelSpace X]
 
 open BigOperators
@@ -719,9 +723,7 @@ theorem RMK [Nonempty X] : ∀ (f : C_c(X, ℝ)), ∫ (x : X), f x ∂(μ Λ hΛ
       (ne_of_gt (Real.toNNReal_pos.mpr (div_pos hε (Nat.cast_pos.mpr (Nat.add_one_pos ⌈N⌉₊)))))
     set V : Fin (⌈N⌉₊ + 1) → Opens X := fun n => Classical.choose (SpecV n) ⊓
       ⟨(f ⁻¹' Iio (y (n + 1) + ε)), IsOpen.preimage f.1.2 isOpen_Iio⟩ with hV
-    have htsupportsubV : tsupport f ⊆ ⋃ n : Fin (⌈N⌉₊ + 1), V n := by
-      apply Set.Subset.trans htsupportsubErest _
-      apply Set.iUnion_mono
+    have hErestsubV : ∀ (n : Fin (⌈N⌉₊ + 1)), Erest n ⊆ V n := by
       intro n
       rw [hV]
       simp only [Nat.cast_succ, Opens.coe_inf, Opens.coe_mk, subset_inter_iff]
@@ -735,6 +737,10 @@ theorem RMK [Nonempty X] : ∀ (f : C_c(X, ℝ)), ∫ (x : X), f x ∂(μ Λ hΛ
         rw [Set.mem_preimage]
         rw [Set.mem_preimage] at hz
         exact lt_of_le_of_lt hz.2 (lt_add_of_pos_right (y (n + 1)) hε)
+    have htsupportsubV : tsupport f ⊆ ⋃ n : Fin (⌈N⌉₊ + 1), V n := by
+      apply Set.Subset.trans htsupportsubErest _
+      apply Set.iUnion_mono
+      exact hErestsubV
     obtain ⟨g, hg⟩ := exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed
       (fun n => (V n).2) f.2 htsupportsubV
 
@@ -750,9 +756,13 @@ theorem RMK [Nonempty X] : ∀ (f : C_c(X, ℝ)), ∫ (x : X), f x ∂(μ Λ hΛ
         simp only [Finset.sum_apply, zero_mul]
     have hgsum : (μ Λ hΛ (tsupport f)).toReal ≤ Λ (∑ n, ⟨g n, hg.2.1 n⟩) := by
       sorry
-    have : ∀ (n : Fin (⌈N⌉₊ + 1)), ∀ (x : X), x ∈ Erest n → y n - ε < f x := by
-      sorry
-    have : ∀ (n : Fin (⌈N⌉₊ + 1)), g n • f ≤ (y n + ε) • g n := by
+      -- use MeasureTheory.Content.measure_eq_content_of_regular
+    have : ∀ (n : Fin (⌈N⌉₊ + 1)), ∀ (x : X), x ∈ Erest n → y n < f x := by
+      intro n x hnx
+      rw [hErest, hE] at hnx
+      simp only [mem_inter_iff, mem_preimage, mem_Ioc] at hnx
+      exact hnx.1.1
+    have : ∀ (n : Fin (⌈N⌉₊ + 1)), (g n • f).1 ≤ ((y n + ε) • (⟨g n, hg.2.1 n⟩ : C_c(X, ℝ))).1 := by
       sorry
 
 
