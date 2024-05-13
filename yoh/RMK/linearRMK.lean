@@ -762,11 +762,14 @@ theorem RMK [Nonempty X] : ∀ (f : C_c(X, ℝ)), ∫ (x : X), f x ∂(μ Λ hΛ
       rw [hErest, hE] at hnx
       simp only [mem_inter_iff, mem_preimage, mem_Ioc] at hnx
       exact hnx.1.1
-    have : ∀ (n : Fin (⌈N⌉₊ + 1)), (g n • f).1 ≤ ((y n + ε) • (⟨g n, hg.2.1 n⟩ : C_c(X, ℝ))).1 := by
-      sorry
-
-
-
+    have : ∀ (n : Fin (⌈N⌉₊ + 1)), (g n • f).1 ≤ ((y (n + 1) + ε) • (⟨g n, hg.2.1 n⟩ : C_c(X, ℝ))).1 := by
+      intro n x
+      simp only [ContinuousMap.toFun_eq_coe, CompactlySupportedContinuousMap.coe_toContinuousMap,
+        CompactlySupportedContinuousMap.smulc_apply, CompactlySupportedContinuousMap.coe_smul,
+        CompactlySupportedContinuousMap.coe_mk, Pi.smul_apply, smul_eq_mul]
+      by_cases hx : x ∈ tsupport f
+      · sorry
+      · sorry
     sorry
 -- `K = range tsupport f`
 -- we will show that `Λ f ≤ ∫ (x : X), f x ∂(μ Λ hΛ) + ε (2 μ K + |a| + b + ε)`
