@@ -609,7 +609,7 @@ theorem RMK [Nonempty X] : ∀ (f : C_c(X, ℝ)), ∫ (x : X), f x ∂(μ Λ hΛ
     set N := (b - a) / δ with hN
     have hNNonneg : 0 ≤ N :=
       by exact div_nonneg (sub_nonneg.mpr hab) (le_of_lt hδpos)
-    set y : ℤ → ℝ := fun n => b + δ * (n - (⌈N⌉+1)) with hy
+    set y : ℤ → ℝ := fun n => b + δ * (n - (⌈N⌉₊+1)) with hy
     have hy0 : y 0 < a := by
       rw [hy, hN]
       simp only [Int.cast_zero, Int.ceil_add_one, Int.cast_add, Int.cast_one, zero_sub, neg_add_rev]
@@ -617,7 +617,7 @@ theorem RMK [Nonempty X] : ∀ (f : C_c(X, ℝ)), ∫ (x : X), f x ∂(μ Λ hΛ
       apply (lt_div_iff' hδpos).mp
       simp only [add_neg_lt_iff_lt_add]
       rw [neg_lt_iff_pos_add, add_assoc, ← neg_lt_iff_pos_add']
-      apply lt_add_of_lt_add_right _ (Int.le_ceil _)
+      apply lt_add_of_lt_add_right _ (Nat.le_ceil _)
       rw [neg_lt_iff_pos_add]
       apply pos_of_mul_pos_left _ (le_of_lt hδpos)
       rw [add_mul, add_mul, div_mul, div_mul, div_self (Ne.symm (ne_of_lt hδpos))]
@@ -638,6 +638,9 @@ theorem RMK [Nonempty X] : ∀ (f : C_c(X, ℝ)), ∫ (x : X), f x ∂(μ Λ hΛ
       simp only
       rw [hE]
       simp only [inter_subset_right]
+    have : range f ⊆ Ioc (y 0) (y (⌈N⌉₊ + 1)) := by
+      sorry
+
     have htsupportsubErest : tsupport f ⊆ ⋃ n, Erest n := by
       intro x hx
       rw [hErest]
@@ -706,6 +709,7 @@ theorem RMK [Nonempty X] : ∀ (f : C_c(X, ℝ)), ∫ (x : X), f x ∂(μ Λ hΛ
     --   rw [hErest]
     --   simp only [mem_iUnion]
     --   sorry
+
     set SpecV := fun (n : Fin (⌈N⌉₊ + 1)) =>
       MeasureTheory.Content.outerMeasure_exists_open (rieszContent Λ hΛ)
       (ne_of_lt (lt_of_le_of_lt ((rieszContent Λ hΛ).outerMeasure.mono (hErestsubtsupport n))
@@ -720,7 +724,8 @@ theorem RMK [Nonempty X] : ∀ (f : C_c(X, ℝ)), ∫ (x : X), f x ∂(μ Λ hΛ
       rw [hV]
       simp only [Nat.cast_succ, Opens.coe_inf, Opens.coe_mk, subset_inter_iff]
       constructor
-      · exact (Classical.choose_spec (SpecV n)).1
+      · simp only [Nat.cast_add, Nat.cast_one] at SpecV
+        exact (Classical.choose_spec (SpecV n)).1
       · rw [hErest]
         simp only
         apply Set.Subset.trans (Set.inter_subset_left _ _) _
