@@ -517,7 +517,8 @@ lemma rieszContent_neq_top {K : Compacts X} : rieszContent Λ hΛ K ≠ ⊤ := b
 
 
 lemma rieszContent_regular : (rieszContent Λ hΛ).ContentRegular := by
-  sorry
+  intro K
+  simp only
 
 variable [MeasurableSpace X] [BorelSpace X]
 
@@ -767,9 +768,18 @@ theorem RMK [Nonempty X] : ∀ (f : C_c(X, ℝ)), ∫ (x : X), f x ∂(μ Λ hΛ
       simp only [ContinuousMap.toFun_eq_coe, CompactlySupportedContinuousMap.coe_toContinuousMap,
         CompactlySupportedContinuousMap.smulc_apply, CompactlySupportedContinuousMap.coe_smul,
         CompactlySupportedContinuousMap.coe_mk, Pi.smul_apply, smul_eq_mul]
-      by_cases hx : x ∈ tsupport f
-      · sorry
-      · sorry
+      by_cases hx : x ∈ tsupport (g n)
+      · rw [mul_comm]
+        apply mul_le_mul_of_nonneg_right _ (hg.2.2.2 n x).1
+        have : x ∈ V n := Set.mem_of_subset_of_mem (hg.1 n) hx
+        rw [hV] at this
+        simp only [Nat.cast_add, Nat.cast_one] at this
+        rw [TopologicalSpace.Opens.mem_mk] at this
+        simp only [Opens.carrier_eq_coe, Opens.coe_inf, Opens.coe_mk, mem_inter_iff,
+          SetLike.mem_coe, mem_preimage, mem_Iio] at this
+        exact le_of_lt this.2
+      · rw [image_eq_zero_of_nmem_tsupport hx]
+        simp only [zero_mul, mul_zero, le_refl]
     sorry
 -- `K = range tsupport f`
 -- we will show that `Λ f ≤ ∫ (x : X), f x ∂(μ Λ hΛ) + ε (2 μ K + |a| + b + ε)`
