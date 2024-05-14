@@ -519,6 +519,35 @@ lemma rieszContent_neq_top {K : Compacts X} : rieszContent Λ hΛ K ≠ ⊤ := b
 lemma rieszContent_regular : (rieszContent Λ hΛ).ContentRegular := by
   intro K
   simp only
+  rw [rieszContent]
+  simp only
+  apply le_antisymm
+  · apply le_iInf
+    rw [← rieszContentAux_eq_rieszContentNonneg]
+    simp only [le_iInf_iff, ENNReal.coe_le_coe]
+    intro K' hK'
+    rw [← rieszContentAux_eq_rieszContentNonneg]
+    rw [← NNReal.coe_le_coe]
+    simp only [coe_mk]
+    exact rieszContentAux_mono Λ hΛ (Set.Subset.trans hK' interior_subset)
+  · rw [iInf_le_iff]
+    intro b hb
+    rw [← rieszContentAux_eq_rieszContentNonneg]
+    rw [ENNReal.le_coe_iff]
+    have : b < ⊤ := by
+      obtain ⟨F, hF⟩ := exists_compact_superset K.2
+      exact lt_of_le_of_lt (le_iInf_iff.mp (hb ⟨F, hF.1⟩) hF.2) ENNReal.coe_lt_top
+    use b.toNNReal
+    constructor
+    · exact Eq.symm (ENNReal.coe_toNNReal (ne_of_lt this))
+    · apply NNReal.coe_le_coe.mp
+      simp only [coe_mk]
+      apply le_iff_forall_pos_le_add.mpr
+      intro ε hε
+      obtain ⟨f, hf⟩ := exists_lt_rieszContentAux_add_pos Λ K hε
+      apply le_of_lt (lt_of_le_of_lt _ hf.2.2.2)
+      -- use 1 < α argument of rudin
+      sorry
 
 variable [MeasurableSpace X] [BorelSpace X]
 
@@ -755,9 +784,19 @@ theorem RMK [Nonempty X] : ∀ (f : C_c(X, ℝ)), ∫ (x : X), f x ∂(μ Λ hΛ
         simp only [Pi.one_apply, mul_one]
       · rw [image_eq_zero_of_nmem_tsupport hx]
         simp only [Finset.sum_apply, zero_mul]
-    have hgsum : (μ Λ hΛ (tsupport f)).toReal ≤ Λ (∑ n, ⟨g n, hg.2.1 n⟩) := by
-      sorry
-      -- use MeasureTheory.Content.measure_eq_content_of_regular
+    have hgsum : (μ Λ hΛ (TopologicalSpace.Compacts.mk (tsupport f) f.2)) ≤ ENNReal.ofReal (Λ (∑ n, ⟨g n, hg.2.1 n⟩)) := by
+      rw [μ]
+      rw [MeasureTheory.Content.measure_eq_content_of_regular (rieszContent Λ hΛ)
+        (rieszContent_regular Λ hΛ) ⟨tsupport f, f.2⟩]
+      rw [rieszContent]
+      simp only [map_sum]
+      apply ENNReal.coe_le_iff.mpr
+      intro p hp
+      rw [← ENNReal.ofReal_coe_nnreal] at hp
+
+
+
+
     have : ∀ (n : Fin (⌈N⌉₊ + 1)), ∀ (x : X), x ∈ Erest n → y n < f x := by
       intro n x hnx
       rw [hErest, hE] at hnx
