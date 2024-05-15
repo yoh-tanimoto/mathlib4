@@ -793,6 +793,16 @@ theorem RMK [Nonempty X] : ∀ (f : C_c(X, ℝ)), ∫ (x : X), f x ∂(μ Λ hΛ
       apply ENNReal.coe_le_iff.mpr
       intro p hp
       rw [← ENNReal.ofReal_coe_nnreal] at hp
+      rw [ENNReal.ofReal_eq_ofReal_iff] at hp
+      rw [rieszContentNonneg]
+      apply csInf_le (rieszContentNonneg_image_BddBelow Λ hΛ ⟨tsupport f, f.2⟩)
+      rw [Set.mem_image]
+      -- need to define g n as C(X, ℝ≥0)
+      use ∑ n, ⟨⟨Real.toNNReal ∘ (g n), Continuous.comp continuous_real_toNNReal (g n).2⟩,
+        @HasCompactSupport.comp_left _ _ _ _ _ _ Real.toNNReal (g n) (hg.2.1 n) Real.toNNReal_zero⟩
+      constructor
+      · intro x hx
+        -- need to show that (∑ g n) x = ∑ g n x for g n : C_c(X, ℝ)
 
 
 
