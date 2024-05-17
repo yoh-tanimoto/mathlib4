@@ -5,6 +5,7 @@ Authors: Yoh Tanimoto
 -/
 import Mathlib.Topology.ContinuousFunction.Bounded
 import Mathlib.Topology.ContinuousFunction.CocompactMap
+import Mathlib.Topology.ContinuousFunction.Compact
 -- import Mathlib.Topology.ContinuousFunction.ZeroAtInfty
 -- make coercion from C₀ to C_c
 -- show the density of C_c in C₀
@@ -33,7 +34,7 @@ open BoundedContinuousFunction Topology Bornology
 open Filter Metric
 
 /-- `C_c(α, β)` is the type of continuous functions `α → β` with compact support from a topological
-space to a metric space with a zero element.
+space to a topological space with a zero element.
 
 When possible, instead of parametrizing results over `(f : C_c(α, β))`,
 you should parametrize over `(F : Type*) [CompactlySupportedContinuousMapClass F α β] (f : F)`.
@@ -132,18 +133,11 @@ def ContinuousMap.liftCompactlySupported [CompactSpace α] : C(α, β) ≃ C_c(�
   toFun f :=
     { toFun := f
       continuous_toFun := f.continuous
-      has_compact_support' := by
-        simp only
-        exact IsCompact.of_isClosed_subset isCompact_univ (isClosed_tsupport f)
-          (Set.subset_univ (tsupport f))
+      has_compact_support' := ContinuousMap.isCompact_tsupport_of_CompactSpace f
         }
   invFun f := f
-  left_inv f := by
-    ext
-    rfl
-  right_inv f := by
-    ext
-    rfl
+  left_inv _ := rfl
+  right_inv _ := rfl
 
 /-- A continuous function on a compact space has automatically compact support. This is not an
 instance to avoid type class loops. -/
@@ -152,8 +146,7 @@ lemma compactlySupportedContinuousMapClass.ofCompact {G : Type*} [FunLike G α �
   map_continuous := map_continuous
   has_compact_support := by
     intro f
-    exact IsCompact.of_isClosed_subset isCompact_univ (isClosed_tsupport f)
-      (Set.subset_univ (tsupport f))
+    exact ContinuousMap.isCompact_tsupport_of_CompactSpace f
 
 end Basics
 
@@ -174,8 +167,7 @@ instance instZero [Zero β] : Zero C_c(α, β) where
             has_compact_support' := by
               rw [HasCompactSupport, tsupport]
               simp only [ContinuousMap.coe_zero, Function.support_zero', closure_empty,
-                isCompact_empty]
-}
+                isCompact_empty] }
 
 instance instInhabited [Zero β] : Inhabited C_c(α, β) :=
   ⟨0⟩
@@ -187,10 +179,9 @@ theorem coe_zero [Zero β] : ⇑(0 : C_c(α, β)) = 0 :=
 theorem zero_apply [Zero β] : (0 : C_c(α, β)) x = 0 :=
   rfl
 
-instance instMul [MulZeroClass β] [ContinuousMul β] : Mul C_c(α, β) :=
+instance [MulZeroClass β] [ContinuousMul β] : Mul C_c(α, β) :=
   ⟨fun f g => ⟨f * g, HasCompactSupport.mul_left g.2⟩⟩
 
-@[simp]
 theorem coe_mul [MulZeroClass β] [ContinuousMul β] (f g : C_c(α, β)) : ⇑(f * g) = f * g :=
   rfl
 
@@ -198,9 +189,12 @@ theorem coe_mul [MulZeroClass β] [ContinuousMul β] (f g : C_c(α, β)) : ⇑(f
 theorem mul_apply [MulZeroClass β] [ContinuousMul β] (f g : C_c(α, β)) : (f * g) x = f x * g x :=
   rfl
 
--- the product of `(f : C(α, β))` and `(g : C_c(α, β))` is in `C_c(α, β)`
-instance instSMulC [MulZeroClass β] [ContinuousMul β] : SMul C(α, β) C_c(α, β) :=
-  ⟨fun f g => ⟨f * g, HasCompactSupport.mul_left g.2⟩⟩
+/-- the product of `f : C(α, β)` and `g : C_c(α, β)` is in `C_c(α, β)` -/
+instance {G : Type*} [MulZeroClass β] [ContinuousMul β] [FunLike F α β] [FunLike G α β]
+    [ContinuousMapClass G α β] [CompactlySupportedContinuousMapClass F α β] : SMul G F where
+  smul := fun g f => fun x => (g x) * (f x)
+-- instance [MulZeroClass β] [ContinuousMul β] : SMul C(α, β) C_c(α, β) :=
+--   ⟨fun f g => ⟨f * g, HasCompactSupport.mul_left g.2⟩⟩
 
 @[simp]
 theorem coe_smulc [MulZeroClass β] [ContinuousMul β] (f : C(α, β)) (g : C_c(α, β)) :
@@ -220,11 +214,11 @@ instance instSemigroupWithZero [SemigroupWithZero β] [ContinuousMul β] :
   DFunLike.coe_injective.semigroupWithZero _ coe_zero coe_mul
 
 -- need `[AddMonoid β]` here to apply `HasCompactSupport.add`
-instance instAdd [AddMonoid β] [ContinuousAdd β] : Add C_c(α, β) :=
+instance instAdd [AddZeroClass β] [ContinuousAdd β] : Add C_c(α, β) :=
   ⟨fun f g => ⟨f + g, HasCompactSupport.add f.2 g.2⟩⟩
 
 @[simp]
-theorem coe_add [AddMonoid β] [ContinuousAdd β] (f g : C_c(α, β)) : ⇑(f + g) = f + g :=
+theorem coe_add [AddZeroClass β] [ContinuousAdd β] (f g : C_c(α, β)) : ⇑(f + g) = f + g :=
   rfl
 
 theorem add_apply [AddMonoid β] [ContinuousAdd β] (f g : C_c(α, β)) : (f + g) x = f x + g x :=
