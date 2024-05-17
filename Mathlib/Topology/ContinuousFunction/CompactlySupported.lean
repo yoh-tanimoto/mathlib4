@@ -182,10 +182,10 @@ theorem zero_apply [Zero β] : (0 : C_c(α, β)) x = 0 :=
 instance [MulZeroClass β] [ContinuousMul β] : Mul C_c(α, β) :=
   ⟨fun f g => ⟨f * g, HasCompactSupport.mul_left g.2⟩⟩
 
+@[simp]
 theorem coe_mul [MulZeroClass β] [ContinuousMul β] (f g : C_c(α, β)) : ⇑(f * g) = f * g :=
   rfl
 
-@[simp]
 theorem mul_apply [MulZeroClass β] [ContinuousMul β] (f g : C_c(α, β)) : (f * g) x = f x * g x :=
   rfl
 
@@ -210,7 +210,6 @@ instance instSemigroupWithZero [SemigroupWithZero β] [ContinuousMul β] :
     SemigroupWithZero C_c(α, β) :=
   DFunLike.coe_injective.semigroupWithZero _ coe_zero coe_mul
 
--- need `[AddMonoid β]` here to apply `HasCompactSupport.add`
 instance instAdd [AddZeroClass β] [ContinuousAdd β] : Add C_c(α, β) :=
   ⟨fun f g => ⟨f + g, HasCompactSupport.add f.2 g.2⟩⟩
 
@@ -218,10 +217,10 @@ instance instAdd [AddZeroClass β] [ContinuousAdd β] : Add C_c(α, β) :=
 theorem coe_add [AddZeroClass β] [ContinuousAdd β] (f g : C_c(α, β)) : ⇑(f + g) = f + g :=
   rfl
 
-theorem add_apply [AddMonoid β] [ContinuousAdd β] (f g : C_c(α, β)) : (f + g) x = f x + g x :=
+theorem add_apply [AddZeroClass β] [ContinuousAdd β] (f g : C_c(α, β)) : (f + g) x = f x + g x :=
   rfl
 
-instance instAddZeroClass [AddMonoid β] [ContinuousAdd β] : AddZeroClass C_c(α, β) :=
+instance instAddZeroClass [AddZeroClass β] [ContinuousAdd β] : AddZeroClass C_c(α, β) :=
   DFunLike.coe_injective.addZeroClass _ coe_zero coe_add
 
 instance instSMul [Zero β] {R : Type*} [Zero R] [SMulWithZero R β] [ContinuousConstSMul R β] :
@@ -367,8 +366,7 @@ open ZeroAtInfty
 variable [TopologicalSpace β] [TopologicalSpace γ] [Zero γ]
 variable [FunLike F β γ] [CompactlySupportedContinuousMapClass F β γ]
 
-lemma zero_at_infty_of_hasCompactSupport
-    (f : F) :
+lemma zero_at_infty_of_hasCompactSupport (f : F) :
     Filter.Tendsto f (Filter.cocompact β) (𝓝 0) := by
   rw [_root_.tendsto_nhds]
   intro s _ hzero
