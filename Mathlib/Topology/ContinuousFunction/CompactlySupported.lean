@@ -6,7 +6,7 @@ Authors: Yoh Tanimoto
 import Mathlib.Topology.ContinuousFunction.Bounded
 import Mathlib.Topology.ContinuousFunction.CocompactMap
 import Mathlib.Topology.ContinuousFunction.Compact
--- import Mathlib.Topology.ContinuousFunction.ZeroAtInfty
+import Mathlib.Topology.ContinuousFunction.ZeroAtInfty
 -- make coercion from C₀ to C_c
 -- show the density of C_c in C₀
 
@@ -190,11 +190,8 @@ theorem mul_apply [MulZeroClass β] [ContinuousMul β] (f g : C_c(α, β)) : (f 
   rfl
 
 /-- the product of `f : C(α, β)` and `g : C_c(α, β)` is in `C_c(α, β)` -/
-instance {G : Type*} [MulZeroClass β] [ContinuousMul β] [FunLike F α β] [FunLike G α β]
-    [ContinuousMapClass G α β] [CompactlySupportedContinuousMapClass F α β] : SMul G F where
-  smul := fun g f => fun x => (g x) * (f x)
--- instance [MulZeroClass β] [ContinuousMul β] : SMul C(α, β) C_c(α, β) :=
---   ⟨fun f g => ⟨f * g, HasCompactSupport.mul_left g.2⟩⟩
+instance [MulZeroClass β] [ContinuousMul β] : SMul C(α, β) C_c(α, β) :=
+   ⟨fun f g => ⟨f * g, HasCompactSupport.mul_left g.2⟩⟩
 
 @[simp]
 theorem coe_smulc [MulZeroClass β] [ContinuousMul β] (f : C(α, β)) (g : C_c(α, β)) :
@@ -363,29 +360,41 @@ instance instNonUnitalCommRing [NonUnitalCommRing β] [TopologicalRing β] :
 
 end AlgebraicStructure
 
-section Uniform
+section ZeroAtInfty
 
-variable [UniformSpace β] [UniformSpace γ] [Zero γ]
+open ZeroAtInfty
+
+variable [TopologicalSpace β] [TopologicalSpace γ] [Zero γ]
 variable [FunLike F β γ] [CompactlySupportedContinuousMapClass F β γ]
 
-lemma zero_at_infty_of_hasCompactSupport [TopologicalSpace β] [Zero β]
-    (f : C_c(α, β)) :
-    Filter.Tendsto f (Filter.cocompact α) (nhds 0) := by
+lemma zero_at_infty_of_hasCompactSupport
+    (f : F) :
+    Filter.Tendsto f (Filter.cocompact β) (𝓝 0) := by
   rw [_root_.tendsto_nhds]
   intro s _ hzero
   rw [Filter.mem_cocompact]
   use tsupport f
   constructor
-  · exact f.2
+  · exact has_compact_support f
   · intro x hx
     simp only [Set.mem_preimage]
     rw [← Set.not_mem_compl_iff, compl_compl] at hx
     rw [image_eq_zero_of_nmem_tsupport hx]
     exact hzero
 
+instance : ZeroAtInftyContinuousMapClass C_c(β, γ) β γ where
+  map_continuous f := f.continuous_toFun
+  zero_at_infty f := zero_at_infty_of_hasCompactSupport f
+
+end ZeroAtInfty
+
+section Uniform
+
+variable [UniformSpace β] [UniformSpace γ] [Zero γ]
+variable [FunLike F β γ] [CompactlySupportedContinuousMapClass F β γ]
+
 theorem uniformContinuous (f : F) : UniformContinuous (f : β → γ) :=
-  (map_continuous f).uniformContinuous_of_tendsto_cocompact
-    (zero_at_infty_of_hasCompactSupport ⟨⟨(f : β → γ) , map_continuous f⟩, has_compact_support f⟩)
+  (map_continuous f).uniformContinuous_of_tendsto_cocompact (zero_at_infty_of_hasCompactSupport f)
 
 end Uniform
 
