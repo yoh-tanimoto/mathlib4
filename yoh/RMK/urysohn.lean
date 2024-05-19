@@ -1,4 +1,4 @@
-import LeanCopilot
+-- import LeanCopilot
 import Mathlib.Data.Set.Basic
 import Mathlib.Topology.Basic
 import Mathlib.Order.Filter.Basic
@@ -8,14 +8,14 @@ import Mathlib.Algebra.Function.Support
 import Mathlib.Topology.MetricSpace.Cauchy
 import Mathlib.Topology.Compactness.Compact
 import Mathlib.Topology.ContinuousFunction.Bounded
-import Mathlib.Topology.ContinuousFunction.CocompactMap
+-- import Mathlib.Topology.ContinuousFunction.CocompactMap
 import Mathlib.Topology.Compactness.LocallyCompact
 import Mathlib.Topology.UrysohnsLemma
-import Mathlib.Topology.ContinuousFunction.ZeroAtInfty
+-- import Mathlib.Topology.ContinuousFunction.ZeroAtInfty
 import Mathlib.Topology.Sets.Compacts
-import Mathlib.MeasureTheory.Constructions.BorelSpace.Basic
-import Mathlib.MeasureTheory.Integral.Bochner
-import Mathlib.Data.Set.Intervals.Instances
+-- import Mathlib.MeasureTheory.Constructions.BorelSpace.Basic
+-- import Mathlib.MeasureTheory.Integral.Bochner
+-- import Mathlib.Data.Set.Intervals.Instances
 
 noncomputable section
 

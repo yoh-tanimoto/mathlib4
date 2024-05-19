@@ -424,6 +424,13 @@ instance regular [WeaklyLocallyCompactSpace G] : μ.measure.Regular := by
   exact (μ.le_outerMeasure_compacts K).trans (le_toMeasure_apply _ _ _)
 #align measure_theory.content.regular MeasureTheory.Content.regular
 
+instance [WeaklyLocallyCompactSpace G] [T2Space G] :
+    MeasureTheory.IsFiniteMeasureOnCompacts μ.measure where
+  lt_top_of_isCompact := by
+    intro K hK
+    rw [MeasureTheory.Content.measure_apply μ hK.measurableSet]
+    exact MeasureTheory.Content.outerMeasure_lt_top_of_isCompact μ hK
+
 end OuterMeasure
 
 section RegularContents
