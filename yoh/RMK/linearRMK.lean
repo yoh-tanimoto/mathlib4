@@ -798,15 +798,25 @@ theorem RMK [Nonempty X] : ∀ (f : C_c(X, ℝ)), ∫ (x : X), f x ∂(μ Λ hΛ
       apply csInf_le (rieszContentNonneg_image_BddBelow Λ hΛ ⟨tsupport f, f.2⟩)
       rw [Set.mem_image]
       -- need to define g n as C(X, ℝ≥0)
-      use ∑ n, ⟨⟨Real.toNNReal ∘ (g n), Continuous.comp continuous_real_toNNReal (g n).2⟩,
+      set g' : Fin (⌈N⌉₊ + 1) → C_c(X, ℝ≥0) :=
+        fun n => ⟨⟨Real.toNNReal ∘ (g n), Continuous.comp continuous_real_toNNReal (g n).2⟩,
         @HasCompactSupport.comp_left _ _ _ _ _ _ Real.toNNReal (g n) (hg.2.1 n) Real.toNNReal_zero⟩
+        with hg'
+      use ∑ n, g' n
       constructor
       · intro x hx
-        -- need to show that (∑ g n) x = ∑ g n x for g n : C_c(X, ℝ)
-
-
-
-
+        rw [CompactlySupportedContinuousMap.sum_apply Finset.univ (fun n => g' n) x]
+        rw [hg']
+        simp only [CompactlySupportedContinuousMap.coe_mk, ContinuousMap.coe_mk, comp_apply]
+        rw [← Real.toNNReal_sum_of_nonneg _]
+        · simp only [Real.one_le_toNNReal]
+          set hgx := hg.2.2.1 hx
+          simp only [Finset.sum_apply, Pi.one_apply] at hgx
+          rw [hgx]
+        · intro n _
+          exact (hg.2.2.2 n x).1
+      · sorry
+      · sorry
     have : ∀ (n : Fin (⌈N⌉₊ + 1)), ∀ (x : X), x ∈ Erest n → y n < f x := by
       intro n x hnx
       rw [hErest, hE] at hnx
