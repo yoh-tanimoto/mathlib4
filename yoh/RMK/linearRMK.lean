@@ -1059,7 +1059,7 @@ theorem RMK [Nonempty X] : ∀ (f : C_c(X, ℝ)), ∫ (x : X), f x ∂(μ Λ hΛ
         rw [← TopologicalSpace.Opens.carrier_eq_coe]
         exact hg.1 n
     have hμVnleμEnaddε : ∀ (n : Fin (⌈N⌉₊ + 1)),
-        (μ Λ hΛ) (V n) ≤ (μ Λ hΛ) (Erest n) + ENNReal.ofReal (ε / (⌈N⌉₊ + 1)) := by
+        (μ Λ hΛ) (V n) ≤ (μ Λ hΛ) (Erest n) + ENNReal.ofReal (ε / ((⌈N⌉₊ + 1 : ℕ))) := by
       intro n
       rw [μ]
       rw [← TopologicalSpace.Opens.carrier_eq_coe]
@@ -1068,23 +1068,28 @@ theorem RMK [Nonempty X] : ∀ (f : C_c(X, ℝ)), ∫ (x : X), f x ∂(μ Λ hΛ
       rw [MeasureTheory.Content.measure_apply (rieszContent Λ hΛ) (hERestmeasurable n)]
       set Un := Classical.choose (SpecV n) with hUn
       set SpecUn := Classical.choose_spec (SpecV n)
-
-      sorry
-
-
-
-
-
+      have hVU : V n ≤ Un := by
+        exact inf_le_left
+      have hμVleμU :
+          (rieszContent Λ hΛ).outerMeasure (V n) ≤ (rieszContent Λ hΛ).outerMeasure (Un) := by
+        exact MeasureTheory.OuterMeasure.mono (rieszContent Λ hΛ).outerMeasure hVU
+      apply le_trans hμVleμU
+      rw [hUn]
+      have hENNNR : ∀ (p : ℝ), ENNReal.ofReal p = p.toNNReal := by
+        intro p
+        rfl
+      rw [hENNNR]
+      exact SpecUn.2
 
 
     sorry
--- from SpecV it follows that μ (V n) ≤ μ (E n) + ε / ⌈N⌉+1.
+-- we have μ (V n) ≤ μ (E n) + ε / ⌈N⌉+1.
 -- we have Λ (g n) ≤ μ_Λ (V n) from supp g n ⊆ V n
+-- show supp f = ⋃ n, E n
 -- we need that μ (supp f) ≤ ∑ n, Λ (g n),
 -- so it follows that - ∑ Λ (g n) ≤  - μ (supp f)
 ---- use that 1 ≤ ∑ n, g n on supp f and
 -- need also that ∑ μ (E n) = μ (supp f)
--- show supp f = ⋃ n, E n
 -- use MeasureTheory.setIntegral_ge_of_const_le
 -- to show that (y n - ε) * μ (E n) ≤ ∫ x ∈ E n, f x d μ
 -- altogether, ∑ (y n - ε) * μ (E n) ≤ ∫ f x d μ
