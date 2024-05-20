@@ -809,6 +809,10 @@ theorem RMK [Nonempty X] : ∀ (f : C_c(X, ℝ)), ∫ (x : X), f x ∂(μ Λ hΛ
 
     set E : ℤ → Set X := fun n => (f ⁻¹' Ioc (y n) (y (n+1))) ∩ (tsupport f) with hE
     set Erest : Fin (⌈N⌉₊ + 1) → Set X := fun n => E n with hErest
+    have hErestdisjoint : PairwiseDisjoint Set.univ Erest := by
+      intro m _ n _ hmn
+      -- use Disjoint.preimage
+
     have hERestmeasurable : ∀ (n : Fin (⌈N⌉₊ + 1)), MeasurableSet (Erest n) := by
       intro n
       rw [hErest]
@@ -1085,11 +1089,12 @@ theorem RMK [Nonempty X] : ∀ (f : C_c(X, ℝ)), ∫ (x : X), f x ∂(μ Λ hΛ
     sorry
 -- we have μ (V n) ≤ μ (E n) + ε / ⌈N⌉+1.
 -- we have Λ (g n) ≤ μ_Λ (V n) from supp g n ⊆ V n
--- show supp f = ⋃ n, E n
+-- we have supp f ⊆ ⋃ n, E n
 -- we need that μ (supp f) ≤ ∑ n, Λ (g n),
 -- so it follows that - ∑ Λ (g n) ≤  - μ (supp f)
 ---- use that 1 ≤ ∑ n, g n on supp f and
 -- need also that ∑ μ (E n) = μ (supp f)
+---- use MeasureTheory.measure_biUnion_finset
 -- use MeasureTheory.setIntegral_ge_of_const_le
 -- to show that (y n - ε) * μ (E n) ≤ ∫ x ∈ E n, f x d μ
 -- altogether, ∑ (y n - ε) * μ (E n) ≤ ∫ f x d μ
