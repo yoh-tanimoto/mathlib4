@@ -528,7 +528,6 @@ def rieszContent : MeasureTheory.Content X where
 lemma rieszContent_neq_top {K : Compacts X} : rieszContent Λ hΛ K ≠ ⊤ := by
   simp only [ne_eq, coe_ne_top, not_false_eq_true]
 
-
 lemma Real.le_of_forall_lt_one_lt_mul (a b : ℝ) (hb : 0 ≤ b) :
     (∀ (ε : ℝ), 1 < ε → a ≤  b * ε) → a ≤ b := by
   intro h
@@ -550,7 +549,7 @@ lemma Real.le_of_forall_lt_one_lt_mul (a b : ℝ) (hb : 0 ≤ b) :
 
 open Pointwise
 
-lemma rieszContent_regular : (rieszContent Λ hΛ).ContentRegular := by
+lemma rieszContentRegular : (rieszContent Λ hΛ).ContentRegular := by
   intro K
   simp only
   rw [rieszContent]
@@ -664,6 +663,37 @@ lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed [T2Space X]
 /-- `rieszContent` is promoted to a measure. -/
 def μ := (MeasureTheory.Content.measure (rieszContent Λ hΛ))
 
+lemma leRieszMeasure_isCompact {f : C_c(X, ℝ)} (hf : ∀ (x : X), 0 ≤ f x ∧ f x ≤ 1) {K : Compacts X}
+    (h : tsupport f ⊆ K) : ENNReal.ofReal (Λ f) ≤ (μ Λ hΛ) K := by
+  rw [μ]
+  rw [MeasureTheory.Content.measure_eq_content_of_regular (rieszContent Λ hΛ)
+    (rieszContentRegular Λ hΛ)]
+  simp only
+  rw [rieszContent]
+  simp only
+  rw [← rieszContentAux_eq_rieszContentNonneg, ← ENNReal.ofReal_eq_coe_nnreal]
+  rw [ENNReal.ofReal_le_ofReal_iff (rieszContentAux_nonneg Λ hΛ)]
+  apply le_iff_forall_pos_le_add.mpr
+  intro ε hε
+  obtain ⟨g, hg⟩ := exists_lt_rieszContentAux_add_pos Λ K hε
+  apply le_of_lt (lt_of_le_of_lt _ hg.2.2.2)
+  apply Λ_mono Λ hΛ
+  intro x
+  simp only [ContinuousMap.toFun_eq_coe, CompactlySupportedContinuousMap.coe_toContinuousMap]
+  by_cases hx : x ∈ tsupport f
+  · exact le_trans (hf x).2 (hg.2.2.1 x (Set.mem_of_subset_of_mem h hx))
+  · rw [image_eq_zero_of_nmem_tsupport hx]
+    exact hg.2.1 x
+
+lemma leRieszMeasure_isOpen {f : C_c(X, ℝ)} (hf : ∀ (x : X), 0 ≤ f x ∧ f x ≤ 1) {V : Opens X}
+    (h : tsupport f ⊆ V) :
+    ENNReal.ofReal (Λ f) ≤ (μ Λ hΛ) V := by
+  apply le_trans _ (MeasureTheory.measure_mono h)
+  rw [← TopologicalSpace.Compacts.coe_mk (tsupport f) f.2]
+  apply leRieszMeasure_isCompact Λ hΛ hf
+  simp only [Compacts.coe_mk]
+  exact subset_rfl
+
 /-- The Riesz-Markov-Kakutani theorem. -/
 theorem RMK [Nonempty X] : ∀ (f : C_c(X, ℝ)), ∫ (x : X), f x ∂(μ Λ hΛ) = Λ f := by
   have RMK_le : ∀ (f : C_c(X, ℝ)), Λ f ≤ ∫ (x : X), f x ∂(μ Λ hΛ) := by
@@ -753,6 +783,16 @@ theorem RMK [Nonempty X] : ∀ (f : C_c(X, ℝ)), ∫ (x : X), f x ∂(μ Λ hΛ
       apply (@Int.cast_lt ℝ).mp
       apply @lt_of_tsub_lt_tsub_right ℝ j k (⌈N⌉₊ + 1)
       exact lt_of_mul_lt_mul_left h (le_of_lt hδpos)
+    have hy1leyn : ∀ (n : Fin (⌈N⌉₊ + 1)), y 1 ≤ y (n + 1) := by
+      intro n
+      rw [hy]
+      simp only [Int.cast_one, sub_add_cancel_right, mul_neg, Int.cast_add, Int.cast_natCast,
+        add_sub_add_right_eq_sub, add_lt_add_iff_left]
+      rw [_root_.mul_sub]
+      apply le_add_neg_iff_le.mp
+      ring_nf
+      simp only [one_div, gt_iff_lt, inv_pos, Nat.ofNat_pos, mul_nonneg_iff_of_pos_right]
+      exact mul_nonneg (le_of_lt hε) (Nat.cast_nonneg _)
     have hy0 : y 0 < a := by
       rw [hy, hN]
       simp only [Int.cast_zero, Int.ceil_add_one, Int.cast_add, Int.cast_one, zero_sub, neg_add_rev]
@@ -766,15 +806,16 @@ theorem RMK [Nonempty X] : ∀ (f : C_c(X, ℝ)), ∫ (x : X), f x ∂(μ Λ hΛ
       rw [add_mul, add_mul, div_mul, div_mul, div_self (Ne.symm (ne_of_lt hδpos))]
       simp only [div_one, one_mul]
       linarith
+
     set E : ℤ → Set X := fun n => (f ⁻¹' Ioc (y n) (y (n+1))) ∩ (tsupport f) with hE
-    have hEmeasurable : ∀ (n : ℤ), MeasurableSet (E n) := by
+    set Erest : Fin (⌈N⌉₊ + 1) → Set X := fun n => E n with hErest
+    have hERestmeasurable : ∀ (n : Fin (⌈N⌉₊ + 1)), MeasurableSet (Erest n) := by
       intro n
-      rw [hE]
+      rw [hErest]
       simp only
       apply MeasurableSet.inter
       · exact (ContinuousMap.measurable f.1) measurableSet_Ioc
       · exact measurableSet_closure
-    set Erest : Fin (⌈N⌉₊ + 1) → Set X := fun n => E n with hErest
     have hErestsubtsupport : ∀ (n : Fin (⌈N⌉₊ + 1)), Erest n ⊆ tsupport f := by
       intro n
       rw [hErest]
@@ -885,7 +926,7 @@ theorem RMK [Nonempty X] : ∀ (f : C_c(X, ℝ)), ∫ (x : X), f x ∂(μ Λ hΛ
     have hgsum : (μ Λ hΛ (TopologicalSpace.Compacts.mk (tsupport f) f.2)) ≤ ENNReal.ofReal (Λ (∑ n, ⟨g n, hg.2.1 n⟩)) := by
       rw [μ]
       rw [MeasureTheory.Content.measure_eq_content_of_regular (rieszContent Λ hΛ)
-        (rieszContent_regular Λ hΛ) ⟨tsupport f, f.2⟩]
+        (rieszContentRegular Λ hΛ) ⟨tsupport f, f.2⟩]
       rw [rieszContent]
       simp only [map_sum]
       apply ENNReal.coe_le_iff.mpr
@@ -963,50 +1004,94 @@ theorem RMK [Nonempty X] : ∀ (f : C_c(X, ℝ)), ∫ (x : X), f x ∂(μ Λ hΛ
         ≤ Λ ((y (n + 1) + ε) • (⟨g n, hg.2.1 n⟩ : C_c(X, ℝ))) := by
       intro n _
       exact Λ_mono Λ hΛ (hgf n)
-    rw [hf]
+    nth_rw 1 [hf]
     simp only [map_sum, CompactlySupportedContinuousMap.coe_sum,
       Finset.sum_apply, Pi.mul_apply]
-    rw [MeasureTheory.integral_finset_sum]
+--    rw [MeasureTheory.integral_finset_sum]
     apply le_trans (Finset.sum_le_sum hΛgf)
     simp only [LinearMapClass.map_smul, smul_eq_mul, CompactlySupportedContinuousMap.smulc_apply,
       CompactlySupportedContinuousMap.coe_smulc]
     rw [← add_zero ε]
     simp_rw [← add_assoc, ← sub_self |a|, ← add_sub_assoc, _root_.sub_mul]
     simp only [Finset.sum_sub_distrib]
+    rw [← Finset.mul_sum]
+    have hy1a : 0 < y 1 + ε + |a| := by
+      rw [hy]
+      simp only [Fin.val_zero, CharP.cast_eq_zero, zero_add, Int.cast_one, sub_add_cancel_right,
+        mul_neg]
+      rw [add_assoc, add_assoc, add_comm, add_assoc, lt_neg_add_iff_lt, ← lt_div_iff' hδpos]
+      apply lt_trans (Nat.ceil_lt_add_one hNNonneg)
+      rw [lt_div_iff' hδpos, hN, mul_add, mul_comm, div_mul, div_self (ne_of_gt hδpos)]
+      simp only [div_one, mul_one]
+      rw [hδ]
+      apply lt_add_of_tsub_lt_right
+      rw [add_sub_assoc, add_comm, ← add_sub_assoc]
+      apply sub_right_lt_of_lt_add
+      rw [sub_add]
+      simp only [sub_self, sub_zero]
+      apply lt_neg_add_iff_lt.mp
+      rw [add_assoc, ← add_assoc]
+      apply add_pos_of_pos_of_nonneg
+      · simp only [lt_neg_add_iff_add_lt, add_zero, half_lt_self_iff]
+        exact hε
+      · exact neg_le_iff_add_nonneg'.mp (neg_abs_le a)
+    have hyna : ∀ (n : Fin (⌈N⌉₊ + 1)), 0 < y (n + 1) + ε + |a| := by
+      intro n
+      by_cases hn : n = 0
+      · rw [hn]
+        exact hy1a
+      · push_neg at hn
+        have hnp : 0 < n := by
+          exact Fin.pos_iff_ne_zero.mpr hn
+        rw [← sub_add_cancel (y (n + 1)) (y 1), add_assoc, add_assoc]
+        apply add_pos_of_nonneg_of_pos
+        · exact sub_nonneg_of_le (hy1leyn n)
+        · rw [← add_assoc]
+          exact hy1a
+    have hΛgnleμVn : ∀ (n : Fin (⌈N⌉₊ + 1)),
+        ENNReal.ofReal (Λ (⟨g n, hg.2.1 n⟩)) ≤ (μ Λ hΛ) (V n) := by
+      intro n
+      apply leRieszMeasure_isOpen
+      · simp only [CompactlySupportedContinuousMap.coe_mk]
+        intro x
+        exact hg.2.2.2 n x
+      · simp only [CompactlySupportedContinuousMap.coe_mk]
+        rw [← TopologicalSpace.Opens.carrier_eq_coe]
+        exact hg.1 n
+    have hμVnleμEnaddε : ∀ (n : Fin (⌈N⌉₊ + 1)),
+        (μ Λ hΛ) (V n) ≤ (μ Λ hΛ) (Erest n) + ENNReal.ofReal (ε / (⌈N⌉₊ + 1)) := by
+      intro n
+      rw [μ]
+      rw [← TopologicalSpace.Opens.carrier_eq_coe]
+      rw [MeasureTheory.Content.measure_apply (rieszContent Λ hΛ) (V n).2.measurableSet]
+      rw [TopologicalSpace.Opens.carrier_eq_coe]
+      rw [MeasureTheory.Content.measure_apply (rieszContent Λ hΛ) (hERestmeasurable n)]
+      set Un := Classical.choose (SpecV n) with hUn
+      set SpecUn := Classical.choose_spec (SpecV n)
+
+      sorry
+
+
+
+
+
+
+
     sorry
 -- from SpecV it follows that μ (V n) ≤ μ (E n) + ε / ⌈N⌉+1.
--- we need that Λ (g n) ≤ μ_Λ (V n) from supp g n ⊆ V n
--- we need that μ (E n) ≤ Λ (g n) from supp g n ⊆ V n,
--- so it follows that - ∑ Λ (g n) ≤ - ∑ μ (E n) = - μ (supp f)
+-- we have Λ (g n) ≤ μ_Λ (V n) from supp g n ⊆ V n
+-- we need that μ (supp f) ≤ ∑ n, Λ (g n),
+-- so it follows that - ∑ Λ (g n) ≤  - μ (supp f)
+---- use that 1 ≤ ∑ n, g n on supp f and
 -- need also that ∑ μ (E n) = μ (supp f)
--- need |a| + y n ≥ 0
+-- show supp f = ⋃ n, E n
 -- use MeasureTheory.setIntegral_ge_of_const_le
 -- to show that (y n - ε) * μ (E n) ≤ ∫ x ∈ E n, f x d μ
--- show supp f = ⋃ n, E n
 -- altogether, ∑ (y n - ε) * μ (E n) ≤ ∫ f x d μ
 
-    intro n hn
-    sorry
---    apply Continuous.integrable_of_hasCompactSupport (g n • f).1.2 (g n • f).2
--- registered instance MeasureTheory.IsFiniteMeasureOnCompacts μ.measure
--- in Measuretheory.Content
--- why does this not work?
-
-
-
-
-
-
-
-
-
--- `K = range tsupport f`
--- we will show that `Λ f ≤ ∫ (x : X), f x ∂(μ Λ hΛ) + ε (2 μ K + |a| + b + ε)`
--- for arbitrary `0 < ε`.
--- ------ need that, if `0 ≤ f ≤ 1` and `tsupport f ⊆ V`, then `Λ f ≤ μ V`
--- calculate
--- need that, if `a ≤ f` on `E j`, then `a μ (E j) ≤ ∫ (E j), f d μ
-
+    -- · intro n hn
+    --   rw [μ]
+    --   exact Continuous.integrable_of_hasCompactSupport (g n • f).1.2 (g n • f).2
   intro f
   apply le_antisymm
   · calc ∫ (x : X), f x ∂(μ Λ hΛ) = ∫ (x : X), -(-f) x ∂(μ Λ hΛ) := by simp only
