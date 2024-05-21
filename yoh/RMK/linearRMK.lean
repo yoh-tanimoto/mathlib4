@@ -11,6 +11,7 @@ import Mathlib.MeasureTheory.Measure.Content
 import Mathlib.Topology.ContinuousFunction.CompactlySupported
 import Mathlib.MeasureTheory.Constructions.BorelSpace.Basic
 import Mathlib.MeasureTheory.Integral.Bochner
+import Mathlib.MeasureTheory.Integral.SetIntegral
 import Mathlib.MeasureTheory.Function.LocallyIntegrable
 
 /-!
@@ -793,6 +794,16 @@ theorem RMK [Nonempty X] : ∀ (f : C_c(X, ℝ)), ∫ (x : X), f x ∂(μ Λ hΛ
       ring_nf
       simp only [one_div, gt_iff_lt, inv_pos, Nat.ofNat_pos, mul_nonneg_iff_of_pos_right]
       exact mul_nonneg (le_of_lt hε) (Nat.cast_nonneg _)
+    have hymono' : ∀ (m n : Fin (⌈N⌉₊ + 1)), m ≤ n → y m ≤ y n := by
+      intro m n hmn
+      rw [hy]
+      simp only [Int.cast_natCast, add_le_add_iff_left]
+      rw [_root_.mul_sub, _root_.mul_sub]
+      simp only [tsub_le_iff_right, sub_add_cancel]
+      apply mul_le_mul_of_nonneg_left _ (le_of_lt hδpos)
+      rw [Nat.cast_le]
+      simp only [Fin.val_fin_le]
+      exact hmn
     have hy0 : y 0 < a := by
       rw [hy, hN]
       simp only [Int.cast_zero, Int.ceil_add_one, Int.cast_add, Int.cast_one, zero_sub, neg_add_rev]
@@ -809,10 +820,41 @@ theorem RMK [Nonempty X] : ∀ (f : C_c(X, ℝ)), ∫ (x : X), f x ∂(μ Λ hΛ
 
     set E : ℤ → Set X := fun n => (f ⁻¹' Ioc (y n) (y (n+1))) ∩ (tsupport f) with hE
     set Erest : Fin (⌈N⌉₊ + 1) → Set X := fun n => E n with hErest
-    have hErestdisjoint : PairwiseDisjoint Set.univ Erest := by
+    have hErestdisjoint : PairwiseDisjoint univ Erest := by
       intro m _ n _ hmn
-      -- use Disjoint.preimage
-
+      apply Disjoint.preimage
+      simp only [mem_preimage]
+      by_cases hmltn : m < n
+      · rw [Set.disjoint_left]
+        intro x hx
+        simp only [mem_Ioc, mem_setOf_eq, not_and_or, not_lt, not_le]
+        simp only [mem_Ioc, mem_setOf_eq] at hx
+        left
+        left
+        apply le_trans hx.1.2
+        have : m.1 + (1 : ℤ) = (m+1 : Fin (⌈N⌉₊ + 1)) := by
+          rw [← Nat.cast_add_one, Nat.cast_inj]
+          apply Eq.symm (Fin.val_add_one_of_lt _)
+          exact lt_of_lt_of_le hmltn (Fin.le_last n)
+        rw [this]
+        apply hymono' _ _
+        exact Fin.add_one_le_of_lt hmltn
+      · rw [Set.disjoint_left]
+        intro x hx
+        simp only [mem_Ioc, mem_setOf_eq, not_and_or, not_lt, not_le]
+        simp only [mem_Ioc, mem_setOf_eq] at hx
+        push_neg at hmltn
+        set hnltm := lt_of_le_of_ne hmltn (Ne.symm hmn)
+        left
+        right
+        apply lt_of_le_of_lt _ hx.1.1
+        have : n.1 + (1 : ℤ) = (n+1 : Fin (⌈N⌉₊ + 1)) := by
+          rw [← Nat.cast_add_one, Nat.cast_inj]
+          apply Eq.symm (Fin.val_add_one_of_lt _)
+          exact lt_of_lt_of_le hnltm (Fin.le_last m)
+        rw [this]
+        apply hymono' _ _
+        exact Fin.add_one_le_of_lt hnltm
     have hERestmeasurable : ∀ (n : Fin (⌈N⌉₊ + 1)), MeasurableSet (Erest n) := by
       intro n
       rw [hErest]
@@ -890,6 +932,18 @@ theorem RMK [Nonempty X] : ∀ (f : C_c(X, ℝ)), ∫ (x : X), f x ∂(μ Λ hΛ
       constructor
       · use j
       · exact hx
+    have htsupporteqErest : tsupport f = ⋃ j, Erest j := by
+      apply subset_antisymm
+      · exact htsupportsubErest
+      · exact Set.iUnion_subset hErestsubtsupport
+    have hμsuppfeqμErest : (μ Λ hΛ) (tsupport f) = ∑ n, (μ Λ hΛ) (Erest n) := by
+      rw [htsupporteqErest]
+      rw [← MeasureTheory.measure_biUnion_finset]
+      · simp only [Finset.mem_univ, iUnion_true]
+      · simp only [Finset.coe_univ]
+        exact hErestdisjoint
+      · intro n _
+        exact hERestmeasurable n
     set SpecV := fun (n : Fin (⌈N⌉₊ + 1)) =>
       MeasureTheory.Content.outerMeasure_exists_open (rieszContent Λ hΛ)
       (ne_of_lt (lt_of_le_of_lt ((rieszContent Λ hΛ).outerMeasure.mono (hErestsubtsupport n))
@@ -927,7 +981,9 @@ theorem RMK [Nonempty X] : ∀ (f : C_c(X, ℝ)), ∫ (x : X), f x ∂(μ Λ hΛ
         simp only [Pi.one_apply, one_mul]
       · rw [image_eq_zero_of_nmem_tsupport hx]
         simp only [Finset.sum_apply, mul_zero]
-    have hgsum : (μ Λ hΛ (TopologicalSpace.Compacts.mk (tsupport f) f.2)) ≤ ENNReal.ofReal (Λ (∑ n, ⟨g n, hg.2.1 n⟩)) := by
+    have μtsupportflesumΛgn :
+        (μ Λ hΛ (TopologicalSpace.Compacts.mk (tsupport f) f.2)) ≤
+        ENNReal.ofReal (Λ (∑ n, ⟨g n, hg.2.1 n⟩)) := by
       rw [μ]
       rw [MeasureTheory.Content.measure_eq_content_of_regular (rieszContent Λ hΛ)
         (rieszContentRegular Λ hΛ) ⟨tsupport f, f.2⟩]
@@ -1011,7 +1067,6 @@ theorem RMK [Nonempty X] : ∀ (f : C_c(X, ℝ)), ∫ (x : X), f x ∂(μ Λ hΛ
     nth_rw 1 [hf]
     simp only [map_sum, CompactlySupportedContinuousMap.coe_sum,
       Finset.sum_apply, Pi.mul_apply]
---    rw [MeasureTheory.integral_finset_sum]
     apply le_trans (Finset.sum_le_sum hΛgf)
     simp only [LinearMapClass.map_smul, smul_eq_mul, CompactlySupportedContinuousMap.smulc_apply,
       CompactlySupportedContinuousMap.coe_smulc]
@@ -1084,24 +1139,36 @@ theorem RMK [Nonempty X] : ∀ (f : C_c(X, ℝ)), ∫ (x : X), f x ∂(μ Λ hΛ
         rfl
       rw [hENNNR]
       exact SpecUn.2
-
-
+    have ynsubεmulμEnleintEnf :
+        ∀ (n : Fin (⌈N⌉₊ + 1)), (y n - ε) * ((μ Λ hΛ) (Erest n)).toReal
+        ≤ ∫ x in (Erest n), f x ∂(μ Λ hΛ) := by
+      intro n
+      apply MeasureTheory.setIntegral_ge_of_const_le (hERestmeasurable n)
+      · rw [μ]
+        rw [MeasureTheory.Content.measure_apply _ (hERestmeasurable n)]
+        rw [← lt_top_iff_ne_top]
+        apply lt_of_le_of_lt (MeasureTheory.OuterMeasure.mono _ (hErestsubtsupport n))
+        exact MeasureTheory.Content.outerMeasure_lt_top_of_isCompact _ f.2
+      · intro x hx
+        apply le_of_lt (lt_trans _ (hErestx n x hx))
+        simp only [sub_lt_self_iff]
+        exact hε
+      · apply MeasureTheory.Integrable.integrableOn
+        rw [μ]
+        exact Continuous.integrable_of_hasCompactSupport f.1.2 f.2
     sorry
--- we have μ (V n) ≤ μ (E n) + ε / ⌈N⌉+1.
--- we have Λ (g n) ≤ μ_Λ (V n) from supp g n ⊆ V n
+-- rudin P.47 line 2
+-- we have μ (V n) ≤ μ (E n) + ε / ⌈N⌉+1. `hμVnleμEnaddε`
+-- we have Λ (g n) ≤ μ_Λ (V n) from supp g n ⊆ V n `hΛgnleμVn`
 -- we have supp f ⊆ ⋃ n, E n
--- we need that μ (supp f) ≤ ∑ n, Λ (g n),
--- so it follows that - ∑ Λ (g n) ≤  - μ (supp f)
----- use that 1 ≤ ∑ n, g n on supp f and
--- need also that ∑ μ (E n) = μ (supp f)
----- use MeasureTheory.measure_biUnion_finset
--- use MeasureTheory.setIntegral_ge_of_const_le
--- to show that (y n - ε) * μ (E n) ≤ ∫ x ∈ E n, f x d μ
+-- we have μ (supp f) ≤ ∑ n, Λ (g n), `μtsupportflesumΛgn`
+-- we have easily that - ∑ Λ (g n) ≤  - μ (supp f)
+-- we have that ∑ μ (E n) = μ (supp f) `hμsuppfeqμErest`
+-- we have that (y n - ε) * μ (E n) ≤ ∫ x ∈ E n, f x d μ `ynsubεmulμEnleintEnf`
 -- altogether, ∑ (y n - ε) * μ (E n) ≤ ∫ f x d μ
+-- using `MeasureTheory.integral_finset_biUnion`
+--
 
-    -- · intro n hn
-    --   rw [μ]
-    --   exact Continuous.integrable_of_hasCompactSupport (g n • f).1.2 (g n • f).2
   intro f
   apply le_antisymm
   · calc ∫ (x : X), f x ∂(μ Λ hΛ) = ∫ (x : X), -(-f) x ∂(μ Λ hΛ) := by simp only
