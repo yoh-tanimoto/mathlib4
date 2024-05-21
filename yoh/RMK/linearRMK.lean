@@ -661,6 +661,17 @@ lemma exists_forall_tsupport_iUnion_one_iUnion_of_isOpen_isClosed [T2Space X]
     ∧ ∀ (i : Fin n), ∀ (x : X), f i x ∈ Icc (0 : ℝ) 1 := by
   sorry
 
+theorem MeasureTheory.integral_tsupport {M : Type*} [MeasurableSpace X] [BorelSpace X]
+    [NormedAddCommGroup M]
+    [NormedSpace ℝ M] {F : X → M} {ν : MeasureTheory.Measure X} :
+    ∫ (x : X), F x ∂ν = ∫ (x : X) in tsupport F, F x ∂ν := by
+  rw [← MeasureTheory.integral_univ]
+  apply MeasureTheory.setIntegral_eq_of_subset_of_forall_diff_eq_zero MeasurableSet.univ
+    (subset_univ _)
+  intro x hx
+  apply image_eq_zero_of_nmem_tsupport
+  exact not_mem_of_mem_diff hx
+
 /-- `rieszContent` is promoted to a measure. -/
 def μ := (MeasureTheory.Content.measure (rieszContent Λ hΛ))
 
@@ -851,7 +862,42 @@ theorem RMK [Nonempty X] : ∀ (f : C_c(X, ℝ)), ∫ (x : X), f x ∂(μ Λ hΛ
         rw [this]
         apply hymono' _ _
         exact Fin.add_one_le_of_lt hnltm
-    have hERestmeasurable : ∀ (n : Fin (⌈N⌉₊ + 1)), MeasurableSet (Erest n) := by
+    have hErestdisjoint' : Pairwise (Disjoint on Erest) := by
+      intro m n hmn
+      apply Disjoint.preimage
+      simp only [mem_preimage]
+      by_cases hmltn : m < n
+      · rw [Set.disjoint_left]
+        intro x hx
+        simp only [mem_Ioc, mem_setOf_eq, not_and_or, not_lt, not_le]
+        simp only [mem_Ioc, mem_setOf_eq] at hx
+        left
+        left
+        apply le_trans hx.1.2
+        have : m.1 + (1 : ℤ) = (m+1 : Fin (⌈N⌉₊ + 1)) := by
+          rw [← Nat.cast_add_one, Nat.cast_inj]
+          apply Eq.symm (Fin.val_add_one_of_lt _)
+          exact lt_of_lt_of_le hmltn (Fin.le_last n)
+        rw [this]
+        apply hymono' _ _
+        exact Fin.add_one_le_of_lt hmltn
+      · rw [Set.disjoint_left]
+        intro x hx
+        simp only [mem_Ioc, mem_setOf_eq, not_and_or, not_lt, not_le]
+        simp only [mem_Ioc, mem_setOf_eq] at hx
+        push_neg at hmltn
+        set hnltm := lt_of_le_of_ne hmltn (Ne.symm hmn)
+        left
+        right
+        apply lt_of_le_of_lt _ hx.1.1
+        have : n.1 + (1 : ℤ) = (n+1 : Fin (⌈N⌉₊ + 1)) := by
+          rw [← Nat.cast_add_one, Nat.cast_inj]
+          apply Eq.symm (Fin.val_add_one_of_lt _)
+          exact lt_of_lt_of_le hnltm (Fin.le_last m)
+        rw [this]
+        apply hymono' _ _
+        exact Fin.add_one_le_of_lt hnltm
+    have hErestmeasurable : ∀ (n : Fin (⌈N⌉₊ + 1)), MeasurableSet (Erest n) := by
       intro n
       rw [hErest]
       simp only
@@ -939,7 +985,7 @@ theorem RMK [Nonempty X] : ∀ (f : C_c(X, ℝ)), ∫ (x : X), f x ∂(μ Λ hΛ
       · simp only [Finset.coe_univ]
         exact hErestdisjoint
       · intro n _
-        exact hERestmeasurable n
+        exact hErestmeasurable n
     set SpecV := fun (n : Fin (⌈N⌉₊ + 1)) =>
       MeasureTheory.Content.outerMeasure_exists_open (rieszContent Λ hΛ)
       (ne_of_lt (lt_of_le_of_lt ((rieszContent Λ hΛ).outerMeasure.mono (hErestsubtsupport n))
@@ -1134,7 +1180,7 @@ theorem RMK [Nonempty X] : ∀ (f : C_c(X, ℝ)), ∫ (x : X), f x ∂(μ Λ hΛ
       rw [← TopologicalSpace.Opens.carrier_eq_coe]
       rw [MeasureTheory.Content.measure_apply (rieszContent Λ hΛ) (V n).2.measurableSet]
       rw [TopologicalSpace.Opens.carrier_eq_coe]
-      rw [MeasureTheory.Content.measure_apply (rieszContent Λ hΛ) (hERestmeasurable n)]
+      rw [MeasureTheory.Content.measure_apply (rieszContent Λ hΛ) (hErestmeasurable n)]
       set Un := Classical.choose (SpecV n) with hUn
       set SpecUn := Classical.choose_spec (SpecV n)
       have hVU : V n ≤ Un := by
@@ -1179,19 +1225,28 @@ theorem RMK [Nonempty X] : ∀ (f : C_c(X, ℝ)), ∫ (x : X), f x ∂(μ Λ hΛ
       · exact lt_top_iff_ne_top.mp (hμErestlttop n)
       · exact ENNReal.ofReal_ne_top
     have ynsubεmulμEnleintEnf :
-        ∀ (n : Fin (⌈N⌉₊ + 1)), (y n - ε') * ((μ Λ hΛ) (Erest n)).toReal
+        ∀ (n : Fin (⌈N⌉₊ + 1)), (y (n + 1) - ε') * ((μ Λ hΛ) (Erest n)).toReal
         ≤ ∫ x in (Erest n), f x ∂(μ Λ hΛ) := by
       intro n
-      apply MeasureTheory.setIntegral_ge_of_const_le (hERestmeasurable n)
+      apply MeasureTheory.setIntegral_ge_of_const_le (hErestmeasurable n)
       · rw [μ]
-        rw [MeasureTheory.Content.measure_apply _ (hERestmeasurable n)]
+        rw [MeasureTheory.Content.measure_apply _ (hErestmeasurable n)]
         rw [← lt_top_iff_ne_top]
         apply lt_of_le_of_lt (MeasureTheory.OuterMeasure.mono _ (hErestsubtsupport n))
         exact MeasureTheory.Content.outerMeasure_lt_top_of_isCompact _ f.2
       · intro x hx
         apply le_of_lt (lt_trans _ (hErestx n x hx))
-        simp only [sub_lt_self_iff]
-        exact hε'.1
+        rw [hy]
+        simp only [Int.cast_add, Int.cast_natCast, Int.cast_one, add_sub_add_right_eq_sub]
+        rw [sub_add_eq_sub_sub]
+        nth_rw 2 [_root_.mul_sub]
+        rw [add_sub_assoc]
+        simp only [mul_one, add_lt_add_iff_left, sub_lt_sub_iff_left]
+        rw [hδ]
+        linarith
+
+
+
       · apply MeasureTheory.Integrable.integrableOn
         rw [μ]
         exact Continuous.integrable_of_hasCompactSupport f.1.2 f.2
@@ -1225,17 +1280,23 @@ theorem RMK [Nonempty X] : ∀ (f : C_c(X, ℝ)), ∫ (x : X), f x ∂(μ Λ hΛ
     apply le_trans ((add_le_add_iff_left _).mpr (mul_le_mul_of_nonneg_right
       (Finset.sum_le_sum (fun n => fun _ => hynleb' n))
       (div_nonneg (le_of_lt hε'.1) (Nat.cast_nonneg _))))
-    simp only [Finset.sum_const, Finset.card_univ, Fintype.card_fin, smul_add, nsmul_eq_mul,
-      Nat.cast_add, Nat.cast_one]
-
-    rw [MeasureTheory.integral_finset_biUnion]
-
-
-
-
-
-
-    sorry
+    simp only [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul, Nat.cast_add,
+      Nat.cast_one]
+    rw [mul_comm _ (|a| + b + ε'), mul_assoc (|a| + b + ε') _ _, ← mul_div_assoc]
+    nth_rw 2 [mul_comm _ ε']
+    rw [mul_div_assoc, div_self (ne_of_gt (add_pos_of_nonneg_of_pos (Nat.cast_nonneg _) one_pos)),
+      mul_one]
+    rw [MeasureTheory.integral_tsupport, htsupporteqErest]
+    nth_rw 3 [μ]
+    rw [← CompactlySupportedContinuousMap.toFun_eq_coe]
+    rw [MeasureTheory.integral_fintype_iUnion hErestmeasurable hErestdisjoint'
+      fun n =>
+      (MeasureTheory.Integrable.integrableOn (Continuous.integrable_of_hasCompactSupport f.1.2 f.2))]
+    rw [add_assoc]
+    apply add_le_add
+    · apply Finset.sum_le_sum
+      exact fun n => fun _ => ynsubεmulμEnleintEnf n
+    · linarith
 
 -- rudin P.47 line 3
 -- we have μ (V n) ≤ μ (E n) + ε / ⌈N⌉+1. `hμVnleμEnaddε`
