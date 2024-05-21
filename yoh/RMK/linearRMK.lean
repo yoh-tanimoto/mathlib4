@@ -726,16 +726,13 @@ theorem RMK [Nonempty X] : ∀ (f : C_c(X, ℝ)), ∫ (x : X), f x ∂(μ Λ hΛ
     apply le_iff_forall_pos_le_add.mpr
     intro ε hε
     have hltε : ∃ (ε' : ℝ), 0 < ε' ∧
-        ε' * (2 * (rieszContent Λ hΛ (⟨tsupport f, f.2⟩)).toReal + |a| + b + ε') < ε := by
-      simp only [coe_toReal]
-      set A := 2 * (rieszContent Λ hΛ (⟨tsupport f, f.2⟩)).toReal + |a| + b with hA
-      simp only [coe_toReal] at hA
+        ε' * (2 * ((μ Λ hΛ) (tsupport f)).toReal + |a| + b + ε') < ε := by
+      set A := 2 * ((μ Λ hΛ) (tsupport f)).toReal + |a| + b with hA
       use ε / (4 * A + 2 + 2 * ε)
-      rw [← hA]
       have hAnonneg : 0 ≤ A := by
         rw [hA, add_assoc]
         apply add_nonneg _ habnonneg
-        simp only [gt_iff_lt, Nat.ofNat_pos, mul_nonneg_iff_of_pos_left, zero_le_coe]
+        simp only [gt_iff_lt, Nat.ofNat_pos, mul_nonneg_iff_of_pos_left, toReal_nonneg]
       constructor
       · apply div_pos hε
         linarith
@@ -767,11 +764,10 @@ theorem RMK [Nonempty X] : ∀ (f : C_c(X, ℝ)), ∫ (x : X), f x ∂(μ Λ hΛ
         exact add_lt_add h1 h4
     obtain ⟨ε', hε'⟩ := hltε
     apply le_of_lt (lt_of_le_of_lt _ (add_lt_add_left hε'.2 _))
-    simp only [coe_toReal]
-    set δ := ε / 2 with hδ
+    set δ := ε' / 2 with hδ
     have hδpos : 0 < δ := by
       rw [hδ]
-      exact div_pos hε two_pos
+      exact div_pos hε'.1 two_pos
     set N := (b - a) / δ with hN
     have hNNonneg : 0 ≤ N :=
       by exact div_nonneg (sub_nonneg.mpr hab) (le_of_lt hδpos)
@@ -793,7 +789,7 @@ theorem RMK [Nonempty X] : ∀ (f : C_c(X, ℝ)), ∫ (x : X), f x ∂(μ Λ hΛ
       apply le_add_neg_iff_le.mp
       ring_nf
       simp only [one_div, gt_iff_lt, inv_pos, Nat.ofNat_pos, mul_nonneg_iff_of_pos_right]
-      exact mul_nonneg (le_of_lt hε) (Nat.cast_nonneg _)
+      exact mul_nonneg (le_of_lt hε'.1) (Nat.cast_nonneg _)
     have hymono' : ∀ (m n : Fin (⌈N⌉₊ + 1)), m ≤ n → y m ≤ y n := by
       intro m n hmn
       rw [hy]
@@ -948,9 +944,9 @@ theorem RMK [Nonempty X] : ∀ (f : C_c(X, ℝ)), ∫ (x : X), f x ∂(μ Λ hΛ
       MeasureTheory.Content.outerMeasure_exists_open (rieszContent Λ hΛ)
       (ne_of_lt (lt_of_le_of_lt ((rieszContent Λ hΛ).outerMeasure.mono (hErestsubtsupport n))
       (MeasureTheory.Content.outerMeasure_lt_top_of_isCompact (rieszContent Λ hΛ) f.2)))
-      (ne_of_gt (Real.toNNReal_pos.mpr (div_pos hε (Nat.cast_pos.mpr (Nat.add_one_pos ⌈N⌉₊)))))
+      (ne_of_gt (Real.toNNReal_pos.mpr (div_pos hε'.1 (Nat.cast_pos.mpr (Nat.add_one_pos ⌈N⌉₊)))))
     set V : Fin (⌈N⌉₊ + 1) → Opens X := fun n => Classical.choose (SpecV n) ⊓
-      ⟨(f ⁻¹' Iio (y (n + 1) + ε)), IsOpen.preimage f.1.2 isOpen_Iio⟩ with hV
+      ⟨(f ⁻¹' Iio (y (n + 1) + ε')), IsOpen.preimage f.1.2 isOpen_Iio⟩ with hV
     have hErestsubV : ∀ (n : Fin (⌈N⌉₊ + 1)), Erest n ⊆ V n := by
       intro n
       rw [hV]
@@ -964,7 +960,7 @@ theorem RMK [Nonempty X] : ∀ (f : C_c(X, ℝ)), ∫ (x : X), f x ∂(μ Λ hΛ
         intro z hz
         rw [Set.mem_preimage]
         rw [Set.mem_preimage] at hz
-        exact lt_of_le_of_lt hz.2 (lt_add_of_pos_right (y (n + 1)) hε)
+        exact lt_of_le_of_lt hz.2 (lt_add_of_pos_right (y (n + 1)) hε'.1)
     have htsupportsubV : tsupport f ⊆ ⋃ n : Fin (⌈N⌉₊ + 1), V n := by
       apply Set.Subset.trans htsupportsubErest _
       apply Set.iUnion_mono
@@ -1038,12 +1034,25 @@ theorem RMK [Nonempty X] : ∀ (f : C_c(X, ℝ)), ∫ (x : X), f x ∂(μ Λ hΛ
         intro n hn
         exact (hg.2.2.2 n x).1
       · exact p.2
+    have μtsupportflesumΛgn' : (μ Λ hΛ (TopologicalSpace.Compacts.mk (tsupport f) f.2)).toReal ≤
+        ∑ n, Λ ⟨g n, hg.2.1 n⟩ := by
+      rw [← map_sum]
+      apply ENNReal.toReal_le_of_le_ofReal _ μtsupportflesumΛgn
+      apply hΛ
+      intro x
+      simp only [ContinuousMap.toFun_eq_coe, ContinuousMap.zero_apply,
+        CompactlySupportedContinuousMap.coe_toContinuousMap,
+        CompactlySupportedContinuousMap.coe_sum, CompactlySupportedContinuousMap.coe_mk,
+        Finset.sum_apply]
+      apply Finset.sum_nonneg
+      intro n _
+      exact (hg.2.2.2 n x).1
     have hErestx : ∀ (n : Fin (⌈N⌉₊ + 1)), ∀ (x : X), x ∈ Erest n → y n < f x := by
       intro n x hnx
       rw [hErest, hE] at hnx
       simp only [mem_inter_iff, mem_preimage, mem_Ioc] at hnx
       exact hnx.1.1
-    have hgf : ∀ (n : Fin (⌈N⌉₊ + 1)), (g n • f).1 ≤ ((y (n + 1) + ε) • (⟨g n, hg.2.1 n⟩ : C_c(X, ℝ))).1 := by
+    have hgf : ∀ (n : Fin (⌈N⌉₊ + 1)), (g n • f).1 ≤ ((y (n + 1) + ε') • (⟨g n, hg.2.1 n⟩ : C_c(X, ℝ))).1 := by
       intro n x
       simp only [ContinuousMap.toFun_eq_coe, CompactlySupportedContinuousMap.coe_toContinuousMap,
         CompactlySupportedContinuousMap.smulc_apply, CompactlySupportedContinuousMap.coe_smul,
@@ -1061,7 +1070,7 @@ theorem RMK [Nonempty X] : ∀ (f : C_c(X, ℝ)), ∫ (x : X), f x ∂(μ Λ hΛ
       · rw [image_eq_zero_of_nmem_tsupport hx]
         simp only [zero_mul, mul_zero, le_refl]
     have hΛgf : ∀ (n : Fin (⌈N⌉₊ + 1)), n ∈ Finset.univ →  Λ (g n • f)
-        ≤ Λ ((y (n + 1) + ε) • (⟨g n, hg.2.1 n⟩ : C_c(X, ℝ))) := by
+        ≤ Λ ((y (n + 1) + ε') • (⟨g n, hg.2.1 n⟩ : C_c(X, ℝ))) := by
       intro n _
       exact Λ_mono Λ hΛ (hgf n)
     nth_rw 1 [hf]
@@ -1070,11 +1079,11 @@ theorem RMK [Nonempty X] : ∀ (f : C_c(X, ℝ)), ∫ (x : X), f x ∂(μ Λ hΛ
     apply le_trans (Finset.sum_le_sum hΛgf)
     simp only [LinearMapClass.map_smul, smul_eq_mul, CompactlySupportedContinuousMap.smulc_apply,
       CompactlySupportedContinuousMap.coe_smulc]
-    rw [← add_zero ε]
+    rw [← add_zero ε']
     simp_rw [← add_assoc, ← sub_self |a|, ← add_sub_assoc, _root_.sub_mul]
     simp only [Finset.sum_sub_distrib]
     rw [← Finset.mul_sum]
-    have hy1a : 0 < y 1 + ε + |a| := by
+    have hy1a : 0 < y 1 + ε' + |a| := by
       rw [hy]
       simp only [Fin.val_zero, CharP.cast_eq_zero, zero_add, Int.cast_one, sub_add_cancel_right,
         mul_neg]
@@ -1092,9 +1101,9 @@ theorem RMK [Nonempty X] : ∀ (f : C_c(X, ℝ)), ∫ (x : X), f x ∂(μ Λ hΛ
       rw [add_assoc, ← add_assoc]
       apply add_pos_of_pos_of_nonneg
       · simp only [lt_neg_add_iff_add_lt, add_zero, half_lt_self_iff]
-        exact hε
+        exact hε'.1
       · exact neg_le_iff_add_nonneg'.mp (neg_abs_le a)
-    have hyna : ∀ (n : Fin (⌈N⌉₊ + 1)), 0 < y (n + 1) + ε + |a| := by
+    have hyna : ∀ (n : Fin (⌈N⌉₊ + 1)), 0 < y (n + 1) + ε' + |a| := by
       intro n
       by_cases hn : n = 0
       · rw [hn]
@@ -1117,8 +1126,9 @@ theorem RMK [Nonempty X] : ∀ (f : C_c(X, ℝ)), ∫ (x : X), f x ∂(μ Λ hΛ
       · simp only [CompactlySupportedContinuousMap.coe_mk]
         rw [← TopologicalSpace.Opens.carrier_eq_coe]
         exact hg.1 n
+
     have hμVnleμEnaddε : ∀ (n : Fin (⌈N⌉₊ + 1)),
-        (μ Λ hΛ) (V n) ≤ (μ Λ hΛ) (Erest n) + ENNReal.ofReal (ε / ((⌈N⌉₊ + 1 : ℕ))) := by
+        (μ Λ hΛ) (V n) ≤ (μ Λ hΛ) (Erest n) + ENNReal.ofReal (ε' / ((⌈N⌉₊ + 1 : ℕ))) := by
       intro n
       rw [μ]
       rw [← TopologicalSpace.Opens.carrier_eq_coe]
@@ -1139,8 +1149,37 @@ theorem RMK [Nonempty X] : ∀ (f : C_c(X, ℝ)), ∫ (x : X), f x ∂(μ Λ hΛ
         rfl
       rw [hENNNR]
       exact SpecUn.2
+    have hμErestlttop : ∀ (n : Fin (⌈N⌉₊ + 1)), (μ Λ hΛ) (Erest n) < ⊤ := by
+      intro n
+      apply lt_of_le_of_lt (MeasureTheory.measure_mono (hErestsubtsupport n))
+      rw [μ, ← CompactlySupportedContinuousMap.toFun_eq_coe,
+        MeasureTheory.Content.measure_apply _ f.2.measurableSet]
+      exact MeasureTheory.Content.outerMeasure_lt_top_of_isCompact _ f.2
+    have hμsuppfeqμErest' : ((μ Λ hΛ) (tsupport f)).toReal = ∑ n, ((μ Λ hΛ) (Erest n)).toReal := by
+      rw [← ENNReal.toReal_sum]
+      exact congr rfl hμsuppfeqμErest
+      intro n _
+      rw [← lt_top_iff_ne_top]
+      exact hμErestlttop n
+    have hΛgnleμVn' : ∀ (n : Fin (⌈N⌉₊ + 1)),
+        Λ (⟨g n, hg.2.1 n⟩) ≤ ((μ Λ hΛ) (V n)).toReal := by
+      intro n
+      apply (ENNReal.ofReal_le_iff_le_toReal _).mp (hΛgnleμVn n)
+      rw [← lt_top_iff_ne_top]
+      apply lt_of_le_of_lt (hμVnleμEnaddε n)
+      rw [WithTop.add_lt_top]
+      constructor
+      · exact hμErestlttop n
+      · exact ENNReal.ofReal_lt_top
+    have hμVnleμEnaddε' : ∀ (n : Fin (⌈N⌉₊ + 1)),
+        ((μ Λ hΛ) (V n)).toReal ≤ ((μ Λ hΛ) (Erest n)).toReal + (ε' / ((⌈N⌉₊ + 1 : ℕ))) := by
+      intro n
+      rw [← ENNReal.toReal_ofReal (div_nonneg (le_of_lt hε'.1) (Nat.cast_nonneg _))]
+      apply ENNReal.toReal_le_add (hμVnleμEnaddε n)
+      · exact lt_top_iff_ne_top.mp (hμErestlttop n)
+      · exact ENNReal.ofReal_ne_top
     have ynsubεmulμEnleintEnf :
-        ∀ (n : Fin (⌈N⌉₊ + 1)), (y n - ε) * ((μ Λ hΛ) (Erest n)).toReal
+        ∀ (n : Fin (⌈N⌉₊ + 1)), (y n - ε') * ((μ Λ hΛ) (Erest n)).toReal
         ≤ ∫ x in (Erest n), f x ∂(μ Λ hΛ) := by
       intro n
       apply MeasureTheory.setIntegral_ge_of_const_le (hERestmeasurable n)
@@ -1152,16 +1191,57 @@ theorem RMK [Nonempty X] : ∀ (f : C_c(X, ℝ)), ∫ (x : X), f x ∂(μ Λ hΛ
       · intro x hx
         apply le_of_lt (lt_trans _ (hErestx n x hx))
         simp only [sub_lt_self_iff]
-        exact hε
+        exact hε'.1
       · apply MeasureTheory.Integrable.integrableOn
         rw [μ]
         exact Continuous.integrable_of_hasCompactSupport f.1.2 f.2
+    apply le_trans (tsub_le_tsub_left (mul_le_mul_of_nonneg_left μtsupportflesumΛgn' (abs_nonneg a)) _)
+    rw [add_mul]
+    simp only [add_sub_cancel_right]
+    apply le_trans (tsub_le_tsub_right (Finset.sum_le_sum (fun n => (fun _ =>
+      mul_le_mul_of_nonneg_left
+      (le_trans (hΛgnleμVn' n) (hμVnleμEnaddε' n)) (le_of_lt (hyna n))))) _)
+    simp_rw [mul_add _ ((μ Λ hΛ) _).toReal _]
+    rw [Finset.sum_add_distrib, ← Finset.sum_mul]
+    nth_rw 1 [← sub_add_cancel ε' ε']
+    simp_rw [add_assoc _ _ |a|, ← add_assoc _ _ (ε' + |a|), Eq.symm (add_comm_sub _ ε' ε'),
+      add_assoc _ ε' _, ← add_assoc ε' ε' |a|, Eq.symm (two_mul ε')]
+    simp_rw [add_mul _ (2 * ε' + |a|) ((μ Λ hΛ) _).toReal]
+    rw [Finset.sum_add_distrib, ← Finset.mul_sum, ← hμsuppfeqμErest', add_mul (2 * ε') |a| _]
+    simp only [Compacts.coe_mk]
+    have hynleb : ∀ (n : Fin (⌈N⌉₊ + 1)), y (n + 1) ≤ b := by
+      intro n
+      rw [hy]
+      simp only [Int.cast_add, Int.cast_natCast, Int.cast_one, add_sub_add_right_eq_sub,
+        add_le_iff_nonpos_right]
+      apply mul_nonpos_of_nonneg_of_nonpos (le_of_lt hδpos)
+      simp only [tsub_le_iff_right, zero_add, Nat.cast_le]
+      exact Fin.is_le n
+    have hynleb' : ∀ (n : Fin (⌈N⌉₊ + 1)), y (n + 1) + (ε' + |a|) ≤ |a| + b + ε':= by
+      intro n
+      set h := hynleb n
+      linarith
+    rw [add_assoc, add_sub_assoc, add_sub_assoc, add_add_sub_cancel, ← add_assoc]
+    apply le_trans ((add_le_add_iff_left _).mpr (mul_le_mul_of_nonneg_right
+      (Finset.sum_le_sum (fun n => fun _ => hynleb' n))
+      (div_nonneg (le_of_lt hε'.1) (Nat.cast_nonneg _))))
+    simp only [Finset.sum_const, Finset.card_univ, Fintype.card_fin, smul_add, nsmul_eq_mul,
+      Nat.cast_add, Nat.cast_one]
+
+    rw [MeasureTheory.integral_finset_biUnion]
+
+
+
+
+
+
     sorry
--- rudin P.47 line 2
+
+-- rudin P.47 line 3
 -- we have μ (V n) ≤ μ (E n) + ε / ⌈N⌉+1. `hμVnleμEnaddε`
--- we have Λ (g n) ≤ μ_Λ (V n) from supp g n ⊆ V n `hΛgnleμVn`
+-- we have Λ (g n) ≤ μ_Λ (V n) from supp g n ⊆ V n `hΛgnleμVn'`
 -- we have supp f ⊆ ⋃ n, E n
--- we have μ (supp f) ≤ ∑ n, Λ (g n), `μtsupportflesumΛgn`
+-- we have μ (supp f) ≤ ∑ n, Λ (g n), `μtsupportflesumΛgn'`
 -- we have easily that - ∑ Λ (g n) ≤  - μ (supp f)
 -- we have that ∑ μ (E n) = μ (supp f) `hμsuppfeqμErest`
 -- we have that (y n - ε) * μ (E n) ≤ ∫ x ∈ E n, f x d μ `ynsubεmulμEnleintEnf`
