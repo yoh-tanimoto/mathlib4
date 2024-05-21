@@ -1297,19 +1297,6 @@ theorem RMK [Nonempty X] : ∀ (f : C_c(X, ℝ)), ∫ (x : X), f x ∂(μ Λ hΛ
     · apply Finset.sum_le_sum
       exact fun n => fun _ => ynsubεmulμEnleintEnf n
     · linarith
-
--- rudin P.47 line 3
--- we have μ (V n) ≤ μ (E n) + ε / ⌈N⌉+1. `hμVnleμEnaddε`
--- we have Λ (g n) ≤ μ_Λ (V n) from supp g n ⊆ V n `hΛgnleμVn'`
--- we have supp f ⊆ ⋃ n, E n
--- we have μ (supp f) ≤ ∑ n, Λ (g n), `μtsupportflesumΛgn'`
--- we have easily that - ∑ Λ (g n) ≤  - μ (supp f)
--- we have that ∑ μ (E n) = μ (supp f) `hμsuppfeqμErest`
--- we have that (y n - ε) * μ (E n) ≤ ∫ x ∈ E n, f x d μ `ynsubεmulμEnleintEnf`
--- altogether, ∑ (y n - ε) * μ (E n) ≤ ∫ f x d μ
--- using `MeasureTheory.integral_finset_biUnion`
---
-
   intro f
   apply le_antisymm
   · calc ∫ (x : X), f x ∂(μ Λ hΛ) = ∫ (x : X), -(-f) x ∂(μ Λ hΛ) := by simp only
