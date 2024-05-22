@@ -9,6 +9,7 @@ import Mathlib.Analysis.Normed.Order.Lattice
 import Mathlib.Analysis.NormedSpace.OperatorNorm.Basic
 import Mathlib.Analysis.NormedSpace.Star.Basic
 import Mathlib.Analysis.NormedSpace.ContinuousLinearMap
+import Mathlib.Topology.Bornology.BoundedOperation
 
 #align_import topology.continuous_function.bounded from "leanprover-community/mathlib"@"5dc275ec639221ca4d5f56938eb966f6ad9bc89f"
 
@@ -581,7 +582,7 @@ theorem arzela_ascoli₂ (s : Set β) (hs : IsCompact s) (A : Set (α →ᵇ β)
     IsCompact A := by
   /- This version is deduced from the previous one by restricting to the compact type in the target,
   using compactness there and then lifting everything to the original space. -/
-  have M : LipschitzWith 1 (↑) := LipschitzWith.subtype_val s
+  have M : LipschitzWith 1 Subtype.val := LipschitzWith.subtype_val s
   let F : (α →ᵇ s) → α →ᵇ β := comp (↑) M
   refine' IsCompact.of_isClosed_subset ((_ : IsCompact (F ⁻¹' A)).image (continuous_comp M)) closed
       fun f hf => _
@@ -1019,27 +1020,12 @@ instance : Neg (α →ᵇ β) :=
     ofNormedAddCommGroup (-f) f.continuous.neg ‖f‖ fun x =>
       norm_neg ((⇑f) x) ▸ f.norm_coe_le_norm x⟩
 
-/-- The pointwise difference of two bounded continuous functions is again bounded continuous. -/
-instance instSub : Sub (α →ᵇ β) :=
-  ⟨fun f g =>
-    ofNormedAddCommGroup (f - g) (f.continuous.sub g.continuous) (‖f‖ + ‖g‖) fun x => by
-      simp only [sub_eq_add_neg]
-      exact le_trans (norm_add_le _ _)
-        (add_le_add (f.norm_coe_le_norm x) <| norm_neg ((⇑g) x) ▸ g.norm_coe_le_norm x)⟩
-
 @[simp]
 theorem coe_neg : ⇑(-f) = -f := rfl
 #align bounded_continuous_function.coe_neg BoundedContinuousFunction.coe_neg
 
 theorem neg_apply : (-f) x = -f x := rfl
 #align bounded_continuous_function.neg_apply BoundedContinuousFunction.neg_apply
-
-@[simp]
-theorem coe_sub : ⇑(f - g) = f - g := rfl
-#align bounded_continuous_function.coe_sub BoundedContinuousFunction.coe_sub
-
-theorem sub_apply : (f - g) x = f x - g x := rfl
-#align bounded_continuous_function.sub_apply BoundedContinuousFunction.sub_apply
 
 @[simp]
 theorem mkOfCompact_neg [CompactSpace α] (f : C(α, β)) : mkOfCompact (-f) = -mkOfCompact f := rfl
@@ -1697,27 +1683,5 @@ lemma norm_sub_nonneg (f : α →ᵇ ℝ) :
   linarith [(abs_le.mp (norm_coe_le_norm f x)).2]
 
 end
-
-variable {𝕜 : Type*} [NormedField 𝕜] [TopologicalSpace α] [NormedRing γ]
-
-/-- The subtype of compactly supported functions as an ideal. -/
-def CompactlySupportedBoundedContinuousFunction : Ideal (α →ᵇ γ) where
-  carrier := { f : α →ᵇ γ | HasCompactSupport f }
-  add_mem' := by
-    intro _ _ h₁ h₂
-    exact h₁.add h₂
-  zero_mem' := by simp [HasCompactSupport, tsupport]
-  smul_mem' := by
-    intro _ _ h
-    rw [mem_setOf_eq, smul_eq_mul, coe_mul]
-    exact h.mul_left
-
-@[inherit_doc]
-scoped[BoundedContinuousFunction] notation (priority := 2000)
-  "C_cb(" α ", " γ ")" => CompactlySupportedBoundedContinuousFunction α γ
-
-@[inherit_doc]
-scoped[BoundedContinuousFunction] notation α " →C_cb " γ =>
-  CompactlySupportedBoundedContinuousFunction α γ
 
 end BoundedContinuousFunction
