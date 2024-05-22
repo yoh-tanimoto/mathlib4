@@ -492,7 +492,7 @@ theorem biUnion_parts : P.parts.biUnion id = s :=
 
 theorem existsUnique_mem (ha : a ∈ s) : ∃! t, t ∈ P.parts ∧ a ∈ t := by
   obtain ⟨t, ht, ht'⟩ := P.exists_mem ha
-  refine' ⟨t, ⟨ht, ht'⟩, _⟩
+  refine ⟨t, ⟨ht, ht'⟩, ?_⟩
   rintro u ⟨hu, hu'⟩
   exact P.eq_of_mem_parts hu ht hu' ht'
 
@@ -624,10 +624,10 @@ def atomise (s : Finset α) (F : Finset (Finset α)) : Finpartition s :=
         obtain ⟨A, _, rfl⟩ := ht
         exact s.filter_subset _
       · rw [mem_sup]
-        refine'
+        refine
           ⟨s.filter fun i ↦ ∀ t, t ∈ F → ((t ∈ F.filter fun u ↦ a ∈ u) ↔ i ∈ t),
             mem_image_of_mem _ (mem_powerset.2 <| filter_subset _ _),
-            mem_filter.2 ⟨ha, fun t ht ↦ _⟩⟩
+            mem_filter.2 ⟨ha, fun t ht ↦ ?_⟩⟩
         rw [mem_filter]
         exact and_iff_right ht)
 #align finpartition.atomise Finpartition.atomise
