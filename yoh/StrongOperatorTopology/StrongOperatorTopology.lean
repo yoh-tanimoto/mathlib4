@@ -81,18 +81,18 @@ namespace StrongOperatorTopology
 
 def B_SOT (H : Type u) [NormedAddCommGroup H] [InnerProductSpace ℂ H] := (H →L[ℂ] H)
 
-instance instTopologicalSpace : TopologicalSpace (B_SOT H) :=
+instance : TopologicalSpace (B_SOT H) :=
   TopologicalSpace.induced (fun (x : H →L[ℂ] H) (v : H) => x v) Pi.topologicalSpace
 
 #check B_SOT H
 
-instance instAddCommMonoid [NormedAddCommGroup H] [InnerProductSpace ℂ H] :
+instance [NormedAddCommGroup H] [InnerProductSpace ℂ H] :
   AddCommMonoid (B_SOT H) := ContinuousLinearMap.addCommMonoid
 
-instance instModule [NormedAddCommGroup H] [InnerProductSpace ℂ H] :
+instance [NormedAddCommGroup H] [InnerProductSpace ℂ H] :
   Module ℂ (B_SOT H) := ContinuousLinearMap.module
 
-instance instAddCommGroup [NormedAddCommGroup H] [InnerProductSpace ℂ H] :
+instance [NormedAddCommGroup H] [InnerProductSpace ℂ H] :
   AddCommGroup (B_SOT H) := ContinuousLinearMap.addCommGroup
 
 -- take instances from Mathlib.Analysis.InnerProductSpace.Adjoint
