@@ -601,6 +601,7 @@ instance instFirstCountableTopology : FirstCountableTopology 𝓢(E, F) :=
 theorem exist_forall_hasCompactSupport_tendsto [FiniteDimensional ℝ E] (f : 𝓢(E, F)) :
     ∃ (x : ℕ → 𝓢(E, F)), ∀ (n : ℕ), HasCompactSupport (x n) ∧ Filter.Tendsto x atTop (nhds f) := by
   sorry
+  -- need a compact smooth partition of unity for `E`
 
 end Topology
 
