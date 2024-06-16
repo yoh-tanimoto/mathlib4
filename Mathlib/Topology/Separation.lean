@@ -1418,7 +1418,7 @@ lemma t2_separation_IsOpen_IsCompact_closure_IsClosed_subset [T2Space X] {s : Se
 -- separation of (closure s) \ s and t
   obtain ⟨U, hU⟩ := separation_of_isCompact_isCompact_disjoint
     (IsCompact.of_isClosed_subset H2 (IsClosed.sdiff isClosed_closure H1)
-    (Set.diff_subset (closure s) s))
+    (Set.diff_subset))
     (IsCompact.of_isClosed_subset H2 H3 (Set.Subset.trans H4 subset_closure))
     (Set.disjoint_of_subset_right H4 Set.disjoint_sdiff_left)
   obtain ⟨V, hV⟩ := hU
@@ -1444,9 +1444,9 @@ lemma t2_separation_IsOpen_IsCompact_closure_IsClosed_subset [T2Space X] {s : Se
   exact Set.subset_inter_iff.mpr (And.intro hV.2.2.2.1 H4)
   rw [Set.disjoint_union_left]
   constructor
-  exact Set.disjoint_of_subset_right (Set.inter_subset_left V s) hV.2.2.2.2
+  exact Set.disjoint_of_subset_right (Set.inter_subset_left) hV.2.2.2.2
   rw [← interior_compl]
-  exact Set.disjoint_of_subset interior_subset (Set.inter_subset_right V s) disjoint_compl_left
+  exact Set.disjoint_of_subset interior_subset (Set.inter_subset_right) disjoint_compl_left
 
 /-- A space is T₂ iff the neighbourhoods of distinct points generate the bottom filter. -/
 theorem t2_iff_nhds : T2Space X ↔ ∀ {x y : X}, NeBot (𝓝 x ⊓ 𝓝 y) → x = y := by

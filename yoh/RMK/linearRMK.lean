@@ -240,18 +240,18 @@ theorem rieszContentAux_eq_add [T2Space X] {K₁ K₂ : Compacts X} (h : Disjoin
       have hclosure_interior_diff_subset: closure (interior V \ K₁.1) ⊆ V := by
         nth_rw 2 [← IsClosed.closure_eq (IsCompact.isClosed hV.1)]
         apply closure_mono
-        exact Set.Subset.trans (Set.diff_subset _ _) interior_subset
+        exact Set.Subset.trans (Set.diff_subset) interior_subset
       have : (K₁ ⊔ K₂).1 = K₁.1 ∪ K₂.1 := by
         exact rfl
       obtain ⟨g, hg⟩ := exists_tsupport_one_of_isOpen_isClosed
         (IsOpen.sdiff isOpen_interior (IsCompact.isClosed K₁.2))
         (IsCompact.of_isClosed_subset hV.1 isClosed_closure hclosure_interior_diff_subset)
         (IsCompact.isClosed K₂.2)
-        (Set.subset_diff.mpr (And.intro (Set.Subset.trans (Set.subset_union_right K₁.1 K₂.1) hV.2)
+        (Set.subset_diff.mpr (And.intro (Set.Subset.trans (Set.subset_union_right) hV.2)
         (Disjoint.symm hDisjoint)))
       have hgHasCompactSupport : HasCompactSupport g := by
         exact IsCompact.of_isClosed_subset hV.1 (isClosed_tsupport g)
-          (Set.Subset.trans hg.1 (Set.Subset.trans (Set.diff_subset (interior V) K₁.carrier)
+          (Set.Subset.trans hg.1 (Set.Subset.trans (Set.diff_subset)
           interior_subset))
       simp only [Compacts.carrier_eq_coe, mem_Icc] at hg
 -- need to show that f * (1-g) has compact support
