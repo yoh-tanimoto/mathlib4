@@ -230,7 +230,7 @@ theorem inner_add_add_self (x y : F) : ⟪x + y, x + y⟫ = ⟪x, x⟫ + ⟪x, y
 theorem inner_sub_sub_self (x y : F) : ⟪x - y, x - y⟫ = ⟪x, x⟫ - ⟪x, y⟫ - ⟪y, x⟫ + ⟪y, y⟫ := by
   simp only [inner_sub_left, inner_sub_right]; ring
 
-theorem inner_smul_smul (x : F) {t : ℝ} : ⟪t • x, t • x⟫ = ⟪x, x⟫ * t * t := by
+theorem inner_smul_smul_re (x : F) {t : ℝ} : ⟪t • x, t • x⟫ = ⟪x, x⟫ * t * t := by
   rw [← Complex.ofReal_eq_coe, ← Complex.coe_smul, inner_smul_left, inner_smul_right,
     Complex.conj_ofReal]
   simp only [Complex.ofReal_eq_coe]
@@ -253,7 +253,7 @@ lemma hdiscrimpre (x y : F) (t : ℝ) : 0 ≤ normSq x * t * t + 2 * re ⟪x, y�
   _ = re ⟪t • x, t • x⟫ + re ⟪t • x, y⟫ + re ⟪y, t • x⟫ + re ⟪y, y⟫ := by simp only [map_add,
     re_to_complex]
   _ = re (⟪x, x⟫ * t * t) + re (⟪x, y⟫ * t) + re (⟪y, x⟫ * t) + re ⟪y, y⟫ := by rw
-    [inner_smul_smul, inner_smul_left_re, inner_smul_right_re]
+    [inner_smul_smul_re, inner_smul_left_re, inner_smul_right_re]
   _ = re ⟪x, x⟫ * t * t + re ⟪x, y⟫ * t + re ⟪y, x⟫ * t + re ⟪y, y⟫ := by simp only [mul_re,
     re_to_complex, Complex.ofReal_re, im_to_complex, Complex.ofReal_im, mul_zero, sub_zero,
     mul_im, zero_add]
@@ -278,9 +278,18 @@ theorem inner_mul_inner_self_le (x y : F) : ‖⟪x, y⟫‖ * ‖⟪y, x⟫‖ 
       · rw [normSq]
         exact inner_self_nonneg
     · push_neg at hzero
-      have : 0 ≤ normSq (⟪x,y⟫ • x) * (t / ‖⟪x,y⟫‖) * (t / ‖⟪x,y⟫‖) + 2 * re ⟪⟪x,y⟫ • x, y⟫ * (t / ‖⟪x,y⟫‖) + normSq y := by
+      rw [← norm_ne_zero_iff] at hzero
+      have htxy: 0 ≤ normSq (⟪x,y⟫ • x) * (t / ‖⟪x,y⟫‖) * (t / ‖⟪x,y⟫‖) + 2 * re ⟪⟪x,y⟫ • x, y⟫ * (t / ‖⟪x,y⟫‖) + normSq y := by
         exact hdiscrimpre (⟪x,y⟫ • x) y (t/‖⟪x,y⟫‖)
-      sorry
+      rw [inner_smul_left, ← Complex.normSq_eq_conj_mul_self] at htxy
+      simp only [re_to_complex, Complex.ofReal_re] at htxy
+      rw [normSq] at htxy
+      rw [inner_smul_left, inner_smul_right, ← mul_assoc, ← Complex.normSq_eq_conj_mul_self] at htxy
+      simp only [mul_re, inner_self_im, mul_zero, sub_zero] at htxy
+      simp only [re_to_complex, Complex.ofReal_re] at htxy
+      rw [Complex.normSq_eq_norm_sq, sq] at htxy
+      rw [normSq, normSq, re_to_complex, re_to_complex]
+
   have hnegdiscrim : (2 * ‖⟪x, y⟫‖)^2 - 4 * normSq x * normSq y ≤ 0 := by
     rw [← discrim]
     exact discrim_le_zero hdiscrim
