@@ -289,7 +289,14 @@ theorem inner_mul_inner_self_le (x y : F) : ‖⟪x, y⟫‖ * ‖⟪y, x⟫‖ 
       simp only [re_to_complex, Complex.ofReal_re] at htxy
       rw [Complex.normSq_eq_norm_sq, sq] at htxy
       rw [normSq, normSq, re_to_complex, re_to_complex]
-
+      have : 0 ≤ ‖⟪x, y⟫_ℂ‖ / ‖⟪x, y⟫_ℂ‖ * ‖⟪x, y⟫_ℂ‖ / ‖⟪x, y⟫_ℂ‖ * (⟪x, x⟫_ℂ).re * t * t +
+          ‖⟪x, y⟫_ℂ‖ / ‖⟪x, y⟫_ℂ‖ * 2 * ‖⟪x, y⟫_ℂ‖ * t + normSq y := by
+        calc 0 ≤ ‖⟪x, y⟫_ℂ‖ * ‖⟪x, y⟫_ℂ‖ * (⟪x, x⟫_ℂ).re * (t / ‖⟪x, y⟫_ℂ‖) * (t / ‖⟪x, y⟫_ℂ‖) +
+          2 * (‖⟪x, y⟫_ℂ‖ * ‖⟪x, y⟫_ℂ‖) * (t / ‖⟪x, y⟫_ℂ‖) + normSq y := htxy
+          _ = ‖⟪x, y⟫_ℂ‖ / ‖⟪x, y⟫_ℂ‖ * ‖⟪x, y⟫_ℂ‖ / ‖⟪x, y⟫_ℂ‖ * (⟪x, x⟫_ℂ).re * t * t +
+          ‖⟪x, y⟫_ℂ‖ / ‖⟪x, y⟫_ℂ‖ * 2* ‖⟪x, y⟫_ℂ‖ * t + normSq y := by ring
+      rw [div_self hzero, one_mul, one_mul, div_self hzero, one_mul] at this
+      exact this
   have hnegdiscrim : (2 * ‖⟪x, y⟫‖)^2 - 4 * normSq x * normSq y ≤ 0 := by
     rw [← discrim]
     exact discrim_le_zero hdiscrim
