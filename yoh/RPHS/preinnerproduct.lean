@@ -168,9 +168,9 @@ theorem ofReal_normSq_eq_inner_self (x : F) : (normSq x : ℂ) = ⟪x, x⟫ := b
   · rw [normSq, inner_self_im]
     simp only [re_to_complex, im_to_complex, Complex.ofReal_im]
 
--- theorem inner_re_symm (x y : F) : re ⟪x, y⟫ = re ⟪y, x⟫ := by rw [← inner_conj_symm, conj_re]
+theorem inner_re_symm (x y : F) : re ⟪x, y⟫ = re ⟪y, x⟫ := by rw [← inner_conj_symm, conj_re]
 
--- theorem inner_im_symm (x y : F) : im ⟪x, y⟫ = -im ⟪y, x⟫ := by rw [← inner_conj_symm, conj_im]
+theorem inner_im_symm (x y : F) : im ⟪x, y⟫ = -im ⟪y, x⟫ := by rw [← inner_conj_symm, conj_im]
 
 theorem inner_smul_left (x y : F) {r : ℂ} : ⟪r • x, y⟫ = r† * ⟪x, y⟫ :=
   c.smul_left _ _ _
@@ -230,20 +230,57 @@ theorem inner_add_add_self (x y : F) : ⟪x + y, x + y⟫ = ⟪x, x⟫ + ⟪x, y
 theorem inner_sub_sub_self (x y : F) : ⟪x - y, x - y⟫ = ⟪x, x⟫ - ⟪x, y⟫ - ⟪y, x⟫ + ⟪y, y⟫ := by
   simp only [inner_sub_left, inner_sub_right]; ring
 
+theorem inner_smul_smul (x : F) {t : ℝ} : ⟪t • x, t • x⟫ = ⟪x, x⟫ * t * t := by
+  rw [← Complex.ofReal_eq_coe, ← Complex.coe_smul, inner_smul_left, inner_smul_right,
+    Complex.conj_ofReal]
+  simp only [Complex.ofReal_eq_coe]
+  rw [← mul_assoc, mul_comm, mul_assoc]
+
+theorem inner_smul_left_re (x y : F) {t : ℝ} : ⟪t • x, y⟫ = ⟪x, y⟫  * t := by
+  rw [← Complex.ofReal_eq_coe, ← Complex.coe_smul, inner_smul_left,
+    Complex.conj_ofReal]
+  simp only [Complex.ofReal_eq_coe]
+  rw [mul_comm]
+
+theorem inner_smul_right_re (x y : F) {t : ℝ} : ⟪x, t • y⟫ = ⟪x, y⟫  * t := by
+  rw [← Complex.ofReal_eq_coe, ← Complex.coe_smul, inner_smul_right]
+  simp only [Complex.ofReal_eq_coe]
+  rw [mul_comm]
+
+lemma hdiscrimpre (x y : F) (t : ℝ) : 0 ≤ normSq x * t * t + 2 * re ⟪x, y⟫ * t + normSq y := by
+  calc 0 ≤ re ⟪t • x + y, t • x + y⟫ := inner_self_nonneg
+  _ = re (⟪t • x, t • x⟫ + ⟪t • x, y⟫ + ⟪y, t • x⟫ + ⟪y, y⟫) := by rw [inner_add_add_self (t • x) y]
+  _ = re ⟪t • x, t • x⟫ + re ⟪t • x, y⟫ + re ⟪y, t • x⟫ + re ⟪y, y⟫ := by simp only [map_add,
+    re_to_complex]
+  _ = re (⟪x, x⟫ * t * t) + re (⟪x, y⟫ * t) + re (⟪y, x⟫ * t) + re ⟪y, y⟫ := by rw
+    [inner_smul_smul, inner_smul_left_re, inner_smul_right_re]
+  _ = re ⟪x, x⟫ * t * t + re ⟪x, y⟫ * t + re ⟪y, x⟫ * t + re ⟪y, y⟫ := by simp only [mul_re,
+    re_to_complex, Complex.ofReal_re, im_to_complex, Complex.ofReal_im, mul_zero, sub_zero,
+    mul_im, zero_add]
+  _ = normSq x * t * t + re ⟪x, y⟫ * t + re ⟪y, x⟫ * t + normSq y := by simp_rw [normSq]
+  _ = normSq x * t * t + re ⟪x, y⟫ * t + re ⟪x, y⟫ * t + normSq y := by rw [inner_re_symm y x]
+  _ = normSq x * t * t + 2 * re ⟪x, y⟫_ℂ * t + normSq y := by ring
+
 /-- **Cauchy–Schwarz inequality**.
 We need this for the `Core` structure to prove the triangle inequality below when
 showing the core is a normed group.
 -/
 theorem inner_mul_inner_self_le (x y : F) : ‖⟪x, y⟫‖ * ‖⟪y, x⟫‖ ≤ re ⟪x, x⟫ * re ⟪y, y⟫ := by
-  have hdiscrimpre : ∀ (t : ℝ), 0 ≤ normSq x * t * t + 2 * re ⟪x, y⟫ * t + normSq y := by
-    intro t
-    calc 0 ≤ re ⟪t • x + y, t • x + y⟫ := inner_self_nonneg
-    _ = re (⟪t • x, t • x⟫ + ⟪t • x, y⟫ + ⟪y, t • x⟫ + ⟪y, y⟫) := by rw [inner_add_add_self (t • x) y]
-    _ = re ⟪t • x, t • x⟫ + re ⟪t • x, y⟫ + re ⟪y, t • x⟫ + re ⟪y, y⟫ := by simp only [map_add,
-      re_to_complex]
-    _ = normSq x * t * t + 2 * re ⟪x, y⟫_ℂ * t + normSq y := by sorry
+-- make this a lemma, then apply this to x/⟪x,y⟫
   have hdiscrim : ∀ (t : ℝ), 0 ≤ normSq x * t * t  + 2 * ‖⟪x, y⟫‖ * t + normSq y := by
-    sorry
+    intro t
+    by_cases hzero : ⟪x, y⟫ = 0
+    · rw [hzero]
+      simp only [norm_zero, mul_zero, zero_mul, add_zero]
+      apply add_nonneg
+      · rw [mul_assoc, ← sq, normSq]
+        exact mul_nonneg inner_self_nonneg (sq_nonneg t)
+      · rw [normSq]
+        exact inner_self_nonneg
+    · push_neg at hzero
+      have : 0 ≤ normSq (⟪x,y⟫ • x) * (t / ‖⟪x,y⟫‖) * (t / ‖⟪x,y⟫‖) + 2 * re ⟪⟪x,y⟫ • x, y⟫ * (t / ‖⟪x,y⟫‖) + normSq y := by
+        exact hdiscrimpre (⟪x,y⟫ • x) y (t/‖⟪x,y⟫‖)
+      sorry
   have hnegdiscrim : (2 * ‖⟪x, y⟫‖)^2 - 4 * normSq x * normSq y ≤ 0 := by
     rw [← discrim]
     exact discrim_le_zero hdiscrim
