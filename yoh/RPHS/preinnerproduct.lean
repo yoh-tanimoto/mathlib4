@@ -98,290 +98,10 @@ end Notations
 
 section PreInnerProductSpace
 
-/-- A structure requiring that a scalar product is positive definite and symmetric, from which one
-can construct an `InnerProductSpace` instance in `InnerProductSpace.ofCore`. -/
--- @[nolint HasNonemptyInstance] porting note: I don't think we have this linter anymore
-structure PreInnerProductSpace (F : Type*) [AddCommGroup F] [Module ℂ F] extends Inner ℂ F where
-  /-- The inner product is *hermitian*, taking the `conj` swaps the arguments. -/
-  conj_symm : ∀ x y, conj (inner y x) = inner x y
-  /-- The inner product is positive (semi)definite. -/
-  nonneg_re : ∀ x, 0 ≤ re (inner x x)
-  /-- The inner product is additive in the first coordinate. -/
-  add_left : ∀ x y z, inner (x + y) z = inner x z + inner y z
-  /-- The inner product is conjugate linear in the first coordinate. -/
-  smul_left : ∀ x y r, inner (r • x) y = conj r * inner x y
-
-/- We set `InnerProductSpace.Core` to be a class as we will use it as such in the construction
-of the normed space structure that it produces. However, all the instances we will use will be
-local to this proof. -/
-attribute [class] PreInnerProductSpace
-
-namespace PreInnerProductSpace
-
-variable [AddCommGroup F] [Module ℂ F] [c : PreInnerProductSpace F]
-
-local notation "⟪" x ", " y "⟫" => @inner ℂ F _ x y
-
-local notation "normSqK" => @RCLike.normSq ℂ _
-
-local notation "reK" => @RCLike.re ℂ _
-
-local notation "ext_iff" => @RCLike.ext_iff ℂ _
-
-local postfix:90 "†" => starRingEnd _
-
-/-- Inner product defined by the `InnerProductSpace.Core` structure. We can't reuse
-`InnerProductSpace.Core.toInner` because it takes `InnerProductSpace.Core` as an explicit
-argument. -/
-def toInner' : Inner ℂ F :=
-  c.toInner
-
-attribute [local instance] toInner'
-
-/-- The norm squared function for `InnerProductSpace.Core` structure. -/
-def normSq (x : F) :=
-  reK ⟪x, x⟫
-
-local notation "normSqF" => @normSq ℂ F _ _ _ _
-
-theorem inner_conj_symm (x y : F) : ⟪y, x⟫† = ⟪x, y⟫ :=
-  c.conj_symm x y
-
-theorem inner_self_nonneg {x : F} : 0 ≤ re ⟪x, x⟫ :=
-  c.nonneg_re _
-
-theorem inner_self_im (x : F) : im ⟪x, x⟫ = 0 := by
-  rw [← @ofReal_inj ℂ, im_eq_conj_sub]
-  simp [inner_conj_symm]
-
-theorem inner_add_left (x y z : F) : ⟪x + y, z⟫ = ⟪x, z⟫ + ⟪y, z⟫ :=
-  c.add_left _ _ _
-
-theorem inner_add_right (x y z : F) : ⟪x, y + z⟫ = ⟪x, y⟫ + ⟪x, z⟫ := by
-  rw [← inner_conj_symm, inner_add_left, RingHom.map_add]; simp only [inner_conj_symm]
-
-theorem ofReal_normSq_eq_inner_self (x : F) : (normSq x : ℂ) = ⟪x, x⟫ := by
-  rw [ext_iff]
-  constructor
-  · rw [normSq]
-    simp only [re_to_complex, Complex.ofReal_re]
-  · rw [normSq, inner_self_im]
-    simp only [re_to_complex, im_to_complex, Complex.ofReal_im]
-
-theorem inner_re_symm (x y : F) : re ⟪x, y⟫ = re ⟪y, x⟫ := by rw [← inner_conj_symm, conj_re]
-
-theorem inner_im_symm (x y : F) : im ⟪x, y⟫ = -im ⟪y, x⟫ := by rw [← inner_conj_symm, conj_im]
-
-theorem inner_smul_left (x y : F) {r : ℂ} : ⟪r • x, y⟫ = r† * ⟪x, y⟫ :=
-  c.smul_left _ _ _
-
-theorem inner_smul_right (x y : F) {r : ℂ} : ⟪x, r • y⟫ = r * ⟪x, y⟫ := by
-  rw [← inner_conj_symm, inner_smul_left];
-    simp only [conj_conj, inner_conj_symm, RingHom.map_mul]
-
-theorem inner_zero_left (x : F) : ⟪0, x⟫ = 0 := by
-  rw [← zero_smul ℂ (0 : F), inner_smul_left];
-    simp only [zero_mul, RingHom.map_zero]
-
-theorem inner_zero_right (x : F) : ⟪x, 0⟫ = 0 := by
-  rw [← inner_conj_symm, inner_zero_left]; simp only [RingHom.map_zero]
-
--- theorem inner_self_eq_zero {x : F} : ⟪x, x⟫ = 0 ↔ x = 0 :=
---   ⟨c.definite _, by
---     rintro rfl
---     exact inner_zero_left _⟩
-
--- theorem normSq_eq_zero {x : F} : normSqF x = 0 ↔ x = 0 :=
---   Iff.trans
---     (by simp only [normSq, ext_iff, map_zero, inner_self_im, eq_self_iff_true, and_true_iff])
---     (@inner_self_eq_zero ℂ _ _ _ _ _ x)
-
--- theorem inner_self_ne_zero {x : F} : ⟪x, x⟫ ≠ 0 ↔ x ≠ 0 :=
---   inner_self_eq_zero.not
-
--- theorem inner_self_ofReal_re (x : F) : (re ⟪x, x⟫ : ℂ) = ⟪x, x⟫ := by
---   norm_num [ext_iff, inner_self_im]
--- set_option linter.uppercaseLean3 false in
-
-theorem norm_inner_symm (x y : F) : ‖⟪x, y⟫‖ = ‖⟪y, x⟫‖ := by rw [← inner_conj_symm, norm_conj]
-
-theorem inner_neg_left (x y : F) : ⟪-x, y⟫ = -⟪x, y⟫ := by
-  rw [← neg_one_smul ℂ x, inner_smul_left]
-  simp
-
-theorem inner_neg_right (x y : F) : ⟪x, -y⟫ = -⟪x, y⟫ := by
-  rw [← inner_conj_symm, inner_neg_left]; simp only [RingHom.map_neg, inner_conj_symm]
-
-theorem inner_sub_left (x y z : F) : ⟪x - y, z⟫ = ⟪x, z⟫ - ⟪y, z⟫ := by
-  simp [sub_eq_add_neg, inner_add_left, inner_neg_left]
-
-theorem inner_sub_right (x y z : F) : ⟪x, y - z⟫ = ⟪x, y⟫ - ⟪x, z⟫ := by
-  simp [sub_eq_add_neg, inner_add_right, inner_neg_right]
-
-theorem inner_mul_symm_re_eq_norm (x y : F) : re (⟪x, y⟫ * ⟪y, x⟫) = ‖⟪x, y⟫ * ⟪y, x⟫‖ := by
-  rw [← inner_conj_symm, mul_comm]
-  exact re_eq_norm_of_mul_conj (inner y x)
-
-/-- Expand `inner (x + y) (x + y)` -/
-theorem inner_add_add_self (x y : F) : ⟪x + y, x + y⟫ = ⟪x, x⟫ + ⟪x, y⟫ + ⟪y, x⟫ + ⟪y, y⟫ := by
-  simp only [inner_add_left, inner_add_right]; ring
-
--- Expand `inner (x - y) (x - y)`
-theorem inner_sub_sub_self (x y : F) : ⟪x - y, x - y⟫ = ⟪x, x⟫ - ⟪x, y⟫ - ⟪y, x⟫ + ⟪y, y⟫ := by
-  simp only [inner_sub_left, inner_sub_right]; ring
-
-theorem inner_smul_smul_re (x : F) {t : ℝ} : ⟪t • x, t • x⟫ = ⟪x, x⟫ * t * t := by
-  rw [← Complex.ofReal_eq_coe, ← Complex.coe_smul, inner_smul_left, inner_smul_right,
-    Complex.conj_ofReal]
-  simp only [Complex.ofReal_eq_coe]
-  rw [← mul_assoc, mul_comm, mul_assoc]
-
-theorem inner_smul_left_re (x y : F) {t : ℝ} : ⟪t • x, y⟫ = ⟪x, y⟫  * t := by
-  rw [← Complex.ofReal_eq_coe, ← Complex.coe_smul, inner_smul_left,
-    Complex.conj_ofReal]
-  simp only [Complex.ofReal_eq_coe]
-  rw [mul_comm]
-
-theorem inner_smul_right_re (x y : F) {t : ℝ} : ⟪x, t • y⟫ = ⟪x, y⟫  * t := by
-  rw [← Complex.ofReal_eq_coe, ← Complex.coe_smul, inner_smul_right]
-  simp only [Complex.ofReal_eq_coe]
-  rw [mul_comm]
-
-lemma hdiscrimpre (x y : F) (t : ℝ) : 0 ≤ normSq x * t * t + 2 * re ⟪x, y⟫ * t + normSq y := by
-  calc 0 ≤ re ⟪t • x + y, t • x + y⟫ := inner_self_nonneg
-  _ = re (⟪t • x, t • x⟫ + ⟪t • x, y⟫ + ⟪y, t • x⟫ + ⟪y, y⟫) := by rw [inner_add_add_self (t • x) y]
-  _ = re ⟪t • x, t • x⟫ + re ⟪t • x, y⟫ + re ⟪y, t • x⟫ + re ⟪y, y⟫ := by simp only [map_add,
-    re_to_complex]
-  _ = re (⟪x, x⟫ * t * t) + re (⟪x, y⟫ * t) + re (⟪y, x⟫ * t) + re ⟪y, y⟫ := by rw
-    [inner_smul_smul_re, inner_smul_left_re, inner_smul_right_re]
-  _ = re ⟪x, x⟫ * t * t + re ⟪x, y⟫ * t + re ⟪y, x⟫ * t + re ⟪y, y⟫ := by simp only [mul_re,
-    re_to_complex, Complex.ofReal_re, im_to_complex, Complex.ofReal_im, mul_zero, sub_zero,
-    mul_im, zero_add]
-  _ = normSq x * t * t + re ⟪x, y⟫ * t + re ⟪y, x⟫ * t + normSq y := by simp_rw [normSq]
-  _ = normSq x * t * t + re ⟪x, y⟫ * t + re ⟪x, y⟫ * t + normSq y := by rw [inner_re_symm y x]
-  _ = normSq x * t * t + 2 * re ⟪x, y⟫_ℂ * t + normSq y := by ring
-
-/-- **Cauchy–Schwarz inequality**.
-We need this for the `Core` structure to prove the triangle inequality below when
-showing the core is a normed group.
--/
-theorem inner_mul_inner_self_le (x y : F) : ‖⟪x, y⟫‖ * ‖⟪y, x⟫‖ ≤ re ⟪x, x⟫ * re ⟪y, y⟫ := by
--- make this a lemma, then apply this to x/⟪x,y⟫
-  have hdiscrim : ∀ (t : ℝ), 0 ≤ normSq x * t * t  + 2 * ‖⟪x, y⟫‖ * t + normSq y := by
-    intro t
-    by_cases hzero : ⟪x, y⟫ = 0
-    · rw [hzero]
-      simp only [norm_zero, mul_zero, zero_mul, add_zero]
-      apply add_nonneg
-      · rw [mul_assoc, ← sq, normSq]
-        exact mul_nonneg inner_self_nonneg (sq_nonneg t)
-      · rw [normSq]
-        exact inner_self_nonneg
-    · push_neg at hzero
-      rw [← norm_ne_zero_iff] at hzero
-      have htxy: 0 ≤ normSq (⟪x,y⟫ • x) * (t / ‖⟪x,y⟫‖) * (t / ‖⟪x,y⟫‖) + 2 * re ⟪⟪x,y⟫ • x, y⟫ * (t / ‖⟪x,y⟫‖) + normSq y := by
-        exact hdiscrimpre (⟪x,y⟫ • x) y (t/‖⟪x,y⟫‖)
-      rw [inner_smul_left, ← Complex.normSq_eq_conj_mul_self] at htxy
-      simp only [re_to_complex, Complex.ofReal_re] at htxy
-      rw [normSq] at htxy
-      rw [inner_smul_left, inner_smul_right, ← mul_assoc, ← Complex.normSq_eq_conj_mul_self] at htxy
-      simp only [mul_re, inner_self_im, mul_zero, sub_zero] at htxy
-      simp only [re_to_complex, Complex.ofReal_re] at htxy
-      rw [Complex.normSq_eq_norm_sq, sq] at htxy
-      rw [normSq, normSq, re_to_complex, re_to_complex]
-      have : 0 ≤ ‖⟪x, y⟫_ℂ‖ / ‖⟪x, y⟫_ℂ‖ * ‖⟪x, y⟫_ℂ‖ / ‖⟪x, y⟫_ℂ‖ * (⟪x, x⟫_ℂ).re * t * t +
-          ‖⟪x, y⟫_ℂ‖ / ‖⟪x, y⟫_ℂ‖ * 2 * ‖⟪x, y⟫_ℂ‖ * t + normSq y := by
-        calc 0 ≤ ‖⟪x, y⟫_ℂ‖ * ‖⟪x, y⟫_ℂ‖ * (⟪x, x⟫_ℂ).re * (t / ‖⟪x, y⟫_ℂ‖) * (t / ‖⟪x, y⟫_ℂ‖) +
-          2 * (‖⟪x, y⟫_ℂ‖ * ‖⟪x, y⟫_ℂ‖) * (t / ‖⟪x, y⟫_ℂ‖) + normSq y := htxy
-          _ = ‖⟪x, y⟫_ℂ‖ / ‖⟪x, y⟫_ℂ‖ * ‖⟪x, y⟫_ℂ‖ / ‖⟪x, y⟫_ℂ‖ * (⟪x, x⟫_ℂ).re * t * t +
-          ‖⟪x, y⟫_ℂ‖ / ‖⟪x, y⟫_ℂ‖ * 2* ‖⟪x, y⟫_ℂ‖ * t + normSq y := by ring
-      rw [div_self hzero, one_mul, one_mul, div_self hzero, one_mul] at this
-      exact this
-  have hnegdiscrim : (2 * ‖⟪x, y⟫‖)^2 - 4 * normSq x * normSq y ≤ 0 := by
-    rw [← discrim]
-    exact discrim_le_zero hdiscrim
-  rw [normSq, normSq, sq] at hnegdiscrim
-  nth_rw 1 [norm_inner_symm x y] at hnegdiscrim
-  linarith
-
-
-
-
--- /-- Norm constructed from an `InnerProductSpace.Core` structure, defined to be the square root
--- of the scalar product. -/
--- def toNorm : Norm F where norm x := √(re ⟪x, x⟫)
--- #align inner_product_space.core.to_has_norm InnerProductSpace.Core.toNorm
-
--- attribute [local instance] toNorm
-
--- theorem norm_eq_sqrt_inner (x : F) : ‖x‖ = √(re ⟪x, x⟫) := rfl
--- #align inner_product_space.core.norm_eq_sqrt_inner InnerProductSpace.Core.norm_eq_sqrt_inner
-
--- theorem inner_self_eq_norm_mul_norm (x : F) : re ⟪x, x⟫ = ‖x‖ * ‖x‖ := by
---   rw [norm_eq_sqrt_inner, ← sqrt_mul inner_self_nonneg (re ⟪x, x⟫), sqrt_mul_self inner_self_nonneg]
--- #align inner_product_space.core.inner_self_eq_norm_mul_norm InnerProductSpace.Core.inner_self_eq_norm_mul_norm
-
--- theorem sqrt_normSq_eq_norm (x : F) : √(normSqF x) = ‖x‖ := rfl
--- #align inner_product_space.core.sqrt_norm_sq_eq_norm InnerProductSpace.Core.sqrt_normSq_eq_norm
-
--- /-- Cauchy–Schwarz inequality with norm -/
--- theorem norm_inner_le_norm (x y : F) : ‖⟪x, y⟫‖ ≤ ‖x‖ * ‖y‖ :=
---   nonneg_le_nonneg_of_sq_le_sq (mul_nonneg (sqrt_nonneg _) (sqrt_nonneg _)) <|
---     calc
---       ‖⟪x, y⟫‖ * ‖⟪x, y⟫‖ = ‖⟪x, y⟫‖ * ‖⟪y, x⟫‖ := by rw [norm_inner_symm]
---       _ ≤ re ⟪x, x⟫ * re ⟪y, y⟫ := inner_mul_inner_self_le x y
---       _ = ‖x‖ * ‖y‖ * (‖x‖ * ‖y‖) := by simp only [inner_self_eq_norm_mul_norm]; ring
--- #align inner_product_space.core.norm_inner_le_norm InnerProductSpace.Core.norm_inner_le_norm
-
-variable [AddCommGroup F] [Module ℂ F] [Inner ℂ F] [PreInnerProductSpace F]
-
-def ker : Subspace ℂ F where
-    carrier := {x : F | inner x x = (0 : ℂ)}
-    add_mem' := sorry
-    zero_mem' := sorry
-    smul_mem' := sorry
-
-end PreInnerProductSpace
-
-section PreInnerProductSpaceK
-
-/-- A structure requiring that a scalar product is positive definite and symmetric, from which one
-can construct an `InnerProductSpace` instance in `InnerProductSpace.ofCore`. -/
--- @[nolint HasNonemptyInstance] porting note: I don't think we have this linter anymore
-class InnerProductSpaceK (𝕜 : Type*) (E : Type*) [RCLike 𝕜] [NormedAddCommGroup E] extends
-  NormedSpace 𝕜 E, Inner 𝕜 E where
-  /-- The inner product induces the norm. -/
-  norm_sq_eq_inner : ∀ x : E, ‖x‖ ^ 2 = re (inner x x)
-  /-- The inner product is *hermitian*, taking the `conj` swaps the arguments. -/
-  conj_symm : ∀ x y, conj (inner y x) = inner x y
-  /-- The inner product is additive in the first coordinate. -/
-  add_left : ∀ x y z, inner (x + y) z = inner x z + inner y z
-  /-- The inner product is conjugate linear in the first coordinate. -/
-  smul_left : ∀ x y r, inner (r • x) y = conj r * inner x y
-
-/-!
-### Constructing a normed space structure from an inner product
-
-In the definition of an inner product space, we require the existence of a norm, which is equal
-(but maybe not defeq) to the square root of the scalar product. This makes it possible to put
-an inner product space structure on spaces with a preexisting norm (for instance `ℝ`), with good
-properties. However, sometimes, one would like to define the norm starting only from a well-behaved
-scalar product. This is what we implement in this paragraph, starting from a structure
-`InnerProductSpace.Core` stating that we have a nice scalar product.
-
-Our goal here is not to develop a whole theory with all the supporting API, as this will be done
-below for `InnerProductSpace`. Instead, we implement the bare minimum to go as directly as
-possible to the construction of the norm and the proof of the triangular inequality.
-
-Warning: Do not use this `Core` structure if the space you are interested in already has a norm
-instance defined on it, otherwise this will create a second non-defeq norm instance!
--/
-
-
-/-- A structure requiring that a scalar product is positive definite and symmetric, from which one
-can construct an `InnerProductSpace` instance in `InnerProductSpace.ofCore`. -/
--- @[nolint HasNonemptyInstance] porting note: I don't think we have this linter anymore
-structure PreInnerProductSpaceK (𝕜 : Type*) (F : Type*) [RCLike 𝕜] [AddCommGroup F]
+/-- A structure requiring that a scalar product is positive semidefinite and symmetric. (**TODO** By
+quotienting the kernel of the scalar product, one can construct an instance of
+`InnerProductSpace.Core`.) -/
+structure PreInnerProductSpace (𝕜 : Type*) (F : Type*) [RCLike 𝕜] [AddCommGroup F]
   [Module 𝕜 F] extends Inner 𝕜 F where
   /-- The inner product is *hermitian*, taking the `conj` swaps the arguments. -/
   conj_symm : ∀ x y, conj (inner y x) = inner x y
@@ -392,15 +112,11 @@ structure PreInnerProductSpaceK (𝕜 : Type*) (F : Type*) [RCLike 𝕜] [AddCom
   /-- The inner product is conjugate linear in the first coordinate. -/
   smul_left : ∀ x y r, inner (r • x) y = conj r * inner x y
 
-/- We set `InnerProductSpace.Core` to be a class as we will use it as such in the construction
-of the normed space structure that it produces. However, all the instances we will use will be
-local to this proof. -/
-attribute [class] PreInnerProductSpaceK
+attribute [class] PreInnerProductSpace
 
+namespace PreInnerProductSpace
 
-namespace PreInnerProductSpaceK
-
-variable (𝕜 : Type*) [RCLike 𝕜] [AddCommGroup F] [Module 𝕜 F] [c : PreInnerProductSpaceK 𝕜 F]
+variable [AddCommGroup F] [Module 𝕜 F] [c : PreInnerProductSpace 𝕜 F]
 
 local notation "⟪" x ", " y "⟫" => @inner 𝕜 F _ x y
 
@@ -412,15 +128,15 @@ local notation "ext_iff" => @RCLike.ext_iff 𝕜 _
 
 local postfix:90 "†" => starRingEnd _
 
-/-- Inner product defined by the `InnerProductSpace.Core` structure. We can't reuse
-`InnerProductSpace.Core.toInner` because it takes `InnerProductSpace.Core` as an explicit
+/-- Inner product defined by the `PreInnerProductSpace` structure. We can't reuse
+`PreInnerProductSpace.toInner` because it takes `PreInnerProductSpace` as an explicit
 argument. -/
 def toInner' : Inner 𝕜 F :=
   c.toInner
 
 attribute [local instance] toInner'
 
-/-- The norm squared function for `InnerProductSpace.Core` structure. -/
+/-- The norm squared function for `PreInnerProductSpace` structure. -/
 def normSq (x : F) :=
   reK ⟪x, x⟫
 
@@ -465,7 +181,8 @@ theorem inner_zero_right (x : F) : ⟪x, 0⟫ = 0 := by
   rw [← inner_conj_symm, inner_zero_left]; simp only [RingHom.map_zero]
 
 theorem inner_self_eq_zero {x : F} : x = 0 → ⟪x, x⟫ = 0 := by
-    rintro rfl
+    intro h
+    rw [h]
     exact inner_zero_left _
 
 theorem normSq_eq_zero {x : F} : x = 0 → normSqF x = 0 := by
@@ -473,6 +190,9 @@ theorem normSq_eq_zero {x : F} : x = 0 → normSqF x = 0 := by
   rw [normSq]
   rw [inner_self_eq_zero h]
   exact RCLike.zero_re'
+
+theorem inner_self_ne_zero {x : F} : ⟪x, x⟫ ≠ 0 → x ≠ 0 := by
+  exact fun P Q => P (inner_self_eq_zero Q)
 
 theorem inner_self_ofReal_re (x : F) : (re ⟪x, x⟫ : 𝕜) = ⟪x, x⟫ := by
   norm_num [ext_iff, inner_self_im]
@@ -505,27 +225,39 @@ theorem inner_add_add_self (x y : F) : ⟪x + y, x + y⟫ = ⟪x, x⟫ + ⟪x, y
 theorem inner_sub_sub_self (x y : F) : ⟪x - y, x - y⟫ = ⟪x, x⟫ - ⟪x, y⟫ - ⟪y, x⟫ + ⟪y, y⟫ := by
   simp only [inner_sub_left, inner_sub_right]; ring
 
-lemma hdiscrimpre (x y : F) (t : ℝ) : 0 ≤ normSq x * t * t + 2 * re ⟪x, y⟫ * t + normSq y := by
-  calc 0 ≤ re ⟪t • x + y, t • x + y⟫ := inner_self_nonneg
-  _ = re (⟪t • x, t • x⟫ + ⟪t • x, y⟫ + ⟪y, t • x⟫ + ⟪y, y⟫) := by rw [inner_add_add_self (t • x) y]
-  _ = re ⟪t • x, t • x⟫ + re ⟪t • x, y⟫ + re ⟪y, t • x⟫ + re ⟪y, y⟫ := by simp only [map_add,
-    re_to_complex]
-  _ = re (⟪x, x⟫ * t * t) + re (⟪x, y⟫ * t) + re (⟪y, x⟫ * t) + re ⟪y, y⟫ := by rw
+theorem inner_smul_smul_re (x : F) {t : ℝ} :
+    re ⟪(ofReal t : 𝕜) • x, (ofReal t : 𝕜) • x⟫ = normSqF x * t * t := by
+  rw [inner_smul_left, inner_smul_right, conj_ofReal, RCLike.re_ofReal_mul, RCLike.re_ofReal_mul,
+  ← mul_assoc, mul_comm, ← mul_assoc, normSq]
+
+theorem inner_smul_left_re (x y : F) {t : ℝ} : ⟪(ofReal t : 𝕜) • x, y⟫ = ⟪x, y⟫  * t := by
+  rw [inner_smul_left, conj_ofReal, mul_comm]
+
+theorem inner_smul_right_re (x y : F) {t : ℝ} : ⟪x, (ofReal t : 𝕜) • y⟫ = ⟪x, y⟫  * t := by
+  rw [inner_smul_right, mul_comm]
+
+/-- An auxiliary equality useful to prove the **Cauchy–Schwarz inequality**. Here we use the
+standard argument involving the discriminant of quadratic form. -/
+lemma cauchy_schwarz_aux (x y : F) (t : ℝ) : 0 ≤ normSqF x * t * t + 2 * re ⟪x, y⟫ * t + normSqF y := by
+  calc 0 ≤ re ⟪(ofReal t : 𝕜) • x + y, (ofReal t : 𝕜) • x + y⟫ := inner_self_nonneg
+  _ = re (⟪(ofReal t : 𝕜) • x, (ofReal t : 𝕜) • x⟫ + ⟪(ofReal t : 𝕜) • x, y⟫
+      + ⟪y, (ofReal t : 𝕜) • x⟫ + ⟪y, y⟫) := by rw [inner_add_add_self ((ofReal t : 𝕜) • x) y]
+  _ = re ⟪(ofReal t : 𝕜) • x, (ofReal t : 𝕜) • x⟫
+      + re ⟪(ofReal t : 𝕜) • x, y⟫ + re ⟪y, (ofReal t : 𝕜) • x⟫ + re ⟪y, y⟫ := by
+      simp only [map_add]
+  _ = normSq x * t * t + re (⟪x, y⟫ * t) + re (⟪y, x⟫ * t) + re ⟪y, y⟫ := by rw
     [inner_smul_smul_re, inner_smul_left_re, inner_smul_right_re]
-  _ = re ⟪x, x⟫ * t * t + re ⟪x, y⟫ * t + re ⟪y, x⟫ * t + re ⟪y, y⟫ := by simp only [mul_re,
-    re_to_complex, Complex.ofReal_re, im_to_complex, Complex.ofReal_im, mul_zero, sub_zero,
-    mul_im, zero_add]
-  _ = normSq x * t * t + re ⟪x, y⟫ * t + re ⟪y, x⟫ * t + normSq y := by simp_rw [normSq]
+  _ = normSq x * t * t + re ⟪x, y⟫ * t + re ⟪y, x⟫ * t + re ⟪y, y⟫ := by rw [mul_comm ⟪x,y⟫ _,
+    RCLike.re_ofReal_mul, mul_comm t _, mul_comm ⟪y,x⟫ _, RCLike.re_ofReal_mul, mul_comm t _]
+  _ = normSq x * t * t + re ⟪x, y⟫ * t + re ⟪y, x⟫ * t + normSq y := by exact rfl
   _ = normSq x * t * t + re ⟪x, y⟫ * t + re ⟪x, y⟫ * t + normSq y := by rw [inner_re_symm y x]
-  _ = normSq x * t * t + 2 * re ⟪x, y⟫_ℂ * t + normSq y := by ring
+  _ = normSq x * t * t + 2 * re ⟪x, y⟫ * t + normSq y := by ring
 
 /-- **Cauchy–Schwarz inequality**.
-We need this for the `Core` structure to prove the triangle inequality below when
-showing the core is a normed group.
+We need this for the `PreInnerProductSpace` structure to take the quotient.
 -/
 theorem inner_mul_inner_self_le (x y : F) : ‖⟪x, y⟫‖ * ‖⟪y, x⟫‖ ≤ re ⟪x, x⟫ * re ⟪y, y⟫ := by
--- make this a lemma, then apply this to x/⟪x,y⟫
-  have hdiscrim : ∀ (t : ℝ), 0 ≤ normSq x * t * t  + 2 * ‖⟪x, y⟫‖ * t + normSq y := by
+  have hdiscrim : ∀ (t : ℝ), 0 ≤ normSqF x * t * t  + 2 * ‖⟪x, y⟫‖ * t + normSqF y := by
     intro t
     by_cases hzero : ⟪x, y⟫ = 0
     · rw [hzero]
@@ -537,69 +269,32 @@ theorem inner_mul_inner_self_le (x y : F) : ‖⟪x, y⟫‖ * ‖⟪y, x⟫‖ 
         exact inner_self_nonneg
     · push_neg at hzero
       rw [← norm_ne_zero_iff] at hzero
-      have htxy: 0 ≤ normSq (⟪x,y⟫ • x) * (t / ‖⟪x,y⟫‖) * (t / ‖⟪x,y⟫‖) + 2 * re ⟪⟪x,y⟫ • x, y⟫ * (t / ‖⟪x,y⟫‖) + normSq y := by
-        exact hdiscrimpre (⟪x,y⟫ • x) y (t/‖⟪x,y⟫‖)
-      rw [inner_smul_left, ← Complex.normSq_eq_conj_mul_self] at htxy
-      simp only [re_to_complex, Complex.ofReal_re] at htxy
+      have htxy: 0 ≤ normSqF (⟪x,y⟫ • x) * (t / ‖⟪x,y⟫‖) * (t / ‖⟪x,y⟫‖)
+          + 2 * re ⟪⟪x,y⟫ • x, y⟫ * (t / ‖⟪x,y⟫‖) + normSqF y := by
+        exact cauchy_schwarz_aux (⟪x,y⟫ • x) y (t/‖⟪x,y⟫‖)
+      rw [inner_smul_left, RCLike.conj_mul, sq, ← RCLike.ofReal_mul, RCLike.ofReal_re] at htxy
       rw [normSq] at htxy
-      rw [inner_smul_left, inner_smul_right, ← mul_assoc, ← Complex.normSq_eq_conj_mul_self] at htxy
-      simp only [mul_re, inner_self_im, mul_zero, sub_zero] at htxy
-      simp only [re_to_complex, Complex.ofReal_re] at htxy
-      rw [Complex.normSq_eq_norm_sq, sq] at htxy
-      rw [normSq, normSq, re_to_complex, re_to_complex]
-      have : 0 ≤ ‖⟪x, y⟫_ℂ‖ / ‖⟪x, y⟫_ℂ‖ * ‖⟪x, y⟫_ℂ‖ / ‖⟪x, y⟫_ℂ‖ * (⟪x, x⟫_ℂ).re * t * t +
-          ‖⟪x, y⟫_ℂ‖ / ‖⟪x, y⟫_ℂ‖ * 2 * ‖⟪x, y⟫_ℂ‖ * t + normSq y := by
-        calc 0 ≤ ‖⟪x, y⟫_ℂ‖ * ‖⟪x, y⟫_ℂ‖ * (⟪x, x⟫_ℂ).re * (t / ‖⟪x, y⟫_ℂ‖) * (t / ‖⟪x, y⟫_ℂ‖) +
-          2 * (‖⟪x, y⟫_ℂ‖ * ‖⟪x, y⟫_ℂ‖) * (t / ‖⟪x, y⟫_ℂ‖) + normSq y := htxy
-          _ = ‖⟪x, y⟫_ℂ‖ / ‖⟪x, y⟫_ℂ‖ * ‖⟪x, y⟫_ℂ‖ / ‖⟪x, y⟫_ℂ‖ * (⟪x, x⟫_ℂ).re * t * t +
-          ‖⟪x, y⟫_ℂ‖ / ‖⟪x, y⟫_ℂ‖ * 2* ‖⟪x, y⟫_ℂ‖ * t + normSq y := by ring
+      rw [inner_smul_left, inner_smul_right, ← mul_assoc, RCLike.conj_mul, sq, ← RCLike.ofReal_mul]
+        at htxy
+      simp only [ofReal_mul, mul_re, ofReal_re, ofReal_im, mul_zero, sub_zero, mul_im, zero_mul,
+        add_zero] at htxy
+      rw [normSq, normSq]
+      have : 0 ≤ ‖⟪x, y⟫‖ / ‖⟪x, y⟫‖ * ‖⟪x, y⟫‖ / ‖⟪x, y⟫‖ * re ⟪x, x⟫ * t * t +
+          ‖⟪x, y⟫‖ / ‖⟪x, y⟫‖ * 2 * ‖⟪x, y⟫‖ * t + normSqF y := by
+        calc 0 ≤ ‖⟪x, y⟫‖ * ‖⟪x, y⟫‖ * re ⟪x, x⟫ * (t / ‖⟪x, y⟫‖) * (t / ‖⟪x, y⟫‖) +
+          2 * (‖⟪x, y⟫‖ * ‖⟪x, y⟫‖) * (t / ‖⟪x, y⟫‖) + normSq y := htxy
+          _ = ‖⟪x, y⟫‖ / ‖⟪x, y⟫‖ * ‖⟪x, y⟫‖ / ‖⟪x, y⟫‖ * re ⟪x, x⟫ * t * t +
+          ‖⟪x, y⟫‖ / ‖⟪x, y⟫‖ * 2* ‖⟪x, y⟫‖ * t + normSq y := by ring
       rw [div_self hzero, one_mul, one_mul, div_self hzero, one_mul] at this
       exact this
-  have hnegdiscrim : (2 * ‖⟪x, y⟫‖)^2 - 4 * normSq x * normSq y ≤ 0 := by
+  have hnegdiscrim : (2 * ‖⟪x, y⟫‖)^2 - 4 * normSqF x * normSqF y ≤ 0 := by
     rw [← discrim]
     exact discrim_le_zero hdiscrim
   rw [normSq, normSq, sq] at hnegdiscrim
   nth_rw 1 [norm_inner_symm x y] at hnegdiscrim
   linarith
 
-
-
-
--- /-- Norm constructed from an `InnerProductSpace.Core` structure, defined to be the square root
--- of the scalar product. -/
--- def toNorm : Norm F where norm x := √(re ⟪x, x⟫)
--- #align inner_product_space.core.to_has_norm InnerProductSpace.Core.toNorm
-
--- attribute [local instance] toNorm
-
--- theorem norm_eq_sqrt_inner (x : F) : ‖x‖ = √(re ⟪x, x⟫) := rfl
--- #align inner_product_space.core.norm_eq_sqrt_inner InnerProductSpace.Core.norm_eq_sqrt_inner
-
--- theorem inner_self_eq_norm_mul_norm (x : F) : re ⟪x, x⟫ = ‖x‖ * ‖x‖ := by
---   rw [norm_eq_sqrt_inner, ← sqrt_mul inner_self_nonneg (re ⟪x, x⟫), sqrt_mul_self inner_self_nonneg]
--- #align inner_product_space.core.inner_self_eq_norm_mul_norm InnerProductSpace.Core.inner_self_eq_norm_mul_norm
-
--- theorem sqrt_normSq_eq_norm (x : F) : √(normSqF x) = ‖x‖ := rfl
--- #align inner_product_space.core.sqrt_norm_sq_eq_norm InnerProductSpace.Core.sqrt_normSq_eq_norm
-
--- /-- Cauchy–Schwarz inequality with norm -/
--- theorem norm_inner_le_norm (x y : F) : ‖⟪x, y⟫‖ ≤ ‖x‖ * ‖y‖ :=
---   nonneg_le_nonneg_of_sq_le_sq (mul_nonneg (sqrt_nonneg _) (sqrt_nonneg _)) <|
---     calc
---       ‖⟪x, y⟫‖ * ‖⟪x, y⟫‖ = ‖⟪x, y⟫‖ * ‖⟪y, x⟫‖ := by rw [norm_inner_symm]
---       _ ≤ re ⟪x, x⟫ * re ⟪y, y⟫ := inner_mul_inner_self_le x y
---       _ = ‖x‖ * ‖y‖ * (‖x‖ * ‖y‖) := by simp only [inner_self_eq_norm_mul_norm]; ring
--- #align inner_product_space.core.norm_inner_le_norm InnerProductSpace.Core.norm_inner_le_norm
-
-variable (F : Type*) (𝕜 : Type*) [AddCommGroup F] [Module ℂ F] [Inner ℂ F] [PreInnerProductSpace F]
-
-def ker : Subspace ℂ F where
-    carrier := {x : F | inner x x = (0 : ℂ)}
-    add_mem' := sorry
-    zero_mem' := sorry
-    smul_mem' := sorry
-
-end PreInnerProductSpaceK
+end PreInnerProductSpace
 
 /-- An inner product space is a vector space with an additional operation called inner product.
 The norm could be derived from the inner product, instead we require the existence of a norm and
@@ -643,18 +338,18 @@ instance defined on it, otherwise this will create a second non-defeq norm insta
 can construct an `InnerProductSpace` instance in `InnerProductSpace.ofCore`. -/
 -- @[nolint HasNonemptyInstance] porting note: I don't think we have this linter anymore
 structure InnerProductSpace.Core (𝕜 : Type*) (F : Type*) [RCLike 𝕜] [AddCommGroup F]
-  [Module 𝕜 F] extends Inner 𝕜 F where
-  /-- The inner product is *hermitian*, taking the `conj` swaps the arguments. -/
-  conj_symm : ∀ x y, conj (inner y x) = inner x y
-  /-- The inner product is positive (semi)definite. -/
-  nonneg_re : ∀ x, 0 ≤ re (inner x x)
+  [Module 𝕜 F] extends PreInnerProductSpace 𝕜 F where
   /-- The inner product is positive definite. -/
   definite : ∀ x, inner x x = 0 → x = 0
-  /-- The inner product is additive in the first coordinate. -/
-  add_left : ∀ x y z, inner (x + y) z = inner x z + inner y z
-  /-- The inner product is conjugate linear in the first coordinate. -/
-  smul_left : ∀ x y r, inner (r • x) y = conj r * inner x y
 #align inner_product_space.core InnerProductSpace.Core
+
+instance (𝕜 : Type*) (F : Type*) [RCLike 𝕜] [AddCommGroup F] [Module 𝕜 F]
+    (c : InnerProductSpace.Core 𝕜 F) : PreInnerProductSpace 𝕜 F where
+  inner := c.inner
+  conj_symm := c.conj_symm
+  nonneg_re := c.nonneg_re
+  add_left := c.add_left
+  smul_left := c.smul_left
 
 /- We set `InnerProductSpace.Core` to be a class as we will use it as such in the construction
 of the normed space structure that it produces. However, all the instances we will use will be
