@@ -3,45 +3,45 @@ Copyright (c) 2024 Yoh Tanimoto. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Yoh Tanimoto
 -/
-import Mathlib.Topology.ContinuousFunction.Bounded
 import Mathlib.Topology.ContinuousFunction.CocompactMap
-import Mathlib.Topology.ContinuousFunction.Compact
 import Mathlib.Topology.ContinuousFunction.ZeroAtInfty
+import Mathlib.Topology.Support
 
 /-!
 # Compactly supported continuous functions
 
-The type of compactly supported continuous functions. When the domain is compact,
-`C(α, β) ≃ C_c(α, β)` via the identity map. When the codomain is a metric space, every continuous
-compactly supported map is a bounded continuous function. When the domain is a locally
-compact space, this type has nice properties.
+In this file, we define the type `C_c(α, β)` of compactly supported continuous functions and the
+class `CompactlySupportedContinuousMapClass`, and prove basic properties.
 
-## TODO
+## Main definitions and results
 
-* Create more intances of algebraic structures (e.g., `NonUnitalSemiring`) once the necessary
-  type classes (e.g., `TopologicalRing`) are sufficiently generalized.
+This file contains various instances such as `Add`, `Mul`, `SMul F C_c(α, β)` when `F` is a class of
+continuous functions.
+When `β` has more structures, `C_c(α, β)` inherits such structures as `AddCommGroup`,
+`NonUnitalRing` and `StarRing`.
+
+When the domain `α` is compact, `ContinuousMap.liftCompactlySupported` gives the identification
+`C(α, β) ≃ C_c(α, β)`.
+
 -/
 
+variable {F α β γ : Type*} [TopologicalSpace α]
 
-universe u v w
-
-variable {F : Type*} {α : Type u} {β : Type v} {γ : Type w} [TopologicalSpace α]
-
-open BoundedContinuousFunction Topology Bornology
+open Topology
 
 open Filter Metric
 
 /-- `C_c(α, β)` is the type of continuous functions `α → β` with compact support from a topological
 space to a topological space with a zero element.
 
-When possible, instead of parametrizing results over `(f : C_c(α, β))`,
-you should parametrize over `(F : Type*) [CompactlySupportedContinuousMapClass F α β] (f : F)`.
+When possible, instead of parametrizing results over `f : C_c(α, β)`,
+you should parametrize over `{F : Type*} [CompactlySupportedContinuousMapClass F α β] (f : F)`.
 
 When you extend this structure, make sure to extend `CompactlySupportedContinuousMapClass`. -/
-structure CompactlySupportedContinuousMap (α : Type u) (β : Type v) [TopologicalSpace α] [Zero β]
-    [TopologicalSpace β] extends ContinuousMap α β : Type max u v where
+structure CompactlySupportedContinuousMap (α β : Type*) [TopologicalSpace α] [Zero β]
+    [TopologicalSpace β] extends ContinuousMap α β where
   /-- The function has compact support . -/
-  has_compact_support' : HasCompactSupport toFun
+  hasCompactSupport' : HasCompactSupport toFun
 
 @[inherit_doc]
 scoped[CompactlySupported] notation (priority := 2000)
@@ -62,35 +62,28 @@ class CompactlySupportedContinuousMapClass (F : Type*) (α β : outParam <| Type
     [TopologicalSpace α] [Zero β] [TopologicalSpace β] [FunLike F α β]
     extends ContinuousMapClass F α β : Prop where
   /-- Each member of the class has compact support. -/
-  has_compact_support (f : F) : HasCompactSupport f
+  hasCompactSupport (f : F) : HasCompactSupport f
 
 end
-
-export CompactlySupportedContinuousMapClass (has_compact_support)
 
 namespace CompactlySupportedContinuousMap
 
 section Basics
 
-variable [TopologicalSpace β] [Zero β] [FunLike F α β] [CompactlySupportedContinuousMapClass F α β]
+variable [TopologicalSpace β] [Zero β]
 
-instance instFunLike : FunLike C_c(α, β) α β where
+instance : FunLike C_c(α, β) α β where
   coe f := f.toFun
   coe_injective' f g h := by
     obtain ⟨⟨_, _⟩, _⟩ := f
     obtain ⟨⟨_, _⟩, _⟩ := g
     congr
 
-instance instCompactlySupportedContinuousMapClass :
-    CompactlySupportedContinuousMapClass C_c(α, β) α β where
-  map_continuous f := f.continuous_toFun
-  has_compact_support f := f.has_compact_support'
+protected lemma hasCompactSupport (f : C_c(α, β)) : HasCompactSupport f := f.hasCompactSupport'
 
-instance instCoeTC : CoeTC F C_c(α, β) :=
-  ⟨fun f =>
-    { toFun := f
-      continuous_toFun := map_continuous f
-      has_compact_support' := has_compact_support f }⟩
+instance : CompactlySupportedContinuousMapClass C_c(α, β) α β where
+  map_continuous f := f.continuous_toFun
+  hasCompactSupport f := f.hasCompactSupport'
 
 @[simp]
 theorem coe_toContinuousMap (f : C_c(α, β)) : (f.toContinuousMap : α → β) = f :=
@@ -104,11 +97,6 @@ theorem ext {f g : C_c(α, β)} (h : ∀ x, f x = g x) : f = g :=
 theorem coe_mk (f : C(α, β)) (h : HasCompactSupport f) : ⇑(⟨f, h⟩ : C_c(α, β)) = f :=
   rfl
 
-@[simp]
-theorem toFun_eq_coe {f : C_c(α, β)} : f.toFun = (f : α → β) :=
-  rfl
-
-
 /-- Copy of a `CompactlySupportedContinuousMap` with a new `toFun` equal to the old one. Useful
 to fix definitional equalities. -/
 protected def copy (f : C_c(α, β)) (f' : α → β) (h : f' = f) : C_c(α, β) where
@@ -116,9 +104,9 @@ protected def copy (f : C_c(α, β)) (f' : α → β) (h : f' = f) : C_c(α, β)
   continuous_toFun := by
     rw [h]
     exact f.continuous_toFun
-  has_compact_support' := by
+  hasCompactSupport' := by
     simp_rw [h]
-    exact f.has_compact_support'
+    exact f.hasCompactSupport'
 
 @[simp]
 theorem coe_copy (f : C_c(α, β)) (f' : α → β) (h : f' = f) : ⇑(f.copy f' h) = f' :=
@@ -130,32 +118,22 @@ theorem copy_eq (f : C_c(α, β)) (f' : α → β) (h : f' = f) : f.copy f' h = 
 theorem eq_of_empty [IsEmpty α] (f g : C_c(α, β)) : f = g :=
   ext <| IsEmpty.elim ‹_›
 
-/-- A continuous function on a compact space has automatically compact support. -/
+/-- A continuous function on a compact space automatically has compact support. -/
 @[simps]
 def ContinuousMap.liftCompactlySupported [CompactSpace α] : C(α, β) ≃ C_c(α, β) where
   toFun f :=
     { toFun := f
       continuous_toFun := f.continuous
-      has_compact_support' := ContinuousMap.isCompact_tsupport_of_CompactSpace f
-        }
+      hasCompactSupport' := HasCompactSupport.of_compactSpace f }
   invFun f := f
   left_inv _ := rfl
   right_inv _ := rfl
-
-/-- A continuous function on a compact space has automatically compact support. This is not an
-instance to avoid type class loops. -/
-lemma compactlySupportedContinuousMapClass.ofCompact {G : Type*} [FunLike G α β]
-    [ContinuousMapClass G α β] [CompactSpace α] : CompactlySupportedContinuousMapClass G α β where
-  map_continuous := map_continuous
-  has_compact_support := by
-    intro f
-    exact ContinuousMap.isCompact_tsupport_of_CompactSpace f
 
 end Basics
 
 /-! ### Algebraic structure
 
-Whenever `β` has the structore of continuous addtive monoid and a compatible topological structure,
+Whenever `β` has the structure of continuous additive monoid and a compatible topological structure,
 then `C_c(α, β)` inherits a corresponding algebraic structure. The primary exception to this is that
 `C_c(α, β)` will not have a multiplicative identity.
 -/
@@ -164,15 +142,12 @@ section AlgebraicStructure
 
 variable [TopologicalSpace β] (x : α)
 
-instance instZero [Zero β] : Zero C_c(α, β) where
+instance [Zero β] : Zero C_c(α, β) where
   zero := { toFun := (0 : C(α, β))
             continuous_toFun := (0 : C(α, β)).2
-            has_compact_support' := by
-              rw [HasCompactSupport, tsupport]
-              simp only [ContinuousMap.coe_zero, Function.support_zero', closure_empty,
-                isCompact_empty] }
+            hasCompactSupport' := by simp [HasCompactSupport, tsupport] }
 
-instance instInhabited [Zero β] : Inhabited C_c(α, β) :=
+instance [Zero β] : Inhabited C_c(α, β) :=
   ⟨0⟩
 
 @[simp]
@@ -192,28 +167,32 @@ theorem coe_mul [MulZeroClass β] [ContinuousMul β] (f g : C_c(α, β)) : ⇑(f
 theorem mul_apply [MulZeroClass β] [ContinuousMul β] (f g : C_c(α, β)) : (f * g) x = f x * g x :=
   rfl
 
-/-- the product of `f : C(α, β)` and `g : C_c(α, β)` is in `C_c(α, β)` -/
-instance [MulZeroClass β] [ContinuousMul β] : SMul C(α, β) C_c(α, β) :=
-   ⟨fun f g => ⟨f * g, HasCompactSupport.mul_left g.2⟩⟩
+/-- the product of `f : F` assuming `ContinuousMapClass F α γ` and `ContinuousSMul γ β` and
+`g : C_c(α, β)` is in `C_c(α, β)` -/
+instance [Zero β] [TopologicalSpace γ] [SMulZeroClass γ β] [ContinuousSMul γ β]
+    {F : Type*} [FunLike F α γ] [ContinuousMapClass F α γ] : SMul F C_c(α, β) where
+  smul f g :=
+    ⟨⟨fun x ↦ f x • g x, (map_continuous f).smul g.continuous⟩, g.hasCompactSupport'.smul_left⟩
 
 @[simp]
-theorem coe_smulc [MulZeroClass β] [ContinuousMul β] (f : C(α, β)) (g : C_c(α, β)) :
-    ⇑(f • g) = f * g :=
+theorem coe_smulc [Zero β] [TopologicalSpace γ] [SMulZeroClass γ β] [ContinuousSMul γ β]
+    {F : Type*} [FunLike F α γ] [ContinuousMapClass F α γ] (f : F) (g : C_c(α, β)) :
+    ⇑(f • g) = fun x => f x • g x :=
   rfl
 
-@[simp]
-theorem smulc_apply [MulZeroClass β] [ContinuousMul β] (f : C(α, β)) (g : C_c(α, β)) :
-    (f • g) x = f x * g x :=
+theorem smulc_apply [Zero β] [TopologicalSpace γ] [SMulZeroClass γ β] [ContinuousSMul γ β]
+    {F : Type*} [FunLike F α γ] [ContinuousMapClass F α γ] (f : F) (g : C_c(α, β)) (x : α) :
+    (f • g) x = f x • g x :=
   rfl
 
-instance instMulZeroClass [MulZeroClass β] [ContinuousMul β] : MulZeroClass C_c(α, β) :=
+instance [MulZeroClass β] [ContinuousMul β] : MulZeroClass C_c(α, β) :=
   DFunLike.coe_injective.mulZeroClass _ coe_zero coe_mul
 
-instance instSemigroupWithZero [SemigroupWithZero β] [ContinuousMul β] :
+instance [SemigroupWithZero β] [ContinuousMul β] :
     SemigroupWithZero C_c(α, β) :=
   DFunLike.coe_injective.semigroupWithZero _ coe_zero coe_mul
 
-instance instAdd [AddZeroClass β] [ContinuousAdd β] : Add C_c(α, β) :=
+instance [AddZeroClass β] [ContinuousAdd β] : Add C_c(α, β) :=
   ⟨fun f g => ⟨f + g, HasCompactSupport.add f.2 g.2⟩⟩
 
 @[simp]
@@ -223,7 +202,7 @@ theorem coe_add [AddZeroClass β] [ContinuousAdd β] (f g : C_c(α, β)) : ⇑(f
 theorem add_apply [AddZeroClass β] [ContinuousAdd β] (f g : C_c(α, β)) : (f + g) x = f x + g x :=
   rfl
 
-instance instAddZeroClass [AddZeroClass β] [ContinuousAdd β] : AddZeroClass C_c(α, β) :=
+instance [AddZeroClass β] [ContinuousAdd β] : AddZeroClass C_c(α, β) :=
   DFunLike.coe_injective.addZeroClass _ coe_zero coe_add
 
 /-- Coercion to a function as a `AddMonoidHom`. Similar to `AddMonoidHom.coeFn`. -/
@@ -232,27 +211,27 @@ def coeFnMonoidHom [AddMonoid β] [ContinuousAdd β] : C_c(α, β) →+ α → �
   map_zero' := coe_zero
   map_add' := coe_add
 
-instance instSMul [Zero β] {R : Type*} [Zero R] [SMulWithZero R β] [ContinuousConstSMul R β] :
+instance [Zero β] {R : Type*} [SMulZeroClass R β] [ContinuousConstSMul R β] :
     SMul R C_c(α, β) :=
-  ⟨fun r f => ⟨⟨r • ⇑f, Continuous.const_smul f.continuous r⟩, HasCompactSupport.smul_left' f.2⟩⟩
+  ⟨fun r f => ⟨⟨r • ⇑f, Continuous.const_smul f.continuous r⟩, HasCompactSupport.smul_left f.2⟩⟩
 
 @[simp, norm_cast]
-theorem coe_smul [Zero β] {R : Type*} [Zero R] [SMulWithZero R β] [ContinuousConstSMul R β] (r : R)
+theorem coe_smul [Zero β] {R : Type*} [SMulZeroClass R β] [ContinuousConstSMul R β] (r : R)
     (f : C_c(α, β)) : ⇑(r • f) = r • ⇑f :=
   rfl
 
-theorem smul_apply [Zero β] {R : Type*} [Zero R] [SMulWithZero R β] [ContinuousConstSMul R β]
-    (r : R) (f : C_c(α, β)) (x : α) : (r • f) x = r • f x :=
+theorem smul_apply [Zero β] {R : Type*} [SMulZeroClass R β] [ContinuousConstSMul R β] (r : R)
+    (f : C_c(α, β)) (x : α) : (r • f) x = r • f x :=
   rfl
 
 section AddMonoid
 
-instance instAddMonoid [AddMonoid β] [ContinuousAdd β] : AddMonoid C_c(α, β) :=
+instance [AddMonoid β] [ContinuousAdd β] : AddMonoid C_c(α, β) :=
   DFunLike.coe_injective.addMonoid _ coe_zero coe_add fun _ _ => rfl
 
 end AddMonoid
 
-instance instAddCommMonoid [AddCommMonoid β] [ContinuousAdd β] : AddCommMonoid C_c(α, β) :=
+instance [AddCommMonoid β] [ContinuousAdd β] : AddCommMonoid C_c(α, β) :=
   DFunLike.coe_injective.addCommMonoid _ coe_zero coe_add fun _ _ => rfl
 
 open BigOperators
@@ -269,13 +248,10 @@ section AddGroup
 
 variable [AddGroup β] [TopologicalAddGroup β] (f g : C_c(α, β))
 
-instance instNeg : Neg C_c(α, β) where
-  neg f := {  toFun := -f.1
-              continuous_toFun := map_continuous (-f.1)
-              has_compact_support' := by
-                rw [HasCompactSupport, tsupport]
-                simp only [ContinuousMap.coe_neg, Function.support_neg']
-                exact f.2 }
+instance : Neg C_c(α, β) where
+  neg f := { toFun := -f.1
+             continuous_toFun := map_continuous (-f.1)
+             hasCompactSupport' := by simpa [HasCompactSupport, tsupport] using f.2 }
 
 @[simp]
 theorem coe_neg : ⇑(-f) = -f :=
@@ -284,17 +260,11 @@ theorem coe_neg : ⇑(-f) = -f :=
 theorem neg_apply : (-f) x = -f x :=
   rfl
 
-instance instSub : Sub C_c(α, β) where
-  sub f g := {  toFun := f.1 - g.1
-                continuous_toFun := map_continuous (f.1 - g.1)
-                has_compact_support' := by
-                  rw [HasCompactSupport, tsupport]
-                  simp only [coe_toContinuousMap]
-                  rw [sub_eq_add_neg]
-                  apply HasCompactSupport.add f.2
-                  rw [HasCompactSupport, tsupport]
-                  simp only [ContinuousMap.coe_neg, Function.support_neg']
-                  exact g.2 }
+instance : Sub C_c(α, β) where
+  sub f g := { toFun := f.1 - g.1
+               continuous_toFun := map_continuous (f.1 - g.1)
+               hasCompactSupport' := by
+                 simpa [sub_eq_add_neg] using HasCompactSupport.add f.2 (-g).2 }
 
 @[simp]
 theorem coe_sub : ⇑(f - g) = f - g :=
@@ -303,58 +273,58 @@ theorem coe_sub : ⇑(f - g) = f - g :=
 theorem sub_apply : (f - g) x = f x - g x :=
   rfl
 
-instance instAddGroup : AddGroup C_c(α, β) :=
+instance : AddGroup C_c(α, β) :=
   DFunLike.coe_injective.addGroup _ coe_zero coe_add coe_neg coe_sub (fun _ _ => rfl) fun _ _ => rfl
 
 end AddGroup
 
-instance instAddCommGroup [AddCommGroup β] [TopologicalAddGroup β] : AddCommGroup C_c(α, β) :=
+instance [AddCommGroup β] [TopologicalAddGroup β] : AddCommGroup C_c(α, β) :=
   DFunLike.coe_injective.addCommGroup _ coe_zero coe_add coe_neg coe_sub (fun _ _ => rfl) fun _ _ =>
     rfl
 
-instance instIsCentralScalar [Zero β] {R : Type*} [Zero R] [SMulWithZero R β] [SMulWithZero Rᵐᵒᵖ β]
+instance [Zero β] {R : Type*} [Zero R] [SMulWithZero R β] [SMulWithZero Rᵐᵒᵖ β]
     [ContinuousConstSMul R β] [IsCentralScalar R β] : IsCentralScalar R C_c(α, β) :=
   ⟨fun _ _ => ext fun _ => op_smul_eq_smul _ _⟩
 
-instance instSMulWithZero [Zero β] {R : Type*} [Zero R] [SMulWithZero R β]
+instance [Zero β] {R : Type*} [Zero R] [SMulWithZero R β]
     [ContinuousConstSMul R β] : SMulWithZero R C_c(α, β) :=
   Function.Injective.smulWithZero ⟨_, coe_zero⟩ DFunLike.coe_injective coe_smul
 
-instance instMulActionWithZero [Zero β] {R : Type*} [MonoidWithZero R] [MulActionWithZero R β]
+instance [Zero β] {R : Type*} [MonoidWithZero R] [MulActionWithZero R β]
     [ContinuousConstSMul R β] : MulActionWithZero R C_c(α, β) :=
   Function.Injective.mulActionWithZero ⟨_, coe_zero⟩ DFunLike.coe_injective coe_smul
 
-instance instModule [AddCommMonoid β] [ContinuousAdd β] {R : Type*} [Semiring R] [Module R β]
+instance [AddCommMonoid β] [ContinuousAdd β] {R : Type*} [Semiring R] [Module R β]
     [ContinuousConstSMul R β] : Module R C_c(α, β) :=
   Function.Injective.module R ⟨⟨_, coe_zero⟩, coe_add⟩ DFunLike.coe_injective coe_smul
 
-instance instNonUnitalNonAssocSemiring [NonUnitalNonAssocSemiring β] [TopologicalSemiring β] :
+instance [NonUnitalNonAssocSemiring β] [TopologicalSemiring β] :
     NonUnitalNonAssocSemiring C_c(α, β) :=
   DFunLike.coe_injective.nonUnitalNonAssocSemiring _ coe_zero coe_add coe_mul fun _ _ => rfl
 
-instance instNonUnitalSemiring [NonUnitalSemiring β] [TopologicalSemiring β] :
+instance [NonUnitalSemiring β] [TopologicalSemiring β] :
     NonUnitalSemiring C_c(α, β) :=
   DFunLike.coe_injective.nonUnitalSemiring _ coe_zero coe_add coe_mul fun _ _ => rfl
 
-instance instNonUnitalCommSemiring [NonUnitalCommSemiring β] [TopologicalSemiring β] :
+instance [NonUnitalCommSemiring β] [TopologicalSemiring β] :
     NonUnitalCommSemiring C_c(α, β) :=
   DFunLike.coe_injective.nonUnitalCommSemiring _ coe_zero coe_add coe_mul fun _ _ => rfl
 
-instance instNonUnitalNonAssocRing [NonUnitalNonAssocRing β] [TopologicalRing β] :
+instance [NonUnitalNonAssocRing β] [TopologicalRing β] :
     NonUnitalNonAssocRing C_c(α, β) :=
   DFunLike.coe_injective.nonUnitalNonAssocRing _ coe_zero coe_add coe_mul coe_neg coe_sub
     (fun _ _ => rfl) fun _ _ => rfl
 
-instance instNonUnitalRing [NonUnitalRing β] [TopologicalRing β] : NonUnitalRing C_c(α, β) :=
+instance [NonUnitalRing β] [TopologicalRing β] : NonUnitalRing C_c(α, β) :=
   DFunLike.coe_injective.nonUnitalRing _ coe_zero coe_add coe_mul coe_neg coe_sub (fun _ _ => rfl)
     fun _ _ => rfl
 
-instance instNonUnitalCommRing [NonUnitalCommRing β] [TopologicalRing β] :
+instance [NonUnitalCommRing β] [TopologicalRing β] :
     NonUnitalCommRing C_c(α, β) :=
   DFunLike.coe_injective.nonUnitalCommRing _ coe_zero coe_add coe_mul coe_neg coe_sub
     (fun _ _ => rfl) fun _ _ => rfl
 
-instance instIsScalarTower {R : Type*} [Semiring R] [NonUnitalNonAssocSemiring β]
+instance {R : Type*} [Semiring R] [NonUnitalNonAssocSemiring β]
     [TopologicalSemiring β] [Module R β] [ContinuousConstSMul R β] [IsScalarTower R β β] :
     IsScalarTower R C_c(α, β) C_c(α, β) where
   smul_assoc r f g := by
@@ -362,7 +332,7 @@ instance instIsScalarTower {R : Type*} [Semiring R] [NonUnitalNonAssocSemiring �
     simp only [smul_eq_mul, coe_mul, coe_smul, Pi.mul_apply, Pi.smul_apply]
     rw [← smul_eq_mul, ← smul_eq_mul, smul_assoc]
 
-instance instSMulCommClass {R : Type*} [Semiring R] [NonUnitalNonAssocSemiring β]
+instance {R : Type*} [Semiring R] [NonUnitalNonAssocSemiring β]
     [TopologicalSemiring β] [Module R β] [ContinuousConstSMul R β] [SMulCommClass R β β] :
     SMulCommClass R C_c(α, β) C_c(α, β) where
   smul_comm r f g := by
@@ -372,176 +342,6 @@ instance instSMulCommClass {R : Type*} [Semiring R] [NonUnitalNonAssocSemiring �
 
 end AlgebraicStructure
 
-section ZeroAtInfty
-
-open ZeroAtInfty
-
-variable [TopologicalSpace β] [TopologicalSpace γ] [Zero γ]
-variable [FunLike F β γ] [CompactlySupportedContinuousMapClass F β γ]
-
-lemma zero_at_infty_of_hasCompactSupport (f : F) :
-    Filter.Tendsto f (Filter.cocompact β) (𝓝 0) := by
-  rw [_root_.tendsto_nhds]
-  intro s _ hzero
-  rw [Filter.mem_cocompact]
-  use tsupport f
-  constructor
-  · exact has_compact_support f
-  · intro x hx
-    simp only [Set.mem_preimage]
-    rw [← Set.not_mem_compl_iff, compl_compl] at hx
-    rw [image_eq_zero_of_nmem_tsupport hx]
-    exact hzero
-
-instance : ZeroAtInftyContinuousMapClass C_c(β, γ) β γ where
-  map_continuous f := f.continuous_toFun
-  zero_at_infty f := zero_at_infty_of_hasCompactSupport f
-
-end ZeroAtInfty
-
-section Uniform
-
-variable [UniformSpace β] [UniformSpace γ] [Zero γ]
-variable [FunLike F β γ] [CompactlySupportedContinuousMapClass F β γ]
-
-theorem uniformContinuous (f : F) : UniformContinuous (f : β → γ) :=
-  (map_continuous f).uniformContinuous_of_tendsto_cocompact (zero_at_infty_of_hasCompactSupport f)
-
-end Uniform
-
-/-! ### Metric structure
-
-When `β` is a metric space, then every element of `C_c(α, β)` is bounded, and so there is a natural
-inclusion map `CompactlySupportedContinuousMap.toBCF : C_c(α, β) → (α →ᵇ β)`. Via this map
-`C_c(α, β)` inherits a metric as the pullback of the metric on `α →ᵇ β`. Moreover, this map has
-closed range in `α →ᵇ β` and consequently `C_c(α, β)` is a complete space whenever `β` is complete.
--/
-
-
-section Metric
-
-open Metric Set
-
-variable [PseudoMetricSpace β] [Zero β] [FunLike F α β] [CompactlySupportedContinuousMapClass F α β]
-
-protected theorem bounded (f : F) : ∃ C, ∀ x y : α, dist ((f : α → β) x) (f y) ≤ C := by
-  obtain ⟨C, hC⟩ := Metric.isBounded_iff_nndist.mp
-    ((has_compact_support f).isCompact_range (map_continuous f)).isBounded
-  use C
-  intro x y
-  exact hC (Set.mem_range_self x) (Set.mem_range_self y)
-
-
-theorem isBounded_range (f : C_c(α, β)) : IsBounded (range f) :=
-  isBounded_range_iff.2 (CompactlySupportedContinuousMap.bounded f)
-
-theorem isBounded_image (f : C_c(α, β)) (s : Set α) : IsBounded (f '' s) :=
-  f.isBounded_range.subset <| image_subset_range _ _
-
-instance (priority := 100) instBoundedContinuousMapClass : BoundedContinuousMapClass F α β :=
-  { ‹CompactlySupportedContinuousMapClass F α β› with
-    map_bounded := fun f => CompactlySupportedContinuousMap.bounded f }
-
-/-- Construct a bounded continuous function from a continuous function vanishing at infinity. -/
-@[simps!]
-def toBCF (f : C_c(α, β)) : α →ᵇ β :=
-  ⟨f, map_bounded f⟩
-
-section
-
-variable (α) (β)
-
-theorem toBCF_injective : Function.Injective (toBCF : C_c(α, β) → α →ᵇ β) := fun f g h => by
-  ext x
-  simpa only using DFunLike.congr_fun h x
-
-end
-
-variable {C : ℝ} {f g : C_c(α, β)}
-
-/-- The type of compactly supported continuous functions, with the uniform distance induced by the
-inclusion `CompactlySupportedContinuousMap.toBCF`, is a pseudo-metric space. -/
-noncomputable instance instPseudoMetricSpace : PseudoMetricSpace C_c(α, β) :=
-  PseudoMetricSpace.induced toBCF inferInstance
-
-/-- The type of compactly supported continuous functions, with the uniform distance induced by the
-inclusion `CompactlySupportedContinuousMap.toBCF`, is a metric space. -/
-noncomputable instance instMetricSpace {β : Type*} [MetricSpace β] [Zero β] :
-    MetricSpace C_c(α, β) :=
-  MetricSpace.induced _ (toBCF_injective α β) inferInstance
-
-@[simp]
-theorem dist_toBCF_eq_dist {f g : C_c(α, β)} : dist f.toBCF g.toBCF = dist f g :=
-  rfl
-
-open BoundedContinuousFunction
-
-/-- Convergence in the metric on `C_c(α, β)` is uniform convergence. -/
-theorem tendsto_iff_tendstoUniformly {ι : Type*} {F : ι → C_c(α, β)} {f : C_c(α, β)}
-    {l : Filter ι} : Tendsto F l (𝓝 f) ↔ TendstoUniformly (fun i => F i) f l := by
-  simpa only [Metric.tendsto_nhds] using
-    @BoundedContinuousFunction.tendsto_iff_tendstoUniformly _ _ _ _ _ (fun i => (F i).toBCF)
-      f.toBCF l
-
-theorem isometry_toBCF : Isometry (toBCF : C_c(α, β) → α →ᵇ β) := by tauto
-
-end Metric
-
-section Norm
-
-/-! ### Normed space
-
-The norm structure on `C_c(α, β)` is the one induced by the inclusion
-`toBCF : C_c(α, β) → (α →ᵇ b)`, viewed as an additive monoid homomorphism. Then `C_c(α, β)` is
-naturally a normed space over a normed field `𝕜` whenever `β` is as well.
--/
-
-
-section NormedSpace
-
-noncomputable instance instSeminormedAddCommGroup [SeminormedAddCommGroup β] :
-    SeminormedAddCommGroup C_c(α, β) :=
-  SeminormedAddCommGroup.induced _ _ (⟨⟨toBCF, rfl⟩, fun _ _ => rfl⟩ : C_c(α, β) →+ α →ᵇ β)
-
-noncomputable instance instNormedAddCommGroup [NormedAddCommGroup β] :
-    NormedAddCommGroup C_c(α, β) :=
-  NormedAddCommGroup.induced _ _ (⟨⟨toBCF, rfl⟩, fun _ _ => rfl⟩ : C_c(α, β) →+ α →ᵇ β)
-    (toBCF_injective α β)
-
-variable [SeminormedAddCommGroup β] {𝕜 : Type*} [NormedField 𝕜] [NormedSpace 𝕜 β]
-
-@[simp]
-theorem norm_toBCF_eq_norm {f : C_c(α, β)} : ‖f.toBCF‖ = ‖f‖ :=
-  rfl
-
-instance : NormedSpace 𝕜 C_c(α, β) where norm_smul_le k f := (norm_smul_le k f.toBCF : _)
-
-end NormedSpace
-
-section NormedRing
-
-noncomputable instance instNonUnitalSeminormedRing [NonUnitalSeminormedRing β] :
-    NonUnitalSeminormedRing C_c(α, β) :=
-  { instNonUnitalRing, instSeminormedAddCommGroup with
-    norm_mul := fun f g => norm_mul_le f.toBCF g.toBCF }
-
-noncomputable instance instNonUnitalNormedRing [NonUnitalNormedRing β] :
-    NonUnitalNormedRing C_c(α, β) :=
-  { instNonUnitalRing, instNormedAddCommGroup with
-    norm_mul := fun f g => norm_mul_le f.toBCF g.toBCF }
-
-noncomputable instance instNonUnitalSeminormedCommRing [NonUnitalSeminormedCommRing β] :
-    NonUnitalSeminormedCommRing C_c(α, β) :=
-  { instNonUnitalSeminormedRing, instNonUnitalCommRing with }
-
-noncomputable instance instNonUnitalNormedCommRing [NonUnitalNormedCommRing β] :
-    NonUnitalNormedCommRing C_c(α, β) :=
-  { instNonUnitalNormedRing, instNonUnitalCommRing with }
-
-end NormedRing
-
-end Norm
-
 section Star
 
 /-! ### Star structure
@@ -550,26 +350,24 @@ It is possible to equip `C_c(α, β)` with a pointwise `star` operation whenever
 `star : β → β` for which `star (0 : β) = 0`. We don't have quite this weak a typeclass, but
 `StarAddMonoid` is close enough.
 
-The `StarAddMonoid` and `NormedStarGroup` classes on `C_c(α, β)` are inherited from their
-counterparts on `α →ᵇ β`. Ultimately, when `β` is a C⋆-ring, then so is `C_c(α, β)`.
+The `StarAddMonoid` class on `C_c(α, β)` is inherited from their counterparts on `α →ᵇ β`.
 -/
 
 
 variable [TopologicalSpace β] [AddMonoid β] [StarAddMonoid β] [ContinuousStar β]
 
-instance instStar : Star C_c(α, β) where
+instance : Star C_c(α, β) where
   star f :=
     { toFun := fun x => star (f x)
       continuous_toFun := (map_continuous f).star
-      has_compact_support' := by
+      hasCompactSupport' := by
         rw [HasCompactSupport, tsupport]
         simp only
         have support_star : (Function.support fun (x : α) => star (f x)) = Function.support f := by
           ext x
           simp only [Function.mem_support, ne_eq, star_eq_zero]
         rw [support_star]
-        exact f.2
-    }
+        exact f.2 }
 
 @[simp]
 theorem coe_star (f : C_c(α, β)) : ⇑(star f) = star (⇑f) :=
@@ -578,27 +376,21 @@ theorem coe_star (f : C_c(α, β)) : ⇑(star f) = star (⇑f) :=
 theorem star_apply (f : C_c(α, β)) (x : α) : (star f) x = star (f x) :=
   rfl
 
-instance instStarAddMonoid [ContinuousAdd β] : StarAddMonoid C_c(α, β) where
+instance [TrivialStar β] : TrivialStar C_c(α, β) where
+    star_trivial f := ext fun x => star_trivial (f x)
+
+instance [ContinuousAdd β] : StarAddMonoid C_c(α, β) where
   star_involutive f := ext fun x => star_star (f x)
   star_add f g := ext fun x => star_add (f x) (g x)
 
 end Star
-
-section NormedStar
-
-variable [NormedAddCommGroup β] [StarAddMonoid β] [NormedStarGroup β]
-
-instance instNormedStarGroup : NormedStarGroup C_c(α, β) where
-  norm_star f := (norm_star f.toBCF : _)
-
-end NormedStar
 
 section StarModule
 
 variable {𝕜 : Type*} [Zero 𝕜] [Star 𝕜] [AddMonoid β] [StarAddMonoid β] [TopologicalSpace β]
   [ContinuousStar β] [SMulWithZero 𝕜 β] [ContinuousConstSMul 𝕜 β] [StarModule 𝕜 β]
 
-instance instStarModule : StarModule 𝕜 C_c(α, β) where
+instance : StarModule 𝕜 C_c(α, β) where
   star_smul k f := ext fun x => star_smul k (f x)
 
 end StarModule
@@ -608,21 +400,13 @@ section StarRing
 variable [NonUnitalSemiring β] [StarRing β] [TopologicalSpace β] [ContinuousStar β]
   [TopologicalSemiring β]
 
-instance instStarRing : StarRing C_c(α, β) :=
+instance : StarRing C_c(α, β) :=
   { CompactlySupportedContinuousMap.instStarAddMonoid with
     star_mul := fun f g => ext fun x => star_mul (f x) (g x) }
 
 end StarRing
 
-section CstarRing
-
-instance instCstarRing [NonUnitalNormedRing β] [StarRing β] [CstarRing β] :
-    CstarRing C_c(α, β) where
-  norm_star_mul_self {f} := CstarRing.norm_star_mul_self (x := f.toBCF)
-
-end CstarRing
-
-/-! ### C_c as a functor
+/-! ### `C_c` as a functor
 
 For each `β` with sufficient structure, there is a contravariant functor `C_c(-, β)` from the
 category of topological spaces with morphisms given by `CocompactMap`s.
@@ -635,30 +419,21 @@ local notation α " →co " β => CocompactMap α β
 
 section
 
-variable [T2Space γ] [Zero δ]
+variable [Zero δ]
 
-/-- Composition of a continuous function with compact support on a `T2Space` with a cocompact map
+/-- Composition of a continuous function with compact support with a cocompact map
 yields another continuous function with compact support. -/
 def comp (f : C_c(γ, δ)) (g : β →co γ) : C_c(β, δ) where
   toContinuousMap := (f : C(γ, δ)).comp g
-  has_compact_support' := by
-    simp only [ContinuousMap.toFun_eq_coe, ContinuousMap.coe_comp, ContinuousMap.coe_coe]
-    rw [HasCompactSupport]
-    apply IsCompact.of_isClosed_subset
-    exact CocompactMap.isCompact_preimage g (hasCompactSupport_def.mp f.2)
-    exact isClosed_tsupport (f ∘ g)
-    simp only [ContinuousMap.toFun_eq_coe, coe_toContinuousMap]
+  hasCompactSupport' := by
+    apply IsCompact.of_isClosed_subset (g.isCompact_preimage_of_isClosed f.2 (isClosed_tsupport _))
+      (isClosed_tsupport (f ∘ g))
     intro x hx
-    simp only [Set.mem_preimage]
-    rw [_root_.mem_closure_iff]
+    rw [tsupport, Set.mem_preimage, _root_.mem_closure_iff]
     intro o ho hgxo
     rw [tsupport, _root_.mem_closure_iff] at hx
     obtain ⟨y, hy⟩ := hx (g ⁻¹' o) (IsOpen.preimage g.1.2 ho) hgxo
-    use g y
-    simp only [Set.mem_inter_iff, Set.mem_preimage, Function.mem_support, Function.comp_apply,
-      ne_eq] at hy
-    simp only [Set.mem_inter_iff, Function.mem_support, ne_eq]
-    exact hy
+    exact ⟨g y, hy⟩
 
 @[simp]
 theorem coe_comp_to_continuous_fun (f : C_c(γ, δ)) (g : β →co γ) : ((f.comp g) : β → δ) = f ∘ g :=
@@ -712,3 +487,51 @@ def compNonUnitalAlgHom {R : Type*} [Semiring R] [NonUnitalNonAssocSemiring δ]
   map_mul' _ _ := rfl
 
 end CompactlySupportedContinuousMap
+
+namespace CompactlySupportedContinuousMapClass
+
+section Basic
+
+variable [Zero β] [TopologicalSpace β] [FunLike F α β] [CompactlySupportedContinuousMapClass F α β]
+
+instance : CoeTC F (CompactlySupportedContinuousMap α β) :=
+  ⟨fun f =>
+    { toFun := f
+      continuous_toFun := map_continuous f
+      hasCompactSupport' := hasCompactSupport f }⟩
+
+/-- A continuous function on a compact space has automatically compact support. This is not an
+instance to avoid type class loops. -/
+lemma of_compactSpace (G : Type*) [FunLike G α β]
+    [ContinuousMapClass G α β] [CompactSpace α] : CompactlySupportedContinuousMapClass G α β where
+  map_continuous := map_continuous
+  hasCompactSupport := by
+    intro f
+    exact HasCompactSupport.of_compactSpace f
+
+end Basic
+
+section Uniform
+
+variable [UniformSpace β] [UniformSpace γ] [Zero γ] [FunLike F β γ]
+  [CompactlySupportedContinuousMapClass F β γ]
+
+theorem uniformContinuous (f : F) : UniformContinuous (f : β → γ) :=
+  (map_continuous f).uniformContinuous_of_tendsto_cocompact
+  (HasCompactSupport.is_zero_at_infty (hasCompactSupport f))
+
+end Uniform
+
+section ZeroAtInfty
+
+open ZeroAtInfty
+
+variable [TopologicalSpace β] [TopologicalSpace γ] [Zero γ]
+  [FunLike F β γ] [CompactlySupportedContinuousMapClass F β γ]
+
+instance : ZeroAtInftyContinuousMapClass F β γ where
+  zero_at_infty f := HasCompactSupport.is_zero_at_infty (hasCompactSupport f)
+
+end ZeroAtInfty
+
+end CompactlySupportedContinuousMapClass
