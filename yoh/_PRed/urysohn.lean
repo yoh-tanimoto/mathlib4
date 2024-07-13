@@ -4,7 +4,7 @@ import Mathlib.Topology.Basic
 import Mathlib.Order.Filter.Basic
 import Mathlib.Data.Nat.Cast.Field
 import Mathlib.Analysis.Complex.Basic
-import Mathlib.Algebra.Function.Support
+import Mathlib.Topology.Support
 import Mathlib.Topology.MetricSpace.Cauchy
 import Mathlib.Topology.Compactness.Compact
 import Mathlib.Topology.ContinuousFunction.Bounded
@@ -28,15 +28,12 @@ open Classical
 
 -- there is prod_mem
 lemma mem_prod_of_forall_mem {ι α : Type*} [CommMonoid α] {n : ℕ} (x : ι → α) {t : Set α} (ht1 : 1 ∈ t)
-    (ht : ∀ (x y : α), x ∈ t → y ∈ t → x * y ∈ t) :
-    ∀ (s : Finset ι), ((∀ (i : ι), i ∈ s → x i ∈ t)) ∧ s.card = n → ∏ i in s, x i ∈ t := by
-  induction' n with n ih
-  · intro s hs
-    rw [Finset.card_eq_zero.mp hs.2]
-    simp only [Finset.prod_empty, mem_Icc, zero_le_one, le_refl, and_self]
+    (ht : ∀ (x y : α), x ∈ t → y ∈ t → x * y ∈ t) (s : Finset ι) (h : ∀ (i : ι), i ∈ s → x i ∈ t) :
+    ∏ i in s, x i ∈ t := by
+  induction s using Finset.cons_induction
+  · simp only [Finset.prod_empty, mem_Icc, zero_le_one, le_refl, and_self]
     exact ht1
-  · intro s hs
-    have : 0 < s.card := by
+  · have : 0 < s.card := by
       rw [hs.2]
       exact Nat.succ_pos n
     obtain ⟨a, ha⟩ := Finset.card_pos.mp this
@@ -58,7 +55,7 @@ lemma mem_prod_of_forall_mem {ι α : Type*} [CommMonoid α] {n : ℕ} (x : ι �
     rw [hUnion, Finset.prod_union hDisjoint, Finset.prod_singleton _ _]
     have hsdiffa : ∀ (i : ι), i ∈ s \ {a} → x i ∈ t := by
       intro j hj
-      exact hs.1 j (Finset.mem_of_subset (Finset.sdiff_subset s {a}) hj)
+      exact hs.1 j (Finset.mem_of_subset Finset.sdiff_subset hj)
     exact ht (∏ i in s \ {a}, x i) (x a) (ih (s \ {a}) (And.intro hsdiffa this)) (hs.1 a ha)
   done
 
