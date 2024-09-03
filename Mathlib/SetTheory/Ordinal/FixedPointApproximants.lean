@@ -5,7 +5,6 @@ Authors: Ira Fesefeldt
 -/
 import Mathlib.SetTheory.Ordinal.Arithmetic
 
-
 /-!
 # Ordinal Approximants for the Fixed points on complete lattices
 
@@ -146,7 +145,7 @@ theorem exists_lfpApprox_eq_lfpApprox : ∃ a < ord <| succ #α, ∃ b < ord <| 
   · exact h_fab
 
 /-- If there are distinct ordinals with equal value then
-  every value succeding the smaller ordinal are fixed points -/
+  every value succeeding the smaller ordinal are fixed points -/
 lemma lfpApprox_mem_fixedPoints_of_eq {a b c : Ordinal}
     (h_init : x ≤ f x) (h_ab : a < b) (h_ac : a ≤ c) (h_fab : lfpApprox f x a = lfpApprox f x b) :
     lfpApprox f x c ∈ fixedPoints f := by
@@ -259,7 +258,7 @@ theorem gfpApprox_ord_eq_gfp : gfpApprox f ⊤ (ord <| succ #α) = gfp f :=
   lfpApprox_ord_eq_lfp (OrderHom.dual f)
 
 /-- Some ordinal approximation of the greatest fixed point is the greatest fixed point. -/
-theorem gfp_mem_range_gfpApprox  : gfp f ∈ Set.range (gfpApprox f ⊤) :=
+theorem gfp_mem_range_gfpApprox : gfp f ∈ Set.range (gfpApprox f ⊤) :=
   lfp_mem_range_lfpApprox (OrderHom.dual f)
 
 end OrdinalApprox
