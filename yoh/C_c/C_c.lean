@@ -142,23 +142,22 @@ open Urysohns
 -- -- helped by Filippo Nuccio
 /-- For a function which vanishes at infinity there is a sequence of functions with compact support
 that tend to the given function. -/
-lemma exist_HasCompactSupport_and_Tendsto [LocallyCompactSpace α] [T2Space α]
-    {𝕂 : Type*} [RCLike 𝕂] (f : C₀(α, 𝕂)) (ε : ℝ) (hε : 0 < ε) : ∃ (g : C₀(α ,𝕂)),
-    HasCompactSupport g ∧ ‖f - g‖ < ε := by
+lemma exist_HasCompactSupport_and_Tendsto [T2Space α] {𝕂 : Type*} [RCLike 𝕂] (f : C₀(α, 𝕂)) (ε : ℝ)
+    (hε : 0 < ε) : ∃ (g : C₀(α ,𝕂)), HasCompactSupport g ∧ ‖f - g‖ < ε := by
 -- take a set such that f is small outside it
-  have h1 : {x : α | dist (f x) 0 < ε /2 } ∈ Filter.cocompact α := by
+  have hfltephalf : {x : α | dist (f x) 0 < ε /2} ∈ Filter.cocompact α := by
     apply Filter.eventually_iff.mp
     apply Metric.tendsto_nhds.mp (ZeroAtInftyContinuousMap.zero_at_infty' f)
     exact half_pos hε
-  rw [Filter.mem_cocompact] at h1
+  rw [Filter.mem_cocompact] at hfltephalf
 -- take a compact set K including the above set
-  obtain ⟨K, hK⟩ := h1
-  rw [Set.compl_subset_comm] at hK
+  obtain ⟨K, hKcp, hKcompl⟩ := hfltephalf
+  rw [Set.compl_subset_comm] at hKcompl
 -- take an open set with compact closure containing K
-  obtain ⟨U, hU⟩ := exists_isOpen_superset_and_isCompact_closure hK.left
+  obtain ⟨U, hUopen, hKsubU, hUccp⟩ := exists_isOpen_superset_and_isCompact_closure hKcp
 -- take a function k which is 1 on K and supported in U by Urysohn's lemma
-  obtain ⟨k, hk⟩ := exists_continuous_one_zero_of_isCompact hK.left
-    (IsOpen.isClosed_compl hU.left) (LE.le.disjoint_compl_right hU.right.left)
+  obtain ⟨k, hk1K, hk0Uc, hkcp, hk01⟩ := exists_continuous_one_zero_of_isCompact hKcp
+    (IsOpen.isClosed_compl hUopen) (LE.le.disjoint_compl_right hKsubU)
 -- k is ℝ-valued, so need to compose with `ofRealCLM`
   have hkcp : HasCompactSupport
       (ContinuousMap.comp ⟨(RCLike.ofRealCLM : ℝ →L[ℝ] 𝕂), RCLike.ofRealCLM.cont⟩ k) := by
@@ -167,58 +166,41 @@ lemma exist_HasCompactSupport_and_Tendsto [LocallyCompactSpace α] [T2Space α]
         Function.support k := by
       apply Function.support_comp_subset RCLike.ofReal_zero
     unfold HasCompactSupport
-    exact IsCompact.closure_of_subset hk.right.right.left (subset_trans hkcp1 subset_closure)
+    exact IsCompact.closure_of_subset hkcp (subset_trans hkcp1 subset_closure)
 -- define g as the product of f and k
   set g : C₀(α, 𝕂)
     := ⟨f.1 * (ContinuousMap.comp ⟨(RCLike.ofRealCLM : ℝ →L[ℝ] 𝕂), RCLike.ofRealCLM.cont⟩ k),
       (zero_at_infty_of_hasCompactSupport (f.1 * (ContinuousMap.comp
       ⟨(RCLike.ofRealCLM : ℝ →L[ℝ] 𝕂), RCLike.ofRealCLM.cont⟩ k)) hkcp.mul_left)⟩ with hg
   use g
-  constructor
--- g is compact
-  exact hkcp.mul_left
+  refine ⟨hkcp.mul_left, ?_⟩
 -- g is close to f
-  have h2 : ∀ (x : α), ‖(f - g) x‖ ≤ ε / 2 := by
+  have hnormdiff : ∀ (x : α), ‖(f - g) x‖ ≤ ε / 2 := by
     intro x
     simp only [ZeroAtInftyContinuousMap.coe_sub, Pi.sub_apply]
     rw [hg]
-    have h21 : g x = f x * k x := by rfl
-    rw [h21]
-    have h23 : 0 ≤ k x ∧ k x ≤ 1 := by
-     exact hk.right.right.right x
-    have h24 : f x - f x * k x = f x * (1 - k x) := by ring
-    rw [h24]
+    have hgval : g x = f x * k x := rfl
+    rw [hgval]
+    have hkval01 : 0 ≤ k x ∧ k x ≤ 1 := hk01 x
+    have hfkx : f x - f x * k x = f x * (1 - k x) := by ring
+    rw [hfkx]
 -- when x ∈ K
     by_cases hxK : x ∈ K
-    · rw [(hk.1 hxK)]
+    · rw [(hk1K hxK)]
       simp only [Pi.one_apply, algebraMap.coe_one, sub_self, mul_zero, norm_zero, ge_iff_le]
       exact le_of_lt (half_pos hε)
 -- when x ∉ K
-    · rw [Set.compl_subset_comm] at hK
-      rw [norm_mul]
-      rw [← mul_one (ε / 2)]
-      apply mul_le_mul
-      · have h25 : dist (f x) 0 < ε / 2 := by
-          apply hK.2
-          exact Set.mem_compl hxK
-        rw [SeminormedAddCommGroup.dist_eq, sub_zero] at h25
-        exact le_of_lt h25
-      · have h26 : (1 - (k x : 𝕂)) = ((1 - k x) : ℝ) := by simp only [RCLike.ofReal_sub,
-          algebraMap.coe_one]
-        rw [h26, RCLike.norm_ofReal]
-        have h27 : 0 ≤ 1 - k x ∧ 1 - k x ≤ 1 := by
-          constructor
-          · nth_rw 1 [← sub_self 1]
-            exact (sub_le_sub (le_refl 1) h23.right)
-          · nth_rw 2 [← sub_zero 1]
-            exact (sub_le_sub (le_refl 1) h23.left)
-        have h28 : |1 - k x| ≤ |1| := by
-          exact abs_le_abs_of_nonneg h27.1 h27.2
-        rw [abs_one] at h28
-        exact h28
-      · simp only [norm_nonneg]
-      · exact le_of_lt (half_pos hε)
-  exact lt_of_le_of_lt ((BoundedContinuousFunction.norm_le (le_of_lt (half_pos hε))).mpr h2)
+    · rw [norm_mul, ← mul_one (ε / 2)]
+      apply mul_le_mul _ _ (norm_nonneg _) (le_of_lt (half_pos hε))
+      · rw [Set.compl_subset_comm] at hKcompl
+        rw [← sub_zero (f x), ← SeminormedAddCommGroup.dist_eq]
+        apply le_of_lt (hKcompl hxK)
+      · have h1subx : (1 - (k x : 𝕂)) = ((1 - k x) : ℝ) := by
+          simp only [RCLike.ofReal_sub, algebraMap.coe_one]
+        rw [h1subx, RCLike.norm_ofReal]
+        nth_rw 2 [← abs_one]
+        exact abs_le_abs_of_nonneg (sub_nonneg_of_le hkval01.2) (sub_le_self 1 hkval01.1)
+  exact lt_of_le_of_lt ((BoundedContinuousFunction.norm_le (le_of_lt (half_pos hε))).mpr hnormdiff)
     (half_lt_self hε)
 
 
