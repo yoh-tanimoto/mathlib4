@@ -42,12 +42,17 @@ open Set Function TopologicalSpace CompactlySupported
 variable {X : Type*} [TopologicalSpace X] [LocallyCompactSpace X] [T2Space X]
 variable (Λ : C_c(X, ℝ) →ₗ[ℝ] ℝ) (hΛ : ∀ (f : C_c(X, ℝ)), 0 ≤ f.1 → 0 ≤ Λ f)
 
+section Positive
+include hΛ
+
 /-- Under the assumption `hΛ`, `Λ` is monotone. -/
 lemma Λ_mono {f g : C_c(X, ℝ)} (h : f.1 ≤ g.1) : Λ f ≤ Λ g := by
   have : 0 ≤ g.1 - f.1 := by exact sub_nonneg.mpr h
   calc Λ f ≤ Λ f + Λ (g - f) := by exact le_add_of_nonneg_right (hΛ (g - f) this)
   _ = Λ (f + (g - f)) := by rw [← LinearMap.map_add Λ f (g - f)]
   _ = Λ g := by simp only [add_sub_cancel]
+
+end Positive
 
 lemma Λ_neg {f : C_c(X, ℝ)} : Λ (-f) = - Λ f := by
   simp only [map_neg]
@@ -95,6 +100,9 @@ theorem rieszContentAux_image_nonempty (K : Compacts X) :
     rw [← ContinuousMap.one_apply x]
     exact (hf.2.1 hx).symm
 
+section Positive
+include hΛ
+
 /-- `rieszContentAux Λ hΛ` is nonnegative. -/
 lemma rieszContentAux_nonneg {K : Compacts X} : 0 ≤ rieszContentAux Λ K := by
   apply le_csInf
@@ -137,9 +145,14 @@ theorem rieszContentAux_mono {K₁ K₂ : Compacts X} (h : K₁ ≤ K₂) :
     exact hf.2.2 x (Set.mem_of_subset_of_mem h hx)
   rfl
 
+end Positive
+
 end RieszMonotone
 
 section RieszSubadditive
+
+section Positive
+include hΛ
 
 /-- Any bounded continuous nonnegative f such that `f ≥ 1` on K gives an upper bound on the
 content of K; namely `λ(K) ≤ Λ f`. -/
@@ -149,6 +162,8 @@ theorem rieszContentAux_le {K : Compacts X} {f : C_c(X, ℝ)}
   apply csInf_le (rieszContentAux_image_BddBelow Λ hΛ K)
   simp only [mem_image, mem_setOf_eq]
   use f
+
+end Positive
 
 /-- The Riesz content can be approximated arbitrarily well by evaluating the positive linear
 functional on test functions: for any `ε > 0`, there exists a bounded continuous nonnegative
@@ -170,6 +185,9 @@ theorem exists_lt_rieszContentAux_add_pos (K : Compacts X) {ε : ℝ} (εpos : 0
   · exact f_hyp.1.2.2
   · rw [f_hyp.2]
     exact α_hyp
+
+section Positive
+include hΛ
 
 /-- The Riesz content λ associated to a given positive linear functional Λ is
 finitely subadditive: `λ(K₁ ∪ K₂) ≤ λ(K₁) + λ(K₂)` for any compact subsets `K₁, K₂ ⊆ X`. -/
@@ -210,9 +228,14 @@ theorem rieszContentAux_sup_le {K₁ K₂ : Compacts X} :
     (le_of_eq _)
   rw [add_assoc, add_comm (ε / 2), add_assoc, add_halves ε, add_assoc]
 
+end Positive
+
 end RieszSubadditive
 
 section RieszAdditive
+
+section Positive
+include hΛ
 
 /-- `rieszContentAux` is additive: `λ(K₁ ∪ K₂) = λ(K₁) + λ(K₂)` for disjoint compact subsets
 `K₁, K₂ ⊆ X`. -/
@@ -280,7 +303,7 @@ theorem rieszContentAux_eq_add [T2Space X] {K₁ K₂ : Compacts X} (h : Disjoin
             rw [tsupport] at hg
             exact Set.not_mem_subset hg.1 (Set.not_mem_diff_of_mem hx)
           rw [hgx]
-          simp only [sub_zero, mul_one, ge_iff_le, one_mul]
+          simp only [sub_zero, smul_eq_mul, one_mul, ge_iff_le]
           exact hf.1.2.2 x ((Set.mem_union x K₁ K₂).mpr (Or.inl hx))
         · rfl
       have h2 : rieszContentAux Λ K₂ ≤ Λ (g • f) := by
@@ -300,14 +323,14 @@ theorem rieszContentAux_eq_add [T2Space X] {K₁ K₂ : Compacts X} (h : Disjoin
             rw [hg.2.1 hx]
             simp only [Pi.one_apply]
           rw [hgx]
-          simp only [sub_zero, mul_one, ge_iff_le, one_mul]
+          simp only [smul_eq_mul, one_mul, ge_iff_le]
           exact hf.1.2.2 x ((Set.mem_union x K₁ K₂).mpr (Or.inr hx))
         · rfl
       have honef : (1 - g) • f + g • f = f := by
         ext x
         simp only [CompactlySupportedContinuousMap.coe_add,
-          CompactlySupportedContinuousMap.coe_smulc, ContinuousMap.coe_sub, ContinuousMap.coe_one,
-          Pi.add_apply, Pi.mul_apply, Pi.sub_apply, Pi.one_apply]
+          CompactlySupportedContinuousMap.coe_smulc, ContinuousMap.sub_apply,
+          ContinuousMap.one_apply, smul_eq_mul, Pi.add_apply]
         ring
       have hb : b = Λ ((1 - g) • f + g • f) := by
         rw [honef]
@@ -315,6 +338,8 @@ theorem rieszContentAux_eq_add [T2Space X] {K₁ K₂ : Compacts X} (h : Disjoin
       rw [hb]
       simp only [map_add, ge_iff_le]
       exact add_le_add h1 h2
+
+end Positive
 
 end RieszAdditive
 
@@ -326,7 +351,7 @@ of type `C_c(X, ℝ)` -/
 def continuousExtendToReal (f : C_c(X, ℝ≥0)) : C_c(X, ℝ) where
   toFun := NNReal.toReal ∘ f
   continuous_toFun :=  Continuous.comp continuousToReal.2 f.1.2
-  has_compact_support' := by
+  hasCompactSupport' := by
     simp only
     apply HasCompactSupport.comp_left f.2
     exact rfl
@@ -346,7 +371,7 @@ lemma continuousExtendToReal_sum {ι : Type*} (s : Finset ι) (f : ι → C_c(X,
 def continuousRestrictionToNNReal (f : C_c(X, ℝ)) : C_c(X, ℝ≥0) where
   toFun := Real.toNNReal ∘ f
   continuous_toFun := Continuous.comp continuous_real_toNNReal f.1.2
-  has_compact_support' := by
+  hasCompactSupport' := by
     simp only
     apply HasCompactSupport.comp_left f.2
     exact Real.toNNReal_zero
@@ -491,7 +516,7 @@ theorem rieszContentNonneg_eq_add [T2Space X] {K₁ K₂ : Compacts X} (h : Disj
     rieszContentNonneg Λ hΛ K₁ + rieszContentNonneg Λ hΛ K₂ := by
   rw [← rieszContentAux_eq_rieszContentNonneg, ← rieszContentAux_eq_rieszContentNonneg,
     ← rieszContentAux_eq_rieszContentNonneg]
-  rw [← NNReal.eq_iff]
+  rw [NNReal.eq_iff]
   simp only [coe_mk, NNReal.coe_add]
   exact rieszContentAux_eq_add Λ hΛ h
 
@@ -627,7 +652,6 @@ lemma rieszContentRegular : (rieszContent Λ hΛ).ContentRegular := by
         rw [hp.1]
         simp only [toNNReal_coe]
         rw [← rieszContentAux_eq_rieszContentNonneg] at hp
-        simp only at hp
         apply le_trans (NNReal.GCongr.toReal_le_toReal hp.2)
         simp only [coe_mk]
         rw [rieszContentAux]
@@ -713,7 +737,7 @@ theorem RMK [Nonempty X] : ∀ (f : C_c(X, ℝ)), ∫ (x : X), f x ∂(μ Λ hΛ
     set L := Set.range f with hLdef
     have hL : IsCompact L := by exact HasCompactSupport.isCompact_range f.2 f.1.2
     have hLNonempty : Nonempty L := instNonemptyRange f
-    have BddBelow_bbdAbove_L := Real.isBounded_iff_bddBelow_bddAbove.mp
+    have BddBelow_bbdAbove_L := isBounded_iff_bddBelow_bddAbove.mp
       (Metric.isCompact_iff_isClosed_bounded.mp hL).2
     obtain ⟨a, ha⟩ := BddBelow_bbdAbove_L.1
     obtain ⟨b, hb⟩ := BddBelow_bbdAbove_L.2
@@ -762,7 +786,7 @@ theorem RMK [Nonempty X] : ∀ (f : C_c(X, ℝ)), ∫ (x : X), f x ∂(μ Λ hΛ
         have h3 : 0 < 4 * A + 2 + 2 * ε := by
           linarith
         have h4 : ε / (4 * A + 2 + 2 * ε) * (ε / (4 * A + 2 + 2 * ε)) < ε / 2 := by
-          rw [lt_div_iff two_pos, mul_comm, ← mul_div_assoc, ← mul_div_assoc, div_lt_iff h3,
+          rw [_root_.lt_div_iff two_pos, mul_comm, ← mul_div_assoc, ← mul_div_assoc, div_lt_iff h3,
             ← mul_assoc, mul_comm, ← mul_assoc, ← mul_div_assoc, div_lt_iff h3, mul_assoc,
             mul_assoc]
           apply mul_lt_mul_of_pos_left _ hε
@@ -1002,7 +1026,7 @@ theorem RMK [Nonempty X] : ∀ (f : C_c(X, ℝ)), ∫ (x : X), f x ∂(μ Λ hΛ
         exact (Classical.choose_spec (SpecV n)).1
       · rw [hErest]
         simp only
-        apply Set.Subset.trans (Set.inter_subset_left _ _) _
+        apply Set.Subset.trans (Set.inter_subset_left) _
         intro z hz
         rw [Set.mem_preimage]
         rw [Set.mem_preimage] at hz
@@ -1016,7 +1040,7 @@ theorem RMK [Nonempty X] : ∀ (f : C_c(X, ℝ)), ∫ (x : X), f x ∂(μ Λ hΛ
     have hf : f = ∑ n, g n • f := by
       ext x
       simp only [CompactlySupportedContinuousMap.coe_sum, CompactlySupportedContinuousMap.coe_smulc,
-        Finset.sum_apply, Pi.mul_apply]
+        smul_eq_mul, Finset.sum_apply]
       rw [← Finset.sum_mul, ← Finset.sum_apply]
       by_cases hx : x ∈ tsupport f
       · rw [hg.2.2.1 hx]
@@ -1057,7 +1081,7 @@ theorem RMK [Nonempty X] : ∀ (f : C_c(X, ℝ)), ∫ (x : X), f x ∂(μ Λ hΛ
         · intro n _
           exact (hg.2.2.2 n x).1
       · rw [RestrictNonneg]
-        rw [← NNReal.eq_iff]
+        rw [NNReal.eq_iff]
         simp only [coe_mk]
         rw [continuousExtendToReal_sum, map_sum Λ _ Finset.univ, ← hp]
         apply Finset.sum_congr (Eq.refl _)
@@ -1123,8 +1147,7 @@ theorem RMK [Nonempty X] : ∀ (f : C_c(X, ℝ)), ∫ (x : X), f x ∂(μ Λ hΛ
     simp only [map_sum, CompactlySupportedContinuousMap.coe_sum,
       Finset.sum_apply, Pi.mul_apply]
     apply le_trans (Finset.sum_le_sum hΛgf)
-    simp only [LinearMapClass.map_smul, smul_eq_mul, CompactlySupportedContinuousMap.smulc_apply,
-      CompactlySupportedContinuousMap.coe_smulc]
+    simp only [map_smul, smul_eq_mul]
     rw [← add_zero ε']
     simp_rw [← add_assoc, ← sub_self |a|, ← add_sub_assoc, _root_.sub_mul]
     simp only [Finset.sum_sub_distrib]
@@ -1198,7 +1221,9 @@ theorem RMK [Nonempty X] : ∀ (f : C_c(X, ℝ)), ∫ (x : X), f x ∂(μ Λ hΛ
     have hμErestlttop : ∀ (n : Fin (⌈N⌉₊ + 1)), (μ Λ hΛ) (Erest n) < ⊤ := by
       intro n
       apply lt_of_le_of_lt (MeasureTheory.measure_mono (hErestsubtsupport n))
-      rw [μ, ← CompactlySupportedContinuousMap.toFun_eq_coe,
+      have : f = f.toFun := by
+        exact rfl
+      rw [μ, this,
         MeasureTheory.Content.measure_apply _ f.2.measurableSet]
       exact MeasureTheory.Content.outerMeasure_lt_top_of_isCompact _ f.2
     have hμsuppfeqμErest' : ((μ Λ hΛ) (tsupport f)).toReal = ∑ n, ((μ Λ hΛ) (Erest n)).toReal := by
@@ -1288,7 +1313,8 @@ theorem RMK [Nonempty X] : ∀ (f : C_c(X, ℝ)), ∫ (x : X), f x ∂(μ Λ hΛ
       mul_one]
     rw [MeasureTheory.integral_tsupport, htsupporteqErest]
     nth_rw 3 [μ]
-    rw [← CompactlySupportedContinuousMap.toFun_eq_coe]
+    have : f = f.toFun := by rfl
+    rw [this]
     rw [MeasureTheory.integral_fintype_iUnion hErestmeasurable hErestdisjoint'
       fun n =>
       (MeasureTheory.Integrable.integrableOn (Continuous.integrable_of_hasCompactSupport f.1.2 f.2))]
