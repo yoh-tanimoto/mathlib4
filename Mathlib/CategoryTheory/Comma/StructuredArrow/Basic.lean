@@ -6,6 +6,7 @@ Authors: Adam Topaz, Kim Morrison
 import Mathlib.CategoryTheory.Comma.Basic
 import Mathlib.CategoryTheory.PUnit
 import Mathlib.CategoryTheory.Limits.Shapes.IsTerminal
+import Mathlib.CategoryTheory.Functor.EpiMono
 
 /-!
 # The category of "structured arrows"
@@ -32,8 +33,6 @@ and morphisms `C`-morphisms `Y ⟶ Y'` making the obvious triangle commute.
 -/
 -- We explicitly come from `PUnit.{1}` here to obtain the correct universe for morphisms of
 -- structured arrows.
--- Porting note (https://github.com/leanprover-community/mathlib4/issues/5171): linter not ported yet
--- @[nolint has_nonempty_instance]
 def StructuredArrow (S : D) (T : C ⥤ D) :=
   Comma (Functor.fromPUnit.{0} S) T
 
@@ -97,7 +96,7 @@ theorem left_eq_id {X Y : StructuredArrow S T} (f : X ⟶ Y) : f.left = 𝟙 X.l
 we need a morphism of the objects underlying the target,
 and to check that the triangle commutes.
 -/
-@[simps]
+@[simps right]
 def homMk {f f' : StructuredArrow S T} (g : f.right ⟶ f'.right)
     (w : f.hom ≫ T.map g = f'.hom := by aesop_cat) : f ⟶ f' where
   left := 𝟙 f.left
@@ -105,10 +104,6 @@ def homMk {f f' : StructuredArrow S T} (g : f.right ⟶ f'.right)
   w := by
     dsimp
     simpa using w.symm
-
-/- Porting note: it appears the simp lemma is not getting generated but the linter
-picks up on it (seems like a bug). Either way simp solves it. -/
-attribute [-simp, nolint simpNF] homMk_left
 
 theorem homMk_surjective {f f' : StructuredArrow S T} (φ : f ⟶ f') :
     ∃ (ψ : f.right ⟶ f'.right) (hψ : f.hom ≫ T.map ψ = f'.hom),
@@ -153,15 +148,18 @@ lemma mkPostcomp_comp (f : S ⟶ T.obj Y) (g : Y ⟶ Y') (g' : Y' ⟶ Y'') :
 we need an isomorphism of the objects underlying the target,
 and to check that the triangle commutes.
 -/
-@[simps!]
+@[simps! hom_right inv_right]
 def isoMk {f f' : StructuredArrow S T} (g : f.right ≅ f'.right)
     (w : f.hom ≫ T.map g.hom = f'.hom := by aesop_cat) :
     f ≅ f' :=
   Comma.isoMk (eqToIso (by ext)) g (by simpa using w.symm)
 
-/- Porting note: it appears the simp lemma is not getting generated but the linter
-picks up on it. Either way simp solves these. -/
-attribute [-simp, nolint simpNF] isoMk_hom_left_down_down isoMk_inv_left_down_down
+theorem obj_ext (x y : StructuredArrow S T) (hr : x.right = y.right)
+    (hh : x.hom ≫ T.map (eqToHom hr) = y.hom) : x = y := by
+  cases x
+  cases y
+  cases hr
+  aesop_cat
 
 theorem ext {A B : StructuredArrow S T} (f g : A ⟶ B) : f.right = g.right → f = g :=
   CommaMorphism.ext (Subsingleton.elim _ _)
@@ -193,13 +191,9 @@ theorem eq_mk (f : StructuredArrow S T) : f = mk f.hom :=
   rfl
 
 /-- Eta rule for structured arrows. -/
-@[simps!]
+@[simps! hom_right inv_right]
 def eta (f : StructuredArrow S T) : f ≅ mk f.hom :=
   isoMk (Iso.refl _)
-
-/- Porting note: it appears the simp lemma is not getting generated but the linter
-picks up on it. Either way simp solves these. -/
-attribute [-simp, nolint simpNF] eta_hom_left_down_down eta_inv_left_down_down
 
 lemma mk_surjective (f : StructuredArrow S T) :
     ∃ (Y : C) (g : S ⟶ T.obj Y), f = mk g :=
@@ -233,13 +227,13 @@ theorem map_comp {f : S ⟶ S'} {f' : S' ⟶ S''} {h : StructuredArrow S'' T} :
   simp
 
 /-- An isomorphism `S ≅ S'` induces an equivalence `StructuredArrow S T ≌ StructuredArrow S' T`. -/
-@[simp]
+@[simps!]
 def mapIso (i : S ≅ S') : StructuredArrow S T ≌ StructuredArrow S' T :=
   Comma.mapLeftIso _ ((Functor.const _).mapIso i)
 
 /-- A natural isomorphism `T ≅ T'` induces an equivalence
     `StructuredArrow S T ≌ StructuredArrow S T'`. -/
-@[simp]
+@[simps!]
 def mapNatIso (i : T ≅ T') : StructuredArrow S T ≌ StructuredArrow S T' :=
   Comma.mapRightIso _ i
 
@@ -398,7 +392,6 @@ and morphisms `C`-morphisms `Y ⟶ Y'` making the obvious triangle commute.
 -/
 -- We explicitly come from `PUnit.{1}` here to obtain the correct universe for morphisms of
 -- costructured arrows.
--- @[nolint has_nonempty_instance] -- Porting note (https://github.com/leanprover-community/mathlib4/issues/5171): linter not ported yet
 def CostructuredArrow (S : C ⥤ D) (T : D) :=
   Comma S (Functor.fromPUnit.{0} T)
 
@@ -437,7 +430,6 @@ theorem mk_right (f : S.obj Y ⟶ T) : (mk f).right = ⟨⟨⟩⟩ :=
 theorem mk_hom_eq_self (f : S.obj Y ⟶ T) : (mk f).hom = f :=
   rfl
 
--- @[reassoc (attr := simp)] Porting note: simp can solve these
 @[reassoc]
 theorem w {A B : CostructuredArrow S T} (f : A ⟶ B) : S.map f.left ≫ B.hom = A.hom := by simp
 
@@ -461,15 +453,11 @@ theorem right_eq_id {X Y : CostructuredArrow S T} (f : X ⟶ Y) : f.right = 𝟙
 we need a morphism of the objects underlying the source,
 and to check that the triangle commutes.
 -/
-@[simps!]
+@[simps! left]
 def homMk {f f' : CostructuredArrow S T} (g : f.left ⟶ f'.left)
     (w : S.map g ≫ f'.hom = f.hom := by aesop_cat) : f ⟶ f' where
   left := g
   right := 𝟙 f.right
-
-/- Porting note: it appears the simp lemma is not getting generated but the linter
-picks up on it. Either way simp can prove this -/
-attribute [-simp, nolint simpNF] homMk_right_down_down
 
 theorem homMk_surjective {f f' : CostructuredArrow S T} (φ : f ⟶ f') :
     ∃ (ψ : f.left ⟶ f'.left) (hψ : S.map ψ ≫ f'.hom = f.hom),
@@ -514,14 +502,17 @@ lemma mkPrecomp_comp (f : S.obj Y ⟶ T) (g : Y' ⟶ Y) (g' : Y'' ⟶ Y') :
 we need an isomorphism of the objects underlying the source,
 and to check that the triangle commutes.
 -/
-@[simps!]
+@[simps! hom_left inv_left]
 def isoMk {f f' : CostructuredArrow S T} (g : f.left ≅ f'.left)
     (w : S.map g.hom ≫ f'.hom = f.hom := by aesop_cat) : f ≅ f' :=
   Comma.isoMk g (eqToIso (by ext)) (by simpa using w)
 
-/- Porting note: it appears the simp lemma is not getting generated but the linter
-picks up on it. Either way simp solves these. -/
-attribute [-simp, nolint simpNF] isoMk_hom_right_down_down isoMk_inv_right_down_down
+theorem obj_ext (x y : CostructuredArrow S T) (hl : x.left = y.left)
+    (hh : S.map (eqToHom hl) ≫ y.hom = x.hom) : x = y := by
+  cases x
+  cases y
+  cases hl
+  aesop_cat
 
 theorem ext {A B : CostructuredArrow S T} (f g : A ⟶ B) (h : f.left = g.left) : f = g :=
   CommaMorphism.ext h (Subsingleton.elim _ _)
@@ -552,13 +543,9 @@ theorem eq_mk (f : CostructuredArrow S T) : f = mk f.hom :=
   rfl
 
 /-- Eta rule for costructured arrows. -/
-@[simps!]
+@[simps! hom_left inv_left]
 def eta (f : CostructuredArrow S T) : f ≅ mk f.hom :=
   isoMk (Iso.refl _)
-
-/- Porting note: it appears the simp lemma is not getting generated but the linter
-picks up on it. Either way simp solves these. -/
-attribute [-simp, nolint simpNF] eta_hom_right_down_down eta_inv_right_down_down
 
 lemma mk_surjective (f : CostructuredArrow S T) :
     ∃ (Y : C) (g : S.obj Y ⟶ T), f = mk g :=
@@ -593,13 +580,13 @@ theorem map_comp {f : T ⟶ T'} {f' : T' ⟶ T''} {h : CostructuredArrow S T} :
 
 /-- An isomorphism `T ≅ T'` induces an equivalence
     `CostructuredArrow S T ≌ CostructuredArrow S T'`. -/
-@[simp]
+@[simps!]
 def mapIso (i : T ≅ T') : CostructuredArrow S T ≌ CostructuredArrow S T' :=
   Comma.mapRightIso _ ((Functor.const _).mapIso i)
 
 /-- A natural isomorphism `S ≅ S'` induces an equivalence
     `CostrucutredArrow S T ≌ CostructuredArrow S' T`. -/
-@[simp]
+@[simps!]
 def mapNatIso (i : S ≅ S') : CostructuredArrow S T ≌ CostructuredArrow S' T :=
   Comma.mapLeftIso _ i
 
@@ -974,5 +961,93 @@ def CostructuredArrow.map₂IsoPreEquivalenceInverseCompProj (T : C ⥤ D) (S : 
   NatIso.ofComponents fun _ => isoMk (Iso.refl _)
 
 end Pre
+
+section Prod
+
+section
+
+variable {C' : Type u₃} [Category.{v₃} C'] {D' : Type u₄} [Category.{v₄} D']
+  (S : D) (S' : D') (T : C ⥤ D) (T' : C' ⥤ D')
+
+@[reassoc (attr := simp)]
+theorem StructuredArrow.w_prod_fst {X Y : StructuredArrow (S, S') (T.prod T')}
+    (f : X ⟶ Y) : X.hom.1 ≫ T.map f.right.1 = Y.hom.1 :=
+  congr_arg _root_.Prod.fst (StructuredArrow.w f)
+
+@[reassoc (attr := simp)]
+theorem StructuredArrow.w_prod_snd {X Y : StructuredArrow (S, S') (T.prod T')}
+    (f : X ⟶ Y) : X.hom.2 ≫ T'.map f.right.2 = Y.hom.2 :=
+  congr_arg _root_.Prod.snd (StructuredArrow.w f)
+
+/-- Implementation; see `StructuredArrow.prodEquivalence`. -/
+@[simps]
+def StructuredArrow.prodFunctor :
+    StructuredArrow (S, S') (T.prod T') ⥤ StructuredArrow S T × StructuredArrow S' T' where
+  obj f := ⟨.mk f.hom.1, .mk f.hom.2⟩
+  map η := ⟨StructuredArrow.homMk η.right.1 (by simp),
+            StructuredArrow.homMk η.right.2 (by simp)⟩
+
+/-- Implementation; see `StructuredArrow.prodEquivalence`. -/
+@[simps]
+def StructuredArrow.prodInverse :
+    StructuredArrow S T × StructuredArrow S' T' ⥤ StructuredArrow (S, S') (T.prod T') where
+  obj f := .mk (Y := (f.1.right, f.2.right)) ⟨f.1.hom, f.2.hom⟩
+  map η := StructuredArrow.homMk ⟨η.1.right, η.2.right⟩ (by simp)
+
+/-- The natural equivalence
+`StructuredArrow (S, S') (T.prod T') ≌ StructuredArrow S T × StructuredArrow S' T'`. -/
+@[simps]
+def StructuredArrow.prodEquivalence :
+    StructuredArrow (S, S') (T.prod T') ≌ StructuredArrow S T × StructuredArrow S' T' where
+  functor := StructuredArrow.prodFunctor S S' T T'
+  inverse := StructuredArrow.prodInverse S S' T T'
+  unitIso := NatIso.ofComponents (fun f => Iso.refl _) (by simp)
+  counitIso := NatIso.ofComponents (fun f => Iso.refl _) (by simp)
+
+end
+
+section
+
+variable {C' : Type u₃} [Category.{v₃} C'] {D' : Type u₄} [Category.{v₄} D']
+  (S : C ⥤ D) (S' : C' ⥤ D') (T : D) (T' : D')
+
+@[reassoc (attr := simp)]
+theorem CostructuredArrow.w_prod_fst {A B : CostructuredArrow (S.prod S') (T, T')} (f : A ⟶ B) :
+    S.map f.left.1 ≫ B.hom.1 = A.hom.1 :=
+  congr_arg _root_.Prod.fst (CostructuredArrow.w f)
+
+@[reassoc (attr := simp)]
+theorem CostructuredArrow.w_prod_snd {A B : CostructuredArrow (S.prod S') (T, T')} (f : A ⟶ B) :
+    S'.map f.left.2 ≫ B.hom.2 = A.hom.2 :=
+  congr_arg _root_.Prod.snd (CostructuredArrow.w f)
+
+/-- Implementation; see `CostructuredArrow.prodEquivalence`. -/
+@[simps]
+def CostructuredArrow.prodFunctor :
+    CostructuredArrow (S.prod S') (T, T') ⥤ CostructuredArrow S T × CostructuredArrow S' T' where
+  obj f := ⟨.mk f.hom.1, .mk f.hom.2⟩
+  map η := ⟨CostructuredArrow.homMk η.left.1 (by simp),
+            CostructuredArrow.homMk η.left.2 (by simp)⟩
+
+/-- Implementation; see `CostructuredArrow.prodEquivalence`. -/
+@[simps]
+def CostructuredArrow.prodInverse :
+    CostructuredArrow S T × CostructuredArrow S' T' ⥤ CostructuredArrow (S.prod S') (T, T') where
+  obj f := .mk (Y := (f.1.left, f.2.left)) ⟨f.1.hom, f.2.hom⟩
+  map η := CostructuredArrow.homMk ⟨η.1.left, η.2.left⟩ (by simp)
+
+/-- The natural equivalence
+`CostructuredArrow (S.prod S') (T, T') ≌ CostructuredArrow S T × CostructuredArrow S' T'`. -/
+@[simps]
+def CostructuredArrow.prodEquivalence :
+    CostructuredArrow (S.prod S') (T, T') ≌ CostructuredArrow S T × CostructuredArrow S' T' where
+  functor := CostructuredArrow.prodFunctor S S' T T'
+  inverse := CostructuredArrow.prodInverse S S' T T'
+  unitIso := NatIso.ofComponents (fun f => Iso.refl _) (by simp)
+  counitIso := NatIso.ofComponents (fun f => Iso.refl _) (by simp)
+
+end
+
+end Prod
 
 end CategoryTheory

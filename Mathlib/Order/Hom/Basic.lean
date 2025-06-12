@@ -3,12 +3,9 @@ Copyright (c) 2020 Johan Commelin. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Johan Commelin
 -/
-import Mathlib.Logic.Equiv.Option
-import Mathlib.Order.RelIso.Basic
 import Mathlib.Order.Disjoint
-import Mathlib.Order.WithBot
+import Mathlib.Order.RelIso.Basic
 import Mathlib.Tactic.Monotonicity.Attr
-import Mathlib.Util.AssertExists
 
 /-!
 # Order homomorphisms
@@ -19,14 +16,14 @@ homomorphism `f : α →o β` is a function `α → β` along with a proof that 
 ## Main definitions
 
 In this file we define the following bundled monotone maps:
- * `OrderHom α β` a.k.a. `α →o β`: Preorder homomorphism.
-    An `OrderHom α β` is a function `f : α → β` such that `a₁ ≤ a₂ → f a₁ ≤ f a₂`
- * `OrderEmbedding α β` a.k.a. `α ↪o β`: Relation embedding.
-    An `OrderEmbedding α β` is an embedding `f : α ↪ β` such that `a ≤ b ↔ f a ≤ f b`.
-    Defined as an abbreviation of `@RelEmbedding α β (≤) (≤)`.
+* `OrderHom α β` a.k.a. `α →o β`: Preorder homomorphism.
+  An `OrderHom α β` is a function `f : α → β` such that `a₁ ≤ a₂ → f a₁ ≤ f a₂`
+* `OrderEmbedding α β` a.k.a. `α ↪o β`: Relation embedding.
+  An `OrderEmbedding α β` is an embedding `f : α ↪ β` such that `a ≤ b ↔ f a ≤ f b`.
+  Defined as an abbreviation of `@RelEmbedding α β (≤) (≤)`.
 * `OrderIso`: Relation isomorphism.
-    An `OrderIso α β` is an equivalence `f : α ≃ β` such that `a ≤ b ↔ f a ≤ f b`.
-    Defined as an abbreviation of `@RelIso α β (≤) (≤)`.
+  An `OrderIso α β` is an equivalence `f : α ≃ β` such that `a ≤ b ↔ f a ≤ f b`.
+  Defined as an abbreviation of `@RelIso α β (≤) (≤)`.
 
 We also define many `OrderHom`s. In some cases we define two versions, one with `ₘ` suffix and
 one without it (e.g., `OrderHom.compₘ` and `OrderHom.comp`). This means that the former
@@ -45,7 +42,7 @@ because the more bundled version usually does not work with dot notation.
 * `OrderHom.onDiag`: restrict a monotone map `α →o α →o β` to the diagonal;
 * `OrderHom.fst`: projection `Prod.fst : α × β → α` as a bundled monotone map;
 * `OrderHom.snd`: projection `Prod.snd : α × β → β` as a bundled monotone map;
-* `OrderHom.prodMap`: `prod.map f g` as a bundled monotone map;
+* `OrderHom.prodMap`: `Prod.map f g` as a bundled monotone map;
 * `Pi.evalOrderHom`: evaluation of a function at a point `Function.eval i` as a bundled
   monotone map;
 * `OrderHom.coeFnHom`: coercion to function as a bundled monotone map;
@@ -70,7 +67,7 @@ monotone map, bundled morphism
 -/
 
 -- Developments relating order homs and sets belong in `Order.Hom.Set` or later.
-assert_not_exists Set.range
+assert_not_imported Mathlib.Data.Set.Basic
 
 open OrderDual
 
@@ -171,20 +168,18 @@ section LE
 
 variable [LE α] [LE β] [EquivLike F α β] [OrderIsoClass F α β]
 
--- Porting note: needed to add explicit arguments to map_le_map_iff
 @[simp]
 theorem map_inv_le_iff (f : F) {a : α} {b : β} : EquivLike.inv f b ≤ a ↔ b ≤ f a := by
-  convert (map_le_map_iff f (a := EquivLike.inv f b) (b := a)).symm
+  convert (map_le_map_iff f).symm
   exact (EquivLike.right_inv f _).symm
 
 theorem map_inv_le_map_inv_iff (f : F) {a b : β} :
     EquivLike.inv f b ≤ EquivLike.inv f a ↔ b ≤ a := by
   simp
 
--- Porting note: needed to add explicit arguments to map_le_map_iff
 @[simp]
 theorem le_map_inv_iff (f : F) {a : α} {b : β} : a ≤ EquivLike.inv f b ↔ f a ≤ b := by
-  convert (map_le_map_iff f (a := a) (b := EquivLike.inv f b)).symm
+  convert (map_le_map_iff f).symm
   exact (EquivLike.right_inv _ _).symm
 
 end LE
@@ -233,7 +228,7 @@ protected theorem mono (f : α →o β) : Monotone f :=
 projection directly instead. -/
 def Simps.coe (f : α →o β) : α → β := f
 
-/- Porting note (https://github.com/leanprover-community/mathlib4/issues/11215): TODO: all other DFunLike classes use `apply` instead of `coe`
+/- TODO: all other DFunLike classes use `apply` instead of `coe`
 for the projection names. Maybe we should change this. -/
 initialize_simps_projections OrderHom (toFun → coe)
 
@@ -267,7 +262,7 @@ theorem copy_eq (f : α →o β) (f' : α → β) (h : f' = f) : f.copy f' h = f
   DFunLike.ext' h
 
 /-- The identity function as bundled monotone function. -/
-@[simps (config := .asFn)]
+@[simps -fullyApplied]
 def id : α →o α :=
   ⟨_root_.id, monotone_id⟩
 
@@ -314,7 +309,7 @@ theorem curry_symm_apply (f : α →o β →o γ) (x : α × β) : curry.symm f 
   rfl
 
 /-- The composition of two bundled monotone functions. -/
-@[simps (config := .asFn)]
+@[simps -fullyApplied]
 def comp (g : β →o γ) (f : α →o β) : α →o γ :=
   ⟨g ∘ f, g.mono.comp f.mono⟩
 
@@ -326,7 +321,7 @@ theorem comp_mono ⦃g₁ g₂ : β →o γ⦄ (hg : g₁ ≤ g₂) ⦃f₁ f₂
     comp ⟨g, hg⟩ ⟨f, hf⟩ = ⟨g ∘ f, hg.comp hf⟩ := rfl
 
 /-- The composition of two bundled monotone functions, a fully bundled version. -/
-@[simps! (config := .asFn)]
+@[simps! -fullyApplied]
 def compₘ : (β →o γ) →o (α →o β) →o α →o γ :=
   curry ⟨fun f : (β →o γ) × (α →o β) => f.1.comp f.2, fun _ _ h => comp_mono h.1 h.2⟩
 
@@ -341,7 +336,7 @@ theorem id_comp (f : α →o β) : comp id f = f := by
   rfl
 
 /-- Constant function bundled as an `OrderHom`. -/
-@[simps (config := .asFn)]
+@[simps -fullyApplied]
 def const (α : Type*) [Preorder α] {β : Type*} [Preorder β] : β →o α →o β where
   toFun b := ⟨Function.const α b, fun _ _ _ => le_rfl⟩
   monotone' _ _ h _ := h
@@ -381,7 +376,7 @@ def diag : α →o α × α :=
   id.prod id
 
 /-- Restriction of `f : α →o α →o β` to the diagonal. -/
-@[simps! (config := { simpRhs := true })]
+@[simps! +simpRhs]
 def onDiag (f : α →o α →o β) : α →o β :=
   (curry.symm f).comp diag
 
@@ -418,7 +413,7 @@ def prodIso : (α →o β × γ) ≃o (α →o β) × (α →o γ) where
   right_inv _ := rfl
   map_rel_iff' := forall_and.symm
 
-/-- `Prod.map` of two `OrderHom`s as an `OrderHom`. -/
+/-- `Prod.map` of two `OrderHom`s as an `OrderHom` -/
 @[simps]
 def prodMap (f : α →o β) (g : γ →o δ) : α × γ →o β × δ :=
   ⟨Prod.map f g, fun _ _ h => ⟨f.mono h.1, g.mono h.2⟩⟩
@@ -426,20 +421,20 @@ def prodMap (f : α →o β) (g : γ →o δ) : α × γ →o β × δ :=
 variable {ι : Type*} {π : ι → Type*} [∀ i, Preorder (π i)]
 
 /-- Evaluation of an unbundled function at a point (`Function.eval`) as an `OrderHom`. -/
-@[simps (config := .asFn)]
+@[simps -fullyApplied]
 def _root_.Pi.evalOrderHom (i : ι) : (∀ j, π j) →o π i :=
   ⟨Function.eval i, Function.monotone_eval i⟩
 
 /-- The "forgetful functor" from `α →o β` to `α → β` that takes the underlying function,
 is monotone. -/
-@[simps (config := .asFn)]
+@[simps -fullyApplied]
 def coeFnHom : (α →o β) →o α → β where
   toFun f := f
   monotone' _ _ h := h
 
 /-- Function application `fun f => f a` (for fixed `a`) is a monotone function from the
 monotone function space `α →o β` to `β`. See also `Pi.evalOrderHom`. -/
-@[simps! (config := .asFn)]
+@[simps! -fullyApplied]
 def apply (x : α) : (α →o β) →o β :=
   (Pi.evalOrderHom x).comp coeFnHom
 
@@ -460,7 +455,7 @@ def piIso : (α →o ∀ i, π i) ≃o ∀ i, α →o π i where
   map_rel_iff' := forall_swap
 
 /-- `Subtype.val` as a bundled monotone function. -/
-@[simps (config := .asFn)]
+@[simps -fullyApplied]
 def Subtype.val (p : α → Prop) : Subtype p →o α :=
   ⟨_root_.Subtype.val, fun _ _ h => h⟩
 
@@ -511,16 +506,6 @@ def dualIso (α β : Type*) [Preorder α] [Preorder β] : (α →o β) ≃o (α�
   toEquiv := OrderHom.dual.trans OrderDual.toDual
   map_rel_iff' := Iff.rfl
 
-/-- Lift an order homomorphism `f : α →o β` to an order homomorphism `WithBot α →o WithBot β`. -/
-@[simps (config := .asFn)]
-protected def withBotMap (f : α →o β) : WithBot α →o WithBot β :=
-  ⟨WithBot.map f, f.mono.withBot_map⟩
-
-/-- Lift an order homomorphism `f : α →o β` to an order homomorphism `WithTop α →o WithTop β`. -/
-@[simps (config := .asFn)]
-protected def withTopMap (f : α →o β) : WithTop α →o WithTop β :=
-  ⟨WithTop.map f, f.mono.withTop_map⟩
-
 /-- Lift an order homomorphism `f : α →o β` to an order homomorphism `ULift α →o ULift β` in a
 higher universe. -/
 @[simps!]
@@ -554,7 +539,7 @@ variable [Preorder α] [Preorder β] (f : α ↪o β)
 
 /-- `<` is preserved by order embeddings of preorders. -/
 def ltEmbedding : ((· < ·) : α → α → Prop) ↪r ((· < ·) : β → β → Prop) :=
-  { f with map_rel_iff' := by intros; simp [lt_iff_le_not_le, f.map_rel_iff] }
+  { f with map_rel_iff' := by intros; simp [lt_iff_le_not_ge, f.map_rel_iff] }
 
 @[simp]
 theorem ltEmbedding_apply (x : α) : f.ltEmbedding x = f x :=
@@ -599,30 +584,6 @@ also has `(· > ·)` well-founded. -/
 protected theorem wellFoundedGT [WellFoundedGT β] (f : α ↪o β) : WellFoundedGT α :=
   @OrderEmbedding.wellFoundedLT αᵒᵈ _ _ _ _ f.dual
 
-/-- A version of `WithBot.map` for order embeddings. -/
-@[simps (config := .asFn)]
-protected def withBotMap (f : α ↪o β) : WithBot α ↪o WithBot β :=
-  { f.toEmbedding.optionMap with
-    toFun := WithBot.map f,
-    map_rel_iff' := @fun a b => WithBot.map_le_iff f f.map_rel_iff a b }
-
-/-- A version of `WithTop.map` for order embeddings. -/
-@[simps (config := .asFn)]
-protected def withTopMap (f : α ↪o β) : WithTop α ↪o WithTop β :=
-  { f.dual.withBotMap.dual with toFun := WithTop.map f }
-
-/-- Coercion `α → WithBot α` as an `OrderEmbedding`. -/
-@[simps (config := .asFn)]
-protected def withBotCoe : α ↪o WithBot α where
-  toFun := .some
-  inj' := Option.some_injective _
-  map_rel_iff' := WithBot.coe_le_coe
-
-/-- Coercion `α → WithTop α` as an `OrderEmbedding`. -/
-@[simps (config := .asFn)]
-protected def withTopCoe : α ↪o WithTop α :=
-  { (OrderEmbedding.withBotCoe (α := αᵒᵈ)).dual with toFun := .some }
-
 /-- To define an order embedding from a partial order to a preorder it suffices to give a function
 together with a proof that it satisfies `f a ≤ f b ↔ a ≤ b`.
 -/
@@ -645,12 +606,22 @@ theorem coe_ofStrictMono {α β} [LinearOrder α] [Preorder β] {f : α → β} 
   rfl
 
 /-- Embedding of a subtype into the ambient type as an `OrderEmbedding`. -/
-@[simps! (config := .asFn)]
 def subtype (p : α → Prop) : Subtype p ↪o α :=
   ⟨Function.Embedding.subtype p, Iff.rfl⟩
 
+@[simp]
+theorem subtype_apply {p : α → Prop} (x : Subtype p) : subtype p x = x :=
+  rfl
+
+theorem subtype_injective (p : α → Prop) : Function.Injective (subtype p) :=
+  Subtype.coe_injective
+
+@[simp]
+theorem coe_subtype (p : α → Prop) : ⇑(subtype p) = Subtype.val :=
+  rfl
+
 /-- Convert an `OrderEmbedding` to an `OrderHom`. -/
-@[simps (config := .asFn)]
+@[simps -fullyApplied]
 def toOrderHom {X Y : Type*} [Preorder X] [Preorder Y] (f : X ↪o Y) : X →o Y where
   toFun := f
   monotone' := f.monotone
@@ -704,7 +675,7 @@ variable (f : ((· < ·) : α → α → Prop) →r ((· < ·) : β → β → P
 
 /-- A bundled expression of the fact that a map between partial orders that is strictly monotone
 is weakly monotone. -/
-@[simps (config := .asFn)]
+@[simps -fullyApplied]
 def toOrderHom : α →o β where
   toFun := f
   monotone' := StrictMono.monotone fun _ _ => f.map_rel
@@ -813,8 +784,14 @@ theorem symm_injective : Function.Injective (symm : α ≃o β → β ≃o α) :
   symm_bijective.injective
 
 @[simp]
-theorem toEquiv_symm (e : α ≃o β) : e.toEquiv.symm = e.symm.toEquiv :=
+theorem toEquiv_symm (e : α ≃o β) : e.symm.toEquiv = e.toEquiv.symm :=
   rfl
+
+@[simp]
+theorem coe_toEquiv (e : α ≃o β) : ⇑e.toEquiv = e := rfl
+
+@[simp]
+theorem coe_symm_toEquiv (e : α ≃o β) : ⇑e.toEquiv.symm = e.symm := rfl
 
 /-- Composition of two order isomorphisms is an order isomorphism. -/
 @[trans]
@@ -953,6 +930,12 @@ theorem lt_iff_lt (e : α ≃o β) {x y : α} : e x < e y ↔ x < y :=
 
 @[gcongr] protected alias ⟨_, GCongr.orderIso_apply_lt_apply⟩ := lt_iff_lt
 
+theorem lt_symm_apply (e : α ≃o β) {x : α} {y : β} : x < e.symm y ↔ e x < y := by
+  rw [← e.lt_iff_lt, e.apply_symm_apply]
+
+theorem symm_apply_lt (e : α ≃o β) {x : α} {y : β} : e.symm y < x ↔ y < e x := by
+  rw [← e.lt_iff_lt, e.apply_symm_apply]
+
 /-- Converts an `OrderIso` into a `RelIso (<) (<)`. -/
 def toRelIsoLT (e : α ≃o β) : ((· < ·) : α → α → Prop) ≃r ((· < ·) : β → β → Prop) :=
   ⟨e.toEquiv, lt_iff_lt e⟩
@@ -962,8 +945,14 @@ theorem toRelIsoLT_apply (e : α ≃o β) (x : α) : e.toRelIsoLT x = e x :=
   rfl
 
 @[simp]
-theorem toRelIsoLT_symm (e : α ≃o β) : e.toRelIsoLT.symm = e.symm.toRelIsoLT :=
+theorem toRelIsoLT_symm (e : α ≃o β) : e.symm.toRelIsoLT = e.toRelIsoLT.symm :=
   rfl
+
+@[simp]
+theorem coe_toRelIsoLT (e : α ≃o β) : ⇑e.toRelIsoLT = e := rfl
+
+@[simp]
+theorem coe_symm_toRelIsoLT (e : α ≃o β) : ⇑e.toRelIsoLT.symm = e.symm := rfl
 
 /-- Converts a `RelIso (<) (<)` into an `OrderIso`. -/
 def ofRelIsoLT {α β} [PartialOrder α] [PartialOrder β]
@@ -1011,7 +1000,7 @@ def ofCmpEqCmp {α β} [LinearOrder α] [LinearOrder β] (f : α → β) (g : β
       apply gf }
 
 /-- To show that `f : α →o β` and `g : β →o α` make up an order isomorphism it is enough to show
-    that `g` is the inverse of `f`-/
+that `g` is the inverse of `f`. -/
 def ofHomInv {F G : Type*} [FunLike F α β] [OrderHomClass F α β] [FunLike G β α]
     [OrderHomClass G β α] (f : F) (g : G)
     (h₁ : (f : α →o β).comp (g : β →o α) = OrderHom.id)
@@ -1038,6 +1027,15 @@ def funUnique (α β : Type*) [Unique α] [Preorder β] : (α → β) ≃o β wh
 theorem funUnique_symm_apply {α β : Type*} [Unique α] [Preorder β] :
     ((funUnique α β).symm : β → α → β) = Function.const α :=
   rfl
+
+/-- The order isomorphism `α ≃o β` when `α` and `β` are preordered types
+containing unique elements. -/
+@[simps!]
+noncomputable def ofUnique
+    (α β : Type*) [Unique α] [Unique β] [Preorder α] [Preorder β] :
+    α ≃o β where
+  toEquiv := Equiv.ofUnique α β
+  map_rel_iff' := by simp
 
 end OrderIso
 
@@ -1068,7 +1066,7 @@ variable [LinearOrder α] [Preorder β]
 variable (f : α → β) (h_mono : StrictMono f)
 
 /-- A strictly monotone function with a right inverse is an order isomorphism. -/
-@[simps (config := .asFn)]
+@[simps -fullyApplied]
 def orderIsoOfRightInverse (g : β → α) (hg : Function.RightInverse g f) : α ≃o β :=
   { OrderEmbedding.ofStrictMono f h_mono with
     toFun := f,
@@ -1153,126 +1151,6 @@ theorem codisjoint_map_orderIso_iff [SemilatticeSup α] [OrderTop α] [Semilatti
     {a b : α} (f : α ≃o β) : Codisjoint (f a) (f b) ↔ Codisjoint a b :=
   ⟨fun h => f.symm_apply_apply a ▸ f.symm_apply_apply b ▸ h.map_orderIso f.symm,
    fun h => h.map_orderIso f⟩
-
-namespace WithBot
-
-/-- Taking the dual then adding `⊥` is the same as adding `⊤` then taking the dual.
-This is the order iso form of `WithBot.ofDual`, as proven by `coe_toDualTopEquiv_eq`.
--/
-protected def toDualTopEquiv [LE α] : WithBot αᵒᵈ ≃o (WithTop α)ᵒᵈ :=
-  OrderIso.refl _
-
-@[simp]
-theorem toDualTopEquiv_coe [LE α] (a : α) :
-    WithBot.toDualTopEquiv ↑(toDual a) = toDual (a : WithTop α) :=
-  rfl
-
-@[simp]
-theorem toDualTopEquiv_symm_coe [LE α] (a : α) :
-    WithBot.toDualTopEquiv.symm (toDual (a : WithTop α)) = ↑(toDual a) :=
-  rfl
-
-@[simp]
-theorem toDualTopEquiv_bot [LE α] : WithBot.toDualTopEquiv (⊥ : WithBot αᵒᵈ) = ⊥ :=
-  rfl
-
-@[simp]
-theorem toDualTopEquiv_symm_bot [LE α] : WithBot.toDualTopEquiv.symm (⊥ : (WithTop α)ᵒᵈ) = ⊥ :=
-  rfl
-
-theorem coe_toDualTopEquiv_eq [LE α] :
-    (WithBot.toDualTopEquiv : WithBot αᵒᵈ → (WithTop α)ᵒᵈ) = toDual ∘ WithBot.ofDual :=
-  funext fun _ => rfl
-
-/-- The coercion `α → WithBot α` bundled as monotone map. -/
-@[simps]
-def coeOrderHom {α : Type*} [Preorder α] : α ↪o WithBot α where
-  toFun := (↑)
-  inj' := WithBot.coe_injective
-  map_rel_iff' := WithBot.coe_le_coe
-
-end WithBot
-
-namespace WithTop
-
-/-- Taking the dual then adding `⊤` is the same as adding `⊥` then taking the dual.
-This is the order iso form of `WithTop.ofDual`, as proven by `coe_toDualBotEquiv_eq`. -/
-protected def toDualBotEquiv [LE α] : WithTop αᵒᵈ ≃o (WithBot α)ᵒᵈ :=
-  OrderIso.refl _
-
-@[simp]
-theorem toDualBotEquiv_coe [LE α] (a : α) :
-    WithTop.toDualBotEquiv ↑(toDual a) = toDual (a : WithBot α) :=
-  rfl
-
-@[simp]
-theorem toDualBotEquiv_symm_coe [LE α] (a : α) :
-    WithTop.toDualBotEquiv.symm (toDual (a : WithBot α)) = ↑(toDual a) :=
-  rfl
-
-@[simp]
-theorem toDualBotEquiv_top [LE α] : WithTop.toDualBotEquiv (⊤ : WithTop αᵒᵈ) = ⊤ :=
-  rfl
-
-@[simp]
-theorem toDualBotEquiv_symm_top [LE α] : WithTop.toDualBotEquiv.symm (⊤ : (WithBot α)ᵒᵈ) = ⊤ :=
-  rfl
-
-theorem coe_toDualBotEquiv [LE α] :
-    (WithTop.toDualBotEquiv : WithTop αᵒᵈ → (WithBot α)ᵒᵈ) = toDual ∘ WithTop.ofDual :=
-  funext fun _ => rfl
-
-/-- The coercion `α → WithTop α` bundled as monotone map. -/
-@[simps]
-def coeOrderHom {α : Type*} [Preorder α] : α ↪o WithTop α where
-  toFun := (↑)
-  inj' := WithTop.coe_injective
-  map_rel_iff' := WithTop.coe_le_coe
-
-end WithTop
-
-namespace OrderIso
-
-variable [PartialOrder α] [PartialOrder β] [PartialOrder γ]
-
-/-- A version of `Equiv.optionCongr` for `WithTop`. -/
-@[simps! apply]
-def withTopCongr (e : α ≃o β) : WithTop α ≃o WithTop β :=
-  { e.toOrderEmbedding.withTopMap with
-    toEquiv := e.toEquiv.optionCongr }
-
-@[simp]
-theorem withTopCongr_refl : (OrderIso.refl α).withTopCongr = OrderIso.refl _ :=
-  RelIso.toEquiv_injective Equiv.optionCongr_refl
-
-@[simp]
-theorem withTopCongr_symm (e : α ≃o β) : e.withTopCongr.symm = e.symm.withTopCongr :=
-  RelIso.toEquiv_injective e.toEquiv.optionCongr_symm
-
-@[simp]
-theorem withTopCongr_trans (e₁ : α ≃o β) (e₂ : β ≃o γ) :
-    e₁.withTopCongr.trans e₂.withTopCongr = (e₁.trans e₂).withTopCongr :=
-  RelIso.toEquiv_injective <| e₁.toEquiv.optionCongr_trans e₂.toEquiv
-
-/-- A version of `Equiv.optionCongr` for `WithBot`. -/
-@[simps! apply]
-def withBotCongr (e : α ≃o β) : WithBot α ≃o WithBot β :=
-  { e.toOrderEmbedding.withBotMap with toEquiv := e.toEquiv.optionCongr }
-
-@[simp]
-theorem withBotCongr_refl : (OrderIso.refl α).withBotCongr = OrderIso.refl _ :=
-  RelIso.toEquiv_injective Equiv.optionCongr_refl
-
-@[simp]
-theorem withBotCongr_symm (e : α ≃o β) : e.withBotCongr.symm = e.symm.withBotCongr :=
-  RelIso.toEquiv_injective e.toEquiv.optionCongr_symm
-
-@[simp]
-theorem withBotCongr_trans (e₁ : α ≃o β) (e₂ : β ≃o γ) :
-    e₁.withBotCongr.trans e₂.withBotCongr = (e₁.trans e₂).withBotCongr :=
-  RelIso.toEquiv_injective <| e₁.toEquiv.optionCongr_trans e₂.toEquiv
-
-end OrderIso
 
 section BoundedOrder
 

@@ -5,9 +5,9 @@ Authors: Mario Carneiro
 -/
 import Mathlib.Algebra.Ring.Associated
 import Mathlib.Algebra.Star.Unitary
-import Mathlib.RingTheory.Int.Basic
 import Mathlib.RingTheory.PrincipalIdealDomain
 import Mathlib.Tactic.Ring
+import Mathlib.Algebra.EuclideanDomain.Int
 
 /-! # ℤ[√d]
 
@@ -27,7 +27,9 @@ to choices of square roots of `d` in `R`.
   are called `re` and `im` by analogy to the negative `d` case. -/
 @[ext]
 structure Zsqrtd (d : ℤ) where
+  /-- Component of the integer not multiplied by `√d` -/
   re : ℤ
+  /-- Component of the integer multiplied by `√d` -/
   im : ℤ
   deriving DecidableEq
 
@@ -257,13 +259,8 @@ instance : CharZero (ℤ√d) where cast_injective m n := by simp [Zsqrtd.ext_if
 @[simp]
 theorem ofInt_eq_intCast (n : ℤ) : (ofInt n : ℤ√d) = n := by ext <;> simp [ofInt_re, ofInt_im]
 
-@[deprecated (since := "2024-04-05")] alias coe_nat_re := natCast_re
-@[deprecated (since := "2024-04-05")] alias coe_nat_im := natCast_im
-@[deprecated (since := "2024-04-05")] alias coe_nat_val := natCast_val
-@[deprecated (since := "2024-04-05")] alias coe_int_re := intCast_re
-@[deprecated (since := "2024-04-05")] alias coe_int_im := intCast_im
-@[deprecated (since := "2024-04-05")] alias coe_int_val := intCast_val
-@[deprecated (since := "2024-04-05")] alias ofInt_eq_coe := ofInt_eq_intCast
+@[simp]
+theorem nsmul_val (n : ℕ) (x y : ℤ) : (n : ℤ√d) * ⟨x, y⟩ = ⟨n * x, n * y⟩ := by ext <;> simp
 
 @[simp]
 theorem smul_val (n x y : ℤ) : (n : ℤ√d) * ⟨x, y⟩ = ⟨n * x, n * y⟩ := by ext <;> simp
@@ -286,11 +283,6 @@ theorem decompose {x y : ℤ} : (⟨x, y⟩ : ℤ√d) = x + sqrtd (d := d) * y 
 theorem mul_star {x y : ℤ} : (⟨x, y⟩ * star ⟨x, y⟩ : ℤ√d) = x * x - d * y * y := by
   ext <;> simp [sub_eq_add_neg, mul_comm]
 
-@[deprecated (since := "2024-05-25")] alias coe_int_add := Int.cast_add
-@[deprecated (since := "2024-05-25")] alias coe_int_sub := Int.cast_sub
-@[deprecated (since := "2024-05-25")] alias coe_int_mul := Int.cast_mul
-@[deprecated (since := "2024-05-25")] alias coe_int_inj := Int.cast_inj
-
 theorem intCast_dvd (z : ℤ) (a : ℤ√d) : ↑z ∣ a ↔ z ∣ a.re ∧ z ∣ a.im := by
   constructor
   · rintro ⟨x, rfl⟩
@@ -310,9 +302,6 @@ theorem intCast_dvd_intCast (a b : ℤ) : (a : ℤ√d) ∣ b ↔ a ∣ b := by
   · rw [intCast_re, intCast_im]
     exact fun hc => ⟨hc, dvd_zero a⟩
 
-@[deprecated (since := "2024-05-25")] alias coe_int_dvd_iff := intCast_dvd
-@[deprecated (since := "2024-05-25")] alias coe_int_dvd_coe_int := intCast_dvd_intCast
-
 protected theorem eq_of_smul_eq_smul_left {a : ℤ} {b c : ℤ√d} (ha : a ≠ 0) (h : ↑a * b = a * c) :
     b = c := by
   rw [Zsqrtd.ext_iff] at h ⊢
@@ -326,7 +315,7 @@ theorem gcd_eq_zero_iff (a : ℤ√d) : Int.gcd a.re a.im = 0 ↔ a = 0 := by
 theorem gcd_pos_iff (a : ℤ√d) : 0 < Int.gcd a.re a.im ↔ a ≠ 0 :=
   pos_iff_ne_zero.trans <| not_congr a.gcd_eq_zero_iff
 
-theorem coprime_of_dvd_coprime {a b : ℤ√d} (hcoprime : IsCoprime a.re a.im) (hdvd : b ∣ a) :
+theorem isCoprime_of_dvd_isCoprime {a b : ℤ√d} (hcoprime : IsCoprime a.re a.im) (hdvd : b ∣ a) :
     IsCoprime b.re b.im := by
   apply isCoprime_of_dvd
   · rintro ⟨hre, him⟩
@@ -342,13 +331,15 @@ theorem coprime_of_dvd_coprime {a b : ℤ√d} (hcoprime : IsCoprime a.re a.im) 
       exact ⟨hzdvdu, hzdvdv⟩
     exact hcoprime.isUnit_of_dvd' ha hb
 
+@[deprecated (since := "2025-01-23")] alias coprime_of_dvd_coprime := isCoprime_of_dvd_isCoprime
+
 theorem exists_coprime_of_gcd_pos {a : ℤ√d} (hgcd : 0 < Int.gcd a.re a.im) :
     ∃ b : ℤ√d, a = ((Int.gcd a.re a.im : ℤ) : ℤ√d) * b ∧ IsCoprime b.re b.im := by
   obtain ⟨re, im, H1, Hre, Him⟩ := Int.exists_gcd_one hgcd
   rw [mul_comm] at Hre Him
   refine ⟨⟨re, im⟩, ?_, ?_⟩
   · rw [smul_val, ← Hre, ← Him]
-  · rw [← Int.gcd_eq_one_iff_coprime, H1]
+  · rw [Int.isCoprime_iff_gcd_eq_one, H1]
 
 end Gcd
 
@@ -356,14 +347,16 @@ end Gcd
 def SqLe (a c b d : ℕ) : Prop :=
   c * a * a ≤ d * b * b
 
-theorem sqLe_of_le {c d x y z w : ℕ} (xz : z ≤ x) (yw : y ≤ w) (xy : SqLe x c y d) : SqLe z c w d :=
-  le_trans (mul_le_mul (Nat.mul_le_mul_left _ xz) xz (Nat.zero_le _) (Nat.zero_le _)) <|
-    le_trans xy (mul_le_mul (Nat.mul_le_mul_left _ yw) yw (Nat.zero_le _) (Nat.zero_le _))
+theorem sqLe_of_le {c d x y z w : ℕ} (xz : z ≤ x) (yw : y ≤ w) (xy : SqLe x c y d) :
+    SqLe z c w d := calc
+  c * z * z ≤ c * x * x := by gcongr
+  _ ≤ d * y * y := xy
+  _ ≤ d * w * w := by gcongr
 
 theorem sqLe_add_mixed {c d x y z w : ℕ} (xy : SqLe x c y d) (zw : SqLe z c w d) :
     c * (x * z) ≤ d * (y * w) :=
   Nat.mul_self_le_mul_self_iff.1 <| by
-    simpa [mul_comm, mul_left_comm] using mul_le_mul xy zw (Nat.zero_le _) (Nat.zero_le _)
+    simpa [mul_comm, mul_left_comm] using Nat.mul_le_mul xy zw
 
 theorem sqLe_add {c d x y z w : ℕ} (xy : SqLe x c y d) (zw : SqLe z c w d) :
     SqLe (x + z) c (y + w) d := by
@@ -398,7 +391,7 @@ theorem sqLe_mul {d x y z w : ℕ} :
           (sub_nonneg_of_le (Int.ofNat_le_ofNat_of_le zw))
       refine Int.le_of_ofNat_le_ofNat (le_of_sub_nonneg ?_)
       convert this using 1
-      simp only [one_mul, Int.ofNat_add, Int.ofNat_mul]
+      simp only [one_mul, Int.natCast_add, Int.natCast_mul]
       ring
 
 open Int in
@@ -411,11 +404,11 @@ def Nonnegg (c d : ℕ) : ℤ → ℤ → Prop
   | -[_+1], -[_+1] => False
 
 theorem nonnegg_comm {c d : ℕ} {x y : ℤ} : Nonnegg c d x y = Nonnegg d c y x := by
-  induction x <;> induction y <;> rfl
+  cases x <;> cases y <;> rfl
 
 theorem nonnegg_neg_pos {c d} : ∀ {a b : ℕ}, Nonnegg c d (-a) b ↔ SqLe a d b c
   | 0, b => ⟨by simp [SqLe, Nat.zero_le], fun _ => trivial⟩
-  | a + 1, b => by rw [← Int.negSucc_coe]; rfl
+  | a + 1, b => by rfl
 
 theorem nonnegg_pos_neg {c d} {a b : ℕ} : Nonnegg c d a (-b) ↔ SqLe b c a d := by
   rw [nonnegg_comm]; exact nonnegg_neg_pos
@@ -448,15 +441,9 @@ theorem norm_one : norm (1 : ℤ√d) = 1 := by simp [norm]
 @[simp]
 theorem norm_intCast (n : ℤ) : norm (n : ℤ√d) = n * n := by simp [norm]
 
-@[deprecated (since := "2024-04-17")]
-alias norm_int_cast := norm_intCast
-
 @[simp]
 theorem norm_natCast (n : ℕ) : norm (n : ℤ√d) = n * n :=
   norm_intCast n
-
-@[deprecated (since := "2024-04-17")]
-alias norm_nat_cast := norm_natCast
 
 @[simp]
 theorem norm_mul (n m : ℤ√d) : norm (n * m) = norm n * norm m := by
@@ -474,15 +461,11 @@ theorem norm_eq_mul_conj (n : ℤ√d) : (norm n : ℤ√d) = n * star n := by
 
 @[simp]
 theorem norm_neg (x : ℤ√d) : (-x).norm = x.norm :=
-  -- Porting note: replaced `simp` with `rw`
-  -- See https://github.com/leanprover-community/mathlib4/issues/5026
-  (Int.cast_inj (α := ℤ√d)).1 <| by rw [norm_eq_mul_conj, star_neg, neg_mul_neg, norm_eq_mul_conj]
+  (Int.cast_inj (α := ℤ√d)).1 <| by simp [norm_eq_mul_conj]
 
 @[simp]
 theorem norm_conj (x : ℤ√d) : (star x).norm = x.norm :=
-  -- Porting note: replaced `simp` with `rw`
-  -- See https://github.com/leanprover-community/mathlib4/issues/5026
-  (Int.cast_inj (α := ℤ√d)).1 <| by rw [norm_eq_mul_conj, star_star, mul_comm, norm_eq_mul_conj]
+  (Int.cast_inj (α := ℤ√d)).1 <| by simp [norm_eq_mul_conj, mul_comm]
 
 theorem norm_nonneg (hd : d ≤ 0) (n : ℤ√d) : 0 ≤ n.norm :=
   add_nonneg (mul_self_nonneg _)
@@ -558,7 +541,7 @@ instance decidableNonnegg (c d a b) : Decidable (Nonnegg c d a b) := by
 instance decidableNonneg : ∀ a : ℤ√d, Decidable (Nonneg a)
   | ⟨_, _⟩ => Zsqrtd.decidableNonnegg _ _ _ _
 
-instance decidableLE : DecidableRel (α := ℤ√d) (· ≤ ·) := fun _ _ => decidableNonneg _
+instance decidableLE : DecidableLE (ℤ√d) := fun _ _ => decidableNonneg _
 
 open Int in
 theorem nonneg_cases : ∀ {a : ℤ√d}, Nonneg a → ∃ x y : ℕ, a = ⟨x, y⟩ ∨ a = ⟨x, -y⟩ ∨ a = ⟨-x, y⟩
@@ -609,9 +592,6 @@ theorem Nonneg.add {a b : ℤ√d} (ha : Nonneg a) (hb : Nonneg b) : Nonneg (a +
       nonnegg_pos_neg.2 (sqLe_add (nonnegg_pos_neg.1 ha) (nonnegg_pos_neg.1 hb))
     rw [Nat.cast_add, Nat.cast_add, neg_add] at this
     rwa [add_def]
-    -- Porting note: was
-    -- simpa [add_comm] using
-    --   nonnegg_pos_neg.2 (sqLe_add (nonnegg_pos_neg.1 ha) (nonnegg_pos_neg.1 hb))
   · exact nonneg_add_lem ha hb
   · refine nonnegg_cases_left fun i h => sqLe_of_le ?_ ?_ (nonnegg_neg_pos.1 ha)
     · dsimp only at h
@@ -624,9 +604,6 @@ theorem Nonneg.add {a b : ℤ√d} (ha : Nonneg a) (hb : Nonneg b) : Nonneg (a +
       nonnegg_neg_pos.2 (sqLe_add (nonnegg_neg_pos.1 ha) (nonnegg_neg_pos.1 hb))
     rw [Nat.cast_add, Nat.cast_add, neg_add] at this
     rwa [add_def]
-    -- Porting note: was
-    -- simpa [add_comm] using
-    --   nonnegg_neg_pos.2 (sqLe_add (nonnegg_neg_pos.1 ha) (nonnegg_neg_pos.1 hb))
 
 theorem nonneg_iff_zero_le {a : ℤ√d} : Nonneg a ↔ 0 ≤ a :=
   show _ ↔ Nonneg _ by simp
@@ -654,19 +631,19 @@ instance preorder : Preorder (ℤ√d) where
   le_refl a := show Nonneg (a - a) by simp only [sub_self]; trivial
   le_trans a b c hab hbc := by simpa [sub_add_sub_cancel'] using hab.add hbc
   lt := (· < ·)
-  lt_iff_le_not_le _ _ := (and_iff_right_of_imp (Zsqrtd.le_total _ _).resolve_left).symm
+  lt_iff_le_not_ge _ _ := (and_iff_right_of_imp (Zsqrtd.le_total _ _).resolve_left).symm
 
 open Int in
 theorem le_arch (a : ℤ√d) : ∃ n : ℕ, a ≤ n := by
   obtain ⟨x, y, (h : a ≤ ⟨x, y⟩)⟩ : ∃ x y : ℕ, Nonneg (⟨x, y⟩ + -a) :=
     match -a with
     | ⟨Int.ofNat x, Int.ofNat y⟩ => ⟨0, 0, by trivial⟩
-    | ⟨Int.ofNat x, -[y+1]⟩ => ⟨0, y + 1, by simp [add_def, Int.negSucc_coe, add_assoc]; trivial⟩
-    | ⟨-[x+1], Int.ofNat y⟩ => ⟨x + 1, 0, by simp [Int.negSucc_coe, add_assoc]; trivial⟩
-    | ⟨-[x+1], -[y+1]⟩ => ⟨x + 1, y + 1, by simp [Int.negSucc_coe, add_assoc]; trivial⟩
+    | ⟨Int.ofNat x, -[y+1]⟩ => ⟨0, y + 1, by simp [add_def, Int.negSucc_eq, add_assoc]; trivial⟩
+    | ⟨-[x+1], Int.ofNat y⟩ => ⟨x + 1, 0, by simp [Int.negSucc_eq, add_assoc]; trivial⟩
+    | ⟨-[x+1], -[y+1]⟩ => ⟨x + 1, y + 1, by simp [Int.negSucc_eq, add_assoc]; trivial⟩
   refine ⟨x + d * y, h.trans ?_⟩
   change Nonneg ⟨↑x + d * y - ↑x, 0 - ↑y⟩
-  cases' y with y
+  rcases y with - | y
   · simp
     trivial
   have h : ∀ y, SqLe y d (d * y) 1 := fun y => by
@@ -793,7 +770,7 @@ theorem divides_sq_eq_zero {x y} (h : x * x = d * y * y) : x = 0 ∧ y = 0 :=
             co2.dvd_of_dvd_mul_right <| by simp [this])
 
 theorem divides_sq_eq_zero_z {x y : ℤ} (h : x * x = d * y * y) : x = 0 ∧ y = 0 := by
-  rw [mul_assoc, ← Int.natAbs_mul_self, ← Int.natAbs_mul_self, ← Int.ofNat_mul, ← mul_assoc] at h
+  rw [mul_assoc, ← Int.natAbs_mul_self, ← Int.natAbs_mul_self, ← Int.natCast_mul, ← mul_assoc] at h
   exact
     let ⟨h1, h2⟩ := divides_sq_eq_zero (Int.ofNat.inj h)
     ⟨Int.natAbs_eq_zero.mp h1, Int.natAbs_eq_zero.mp h2⟩
@@ -827,7 +804,8 @@ instance linearOrder : LinearOrder (ℤ√d) :=
   { Zsqrtd.preorder with
     le_antisymm := fun _ _ => Zsqrtd.le_antisymm
     le_total := Zsqrtd.le_total
-    decidableLE := Zsqrtd.decidableLE }
+    toDecidableLE := Zsqrtd.decidableLE
+    toDecidableEq := inferInstance }
 
 protected theorem eq_zero_or_eq_zero_of_mul_eq_zero : ∀ {a b : ℤ√d}, a * b = 0 → a = 0 ∨ b = 0
   | ⟨x, y⟩, ⟨z, w⟩, h => by
@@ -870,15 +848,14 @@ protected theorem mul_pos (a b : ℤ√d) (a0 : 0 < a) (b0 : 0 < b) : 0 < a * b 
       (le_antisymm ab (Zsqrtd.mul_nonneg _ _ (le_of_lt a0) (le_of_lt b0))))
     (fun e => ne_of_gt a0 e) fun e => ne_of_gt b0 e
 
-instance : LinearOrderedCommRing (ℤ√d) :=
-  { Zsqrtd.commRing, Zsqrtd.linearOrder, Zsqrtd.nontrivial with
-    add_le_add_left := Zsqrtd.add_le_add_left
-    mul_pos := Zsqrtd.mul_pos
-    zero_le_one := by trivial }
+instance : ZeroLEOneClass (ℤ√d) :=
+  { zero_le_one := by trivial }
 
-instance : LinearOrderedRing (ℤ√d) := by infer_instance
+instance : IsOrderedAddMonoid (ℤ√d) :=
+  { add_le_add_left := Zsqrtd.add_le_add_left }
 
-instance : OrderedRing (ℤ√d) := by infer_instance
+instance : IsStrictOrderedRing (ℤ√d) :=
+  .of_mul_pos Zsqrtd.mul_pos
 
 end
 
@@ -902,7 +879,7 @@ theorem norm_eq_zero {d : ℤ} (h_nonsquare : ∀ n : ℤ, d ≠ n * n) (a : ℤ
 variable {R : Type}
 
 @[ext]
-theorem hom_ext [Ring R] {d : ℤ} (f g : ℤ√d →+* R) (h : f sqrtd = g sqrtd) : f = g := by
+theorem hom_ext [NonAssocRing R] {d : ℤ} (f g : ℤ√d →+* R) (h : f sqrtd = g sqrtd) : f = g := by
   ext ⟨x_re, x_im⟩
   simp [decompose, h]
 
