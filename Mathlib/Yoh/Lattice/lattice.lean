@@ -1,5 +1,5 @@
 import Mathlib
-import Mathlib.Yoh.Defs
+import Mathlib.Yoh.Lattice.Defs
 
 -- main depenency : Mathlib/Algebra/Module/ZLattice/Basic
 

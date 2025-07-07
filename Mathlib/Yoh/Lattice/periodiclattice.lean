@@ -1,5 +1,5 @@
 import Mathlib
-import Mathlib.Yoh.Defs
+import Mathlib.Yoh.Lattice.Defs
 
 open Polynomial Classical Filter QuotientAddGroup Submodule MeasureTheory MeasureTheory.Measure
   NNReal BigOperators
