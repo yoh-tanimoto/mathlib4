@@ -36,6 +36,8 @@ section
 variable {α F : Type*} {m : MeasurableSpace α} {μ : Measure α} [NormedRing F]
   [Fact (1 ≤ (⊤ : ℝ≥0∞))]
 
+#check NormMulClass
+
 #check Lp F ⊤ μ
 
 #synth TopologicalSpace F
@@ -66,7 +68,7 @@ protected theorem EventuallyLE.of_forall' {α : Type*} {β : Type*} [Preorder β
   (h : f ≤ g) : f ≤ᶠ[l] g := EventuallyLE.of_forall l f g h
 
 
-example (f g : (α →ₘ[μ] F)) : eLpNormEssSup (f * g) μ ≤ eLpNormEssSup f μ * eLpNormEssSup g μ := by
+lemma linfty_mul_norm (f g : (α →ₘ[μ] F)) : eLpNormEssSup (f * g) μ ≤ eLpNormEssSup f μ * eLpNormEssSup g μ := by
   unfold eLpNormEssSup
   apply le_trans _ (ENNReal.essSup_mul_le _ _)
   apply essSup_mono_ae
@@ -107,6 +109,20 @@ example (f g : (α →ₘ[μ] F)) : eLpNormEssSup (f * g) μ ≤ eLpNormEssSup f
     apply Filter.EventuallyEq.trans (MeasureTheory.AEEqFun.coeFn_mul f g)
     rfl
   exact MeasureTheory.ae_le_trans aaa (EventuallyLE.of_forall' this)
+
+lemma mul_Linfty (f g : (Lp F ⊤ μ)) : f.1 * g.1 ∈ (Lp F ⊤ μ) := by
+  refine mem_Lp_iff_eLpNorm_lt_top.mpr ?_
+  simp only [eLpNorm_exponent_top]
+  apply lt_of_le_of_lt (linfty_mul_norm f.1 g.1)
+  exact ENNReal.mul_lt_top f.2 g.2
+
+
+
+instance : Mul (Lp F ⊤ μ) where
+  mul f g := ⟨f * g, mul_Linfty f g⟩
+
+instance : NormedRing (Lp F ⊤ μ) where
+  left_distrib := sorry
 
 
 theorem MemLp.integrable_sq {f : α → ℝ} (h : MemLp f 2 μ) : Integrable (fun x => f x ^ 2) μ := by
