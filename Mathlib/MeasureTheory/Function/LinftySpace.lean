@@ -114,10 +114,15 @@ lemma mul_Linfty (f g : (Lp F ⊤ μ)) : f.1 * g.1 ∈ (Lp F ⊤ μ) := by
   apply lt_of_le_of_lt (linfty_mul_norm f.1 g.1)
   exact ENNReal.mul_lt_top f.2 g.2
 
-
-
 instance : Mul (Lp F ⊤ μ) where
   mul f g := ⟨f * g, mul_Linfty f g⟩
+
+lemma smul_Linfty {p : ℝ≥0∞} (f : (Lp F ⊤ μ)) (g : (Lp F p μ)) : f.1 * g.1 ∈ (Lp F p μ) := by
+  refine mem_Lp_iff_eLpNorm_lt_top.mpr ?_
+  sorry
+
+instance {p : ℝ≥0∞} : SMul (Lp F ⊤ μ) (Lp F p μ) where
+  smul f g := ⟨f * g, smul_Linfty f g⟩
 
 variable [c : StarAddMonoid F] [p : NormedStarGroup F]
 
