@@ -4,60 +4,63 @@ section Defs
 
 abbrev SpaceDimension := ℕ
 
-structure Delta where
-  val : ℝ
-  prop : val > 0
+variable (δ cδ K : ℝ)
+(hδ : 0 < δ) (hCδ : 0 < cδ) (hK : 0 < K)
 
-instance : Coe Delta ℝ where
-  coe δ := δ.val
+-- structure Delta where
+--   val : ℝ
+--   prop : val > 0
 
-structure CDelta where
-  val : ℝ
-  prop : val > 0
+-- instance : Coe Delta ℝ where
+--   coe δ := δ.val
 
-instance : Coe CDelta ℝ where
-  coe c_δ := c_δ.val
+-- structure CDelta where
+--   val : ℝ
+--   prop : val > 0
 
-structure ConstK where
-  val : ℝ
-  prop : val > 0
+-- instance : Coe CDelta ℝ where
+--   coe c_δ := c_δ.val
 
-instance : Coe ConstK ℝ where
-  coe K := K.val
+-- structure ConstK where
+--   val : ℝ
+--   prop : val > 0
 
-structure ConstM0 where
-  val : ℝ
-  prop : 1 < val
+-- instance : Coe ConstK ℝ where
+--   coe K := K.val
 
-instance : Coe ConstM0 ℝ where
-  coe M0 := M0.val
+-- structure ConstM0 where
+--   val : ℝ
+--   prop : 1 < val
 
-instance : Coe ConstM0 ℝ where
-  coe M0 := M0.val
+-- instance : Coe ConstM0 ℝ where
+--   coe M0 := M0.val
+
+-- instance : Coe ConstM0 ℝ where
+--   coe M0 := M0.val
 
 abbrev SideLength := ℕ
 
-structure VolM' where
-  val : ℕ
+-- structure VolM' where
+--   val : ℕ
 
-instance : Coe VolM' ℕ where
-  coe M0 := M0.val
+-- instance : Coe VolM' ℕ where
+--   coe M0 := M0.val
 
 abbrev LatticeSpacing := ℕ
 
-structure LatticeSpacing' where
-  val : ℕ
+-- structure LatticeSpacing' where
+--   val : ℕ
 
-instance : Coe LatticeSpacing' ℕ where
-  coe N := N.val
+-- instance : Coe LatticeSpacing' ℕ where
+--   coe N := N.val
 
 abbrev RGStepL := ℕ
 
-structure RGStepL' where
-  val : ℕ
-  prop : 1 < val
+-- structure RGStepL' where
+--   val : ℕ
+--   prop : 1 < val
 
-instance : Coe RGStepL' ℕ where
-  coe L := L.val
+-- instance : Coe RGStepL' ℕ where
+--   coe L := L.val
 
-end Defs
+-- end Defs

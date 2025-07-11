@@ -5,7 +5,7 @@ open Polynomial Classical Filter QuotientAddGroup Submodule MeasureTheory Measur
   NNReal BigOperators
 
 variable {d : SpaceDimension}
-variable {L : RGStepL} [NeZero L] (M : SideLength) (N : LatticeSpacing)
+variable {L : RGStepL} {hL : 1 < L} [NeZero L] (M : SideLength) (N : LatticeSpacing)
 
 variable {μb gc : ℝ}
 
@@ -32,27 +32,33 @@ noncomputable def partialDeriv {M : SideLength} {N : LatticeSpacing} (n : Fin d)
     @LatticeField d L M N → @LatticeField d L M N :=
   fun ϕ => fun x => (ϕ (shiftOne M N n x) - ϕ x) / L ^ N
 
-noncomputable def LatticeEmbedding {M : SideLength} {N₁ N₂ : LatticeSpacing} :
+noncomputable def LatticeEmbedding {M : SideLength} {N₁ N₂ : LatticeSpacing} (h : N₁ < N₂) :
     @FineLattice d L M N₁ → @FineLattice d L M N₂ :=
-  fun x => fun n => (x n : ℕ) * (Fin.ofNat' (L ^ (M + N₂)) (L ^ (N₂ - N₁)))
+  fun x => fun n => Fin.ofNat (L ^ (M + N₂)) (x n * (L ^ (N₂ - N₁)))
 
 end LatticeField
 
 section Weight
 
-variable (x' : @FineLattice d L M (N-1)) (x : @FineLattice d L M N) (n : Fin d)
+variable (x' : @FineLattice d L M (N - 1)) (x : @FineLattice d L M N) (n : Fin d)
 
 abbrev FieldWeight {M : SideLength} {N : LatticeSpacing} := @LatticeField d L M N  → ℝ≥0
 
 noncomputable def blockAveraging {M : SideLength} {N : LatticeSpacing} :
-    @LatticeField d L M N → @LatticeField d L M (N - 1) :=
+    @LatticeField d L M (N + 1) → @LatticeField d L M N :=
   fun ϕ => fun x =>
-    ∑ x' in {s : @FineLattice d L M N | ∀ n, s n < L},
-      ϕ (fun n => (LatticeEmbedding x n) + x' n - ((L / 2 : ℕ) : Fin (L ^ (M + N)))) / L ^ d
+    ∑ x' ∈ {s : @FineLattice d L M (N + 1) | ∀ n, s n < L},
+      ϕ (fun n => (LatticeEmbedding (lt_add_one N) x n) + x' n
+        - (Fin.ofNat (L ^ (M + (N + 1))) (L / 2 : ℕ))) / L ^ d
+
+lemma pow_sub_one_le {hL : 1 < L} : L ^ (M + (N - 1)) ≤ L ^ (M + N) := by
+  apply Nat.pow_le_pow_of_le hL
+  simp
+
 
 noncomputable def blockConstant {M : SideLength} {N : LatticeSpacing} :
-    @LatticeField d L M (N - 1) → @LatticeField d L M N :=
-  fun ϕ => fun x => ϕ (fun n => ((x n + L / 2) / L))
+    @LatticeField d L M N → @LatticeField d L M (N - 1) :=
+  fun ϕ => fun x => ϕ (fun n => Fin.castLE (pow_sub_one_le M N) ((x n + (Fin.ofNat (L ^ (M + (N - 1))) (L / 2))) / (Fin.ofNat (L ^ (M + (N - 1))) L)))
 
 @[simp]
 lemma blockConstant_apply {M : SideLength} {N : LatticeSpacing} (ϕ : @LatticeField d L M (N - 1))
