@@ -7,6 +7,7 @@ import Mathlib.Analysis.InnerProductSpace.LinearMap
 import Mathlib.MeasureTheory.Function.LpSpace.ContinuousFunctions
 import Mathlib.MeasureTheory.Function.StronglyMeasurable.Inner
 import Mathlib.MeasureTheory.Integral.Bochner.ContinuousLinearMap
+import Mathlib.Order.Filter.Ring
 
 /-! # `L^2` space
 
@@ -86,6 +87,46 @@ theorem MeasureTheory.ae_congr {α : Type*} {G : Type*} {F : Type*} [FunLike G (
   by_contra!
   rw [← this.1] at hng
   exact hng this.2
+
+
+theorem Filter.EventuallyLE.comp_le_of_monotone {α : Type*} {l : Filter α} {f₁ f₂ : α → ℝ≥0}
+    {g : ℝ≥0 → ℝ≥0} (H : f₁ ≤ᶠ[l] f₂) (h : Monotone g) : g ∘ f₁ ≤ᶠ[l] g ∘ f₂ := by
+  rw [eventuallyLE_iff_all_subsets]
+  rw [eventuallyLE_iff_all_subsets] at H
+  intro s
+  refine eventually_iff_exists_mem.mpr ?_
+  obtain ⟨v, hv⟩ := (eventually_iff_exists_mem.mp (H s))
+  use v
+  constructor
+  · exact hv.1
+  · intro y hy hys
+    simp only [Function.comp_apply]
+    exact (h (hv.2 y hy hys))
+
+theorem Filter.EventuallyLE.rpow {α : Type*} {l : Filter α} {f₁ f₂ : α → ℝ≥0}
+    {p : ℝ≥0∞} (H : f₁ ≤ᶠ[l] f₂) : f₁ ^ p.toReal ≤ᶠ[l] f₂ ^ p.toReal := by
+  exact Filter.EventuallyLE.comp_le_of_monotone H
+    (NNReal.monotone_rpow_of_nonneg ENNReal.toReal_nonneg)
+
+theorem Filter.EventuallyLE.comp_le_of_monotone' {α : Type*} {l : Filter α} {f₁ f₂ : α → ℝ≥0∞}
+    {g : ℝ≥0∞ → ℝ≥0∞} (H : f₁ ≤ᶠ[l] f₂) (h : Monotone g) : g ∘ f₁ ≤ᶠ[l] g ∘ f₂ := by
+  rw [eventuallyLE_iff_all_subsets]
+  rw [eventuallyLE_iff_all_subsets] at H
+  intro s
+  refine eventually_iff_exists_mem.mpr ?_
+  obtain ⟨v, hv⟩ := (eventually_iff_exists_mem.mp (H s))
+  use v
+  constructor
+  · exact hv.1
+  · intro y hy hys
+    simp only [Function.comp_apply]
+    exact (h (hv.2 y hy hys))
+
+theorem Filter.EventuallyLE.rpow' {α : Type*} {l : Filter α} {f₁ f₂ : α → ℝ≥0∞}
+    {p : ℝ≥0∞} (H : f₁ ≤ᶠ[l] f₂) : f₁ ^ p.toReal ≤ᶠ[l] f₂ ^ p.toReal := by
+  exact Filter.EventuallyLE.comp_le_of_monotone' H
+    (ENNReal.monotone_rpow_of_nonneg ENNReal.toReal_nonneg)
+
 
 theorem MeasureTheory.ae_congr' {α : Type*} {G : Type*} {F : Type*} [FunLike G (Set α) ENNReal]
     [OuterMeasureClass G α] {μ : G} {f1 f2 g : α → F} {p : (α → F) → F → α → Prop}
@@ -222,6 +263,16 @@ lemma mul_Linfty (f g : (Lp F ⊤ μ)) : f.1 * g.1 ∈ (Lp F ⊤ μ) := by
 instance : Mul (Lp F ⊤ μ) where
   mul f g := ⟨f * g, mul_Linfty f g⟩
 
+instance : One (Lp F ⊤ μ) where
+  one := ⟨1, by
+    rw [Lp.mem_Lp_iff_memLp, AEEqFun.one_def]
+    apply (memLp_congr_ae (AEEqFun.coeFn_mk (fun x => 1) aestronglyMeasurable_one)).mpr
+    exact memLp_top_const 1⟩
+
+@[simp]
+lemma MeasureTheory.Linfty.one_coe : (1 : (Lp F ⊤ μ)).1 = 1 := by
+  rfl
+
 @[simp]
 lemma MeasureTheory.Lp.mul_eq_mul_iff (f g : (Lp F ⊤ μ)) : (f * g).1 = f.1 * g.1 := rfl
 
@@ -247,10 +298,13 @@ lemma smul_Linfty {p : ℝ≥0∞} (hp_ne_zero : p ≠ 0) (hp_ne_top : p ≠ ⊤
     _ < ⊤ := ?_
   · apply MeasureTheory.lintegral_mono_ae
     suffices henorm : ∀ᵐ (a : α) ∂μ, ‖(f.1 * g.1) a‖ₑ ^ p.toReal = ‖f.1 a * g.1 a‖ₑ ^ p.toReal by
-      apply MeasureTheory.ae_rpow_mono'
-      rw [MeasureTheory.ae_iff]
-      simp only [not_le]
-      sorry
+      apply MeasureTheory.ae_rpow_mono' _ (ENNReal.toReal_pos hp_ne_zero hp_ne_top)
+      apply EventuallyEq.rw (ae_eq_symm (coeFn_mul f.1 g.1))
+        (fun x => fun X => ‖X‖ₑ ≤ ‖f.1 x‖ₑ * ‖g.1 x‖ₑ)
+      simp only [Pi.mul_apply]
+      apply ae_of_all
+      intro x
+      exact enorm_mul_le_mul_enorm (f.1 x) (g.1 x)
     apply @Filter.EventuallyEq.fun_comp _ _ _ _ _ (ae μ) _ (fun x => x ^ p.toReal)
     apply Filter.EventuallyEq.fun_comp
     exact AEEqFun.coeFn_mul _ _
@@ -258,10 +312,16 @@ lemma smul_Linfty {p : ℝ≥0∞} (hp_ne_zero : p ≠ 0) (hp_ne_top : p ≠ ⊤
     ext x
     rw [ENNReal.mul_rpow_of_nonneg _ _ p.toReal_nonneg]
   · apply MeasureTheory.lintegral_mono_ae
-
-
-
-
+    apply EventuallyLE.mul_le_mul
+    · apply Filter.EventuallyLE.rpow' _
+      simp only [eLpNorm_exponent_top]
+      exact ae_le_eLpNormEssSup
+    · exact EventuallyLE.refl _ _
+    · apply ae_of_all
+      intro x
+      simp
+    · apply ae_of_all
+      simp
   · rw [MeasureTheory.lintegral_const_mul']
     exact ENNReal.rpow_ne_top_of_nonneg p.toReal_nonneg (eLpNorm_ne_top f)
   · congr
@@ -313,8 +373,12 @@ instance [c : StarAddMonoid F] [p : NormedStarGroup F] : Star (Lp F ⊤ μ) wher
 #synth NormedAddCommGroup (Lp ℂ ⊤ μ)
 -- #synth StarModule (Lp ℂ ⊤ μ)
 -- #synth NonUnitalStarAlgebra (Lp ℂ ⊤ μ)
+-- #synth InvolutiveStar
+-- #synth StarAddMonoid
 -- #synth StarRing (Lp ℂ ⊤ μ)
 -- #synth StarModule (Lp ℂ ⊤ μ)
+-- #synth NormedStarGroup
+
 
 
 theorem MeasureTheory.AEEqFun.zero_mul {α : Type*} {γ : Type*} [MeasurableSpace α] {μ : Measure α}
@@ -413,7 +477,6 @@ instance : Semiring (α →ₘ[μ] F) where
 
 instance : Ring (α →ₘ[μ] F) where
 
-
 section
 
 variable {α : Type*} {γ : Type*} [MeasurableSpace α] {μ : Measure α} [TopologicalSpace γ] [MulZeroClass γ] [ContinuousMul γ]
@@ -432,7 +495,65 @@ instance : MulZeroClass (Lp F ⊤ μ) where
   zero_mul := MeasureTheory.Linfty.zero_mul
   mul_zero := MeasureTheory.Linfty.mul_zero
 
+end
+
+section
+
+variable {α : Type*} {γ : Type*} [MeasurableSpace α] {μ : Measure α} [TopologicalSpace γ] [MulOneClass γ] [ContinuousMul γ]
+
+theorem MeasureTheory.Linfty.one_mul (f : (Lp F ⊤ μ)) : (1 : (Lp F ⊤ μ)) * f = f := by
+  rw [Subtype.eq_iff]
+  simp
+
+theorem MeasureTheory.Linfty.mul_one (f : (Lp F ⊤ μ)) : f * (1 : (Lp F ⊤ μ)) = f := by
+  rw [Subtype.eq_iff]
+  simp
+
+instance : MulOneClass (Lp F ⊤ μ) where
+  one_mul := MeasureTheory.Linfty.one_mul
+  mul_one := MeasureTheory.Linfty.mul_one
+
+end
+
+section
+
+variable {α : Type*} {γ : Type*} [MeasurableSpace α] {μ : Measure α}
+    [TopologicalSpace γ] [NonUnitalNonAssocSemiring γ] [IsTopologicalSemiring γ]
+
+theorem MeasureTheory.Linfty.right_distrib (a b c : (Lp F ⊤ μ)) :
+    (a + b) * c = a * c + b * c := by
+  rw [Subtype.eq_iff]
+  simp only [mul_eq_mul_iff, AddSubgroup.coe_add]
+  exact AEEqFun.right_distrib a.1 b.1 c.1
+
+theorem MeasureTheory.Linfty.left_distrib (a b c : (Lp F ⊤ μ)) :
+    a * (b + c) = a * b + a * c := by
+  rw [Subtype.eq_iff]
+  simp only [mul_eq_mul_iff, AddSubgroup.coe_add]
+  exact AEEqFun.left_distrib a.1 b.1 c.1
+
+
+instance : NonUnitalNonAssocSemiring (Lp F ⊤ μ) where
+  left_distrib := Linfty.left_distrib
+  right_distrib := Linfty.right_distrib
+
+end
+
+section
+
+variable {α : Type*} {γ : Type*} [MeasurableSpace α] {μ : Measure α}
+    [TopologicalSpace γ] [NonUnitalSemiring γ] [IsTopologicalSemiring γ]
+
+instance : NonUnitalSemiring (Lp F ⊤ μ) where
+  mul_assoc a b c := by
+    rw [Subtype.eq_iff]
+    simp only [mul_eq_mul_iff]
+    exact mul_assoc a.1 b.1 c.1
+
+end
+
 instance : NormedRing (Lp F ⊤ μ) where
+  dist_eq := fun x y => rfl
 
 
 
