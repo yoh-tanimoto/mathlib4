@@ -9,19 +9,22 @@ import Mathlib.MeasureTheory.Function.StronglyMeasurable.Inner
 import Mathlib.MeasureTheory.Integral.Bochner.ContinuousLinearMap
 import Mathlib.Order.Filter.Ring
 
-/-! # `L^2` space
+/-! # `L^∞` space
 
-If `E` is an inner product space over `𝕜` (`ℝ` or `ℂ`), then `Lp E 2 μ`
+If `F` carries some algebraic structures which are continuous in norm, then `Lp F ⊤ μ`
 (defined in `Mathlib/MeasureTheory/Function/LpSpace.lean`)
-is also an inner product space, with inner product defined as `inner f g := ∫ a, ⟪f a, g a⟫ ∂μ`.
+carries the corresponding structures.
+
+
+
+### Main definitions
+
+* Description
 
 ### Main results
 
-* `mem_L1_inner` : for `f` and `g` in `Lp E 2 μ`, the pointwise inner product `fun x ↦ ⟪f x, g x⟫`
-  belongs to `Lp 𝕜 1 μ`.
-* `integrable_inner` : for `f` and `g` in `Lp E 2 μ`, the pointwise inner product
-  `fun x ↦ ⟪f x, g x⟫` is integrable.
-* `L2.innerProductSpace` : `Lp E 2 μ` is an inner product space.
+* Description
+
 -/
 
 noncomputable section
@@ -30,7 +33,7 @@ open TopologicalSpace MeasureTheory MeasureTheory.Lp Filter AEEqFun
 
 open scoped NNReal ENNReal MeasureTheory
 
-section
+section General
 
 variable {α F : Type*} {m : MeasurableSpace α} {μ : Measure α}
 
@@ -172,10 +175,10 @@ theorem MeasureTheory.ae_congr'' {α : Type*} {F : Type*} [TopologicalSpace F] [
   rw [← this.1] at hng
   exact hng this.2
 
-end
+end General
 
 
-section
+section Mul
 
 variable {α F : Type*} [MeasurableSpace α] {μ : Measure α} [NormedRing F]
   [Fact (1 ≤ (⊤ : ℝ≥0∞))]
@@ -283,6 +286,13 @@ lemma MeasureTheory.ae_mul_apply_eq (f g : α →ₘ[μ] F) : ∀ᵐ (a : α) �
 lemma MeasureTheory.ae_mul_apply_eq_refl (f g : α →ₘ[μ] F) : ∀ᵐ (a : α) ∂μ, f a * g a = (f * g) a:=
   MeasureTheory.ae_eq_comm.mp (MeasureTheory.AEEqFun.coeFn_mul f g)
 
+end Mul
+
+section SMul
+
+variable {α F : Type*} [MeasurableSpace α] {μ : Measure α} [NormedRing F]
+  [Fact (1 ≤ (⊤ : ℝ≥0∞))]
+
 lemma smul_Linfty {p : ℝ≥0∞} (hp_ne_zero : p ≠ 0) (hp_ne_top : p ≠ ⊤) (f : (Lp F ⊤ μ))
     (g : (Lp F p μ)) : f.1 * g.1 ∈ (Lp F p μ) := by
   refine mem_Lp_iff_eLpNorm_lt_top.mpr ?_
@@ -334,6 +344,13 @@ lemma smul_Linfty {p : ℝ≥0∞} (hp_ne_zero : p ≠ 0) (hp_ne_top : p ≠ ⊤
 
 instance {p : ℝ≥0∞} [nz : Fact (p ≠ 0)] [nt : Fact (p ≠ ⊤)] : SMul (Lp F ⊤ μ) (Lp F p μ) where
   smul f g := ⟨f * g, smul_Linfty nz.out nt.out f g⟩
+
+end SMul
+
+section Star
+
+variable {α F : Type*} [MeasurableSpace α] {μ : Measure α} [NormedRing F]
+  [Fact (1 ≤ (⊤ : ℝ≥0∞))]
 
 variable [c : StarAddMonoid F] [p : NormedStarGroup F]
 
@@ -477,7 +494,12 @@ instance : Semiring (α →ₘ[μ] F) where
 
 instance : Ring (α →ₘ[μ] F) where
 
+end Star
+
 section
+
+variable {α F : Type*} [MeasurableSpace α] {μ : Measure α} [NormedRing F]
+  [Fact (1 ≤ (⊤ : ℝ≥0∞))]
 
 variable {α : Type*} {γ : Type*} [MeasurableSpace α] {μ : Measure α} [TopologicalSpace γ] [MulZeroClass γ] [ContinuousMul γ]
 
@@ -499,6 +521,9 @@ end
 
 section
 
+variable {α F : Type*} [MeasurableSpace α] {μ : Measure α} [NormedRing F]
+  [Fact (1 ≤ (⊤ : ℝ≥0∞))]
+
 variable {α : Type*} {γ : Type*} [MeasurableSpace α] {μ : Measure α} [TopologicalSpace γ] [MulOneClass γ] [ContinuousMul γ]
 
 theorem MeasureTheory.Linfty.one_mul (f : (Lp F ⊤ μ)) : (1 : (Lp F ⊤ μ)) * f = f := by
@@ -516,6 +541,9 @@ instance : MulOneClass (Lp F ⊤ μ) where
 end
 
 section
+
+variable {α F : Type*} [MeasurableSpace α] {μ : Measure α} [NormedRing F]
+  [Fact (1 ≤ (⊤ : ℝ≥0∞))]
 
 variable {α : Type*} {γ : Type*} [MeasurableSpace α] {μ : Measure α}
     [TopologicalSpace γ] [NonUnitalNonAssocSemiring γ] [IsTopologicalSemiring γ]
@@ -541,6 +569,9 @@ end
 
 section
 
+variable {α F : Type*} [MeasurableSpace α] {μ : Measure α} [NormedRing F]
+  [Fact (1 ≤ (⊤ : ℝ≥0∞))]
+
 variable {α : Type*} {γ : Type*} [MeasurableSpace α] {μ : Measure α}
     [TopologicalSpace γ] [NonUnitalSemiring γ] [IsTopologicalSemiring γ]
 
@@ -550,11 +581,8 @@ instance : NonUnitalSemiring (Lp F ⊤ μ) where
     simp only [mul_eq_mul_iff]
     exact mul_assoc a.1 b.1 c.1
 
-end
 
 instance : NormedRing (Lp F ⊤ μ) where
   dist_eq := fun x y => rfl
-
-
 
 end
