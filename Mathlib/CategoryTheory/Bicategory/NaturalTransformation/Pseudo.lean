@@ -46,9 +46,9 @@ that is "natural up to 2-isomorphisms".
 More precisely, it consists of the following:
 * a 1-morphism `η.app a : F.obj a ⟶ G.obj a` for each object `a : B`.
 * a 2-isomorphism `η.naturality f : F.map f ≫ app b ≅ app a ≫ G.map f` for each 1-morphism
-`f : a ⟶ b`.
+  `f : a ⟶ b`.
 * These 2-isomorphisms satisfy the naturality condition, and preserve the identities and the
-compositions modulo some adjustments of domains and codomains of 2-morphisms.
+  compositions modulo some adjustments of domains and codomains of 2-morphisms.
 -/
 structure StrongTrans (F G : Pseudofunctor B C) where
   /-- The component 1-morphisms of a strong transformation. -/
@@ -204,7 +204,7 @@ lemma naturality_id_inv (α : F ⟶ G) (a : B) :
   simp [naturality_id_iso]
 
 @[reassoc, to_app]
-lemma naturality_naturality_hom (α : F ⟶ G) {a b : B} {f g : a ⟶ b} (η : f ≅ g):
+lemma naturality_naturality_hom (α : F ⟶ G) {a b : B} {f g : a ⟶ b} (η : f ≅ g) :
     (α.naturality g).hom =
      (F.map₂ η.inv) ▷ α.app b ≫ (α.naturality f).hom ≫ α.app a ◁ G.map₂ η.hom := by
   simp [← IsIso.inv_comp_eq, ← G.map₂_inv η.inv]
@@ -216,7 +216,7 @@ lemma naturality_naturality_iso (α : F ⟶ G) {a b : B} {f g : a ⟶ b} (η : f
   rw [naturality_naturality_hom α η]
   simp
 
-lemma naturality_naturality_inv (α : F ⟶ G) {a b : B} {f g : a ⟶ b} (η : f ≅ g):
+lemma naturality_naturality_inv (α : F ⟶ G) {a b : B} {f g : a ⟶ b} (η : f ≅ g) :
     (α.naturality g).inv =
       α.app a ◁ G.map₂ η.inv ≫ (α.naturality f).inv ≫ F.map₂ η.hom ▷ α.app b := by
   simp [naturality_naturality_iso α η]
