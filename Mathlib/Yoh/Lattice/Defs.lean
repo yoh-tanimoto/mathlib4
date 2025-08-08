@@ -2,6 +2,26 @@ import Mathlib
 
 section Defs
 
+structure ModelParameter (p : ℝ → Prop) where
+  val : ℝ
+  prop : p val
+
+instance (p : ℝ → Prop) : CoeTC (ModelParameter p) ℝ where
+  coe x := x.val
+
+def Delta := ModelParameter (fun δ => 0 < δ)
+
+instance (p : ℝ → Prop) : HAdd ℝ (ModelParameter p) ℝ where
+  hAdd x y := x + y.val
+
+instance (p : ℝ → Prop) : HAdd (ModelParameter p) ℝ ℝ where
+  hAdd x y := x.val + y
+
+
+variable (δ : (ModelParameter (fun δ => 0 < δ))) (x : ℝ)
+
+#check x = δ
+
 abbrev SpaceDimension := ℕ
 
 variable (δ cδ K : ℝ)
