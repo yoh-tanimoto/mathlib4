@@ -25,10 +25,6 @@ instance (p : ℝ → Prop) : HMul (ModelParameter p) ℝ ℝ where
 
 variable (δ ε : (ModelParameter (fun δ => 0 < δ))) (x : ℝ)
 
-example : δ + ε + x = δ + (ε + x) := by ring
-
-#check x = δ
-
 abbrev SpaceDimension := ℕ
 
 variable (δ cδ K : ℝ)
