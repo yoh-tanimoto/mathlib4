@@ -17,8 +17,15 @@ instance (p : ℝ → Prop) : HAdd ℝ (ModelParameter p) ℝ where
 instance (p : ℝ → Prop) : HAdd (ModelParameter p) ℝ ℝ where
   hAdd x y := x.val + y
 
+instance (p : ℝ → Prop) : HMul ℝ (ModelParameter p) ℝ where
+  hMul x y := x * y.val
 
-variable (δ : (ModelParameter (fun δ => 0 < δ))) (x : ℝ)
+instance (p : ℝ → Prop) : HMul (ModelParameter p) ℝ ℝ where
+  hMul x y := x.val * y
+
+variable (δ ε : (ModelParameter (fun δ => 0 < δ))) (x : ℝ)
+
+example : δ + ε + x = δ + (ε + x) := by ring
 
 #check x = δ
 
@@ -83,4 +90,4 @@ abbrev RGStepL := ℕ
 -- instance : Coe RGStepL' ℕ where
 --   coe L := L.val
 
--- end Defs
+end Defs

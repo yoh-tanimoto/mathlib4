@@ -1,8 +1,9 @@
 import Mathlib
 import Mathlib.Yoh.Lattice.Defs
 
-open Polynomial Classical Filter QuotientAddGroup Submodule MeasureTheory MeasureTheory.Measure
+open Polynomial Filter QuotientAddGroup Submodule MeasureTheory MeasureTheory.Measure
   NNReal BigOperators
+
 
 variable {d : SpaceDimension}
 variable {L : RGStepL} {hL : 1 < L} [NeZero L] (M : SideLength) (N : LatticeSpacing)
@@ -21,12 +22,12 @@ end PeriodicLattice
 
 section LatticeField
 
-abbrev LatticeField {M : SideLength} {N : LatticeSpacing} := @FineLattice d L M N → ℝ
+abbrev LatticeField (M : SideLength) (N : LatticeSpacing) := @FineLattice d L M N → ℝ
 
-variable (ϕ : LatticeField) (x : FineLattice M N)
+variable (ϕ : @LatticeField d L M N)
 
-noncomputable def fieldNorm {M : SideLength} {N : LatticeSpacing} (ϕ : @LatticeField d L M N) : ℝ :=
-  (∫ (x : @FineLattice d L M N), (ϕ x) ^ 2 ∂count) / L ^ (d * N)
+noncomputable def fieldNorm :=
+  (∫ x, (ϕ x) ^ 2 ∂count) / L ^ (d * N)
 
 noncomputable def partialDeriv {M : SideLength} {N : LatticeSpacing} (n : Fin d) :
     @LatticeField d L M N → @LatticeField d L M N :=
