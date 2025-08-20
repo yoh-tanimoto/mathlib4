@@ -18,14 +18,62 @@ namespace Submodule
 
 variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
 
+abbrev mulI (S : ClosedSubmodule ℝ H) := S.map (scalarSMulCLM H Complex.I)
+
+-- maybe first define `orthoCompl`?
+
 def symplComp (S : Submodule ℝ H) : ClosedSubmodule ℝ H where
-  carrier := { x : H | ∀ y : S, ⟪x, y⟫.im = 0 }
-  add_mem' := sorry
+  carrier := { x : H | ∀ z : S, ⟪x, z⟫.im = 0 }
+  add_mem' {x y} hx hy := by
+    intro z
+    simp only [inner_add_left, Complex.add_im]
+    rw [hx, hy, add_zero]
   zero_mem' := fun y => by simp
-  smul_mem' := sorry
-  isClosed' := sorry
+  smul_mem' {c x} h := by
+    intro z
+    simp only [CStarModule.inner_smul_left_real, Complex.real_smul, Complex.mul_im,
+      Complex.ofReal_re, Complex.ofReal_im, zero_mul, add_zero]
+    rw [h, mul_zero]
+  isClosed' := by
+    suffices h : {x : H| ∀ (z : ↥S), ⟪x, z⟫.im = 0} = ⋂ z ∈ S, { x : H | ⟪x, z⟫.im = 0} by
+      rw [h]
+      apply isClosed_biInter
+      intro z hz
+      suffices hz : {x | ⟪x, z⟫.im = 0} = ((fun (x : H) => ⟪x, z⟫.im) ⁻¹' {0}) by
+        rw [hz]
+        exact IsClosed.preimage (by continuity) isClosed_singleton
+      ext x
+      simp
+    ext x
+    simp
 
 end Submodule
+
+namespace ClosedSubmodule
+
+variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
+
+abbrev mulI (S : ClosedSubmodule ℝ H) := S.map (scalarSMulCLM H Complex.I)
+
+@[simp]
+lemma mulI_mulI_eq (S : ClosedSubmodule ℝ H) : S.mulI.mulI = S := by
+  ext x
+  simp only [Submodule.carrier_eq_coe, coe_toSubmodule, SetLike.mem_coe]
+  constructor
+  · intro h
+    sorry
+    -- note that `S.mulI` is not exactly `Submodule.map` because of closure. need to use
+    -- that `(scalarSMulCLM H Complex.I)` is one-to-one.
+  · intro h
+    sorry
+
+lemma inf_symplComp_eq_symplcomp_sup (S T : ClosedSubmodule ℝ H) :
+    (S ⊔ T).symplComp = S.mulI.symplComp ⊓ T.mulI.symplComp := by sorry
+
+lemma sup_symplComp_eq_symplcomp_inf (S T : ClosedSubmodule ℝ H) :
+    (S ⊓ T).symplComp = S.mulI.symplComp ⊔ T.mulI.symplComp := by sorry
+
+end ClosedSubmodule
 
 section StandardSubspace
 
@@ -33,8 +81,20 @@ variable (H : Type*) [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteS
 
 structure StandardSubspace where
   toSubspace : ClosedSubmodule ℝ H
-  separating : toSubspace ⊓ (toSubspace.map (scalarSMulCLM H Complex.I)) = ⊥
-  cyclic : (toSubspace ⊔ toSubspace.map (scalarSMulCLM H Complex.I)).closure = ⊤
+  separating : toSubspace ⊓ toSubspace.mulI = ⊥
+  cyclic : (toSubspace ⊔ toSubspace.mulI).closure = ⊤
+
+def mulI (S : StandardSubspace H) : StandardSubspace H where
+  toSubspace := S.toSubspace.mulI
+  separating := by
+    simp only [ClosedSubmodule.mulI_mulI_eq]
+    rw [inf_comm]
+    exact S.separating
+  cyclic := by
+    simp only [ClosedSubmodule.mulI_mulI_eq]
+    sorry -- need first to show `sup_comm` for ClosedSubmodule through `SemilatticeSup`
+    -- rw [sup_comm]
+    -- exact S.cyclic
 
 def symplComp (S : StandardSubspace H) : StandardSubspace H where
   toSubspace := S.toSubspace.symplComp
