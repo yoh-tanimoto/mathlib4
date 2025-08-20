@@ -5,12 +5,46 @@ open scoped ComplexInnerProductSpace
 
 section ScalarSMulCLM
 
-variable (H : Type*) [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
+variable (H : Type*) [NormedAddCommGroup H] [InnerProductSpace ℂ H]
 
 def scalarSMulCLM : ℂ →L[ℂ] H →L[ℝ] H where
   toFun c := c • (id ℝ H)
   map_add' _ _ := Module.add_smul _ _ (id ℝ H)
   map_smul' _ _ := IsScalarTower.smul_assoc _ _ (id ℝ H)
+
+@[simp]
+lemma scalarSMulCLM_apply (c : ℂ) (x : H) : scalarSMulCLM H c x = c • x := rfl
+
+noncomputable def scalarSMulCLE (c : ℂ) [h : NeZero c] : H ≃L[ℝ] H where
+  toFun := c • (id ℝ H)
+  continuous_toFun := by
+    have : Continuous (fun (x : H) => c • x) := continuous_const_smul c
+    congr
+  map_add' x y := by simp
+  map_smul' a x := by
+    simp only [coe_id', Pi.smul_apply, id_eq, RingHom.id_apply]
+    exact smul_comm c a x
+  invFun := c⁻¹ • (id ℝ H)
+  left_inv := by
+    intro x
+    simp only [coe_id', Pi.smul_apply, id_eq]
+    exact inv_smul_smul₀ h.out x
+  right_inv := by
+    intro x
+    simp only [coe_id', Pi.smul_apply, id_eq]
+    refine smul_inv_smul₀ h.out x
+  continuous_invFun := by
+    have : Continuous (fun (x : H) => c⁻¹ • x) := continuous_const_smul c⁻¹
+    congr
+
+@[simp]
+lemma scalarSMulCLE_apply (c : ℂ) [NeZero c] (x : H) : scalarSMulCLE H c x = c • x := rfl
+
+lemma IsInvertible_scalarSMulCLM_of_neZero (c : ℂ) [NeZero c] :
+    IsInvertible (scalarSMulCLM H c) := by
+  use scalarSMulCLE H c
+  ext x
+  simp
 
 end ScalarSMulCLM
 
@@ -18,9 +52,19 @@ namespace Submodule
 
 variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
 
+-- variable (S : ClosedSubmodule ℂ H)
+
+-- variable (T : Submodule ℂ H) [IsClosed T.carrier]
+
+-- #synth CompleteSpace T
+
+-- #synth HasOrthogonalProjection T
+
 abbrev mulI (S : ClosedSubmodule ℝ H) := S.map (scalarSMulCLM H Complex.I)
 
--- maybe first define `orthoCompl`?
+-- maybe use `InnerProductSpace.orthogonal`, but making it to `ClosedSubmodule.orthogonal`?
+-- see `Mathlib.Analysis.InnerProductSpace.Projection.Submodule`
+-- `Mathlib.Analysis.InnerProductSpace.Orthogonal`
 
 def symplComp (S : Submodule ℝ H) : ClosedSubmodule ℝ H where
   carrier := { x : H | ∀ z : S, ⟪x, z⟫.im = 0 }
@@ -57,6 +101,7 @@ abbrev mulI (S : ClosedSubmodule ℝ H) := S.map (scalarSMulCLM H Complex.I)
 
 @[simp]
 lemma mulI_mulI_eq (S : ClosedSubmodule ℝ H) : S.mulI.mulI = S := by
+  let I := neZero_iff.mpr Complex.I_ne_zero
   ext x
   simp only [Submodule.carrier_eq_coe, coe_toSubmodule, SetLike.mem_coe]
   constructor
