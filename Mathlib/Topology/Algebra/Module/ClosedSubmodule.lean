@@ -197,4 +197,48 @@ lemma map_le_iff_le_comap {s : ClosedSubmodule R M} {t : ClosedSubmodule R N} :
 
 lemma gc_map_comap : GaloisConnection (map f) (comap f) := fun _ _ ↦ map_le_iff_le_comap
 
+instance instSup : Max (ClosedSubmodule R N) where
+  max s t := (s.toSubmodule ⊔ t.toSubmodule).closure
+
+instance instSupSet : SupSet (ClosedSubmodule R N) where
+  sSup S := ⟨(⨆ s ∈ S, s.toSubmodule).closure, isClosed_closure⟩
+
+@[simp]
+lemma toSubmodule_sSup (S : Set (ClosedSubmodule R N)) :
+    toSubmodule (sSup S) = (⨆ s ∈ S, s.toSubmodule).closure := rfl
+
+@[simp]
+lemma toSubmodule_iSnf (f : ι → ClosedSubmodule R N) :
+    toSubmodule (⨆ i, f i) = (⨆ i, (f i).toSubmodule).closure := by
+  rw [iSup, toSubmodule_sSup, iSup_range]
+
+@[simp, norm_cast]
+lemma coe_sSup (S : Set (ClosedSubmodule R N)) :
+    ↑(sSup S) = closure (⨆ s ∈ S, s.toSubmodule).carrier := by
+  simp only [← coe_toSubmodule, toSubmodule_sSup]
+  simp only [coe_toSubmodule, Submodule.coe_closure, Submodule.carrier_eq_coe]
+
+
+-- @[simp, norm_cast]
+-- lemma coe_iInf (f : ι → ClosedSubmodule R M) : ↑(⨅ i, f i) = ⨅ i, (f i : Set M) := by
+--   simp [← coe_toSubmodule]
+
+-- @[simp] lemma mem_sInf {S : Set (ClosedSubmodule R M)} : x ∈ sInf S ↔ ∀ s ∈ S, x ∈ s := by
+--   simp [← SetLike.mem_coe]
+
+-- @[simp] lemma mem_iInf {f : ι → ClosedSubmodule R M} : x ∈ ⨅ i, f i ↔ ∀ i, x ∈ f i := by
+--   simp [← SetLike.mem_coe]
+
+-- instance instSemilatticeInf : SemilatticeInf (ClosedSubmodule R M) :=
+--   toSubmodule_injective.semilatticeInf _ fun _ _ ↦ rfl
+
+-- @[simp, norm_cast]
+-- lemma toSubmodule_inf (s t : ClosedSubmodule R M) :
+--     toSubmodule (s ⊓ t) = s.toSubmodule ⊓ t.toSubmodule := rfl
+
+-- @[simp, norm_cast] lemma coe_inf (s t : ClosedSubmodule R M) : ↑(s ⊓ t) = (s ⊓ t : Set M) := rfl
+
+-- @[simp] lemma mem_inf : x ∈ s ⊓ t ↔ x ∈ s ∧ x ∈ t := .rfl
+
+
 end ClosedSubmodule
