@@ -4,10 +4,17 @@ import Mathlib.Yoh.Lattice.Defs
 open Polynomial Filter QuotientAddGroup Submodule MeasureTheory MeasureTheory.Measure
   NNReal BigOperators
 
-variable {d : SpaceDimension}
-variable {L : RGStepL} {hL : 1 < L} [NeZero L] (M : SideLength) (N : LatticeSpacing)
+variable {d : SpaceDimension} {L : RGStepL}
+  (M : SideLength) (N : LatticeSpacing)
 
 variable {μb gc : ℝ}
+
+class OneLtL : Prop where
+  out : 1 < L
+
+variable [hL : @OneLtL L]
+
+instance : NeZero L := NeZero.of_gt hL.out
 
 section PeriodicLattice
 
@@ -51,22 +58,21 @@ noncomputable def blockAveraging {M : SideLength} {N : LatticeSpacing} :
       ϕ (fun n => (LatticeEmbedding (lt_add_one N) x n) + x' n
         - (Fin.ofNat (L ^ (M + (N + 1))) (L / 2 : ℕ))) / L ^ d
 
-lemma pow_sub_one_le {hL : 1 < L} : L ^ (M + (N - 1)) ≤ L ^ (M + N) := by
-  apply Nat.pow_le_pow_of_le hL
+lemma pow_sub_one_le : L ^ (M + N) ≤ L ^ (M + (N + 1)) := by
+  apply Nat.pow_le_pow_of_le hL.out
   simp
 
-
 noncomputable def blockConstant {M : SideLength} {N : LatticeSpacing} :
-    @LatticeField d L M N → @LatticeField d L M (N - 1) :=
-  fun ϕ => fun x => ϕ (fun n => Fin.castLE (pow_sub_one_le M N) ((x n + (Fin.ofNat (L ^ (M + (N - 1))) (L / 2))) / (Fin.ofNat (L ^ (M + (N - 1))) L)))
+    @LatticeField d L M N → @LatticeField d L M (N + 1) :=
+  fun ϕ => fun x => ϕ (fun n => ((x n + (Fin.ofNat (L ^ (M + (N + 1))) (L / 2))) / (Fin.ofNat (L ^ (M + (N + 1))) L)))
 
 @[simp]
-lemma blockConstant_apply {M : SideLength} {N : LatticeSpacing} (ϕ : @LatticeField d L M (N - 1))
-    (x : @FineLattice d L M N) :
-    blockConstant ϕ x = ϕ (fun n => ((x n + L / 2) / L)) := by rfl
+lemma blockConstant_apply {M : SideLength} {N : LatticeSpacing} (ϕ : @LatticeField d L M N)
+    (x : @FineLattice d L M (N + 1)) :
+    blockConstant ϕ x = ϕ (fun n => Fin.ofNat (L ^ (M + N)) (((x n).val + L / (2 : ℕ)) / L)) := by rfl
 
 lemma blockAC_eq_id {M : SideLength} {N : LatticeSpacing} :
-    @blockAveraging d L _ M N ∘ blockConstant = id := by
+    @blockAveraging d L _ M N ∘ @blockConstant d L _ M N= id := by
   ext ϕ x
   simp only [Function.comp_apply, id_eq]
 
