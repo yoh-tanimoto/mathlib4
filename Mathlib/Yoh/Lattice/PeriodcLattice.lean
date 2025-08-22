@@ -64,12 +64,13 @@ lemma pow_sub_one_le : L ^ (M + N) ≤ L ^ (M + (N + 1)) := by
 
 noncomputable def blockConstant {M : SideLength} {N : LatticeSpacing} :
     @LatticeField d L M N → @LatticeField d L M (N + 1) :=
-  fun ϕ => fun x => ϕ (fun n => ((x n + (Fin.ofNat (L ^ (M + (N + 1))) (L / 2))) / (Fin.ofNat (L ^ (M + (N + 1))) L)))
+  fun ϕ => fun x => ϕ (fun n => (Fin.ofNat (L ^ (M + N)) (((x n : ℕ)+ L / (2 : ℕ)) / L)))
 
 @[simp]
 lemma blockConstant_apply {M : SideLength} {N : LatticeSpacing} (ϕ : @LatticeField d L M N)
     (x : @FineLattice d L M (N + 1)) :
-    blockConstant ϕ x = ϕ (fun n => Fin.ofNat (L ^ (M + N)) (((x n).val + L / (2 : ℕ)) / L)) := by rfl
+    blockConstant ϕ x = ϕ (fun n => Fin.ofNat (L ^ (M + N)) (((x n : ℕ)+ L / (2 : ℕ)) / L)) := by
+  rfl
 
 lemma blockAC_eq_id {M : SideLength} {N : LatticeSpacing} :
     @blockAveraging d L _ M N ∘ @blockConstant d L _ M N= id := by
