@@ -187,6 +187,24 @@ protected def closure (s : Submodule R M) : ClosedSubmodule R M where
   t.isClosed.closure_subset_iff
 
 @[simp]
+lemma mem_closure_iff {x : M} {s : Submodule R M} : x ∈ s.closure ↔ x ∈ s.topologicalClosure := by
+  exact Eq.to_iff rfl
+
+lemma mem_closure_iff' {x : M} {s : Submodule R M} : x ∈ s.closure.toSubmodule ↔ x ∈ s.closure := by
+  exact Eq.to_iff rfl
+
+lemma mem_closure_iff_of_isClosed {x : M} {s : Submodule R M} (hs : IsClosed s.carrier) :
+    x ∈ s.closure ↔ x ∈ s := by
+  constructor
+  · intro h
+    rw [mem_closure_iff, IsClosed.submodule_topologicalClosure_eq hs] at h
+    exact h
+  · intro h
+    simp only [mem_closure_iff]
+    rw [IsClosed.submodule_topologicalClosure_eq hs]
+    exact h
+
+@[simp]
 lemma closure_toSubmodule_eq {s : ClosedSubmodule R M} : s.toSubmodule.closure = s := by
   ext x
   simp only [carrier_eq_coe, ClosedSubmodule.coe_toSubmodule, coe_closure, SetLike.mem_coe]
