@@ -519,7 +519,7 @@ theorem iInf_orthogonal {ι : Type*} (K : ι → ClosedSubmodule 𝕜 E) : ⨅ i
   (orthogonal_gc 𝕜 E).l_iSup.symm
 
 /-- The inf of a set of orthogonal subspaces equals the subspace orthogonal to the sup. -/
-theorem sInf_orthogonal (s : Set <| Submodule 𝕜 E) : ⨅ K ∈ s, Kᗮ = (sSup s)ᗮ :=
+theorem sInf_orthogonal (s : Set <| ClosedSubmodule 𝕜 E) : ⨅ K ∈ s, Kᗮ = (sSup s)ᗮ :=
   (orthogonal_gc 𝕜 E).l_sSup.symm
 
 @[simp]
