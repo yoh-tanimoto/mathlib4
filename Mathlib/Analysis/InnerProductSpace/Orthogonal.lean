@@ -189,6 +189,10 @@ lemma orthogonal_closure (K : Submodule 𝕜 E) : K.topologicalClosureᗮ = Kᗮ
   le_antisymm (orthogonal_le <| le_topologicalClosure _)
     fun x hx y hy ↦ closure_minimal hx (isClosed_eq (by fun_prop) (by fun_prop)) hy
 
+lemma orthogonal_closure' (K : Submodule 𝕜 E) (x : E) :
+    (∀ y ∈ K, ⟪y, x⟫ = 0) ↔ ∀ y ∈ K.topologicalClosure, ⟪y, x⟫ = 0 := by
+  simp_rw [← mem_orthogonal, orthogonal_closure]
+
 theorem orthogonalFamily_self :
     OrthogonalFamily 𝕜 (fun b => ↥(cond b K Kᗮ)) fun b => (cond b K Kᗮ).subtypeₗᵢ
   | true, true => absurd rfl
@@ -523,18 +527,14 @@ theorem sInf_orthogonal (s : Set <| ClosedSubmodule 𝕜 E) : ⨅ K ∈ s, Kᗮ 
   (orthogonal_gc 𝕜 E).l_sSup.symm
 
 @[simp]
-theorem top_orthogonal_eq_bot : (⊤ : Submodule 𝕜 E)ᗮ = ⊥ := by
+theorem top_orthogonal_eq_bot : (⊤ : ClosedSubmodule 𝕜 E)ᗮ = ⊥ := by
   ext x
-  simp only [carrier_eq_coe, ClosedSubmodule.coe_toSubmodule, SetLike.mem_coe,
-    ClosedSubmodule.toSubmodule_bot, bot_toAddSubmonoid, AddSubsemigroup.mem_carrier,
-    AddSubmonoid.mem_toSubsemigroup, AddSubmonoid.mem_bot]
-  exact
-    ⟨fun h => inner_self_eq_zero.mp (h x mem_top), by
-      rintro rfl
-      simp⟩
+  simp only [orthogonal_toSubmodule_eq, toSubmodule_top, Submodule.top_orthogonal_eq_bot,
+    Submodule.bot_toAddSubmonoid, AddSubsemigroup.mem_carrier, AddSubmonoid.mem_toSubsemigroup,
+    AddSubmonoid.mem_bot, toSubmodule_bot]
 
 @[simp]
-theorem bot_orthogonal_eq_top : (⊥ : Submodule 𝕜 E)ᗮ = ⊤ := by
+theorem bot_orthogonal_eq_top : (⊥ : ClosedSubmodule 𝕜 E)ᗮ = ⊤ := by
   rw [← top_orthogonal_eq_bot, eq_top_iff]
   exact le_orthogonal_orthogonal ⊤
 
@@ -550,15 +550,23 @@ theorem orthogonal_eq_top_iff : Kᗮ = ⊤ ↔ K = ⊥ := by
 
 /-- The closure of a submodule has the same orthogonal complement and the submodule itself. -/
 @[simp]
-lemma orthogonal_closure (K : Submodule 𝕜 E) : K.topologicalClosureᗮ = Kᗮ :=
-  le_antisymm (orthogonal_le <| le_topologicalClosure _)
-    fun x hx y hy ↦ closure_minimal hx (isClosed_eq (by fun_prop) (by fun_prop)) hy
-
-theorem orthogonalFamily_self :
-    OrthogonalFamily 𝕜 (fun b => ↥(cond b K Kᗮ)) fun b => (cond b K Kᗮ).subtypeₗᵢ
-  | true, true => absurd rfl
-  | true, false => fun _ x y => inner_right_of_mem_orthogonal x.prop y.prop
-  | false, true => fun _ x y => inner_left_of_mem_orthogonal y.prop x.prop
-  | false, false => absurd rfl
+lemma orthogonal_closure (K : Submodule 𝕜 E) : K.closureᗮ = Kᗮ.closure := by
+  apply le_antisymm
+  · intro x hx
+    suffices h : x ∈ Kᗮ by
+      exact subset_closure h
+    simp only [orthogonal_toSubmodule_eq] at hx
+    apply (Submodule.mem_orthogonal K x).mpr
+    intro y hy
+    rw [Submodule.mem_orthogonal _ x] at hx
+    apply hx
+    exact subset_closure hy
+  · intro x hx
+    apply (Submodule.mem_orthogonal _ x).mpr
+    intro y hy
+    rw [Submodule.mem_closure_iff', Submodule.mem_closure_iff] at hx
+    rw [IsClosed.submodule_topologicalClosure_eq (Submodule.isClosed_orthogonal K)] at hx
+    apply (Submodule.orthogonal_closure' K x).mp (fun y a ↦ hx y a)
+    exact hy
 
 end ClosedSubmodule
