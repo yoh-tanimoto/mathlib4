@@ -265,4 +265,6 @@ instance : SemilatticeSup (ClosedSubmodule R N) where
     simp only [sup_le_iff, toSubmodule_le_toSubmodule]
     exact ⟨ha, hb⟩
 
+instance : Lattice (ClosedSubmodule R N) where
+
 end ClosedSubmodule
