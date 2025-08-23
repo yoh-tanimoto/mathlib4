@@ -186,11 +186,11 @@ protected def closure (s : Submodule R M) : ClosedSubmodule R M where
 @[simp] lemma closure_le {s : Submodule R M} {t : ClosedSubmodule R M} : s.closure ≤ t ↔ s ≤ t :=
   t.isClosed.closure_subset_iff
 
-lemma mem_closure_iff' {x : M} {s : Submodule R M} : x ∈ s.closure.toSubmodule ↔ x ∈ s.closure := by
-  exact Eq.to_iff rfl
-
 @[simp]
 lemma mem_closure_iff {x : M} {s : Submodule R M} : x ∈ s.closure ↔ x ∈ s.topologicalClosure := by
+  exact Eq.to_iff rfl
+
+lemma mem_closure_iff' {x : M} {s : Submodule R M} : x ∈ s.closure.toSubmodule ↔ x ∈ s.closure := by
   exact Eq.to_iff rfl
 
 lemma mem_closure_iff_of_isClosed {x : M} {s : Submodule R M} (hs : IsClosed s.carrier) :
