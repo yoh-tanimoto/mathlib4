@@ -138,7 +138,19 @@ lemma toSubmodule_inf (s t : ClosedSubmodule R M) :
 
 @[simp] lemma mem_inf : x ∈ s ⊓ t ↔ x ∈ s ∧ x ∈ t := .rfl
 
-instance instTop : Top (ClosedSubmodule R M) where top := ⟨⊤, isClosed_univ⟩
+instance : CompleteSemilatticeInf (ClosedSubmodule R M) where
+  sInf_le s a := by
+    intro ha _
+    simp only [toSubmodule_sInf, Submodule.mem_iInf]
+    exact fun h ↦ h a ha
+  le_sInf s a := by
+    intro ha b
+    simp only [toSubmodule_sInf, Submodule.mem_iInf]
+    exact fun a i hi ↦ ha i hi a
+
+instance : OrderTop (ClosedSubmodule R M) where
+  top := ⟨⊤, isClosed_univ⟩
+  le_top s := le_top (a := s.toSubmodule)
 
 @[simp, norm_cast] lemma toSubmodule_top : toSubmodule (⊤ : ClosedSubmodule R M) = ⊤ := rfl
 
@@ -173,6 +185,24 @@ protected def closure (s : Submodule R M) : ClosedSubmodule R M where
 
 @[simp] lemma closure_le {s : Submodule R M} {t : ClosedSubmodule R M} : s.closure ≤ t ↔ s ≤ t :=
   t.isClosed.closure_subset_iff
+
+@[simp]
+lemma closure_toSubmodule_eq {s : ClosedSubmodule R M} : s.toSubmodule.closure = s := by
+  ext x
+  simp only [carrier_eq_coe, ClosedSubmodule.coe_toSubmodule, coe_closure, SetLike.mem_coe]
+  rw [closure_eq_iff_isClosed.mpr (ClosedSubmodule.isClosed s)]
+  exact SetLike.mem_coe
+
+lemma mem_toSubmodule_iff {x : M} {t : ClosedSubmodule R M} :
+    x ∈ t.toSubmodule ↔ x ∈ t.toSubmodule.closure := by
+  constructor
+  · intro h
+    apply subset_closure
+    simp only [coe_toAddSubmonoid, ClosedSubmodule.coe_toSubmodule, SetLike.mem_coe]
+    exact h
+  · intro h
+    simp only [closure_toSubmodule_eq] at h
+    exact h
 
 end Submodule
 
@@ -265,6 +295,34 @@ instance : SemilatticeSup (ClosedSubmodule R N) where
     simp only [sup_le_iff, toSubmodule_le_toSubmodule]
     exact ⟨ha, hb⟩
 
+instance : CompleteSemilatticeSup (ClosedSubmodule R N) where
+  le_sSup s a := by
+    intro ha x
+    simp only [toSubmodule_sSup]
+    intro hx
+    apply subset_closure
+    simp only [Submodule.coe_toAddSubmonoid, SetLike.mem_coe]
+    apply Submodule.mem_iSup_of_mem
+    exact Submodule.mem_iSup_of_mem ha hx
+  sSup_le s a := by
+    intro h x
+    simp only [toSubmodule_sSup]
+    nth_rw 2 [Submodule.mem_toSubmodule_iff]
+    apply closure_mono
+    simp only [Submodule.coe_toAddSubmonoid, coe_toSubmodule]
+    intro y hy
+    simp only [SetLike.mem_coe] at hy
+    rw [Submodule.mem_iSup] at hy
+    apply hy
+    intro b
+    intro z hz
+    rw [Submodule.mem_iSup] at hz
+    apply hz
+    intro hb
+    exact h b hb
+
 instance : Lattice (ClosedSubmodule R N) where
+
+instance [T1Space N] : CompleteLattice (ClosedSubmodule R N) where
 
 end ClosedSubmodule
