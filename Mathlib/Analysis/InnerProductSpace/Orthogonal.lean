@@ -508,10 +508,6 @@ subspaces. -/
 theorem orthogonal_orthogonal_monotone {K₁ K₂ : ClosedSubmodule 𝕜 E} (h : K₁ ≤ K₂) : K₁ᗮᗮ ≤ K₂ᗮᗮ :=
   orthogonal_le (orthogonal_le h)
 
-/-- `K` is contained in `Kᗮᗮ`. -/
-theorem le_orthogonal_orthogonal : K ≤ (Kᗮ)ᗮ :=
-  (orthogonal_gc 𝕜 E).le_u_l _
-
 /-- The inf of two orthogonal subspaces equals the subspace orthogonal
 to the sup. -/
 theorem inf_orthogonal (K₁ K₂ : ClosedSubmodule 𝕜 E) : K₁ᗮ ⊓ K₂ᗮ = (K₁ ⊔ K₂)ᗮ :=
@@ -529,14 +525,12 @@ theorem sInf_orthogonal (s : Set <| ClosedSubmodule 𝕜 E) : ⨅ K ∈ s, Kᗮ 
 @[simp]
 theorem top_orthogonal_eq_bot : (⊤ : ClosedSubmodule 𝕜 E)ᗮ = ⊥ := by
   ext x
-  simp only [orthogonal_toSubmodule_eq, toSubmodule_top, Submodule.top_orthogonal_eq_bot,
-    Submodule.bot_toAddSubmonoid, AddSubsemigroup.mem_carrier, AddSubmonoid.mem_toSubsemigroup,
-    AddSubmonoid.mem_bot, toSubmodule_bot]
+  simp
 
 @[simp]
 theorem bot_orthogonal_eq_top : (⊥ : ClosedSubmodule 𝕜 E)ᗮ = ⊤ := by
-  rw [← top_orthogonal_eq_bot, eq_top_iff]
-  exact le_orthogonal_orthogonal ⊤
+  ext x
+  simp
 
 @[simp]
 theorem orthogonal_eq_top_iff : Kᗮ = ⊤ ↔ K = ⊥ := by
