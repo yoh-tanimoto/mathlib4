@@ -4,10 +4,20 @@ import Mathlib.Yoh.Lattice.Defs
 open Polynomial Filter QuotientAddGroup Submodule MeasureTheory MeasureTheory.Measure
   NNReal BigOperators
 
+class ParameterSet where
+  d' : SpaceDimension
+  L' : RGStepL
+  M' : SideLength
+  N' : LatticeSpacing
+
 variable {d : SpaceDimension} {L : RGStepL}
   (M : SideLength) (N : LatticeSpacing)
 
-variable {μb gc : ℝ}
+export ParameterSet (d' L' M' N')
+
+variable [ParameterSet] {μb gc : ℝ}
+
+#check d'
 
 class OneLtL : Prop where
   out : 1 < L
