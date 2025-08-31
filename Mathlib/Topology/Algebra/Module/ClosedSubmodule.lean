@@ -3,7 +3,6 @@ Copyright (c) 2025 Yaël Dillies. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Yaël Dillies
 -/
-import Mathlib.Topology.Algebra.Module.LinearMap
 import Mathlib.Topology.Algebra.Module.Equiv
 import Mathlib.Topology.Sets.Closeds
 
@@ -191,19 +190,12 @@ protected def closure (s : Submodule R M) : ClosedSubmodule R M where
 lemma mem_closure_iff {x : M} {s : Submodule R M} : x ∈ s.closure ↔ x ∈ s.topologicalClosure := by
   exact Eq.to_iff rfl
 
-lemma mem_closure_iff' {x : M} {s : Submodule R M} : x ∈ s.closure.toSubmodule ↔ x ∈ s.closure := by
-  exact Eq.to_iff rfl
+lemma mem_closure_iff' {x : M} {s : Submodule R M} : x ∈ s.closure ↔ x ∈ s.closure.toSubmodule := by
+  rfl
 
 lemma mem_closure_iff_of_isClosed {x : M} {s : Submodule R M} (hs : IsClosed s.carrier) :
     x ∈ s.closure ↔ x ∈ s := by
-  constructor
-  · intro h
-    rw [mem_closure_iff, IsClosed.submodule_topologicalClosure_eq hs] at h
-    exact h
-  · intro h
-    simp only [mem_closure_iff]
-    rw [IsClosed.submodule_topologicalClosure_eq hs]
-    exact h
+  rw [mem_closure_iff, IsClosed.submodule_topologicalClosure_eq hs]
 
 @[simp]
 lemma closure_toSubmodule_eq {s : ClosedSubmodule R M} : s.toSubmodule.closure = s := by
@@ -214,14 +206,8 @@ lemma closure_toSubmodule_eq {s : ClosedSubmodule R M} : s.toSubmodule.closure =
 
 lemma mem_toSubmodule_iff {x : M} {t : ClosedSubmodule R M} :
     x ∈ t.toSubmodule ↔ x ∈ t.toSubmodule.closure := by
-  constructor
-  · intro h
-    apply subset_closure
-    simp only [coe_toAddSubmonoid, ClosedSubmodule.coe_toSubmodule, SetLike.mem_coe]
-    exact h
-  · intro h
-    simp only [closure_toSubmodule_eq] at h
-    exact h
+  simp only [closure_toSubmodule_eq]
+  exact Eq.to_iff rfl
 
 end Submodule
 
@@ -334,12 +320,10 @@ instance : CompleteSemilatticeSup (ClosedSubmodule R N) where
     simp only [SetLike.mem_coe] at hy
     rw [Submodule.mem_iSup] at hy
     apply hy
-    intro b
-    intro z hz
+    intro b z hz
     rw [Submodule.mem_iSup] at hz
     apply hz
-    intro hb
-    exact h b hb
+    exact fun hb ↦ h b hb
 
 instance : Lattice (ClosedSubmodule R N) where
 
