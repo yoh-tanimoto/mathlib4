@@ -73,8 +73,8 @@ lemma IsInnerPart.eq_empty {P : Finset (Set X)} (hP : IsInnerPart ∅ P) : P = �
   obtain ⟨p, hp⟩ := hc
   simp_all [Set.subset_eq_empty (h p hp) rfl]
 
-lemma isInnerPart_mono  {s₁ s₂ : Set X} (h : s₁ ⊆ s₂) (P : Finset (Set X))
-    (hP :  IsInnerPart s₁ P) : IsInnerPart s₂ P := by
+lemma isInnerPart_mono {s₁ s₂ : Set X} (h : s₁ ⊆ s₂) (P : Finset (Set X))
+    (hP : IsInnerPart s₁ P) : IsInnerPart s₂ P := by
   obtain ⟨h1, h2, h3, _⟩ := hP
   exact ⟨fun p hp ↦ subset_trans (h1 p hp) h, h2, h3, by simp_all⟩
 
@@ -172,7 +172,7 @@ lemma varAux_mono {s₁ s₂ : Set X} (hs₂ : MeasurableSet s₂) (h : s₁ ⊆
 
 lemma exists_isInnerPart_sum_gt {s : Set X} (hs : MeasurableSet s) {a : ℝ≥0∞}
     (ha : a < var_aux f s) : ∃ P, IsInnerPart s P ∧ a < ∑ p ∈ P, f p := by
-  simp_all [var_aux, hs, lt_iSup_iff]
+  simp_all [var_aux, lt_iSup_iff]
 
 lemma exists_isInnerPart_sum_ge {s : Set X} (hs : MeasurableSet s) {ε : NNReal} (hε : 0 < ε)
     (h : var_aux f s ≠ ⊤) : ∃ P, IsInnerPart s P ∧ var_aux f s ≤ ∑ p ∈ P, f p + ε := by
@@ -193,7 +193,7 @@ lemma exists_isInnerPart_sum_ge {s : Set X} (hs : MeasurableSet s) {ε : NNReal}
         exact (ENNReal.add_le_add_iff_right coe_ne_top).mpr (le_of_lt hP')
       _ ≤ ∑ p ∈ P, f p + ε := by gcongr
   · simp_rw [hw, zero_le, and_true]
-    exact ⟨{ }, by simp, by simp [hs], by simp, by simp⟩
+    exact ⟨{ }, by simp, by simp, by simp, by simp⟩
 
 lemma IsInnerPart.sum_le_varAux {s : Set X} (hs : MeasurableSet s) {P : Finset (Set X)}
     (hP : IsInnerPart s P) : ∑ p ∈ P, f p ≤ var_aux f s := by
@@ -326,7 +326,7 @@ lemma var_aux_iUnion_le {s : ℕ → Set X} (hs : ∀ i, MeasurableSet (s i))
 lemma var_aux_iUnion (hf : IsSubadditive f) (hf' : f ∅ = 0) (s : ℕ → Set X)
     (hs : ∀ i, MeasurableSet (s i)) (hs' : Pairwise (Disjoint on s)) :
     HasSum (fun i ↦ var_aux f (s i)) (var_aux f (⋃ i, s i)) := by
-  refine ENNReal.summable.hasSum_iff.mpr (eq_of_le_of_le ?_ ?_)
+  refine ENNReal.summable.hasSum_iff.mpr (eq_of_le_of_ge ?_ ?_)
   · exact IsInnerPart.sum_le_varAux_iUnion f hs hs'
   · exact var_aux_iUnion_le f hs hs' hf hf'
 
