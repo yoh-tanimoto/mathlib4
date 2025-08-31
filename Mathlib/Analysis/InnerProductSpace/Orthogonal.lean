@@ -558,7 +558,7 @@ lemma orthogonal_closure (K : Submodule 𝕜 E) : K.closureᗮ = Kᗮ.closure :=
   · intro x hx
     apply (Submodule.mem_orthogonal _ x).mpr
     intro y hy
-    rw [Submodule.mem_closure_iff', Submodule.mem_closure_iff] at hx
+    rw [← Submodule.mem_closure_iff', Submodule.mem_closure_iff] at hx
     rw [IsClosed.submodule_topologicalClosure_eq (Submodule.isClosed_orthogonal K)] at hx
     apply (Submodule.orthogonal_closure' K x).mp (fun y a ↦ hx y a)
     exact hy
