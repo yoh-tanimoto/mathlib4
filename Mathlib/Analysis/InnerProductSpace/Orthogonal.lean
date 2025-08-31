@@ -489,7 +489,7 @@ instance [CompleteSpace E] : CompleteSpace Kᗮ :=
 variable (𝕜 E)
 
 /-- `orthogonal` gives a `GaloisConnection` between
-`Submodule 𝕜 E` and its `OrderDual`. -/
+`ClosedSubmodule 𝕜 E` and its `OrderDual`. -/
 theorem orthogonal_gc :
     @GaloisConnection (ClosedSubmodule 𝕜 E) (ClosedSubmodule 𝕜 E)ᵒᵈ _ _ orthogonal orthogonal :=
   fun _K₁ _K₂ =>
@@ -523,14 +523,10 @@ theorem sInf_orthogonal (s : Set <| ClosedSubmodule 𝕜 E) : ⨅ K ∈ s, Kᗮ 
   (orthogonal_gc 𝕜 E).l_sSup.symm
 
 @[simp]
-theorem top_orthogonal_eq_bot : (⊤ : ClosedSubmodule 𝕜 E)ᗮ = ⊥ := by
-  ext x
-  simp
+theorem top_orthogonal_eq_bot : (⊤ : ClosedSubmodule 𝕜 E)ᗮ = ⊥ := by ext x; simp
 
 @[simp]
-theorem bot_orthogonal_eq_top : (⊥ : ClosedSubmodule 𝕜 E)ᗮ = ⊤ := by
-  ext x
-  simp
+theorem bot_orthogonal_eq_top : (⊥ : ClosedSubmodule 𝕜 E)ᗮ = ⊤ := by ext x; simp
 
 @[simp]
 theorem orthogonal_eq_top_iff : Kᗮ = ⊤ ↔ K = ⊥ := by
@@ -542,7 +538,7 @@ theorem orthogonal_eq_top_iff : Kᗮ = ⊤ ↔ K = ⊥ := by
   have : K ⊓ Kᗮ = ⊥ := K.orthogonal_disjoint.eq_bot
   rwa [h, inf_comm, top_inf_eq] at this
 
-/-- The closure of a submodule has the same orthogonal complement and the submodule itself. -/
+/-- The closure of a submodule has the same orthogonal complement as the submodule itself. -/
 @[simp]
 lemma orthogonal_closure (K : Submodule 𝕜 E) : K.closureᗮ = Kᗮ.closure := by
   apply le_antisymm
@@ -558,8 +554,8 @@ lemma orthogonal_closure (K : Submodule 𝕜 E) : K.closureᗮ = Kᗮ.closure :=
   · intro x hx
     apply (Submodule.mem_orthogonal _ x).mpr
     intro y hy
-    rw [← Submodule.mem_closure_iff', Submodule.mem_closure_iff] at hx
-    rw [IsClosed.submodule_topologicalClosure_eq (Submodule.isClosed_orthogonal K)] at hx
+    rw [← Submodule.mem_closure_iff', Submodule.mem_closure_iff,
+      IsClosed.submodule_topologicalClosure_eq (Submodule.isClosed_orthogonal K)] at hx
     apply (Submodule.orthogonal_closure' K x).mp (fun y a ↦ hx y a)
     exact hy
 
