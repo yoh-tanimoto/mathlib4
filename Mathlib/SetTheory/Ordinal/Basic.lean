@@ -52,7 +52,7 @@ for the empty set by convention.
 
 ## Notations
 
-* `ω` is a notation for the first infinite ordinal in the locale `Ordinal`.
+* `ω` is a notation for the first infinite ordinal in the scope `Ordinal`.
 -/
 
 assert_not_exists Module Field
@@ -578,6 +578,7 @@ theorem card_typein {r : α → α → Prop} [IsWellOrder α r] (x : α) :
     #{ y // r y x } = (typein r x).card :=
   rfl
 
+@[gcongr]
 theorem card_le_card {o₁ o₂ : Ordinal} : o₁ ≤ o₂ → card o₁ ≤ card o₂ :=
   inductionOn o₁ fun _ _ _ => inductionOn o₂ fun _ _ _ ⟨⟨⟨f, _⟩, _⟩⟩ => ⟨f⟩
 
@@ -776,7 +777,7 @@ instance addMonoidWithOne : AddMonoidWithOne Ordinal.{u} where
     Quotient.inductionOn₃ o₁ o₂ o₃ fun ⟨α, r, _⟩ ⟨β, s, _⟩ ⟨γ, t, _⟩ =>
       Quot.sound
         ⟨⟨sumAssoc _ _ _, by
-          intros a b
+          intro a b
           rcases a with (⟨a | a⟩ | a) <;> rcases b with (⟨b | b⟩ | b) <;>
             simp only [sumAssoc_apply_inl_inl, sumAssoc_apply_inl_inr, sumAssoc_apply_inr,
               Sum.lex_inl_inl, Sum.lex_inr_inr, Sum.Lex.sep, Sum.lex_inr_inl]⟩⟩
