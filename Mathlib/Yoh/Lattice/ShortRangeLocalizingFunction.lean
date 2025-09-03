@@ -1,56 +1,44 @@
 import Mathlib
 
+noncomputable section
+
 open Polynomial Classical Filter
 
 section Defs
 
-structure SpaceDimension where
-  val : ℕ
+class A1Parameters where
+  d : ℕ
+  δ : ℝ
+  hδ : 0 < δ
+  cδ : ℝ
+  hcδ : 0 < cδ
+  K : ℝ
+  hK : 0 < K
+  M0 : ℝ
+  hM0 : 1 < M0
 
-instance : Coe SpaceDimension ℕ where
-  coe d := d.val
+export A1Parameters (d δ hδ cδ hcδ K hK M0 hM0)
 
-structure Delta where
-  val : ℝ
-  prop : val > 0
+variable [A1Parameters]
 
-instance : Coe Delta ℝ where
-  coe δ := δ.val
+def b (a : EuclideanSpace ℝ (Fin d) → ℝ) :
+  EuclideanSpace ℝ (Fin d) → ℝ := fun x ↦ (1 + ‖x‖) ^ (d + δ) * a x
 
-structure CDelta where
-  val : ℝ
-  prop : val > 0
+def Zd := Submodule.span ℤ (Set.range (EuclideanSpace.basisFun (Fin d) ℝ))
 
-instance : Coe CDelta ℝ where
-  coe c_δ := c_δ.val
+def convolution_self (f : EuclideanSpace ℝ (Fin d) → ℝ) : EuclideanSpace ℝ (Fin d) → ℝ := fun x =>
+  ∑' y : Zd, f (x - y) * f y
 
-structure ConstK where
-  val : ℝ
-  prop : val > 0
-
-instance : Coe ConstK ℝ where
-  coe K := K.val
-
-structure ConstM0 where
-  val : ℝ
-  prop : val > 1
-
-instance : Coe ConstM0 ℝ where
-  coe M0 := M0.val
-
-noncomputable def b {d : SpaceDimension} {a : EuclideanSpace ℝ (Fin d) → ℝ} {δ : ℝ} :
-  EuclideanSpace ℝ (Fin d) → ℝ := fun x ↦ Real.exp ((2 + δ) * Real.log (1 + ‖x‖)) * a x
-
-structure ShortRangeLocalizingFunction {d : SpaceDimension} {δ : Delta} {c_δ : CDelta} where
+structure ShortRangeLocalizingFunction where
   toFun : EuclideanSpace ℝ (Fin d) → ℝ
   P1 : ∀ (x : EuclideanSpace ℝ (Fin d)), toFun x > 0
-  P2 : ∀ (x : EuclideanSpace ℝ (Fin d)), toFun x ≤ c_δ * Real.exp (-2 * (2 + δ) * Real.log (1 + ‖x‖))
-  P3 : ∀ (x y : EuclideanSpace ℝ (Fin d)) (hP3 : ‖y‖ ≤ 2 * NNReal.sqrt 2),
-    (@b d toFun δ) (x + y) / (@b d toFun δ) x ≤ K
-  -- P4 : ∃ (c ε : ℝ) (hP4 : ε > 0), ∀ (n : ℕ) (x : EuclideanSpace ℝ (Fin d)),
-  --   (convolution_self2 n) (b a δ) (x) ≤ c^n * ((@b d toFun δ) (ε • x))
-  P5 : ∀ (x x' : EuclideanSpace ℝ (Fin d)) (hP5 : M₀ ≤ ‖x‖ ∧ ‖x‖ ≤ ‖x'‖),
-    (@b d toFun δ) x ≥ (@b d toFun δ) x'
+  P2 : ∀ (x : EuclideanSpace ℝ (Fin d)), toFun x ≤ cδ * Real.exp (-2 * (2 + δ) * Real.log (1 + ‖x‖))
+  P3 : ∀ (x y : EuclideanSpace ℝ (Fin d)) (hP3 : ‖y‖ ≤ 2 * Real.sqrt d),
+    (b toFun) (x + y) / (b toFun) x ≤ K
+  P4 : ∃ (c ε : ℝ) (hP4 : ε > 0), ∀ (n : ℕ) (x : EuclideanSpace ℝ (Fin d)),
+    (convolution_self2 n) (b a δ) (x) ≤ c^n * ((b toFun) (ε • x))
+  P5 : ∀ (x x' : EuclideanSpace ℝ (Fin d)) (hP5 : M0 ≤ ‖x‖ ∧ ‖x‖ ≤ ‖x'‖),
+    (b  toFun) x ≥ (b toFun) x'
 
 end Defs
 
@@ -608,3 +596,7 @@ variable (a : ShortRangeLocalizingFunction)
 --    calc
 --     b a δ (M' • x) ≤ b a δ (Mx • x) := by exact P5 (Mx • x) (M' • x) (And.intro hMxx hMM')
 --     _ ≤ b a δ x := by exact hMx.2 Mx (le_refl _)
+
+end LemmaA1
+
+end
