@@ -26,6 +26,8 @@ def b (a : EuclideanSpace ℝ (Fin d) → ℝ) :
 
 def Zd := Submodule.span ℤ (Set.range (EuclideanSpace.basisFun (Fin d) ℝ))
 
+
+-- use convolution
 def convolution_self (f : EuclideanSpace ℝ (Fin d) → ℝ) : EuclideanSpace ℝ (Fin d) → ℝ := fun x =>
   ∑' y : Zd, f (x - y) * f y
 
