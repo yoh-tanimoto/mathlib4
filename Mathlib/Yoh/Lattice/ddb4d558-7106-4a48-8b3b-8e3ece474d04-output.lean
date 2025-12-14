@@ -133,20 +133,7 @@ by
         refine' h_lim.comp _;
         have h_lim : Filter.Tendsto (fun M_tilde : ℕ => ‖((M_tilde / 3 : ℝ) • toRd d x)‖) Filter.atTop Filter.atTop := by
           norm_num [ norm_smul ];
-          apply Filter.Tendsto.atTop_mul_const
-          apply norm_pos_iff.mpr
-          rw [toRd]
-          simp only [PiLp.continuousLinearEquiv_symm_apply, ne_eq, WithLp.toLp_eq_zero]
-          by_contra! hxzero
-          apply hx_ne_zero
-          ext i
-          simp only [Pi.zero_apply]
-          have : x i = (0 : ℝ) := by
-            rw [funext_iff] at hxzero
-            exact hxzero i
-          simp only [Int.cast_eq_zero] at this
-          exact this
-          exact tendsto_natCast_atTop_atTop.atTop_div_const zero_lt_three
+          exact Filter.Tendsto.atTop_mul_const ( norm_pos_iff.mpr <| show toRd d x ≠ 0 from fun h => hx_ne_zero <| by ext i; simpa [ toRd ] using congr_fun h i ) <| tendsto_natCast_atTop_atTop.atTop_div_const zero_lt_three;
         norm_num +zetaDelta at *;
         convert h_lim using 1;
         exact?;
@@ -155,14 +142,12 @@ by
     have := lemma_finite_ball_Zd d ( 3 * M0 );
     exact ⟨ Max.max M1 ( Finset.sup ( this.toFinset ) Mx ), le_max_left _ _, fun x hx hx' M_tilde hM_tilde => hMx x hx hx' M_tilde ( le_trans ( Finset.le_sup ( f := Mx ) ( this.mem_toFinset.mpr hx ) ) ( le_trans ( le_max_right _ _ ) hM_tilde ) ) ⟩;
   use M2 + 1;
-  refine ⟨?_, ?_⟩
-  · bound
-  · intro M_tilde hM_tilde x
-    by_cases hx : x = 0 <;> simp_all +decide;
-    · unfold b_func; norm_num [ toRd ] ;
-      erw [ WithLp.toLp_zero ] ; norm_num;
-    · by_cases hx' : ‖toRd d x‖ ≤ 3 * M0;
-      · exact hM2.right x hx' hx M_tilde ( by linarith );
-      · exact hM1.right M_tilde ( by linarith ) x ( by linarith )
+  bound;
+  by_cases hx : x = 0 <;> simp_all +decide;
+  · unfold b_func; norm_num [ toRd ] ;
+    erw [ WithLp.toLp_zero ] ; norm_num;
+  · by_cases hx' : ‖toRd d x‖ ≤ 3 * M0;
+    · exact right_2 x hx' hx M_tilde ( by linarith );
+    · exact right_1 M_tilde ( by linarith ) x ( by linarith )
 
 #print axioms lemma_1_2
