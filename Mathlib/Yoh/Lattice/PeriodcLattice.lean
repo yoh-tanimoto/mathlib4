@@ -43,13 +43,13 @@ def ScaledBasis (k : Fin N) : Set ContinuousTorus :=
 
 def ScaledLattice (k : Fin N) := Submodule.span ℤ (ScaledBasis k)
 
-def FineLattice := Submodule.span ℤ FineBasis
+def FineLattice := AddSubgroup.closure FineBasis
 
 lemma ScaledBasisVector_in_ScaledLattice {k : Fin N} {i : Fin d} :
     ScaledBasisVector k i ∈ ScaledLattice k := Submodule.mem_span_of_mem (Set.mem_range_self _)
 
 lemma FineBasisVector_in_FineLattice {i : Fin d} : FineBasisVector i ∈ FineLattice :=
-  Submodule.mem_span_of_mem (Set.mem_range_self _)
+  AddSubgroup.mem_closure_of_mem (Set.mem_range_self _)
 
 abbrev FineLattice' {L' : RGStepL} (M' : SideLength) (N' : LatticeSpacing) :=
   (Fin d') → Fin (L' ^ (M' + N'))
