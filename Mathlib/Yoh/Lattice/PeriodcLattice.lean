@@ -41,6 +41,27 @@ def FineBasis : Set ContinuousTorus :=
 def ScaledBasis (k : Fin N) : Set ContinuousTorus :=
   Set.range (fun (i : Fin d) => ScaledBasisVector k i)
 
+def ScaledInfiniteLattice (p : ℝ) :=
+  AddSubgroup.map ((LinearMap.lsmul ℝ ℝ p : ℝ →+ ℝ).comp (Int.castAddHom ℝ)) (⊤ : AddSubgroup ℤ)
+
+lemma ScaledInfiniteLattice_eq (p : ℝ) : ScaledInfiniteLattice p = AddSubgroup.closure {p} := by
+  ext x
+  rw [ScaledInfiniteLattice, AddSubgroup.mem_map, AddSubgroup.mem_closure_singleton]
+  simp only [AddSubgroup.mem_top, AddMonoidHom.coe_comp, AddMonoidHom.coe_coe, Int.coe_castAddHom,
+    Function.comp_apply, LinearMap.lsmul_apply, smul_eq_mul, true_and, zsmul_eq_mul]
+  constructor
+  · intro h
+    obtain ⟨q, hq⟩ := h
+    use q
+    rw [← hq]
+    exact Int.cast_comm q p
+  · intro h
+    obtain ⟨q, hq⟩ := h
+    use q
+    rw [← hq]
+    exact Eq.symm (Int.cast_comm q p)
+
+
 def ScaledLattice (k : Fin N) := Submodule.span ℤ (ScaledBasis k)
 
 def FineLattice := AddSubgroup.closure FineBasis
