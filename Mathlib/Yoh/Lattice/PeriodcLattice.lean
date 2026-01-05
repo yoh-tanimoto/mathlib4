@@ -15,20 +15,25 @@ variable {d' : SpaceDimension} {L' : RGStepL}
 
 export ParameterSet (d L M N)
 
-variable [ParameterSet] {μb gc : ℝ}
+variable [ps : ParameterSet] {μb gc : ℝ}
 
 #check d
 
 class OneLtL : Prop where
-  out : 1 < L'
+  out : 1 < L
 
-variable [hL : @OneLtL L']
+variable [hL : @OneLtL ps]
 
-instance : NeZero L' := NeZero.of_gt hL.out
+instance : Fact (0 < (L ^ M : ℝ)) :=
+    Fact.mk (by
+      rw [← Nat.cast_pow]
+      exact Nat.cast_pos'.mpr (pow_pos (lt_trans zero_lt_one hL.out) M))
+
+instance : NeZero L := NeZero.of_gt hL.out
 
 noncomputable section PeriodicLattice
 
-abbrev ContinuousTorus := (Fin d) → (AddCircle (L : ℝ))
+abbrev ContinuousTorus := (Fin d) → (AddCircle (L ^ M : ℝ))
 
 def FineBasisVector (i : Fin d) : ContinuousTorus := (fun j => if i = j then (1 / N : ℝ) else 0)
 
@@ -41,12 +46,13 @@ def FineBasis : Set ContinuousTorus :=
 def ScaledBasis (k : Fin N) : Set ContinuousTorus :=
   Set.range (fun (i : Fin d) => ScaledBasisVector k i)
 
-def ScaledInfiniteLattice (p : ℝ) :=
+def ScaledInfiniteLattice1d (p : ℝ) :=
   AddSubgroup.map ((LinearMap.lsmul ℝ ℝ p : ℝ →+ ℝ).comp (Int.castAddHom ℝ)) (⊤ : AddSubgroup ℤ)
 
-lemma ScaledInfiniteLattice_eq (p : ℝ) : ScaledInfiniteLattice p = AddSubgroup.closure {p} := by
+lemma ScaledInfiniteLattice1d_eq (p : ℝ) :
+    ScaledInfiniteLattice1d p = AddSubgroup.zmultiples p := by
   ext x
-  rw [ScaledInfiniteLattice, AddSubgroup.mem_map, AddSubgroup.mem_closure_singleton]
+  rw [ScaledInfiniteLattice1d, AddSubgroup.mem_map, AddSubgroup.mem_zmultiples_iff]
   simp only [AddSubgroup.mem_top, AddMonoidHom.coe_comp, AddMonoidHom.coe_coe, Int.coe_castAddHom,
     Function.comp_apply, LinearMap.lsmul_apply, smul_eq_mul, true_and, zsmul_eq_mul]
   constructor
@@ -61,8 +67,81 @@ lemma ScaledInfiniteLattice_eq (p : ℝ) : ScaledInfiniteLattice p = AddSubgroup
     rw [← hq]
     exact Eq.symm (Int.cast_comm q p)
 
+def ScaledPeriodicLattice1d (k : Fin N) :=
+  AddSubgroup.map (QuotientAddGroup.mk' (AddSubgroup.zmultiples (L ^ M : ℝ)))
+    (ScaledInfiniteLattice1d (1 / (L ^ (N - k) : ℝ)))
+
+lemma ScaledPeriodicLattice1d_eq_Submodule_span (k : Fin N) :
+    ScaledPeriodicLattice1d k =
+    AddSubgroup.zmultiples
+    ((QuotientAddGroup.mk' (AddSubgroup.zmultiples (L ^ M : ℝ))) (1 / (L ^ (N - k) : ℝ))) := by
+  ext x
+  simp only [one_div, mk'_apply]
+  constructor
+  · intro h
+    obtain ⟨y, hy⟩ := AddSubgroup.mem_map.mp h
+    simp only [one_div, mk'_apply] at hy
+    rw [ScaledInfiniteLattice1d_eq] at hy
+    rw [← hy.right]
+    obtain ⟨m, hm⟩ := AddSubgroup.mem_zmultiples_iff.mp hy.left
+    rw [AddSubgroup.mem_zmultiples_iff]
+    use m
+    rw [← hm]
+    simp
+  · intro h
+    obtain ⟨m, hm⟩ := AddSubgroup.mem_zmultiples_iff.mp h
+    rw [ScaledPeriodicLattice1d]
+    simp only [one_div, AddSubgroup.mem_map, mk'_apply]
+    use m • (L ^ (N - k) : ℝ )⁻¹
+    refine ⟨?_, hm⟩
+    rw [ScaledInfiniteLattice1d_eq]
+    simp
 
 def ScaledLattice (k : Fin N) := Submodule.span ℤ (ScaledBasis k)
+
+abbrev ScaledLattice' (k : Fin N) := (Fin d) → ScaledPeriodicLattice1d k
+
+section QuotientGroupPi
+
+variable {ι : Type*} {G : ι → Type*} [∀ i, Group (G i)] {NG : (i : ι) → Subgroup (G i)}
+  [nnormal : ∀ i, (NG i).Normal]
+
+-- #synth (Subgroup.pi Set.univ NG).Normal fails
+
+@[to_additive]
+instance Subgroup_normal : (Subgroup.pi Set.univ NG).Normal :=
+  { conj_mem := fun n hn g i hi => Subgroup.Normal.conj_mem (nnormal i) (n i) (hn i hi) (g i) }
+
+#synth (Subgroup.pi Set.univ NG).Normal
+
+-- missing Pi.mulEquiv? cf. Pi.monoidHom
+-- missing the canonical iso between the groups below
+
+#synth Group ((i : ι) → (G i) ⧸ (NG i))
+#synth Group (((i : ι) → (G i)) ⧸ (Subgroup.pi Set.univ NG))
+
+
+end QuotientGroupPi
+
+section QuotientAddGroupPi
+
+variable {ι : Type*} {G : ι → Type*} [∀ i, AddCommGroup (G i)] {NG : (i : ι) → AddSubgroup (G i)}
+
+#synth (AddSubgroup.pi Set.univ NG).Normal
+
+end QuotientAddGroupPi
+
+
+def ScaledLattice.component (k : Fin N) (x : ScaledLattice k) (j : Fin d) :
+    Set.Ioc (0 : ℝ) (0 + L ^ M) :=
+  AddCircle.equivIoc (L ^ M : ℝ) 0 (x.val j)
+
+lemma mem_ScaledLattice_iff (k : Fin N) (x : ContinuousTorus) : x ∈ ScaledLattice k ↔
+    ∀ j, ∃ (m : ℕ), AddCircle.equivIoc (L ^ M : ℝ) 0 (x j) = (m / L ^ N : ℝ) := by
+  constructor
+  · intro h j
+    sorry
+  · sorry
 
 def FineLattice := AddSubgroup.closure FineBasis
 
@@ -114,8 +193,7 @@ def partialDeriv' {M' : SideLength} {N' : LatticeSpacing} (n : Fin d') :
 
 def LatticeEmbedding {k₁ k₂ : Fin N} (h : k₁ < k₂) :
     ScaledLattice k₂ → ScaledLattice k₁ :=
-  sorry
---  fun x => fun j => ⟨(x : ContinuousTorus) j, by sorry⟩
+  fun x => ⟨fun (j : Fin d) => ((x : ContinuousTorus) j : AddCircle (L ^ M : ℝ)), by sorry⟩
 -- need to show that `x` in a finer lattice is in the ℤ-span of coarser lattice basis.
 -- maybe I should construct API to take components
 -- look around Mathlib.Analysis.Fourier.ZMod, Mathlib.Topology.Instances.AddCircle.Real
