@@ -3,9 +3,11 @@ Copyright (c) 2018 Kim Morrison. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Reid Barton, Mario Carneiro, Kim Morrison, Floris van Doorn
 -/
-import Mathlib.CategoryTheory.Adjunction.Basic
-import Mathlib.CategoryTheory.Limits.Cones
-import Batteries.Tactic.Congr
+module
+
+public import Mathlib.CategoryTheory.Adjunction.Basic
+public import Mathlib.CategoryTheory.Limits.Cones
+public import Batteries.Tactic.Congr
 
 /-!
 # Limits and colimits
@@ -30,6 +32,8 @@ e.g. a `@[dualize]` attribute that behaves similarly to `@[to_additive]`.
 * [Stacks: Limits and colimits](https://stacks.math.columbia.edu/tag/002D)
 
 -/
+
+@[expose] public section
 
 
 noncomputable section
@@ -360,6 +364,17 @@ def homEquiv (h : IsLimit t) {W : C} : (W ⟶ t.pt) ≃ ((Functor.const J).obj W
   left_inv f := h.hom_ext (by simp)
   right_inv π := by cat_disch
 
+@[reassoc (attr := simp)]
+lemma homEquiv_symm_π_app (h : IsLimit t) {W : C}
+    (f : (const J).obj W ⟶ F) (j : J) :
+    h.homEquiv.symm f ≫ t.π.app j = f.app j := by
+  simp [homEquiv]
+
+lemma homEquiv_symm_naturality (h : IsLimit t) {W W' : C}
+    (f : (const J).obj W ⟶ F) (g : W' ⟶ W) :
+    h.homEquiv.symm ((Functor.const _).map g ≫ f) = g ≫ h.homEquiv.symm f :=
+  h.homEquiv.injective (by aesop)
+
 /-- The universal property of a limit cone: a map `W ⟶ X` is the same as
   a cone on `F` with cone point `W`. -/
 def homIso (h : IsLimit t) (W : C) : ULift.{u₁} (W ⟶ t.pt : Type v₃) ≅ (const J).obj W ⟶ F :=
@@ -489,8 +504,6 @@ def ofRepresentableBy {X : C} (h : F.cones.RepresentableBy X) : IsLimit (limitCo
     congr
     rw [coneOfHom_fac]
     dsimp [Cone.extend]; cases s; congr with j; exact w j
-
-@[deprecated (since := "2025-05-09")] alias ofNatIso := ofRepresentableBy
 
 /-- Given a limit cone, `F.cones` is representable by the point of the cone. -/
 def representableBy (hc : IsLimit t) : F.cones.RepresentableBy t.pt where
@@ -827,6 +840,17 @@ def homEquiv (h : IsColimit t) {W : C} : (t.pt ⟶ W) ≃ (F ⟶ (const J).obj W
 lemma homEquiv_apply (h : IsColimit t) {W : C} (f : t.pt ⟶ W) :
     h.homEquiv f = (t.extend f).ι := rfl
 
+@[reassoc (attr := simp)]
+lemma ι_app_homEquiv_symm (h : IsColimit t) {W : C}
+    (f : F ⟶ (const J).obj W) (j : J) :
+    t.ι.app j ≫ h.homEquiv.symm f = f.app j := by
+  simp [homEquiv]
+
+lemma homEquiv_symm_naturality (h : IsColimit t) {W W' : C}
+    (f : F ⟶ (const J).obj W) (g : W ⟶ W') :
+    h.homEquiv.symm (f ≫ (Functor.const _).map g) = h.homEquiv.symm f ≫ g :=
+  h.homEquiv.injective (by aesop)
+
 /-- The universal property of a colimit cocone: a map `X ⟶ W` is the same as
   a cocone on `F` with cone point `W`. -/
 def homIso (h : IsColimit t) (W : C) : ULift.{u₁} (t.pt ⟶ W : Type v₃) ≅ F ⟶ (const J).obj W :=
@@ -913,9 +937,6 @@ theorem coconeOfHom_homOfCocone (s : Cocone F) : coconeOfHom h (homOfCocone h s)
 theorem homOfCocone_coconeOfHom {Y : C} (f : X ⟶ Y) : homOfCocone h (coconeOfHom h f) = f := by
   simp [homOfCocone, coconeOfHom]
 
-@[deprecated (since := "2025-05-13")]
-alias homOfCocone_cooneOfHom := homOfCocone_coconeOfHom
-
 /-- If `F.cocones` is corepresented by `X`, the cocone corresponding to the identity morphism on `X`
 will be a colimit cocone. -/
 def colimitCocone : Cocone F :=
@@ -960,8 +981,6 @@ def ofCorepresentableBy {X : C} (h : F.cocones.CorepresentableBy X) :
     congr
     rw [coconeOfHom_fac]
     dsimp [Cocone.extend]; cases s; congr with j; exact w j
-
-@[deprecated (since := "2025-05-09")] alias ofNatIso := ofCorepresentableBy
 
 /-- Given a colimit cocone, `F.cocones` is corepresentable by the point of the cocone. -/
 def corepresentableBy (hc : IsColimit t) : F.cocones.CorepresentableBy t.pt where
