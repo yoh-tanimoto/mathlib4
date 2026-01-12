@@ -1,6 +1,11 @@
 import Mathlib
 import Mathlib.Yoh.Lattice.Defs
 
+-- Temporary goal: define lattice as a `AddSubgroup` of `(Fin d) → AddCircle L ^ M`,
+-- showing that it is isomorphic to `(Fin d) → ZMod L ^ (M + N)`
+-- together with `LatticeEmbedding` as `AddGroupHom`
+
+
 open Polynomial Filter QuotientAddGroup Submodule MeasureTheory MeasureTheory.Measure
   NNReal BigOperators
 
