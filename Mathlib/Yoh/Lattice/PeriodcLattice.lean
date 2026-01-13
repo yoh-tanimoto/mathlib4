@@ -108,26 +108,21 @@ lemma ScaledPeriodicLattice1d_eq_Submodule_span (k : Fin N) :
     rw [ScaledInfiniteLattice1d_eq]
     simp
 
-def SMulEquiv (p : ℝ) [nz : NeZero p] : ℝ ≃+ ℝ where
+def SMulEquiv {p : ℝ} (hp : p ≠ 0) : ℝ ≃+ ℝ where
   toFun x := p • x
   invFun x := p⁻¹ • x
   map_add' := smul_add _
   left_inv := by
     intro x
-    simp [smul_eq_mul, ← mul_assoc, inv_mul_cancel₀ nz.out]
+    simp [smul_eq_mul, ← mul_assoc, inv_mul_cancel₀ hp]
   right_inv := by
     intro x
-    simp [smul_eq_mul, ← mul_assoc, mul_inv_cancel₀ nz.out]
+    simp [smul_eq_mul, ← mul_assoc, mul_inv_cancel₀ hp]
 
-variable (p : ℝ) [NeZero p]
-#check (SMulEquiv p).comp (Int.castAddHom ℝ).toAddHom
-
-def ZEmbedAddMonoidHom (p : ℝ) [NeZero p] : ℤ →+ ℝ where
-  toFun := (SMulEquiv p).comp (Int.castAddHom ℝ).toAddHom
+def ZEmbedAddMonoidHom {p : ℝ} (hp : p ≠ 0) : ℤ →+ ℝ where
+  toFun := (SMulEquiv hp).comp (Int.castAddHom ℝ).toAddHom
   map_zero' := by simp
   map_add' := by simp
-
-#check (ZEmbedAddMonoidHom p).range
 
 -- want `toZMod : ScaledPeriodicLattice1d k ≃+ ZMod (L ^ (M + N - k))`.
 -- note that `ZMod n` is defined as `Fin n`, but
@@ -151,6 +146,46 @@ def ZinR := (Int.castAddHom ℝ).range
 --· Moreover, we need
 --  `ScaledInfiniteLattice1d (1 / (L ^ (N - k) : ℝ)) ⧸ (zsmulAddGroupHom L ^ M).range`
 --  `≃+ ScaledPeriodicLattice k`.
+--  use `QuotientAddGroup.quotientMapAddSubgroupOfOfLe` to make this last
+--  identification (it uses internally `QuotientAddGroup.map` )
+--  to obtain `H ⧸ N.addSubgroupOf H →+ (⊤ : Subgroup G) ⧸ N.addSubgroupOf (⊤ : Subgroup G)`
+--  use `Subgroup.topEquiv : ↥⊤ ≃* G` and `QuotientAddGroup.map`
+--  to get `(⊤ : Subgroup G) ⧸ N.subgroupOf ⊤ ≃* G ⧸ N)`
+--  `variable (G : Type) [CommGroup G] (H N : Subgroup G) [N.Normal]`
+--  `QuotientGroup.map (N.subgroupOf ⊤) N ⟨⟨Subgroup.topEquiv.toFun, by simp⟩, Subgroup.topEquiv.map_mul'⟩`
+--  `(by intro x h; simp; exact Subgroup.mem_subgroupOf.mp h)`
+
+--  or perhaps use `QuotientGroup.map` from the beginning with
+-- `G = ℤ`, `N = zsmulAddGroupHom L ^ (M + N - k)`
+-- `H = ℝ`, `M = zsmulAddGroupHom (L ^ M : ℝ)`
+
+#check (AddSubgroup.zmultiples (L ^ M : ℝ))
+
+def ZModEmbedding : ℤ ⧸ (AddSubgroup.zmultiples (L ^ (M + N - k) : ℤ)) →+ AddCircle (L ^ M : ℝ) :=
+  let hLReal : 1 < (L : ℝ) := by rw [← Nat.cast_one]; exact Nat.cast_lt.mpr hL.out
+  let hLkN := (one_div_ne_zero (pow_ne_zero (N - k) (ne_of_gt (lt_trans zero_lt_one hLReal))))
+  QuotientAddGroup.map (AddSubgroup.zmultiples (L ^ (M + N - k) : ℤ)) (AddSubgroup.zmultiples (L ^ M : ℝ))
+  (ZEmbedAddMonoidHom hLkN)
+  (by intro x h
+      rw [ZEmbedAddMonoidHom]
+      simp
+      rw [SMulEquiv]
+      simp
+      rw [AddSubgroup.mem_zmultiples_iff]
+      rw [AddSubgroup.mem_zmultiples_iff] at h
+      obtain ⟨n, hn⟩ := h
+      use n
+      field_simp
+      ring
+      rw [← hn]
+      simp
+      ring
+      rw [← pow_add]
+      congr
+      exact?)
+
+-- compose with `Int.quotientZMultiplesEquivZMod`
+
 
 def ScaledLattice (k : Fin N) := Submodule.span ℤ (ScaledBasis k)
 
