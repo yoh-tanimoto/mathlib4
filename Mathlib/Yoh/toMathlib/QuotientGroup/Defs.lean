@@ -274,6 +274,26 @@ theorem lift_surjective_of_surjective (φ : G →* M) (hφ : Function.Surjective
     Function.Surjective (QuotientGroup.lift N φ HN) :=
   Quotient.lift_surjective _ _ hφ
 
+section
+
+theorem Quot.injective_lift {α : Sort*} {γ : Sort*} {r : Setoid α} {f : α → γ}
+    (h : ∀ (a₁ a₂ : α), r a₁ a₂ → f a₁ = f a₂) :
+    Function.Injective (Quot.lift f h) ↔ ∀ (a₁ a₂ : α), r a₁ a₂ ↔ f a₁ = f a₂ := by
+  constructor
+  · intro hlinj a b
+    constructor
+    · intro hr
+      exact h a b hr
+    · intro hfab
+      exact Quotient.eq''.mp (hlinj hfab)
+  · intro h' aq bq hq
+    rw [← Quot.out_eq aq, ← Quot.out_eq bq, Quot.lift_mk f h, Quot.lift_mk f h] at hq
+    have hab := (h' aq.out bq.out).mpr hq
+    rw [← Quot.out_eq aq, ← Quot.out_eq bq]
+    exact Quot.sound hab
+
+end
+
 @[to_additive]
 theorem lift_injective_iff (φ : G →* M) (HN : N = φ.ker) :
     Function.Injective (QuotientGroup.lift N φ (le_of_eq HN)) := by
