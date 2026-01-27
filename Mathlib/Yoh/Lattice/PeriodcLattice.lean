@@ -45,14 +45,14 @@ abbrev ContinuousTorus := (Fin d) → (AddCircle (L ^ M : ℝ))
 
 def FineBasisVector (i : Fin d) : ContinuousTorus := (fun j => if i = j then (1 / N : ℝ) else 0)
 
-def ScaledBasisVector (k : Fin N) (i : Fin d) :
-    ContinuousTorus := (fun j => if i = j then (k / N : ℝ) else 0)
+-- def ScaledBasisVector (k : Fin N) (i : Fin d) :
+--     ContinuousTorus := (fun j => if i = j then (k / N : ℝ) else 0)
 
-def FineBasis : Set ContinuousTorus :=
-  Set.range (fun (i : Fin d) => FineBasisVector i)
+-- def FineBasis : Set ContinuousTorus :=
+--   Set.range (fun (i : Fin d) => FineBasisVector i)
 
-def ScaledBasis (k : Fin N) : Set ContinuousTorus :=
-  Set.range (fun (i : Fin d) => ScaledBasisVector k i)
+-- def ScaledBasis (k : Fin N) : Set ContinuousTorus :=
+--   Set.range (fun (i : Fin d) => ScaledBasisVector k i)
 
 def ScaledInfiniteLattice1d (p : ℝ) :=
   AddSubgroup.map ((LinearMap.lsmul ℝ ℝ p : ℝ →+ ℝ).comp (Int.castAddHom ℝ)) (⊤ : AddSubgroup ℤ)
@@ -75,9 +75,17 @@ lemma ScaledInfiniteLattice1d_eq (p : ℝ) :
     rw [← hq]
     exact Eq.symm (Int.cast_comm q p)
 
-def ScaledPeriodicLattice1d (k : Fin N) :=
+abbrev ScaledPeriodicLattice1d (k : Fin N) :=
   AddSubgroup.map (QuotientAddGroup.mk' (AddSubgroup.zmultiples (L ^ M : ℝ)))
     (ScaledInfiniteLattice1d (1 / (L ^ (N - k) : ℝ)))
+
+def ScaledPeriodicLattice1dBasis (k : Fin N) : ScaledPeriodicLattice1d k where
+  val := ↑(1 / (L ^ (N - k) : ℝ))
+  property := by
+    simp only [one_div, AddSubgroup.mem_map, mk'_apply]
+    rw [ScaledInfiniteLattice1d_eq]
+    use (1 / (L ^ (N - k) : ℝ))
+    simp
 
 variable (k : Fin N)
 #check (ScaledPeriodicLattice1d k : AddSubgroup (AddCircle (L ^ M : ℝ)))
@@ -244,9 +252,10 @@ lemma injective_ZModEmbedding : Injective (ZModEmbedding k) := by
 -- compose with `Int.quotientZMultiplesEquivZMod`
 
 
-abbrev ScaledPeriodicLattice (k : Fin N) := (Fin d) → ScaledPeriodicLattice1d k
+abbrev ScaledPeriodicLattice (k : Fin N) := AddSubgroup.pi (Set.univ : Set (Fin d))
+  (fun _ => ScaledPeriodicLattice1d k)
 
-abbrev ScaledPeriodicLattice' (k : Fin N) := (Fin d) → ScaledPeriodicLattice1d k
+-- abbrev ScaledPeriodicLattice' (k : Fin N) := (Fin d) → ScaledPeriodicLattice1d k
 
 section QuotientGroupPi
 
@@ -278,9 +287,11 @@ variable {ι : Type*} {G : ι → Type*} [∀ i, AddCommGroup (G i)] {NG : (i : 
 
 end QuotientAddGroupPi
 
+variable (k : Fin N) (x y : ScaledPeriodicLattice k) (m : Fin d)
+#check (x.val + y) m
 
 def ScaledPeriodicLattice.component (k : Fin N) (x : ScaledPeriodicLattice k) (j : Fin d) :
-    Set.Ioc (0 : ℝ) (0 + L ^ M) := AddCircle.equivIoc (L ^ M : ℝ) 0 (x j)
+    Set.Ioc (0 : ℝ) (0 + L ^ M) := AddCircle.equivIoc (L ^ M : ℝ) 0 (x.val j)
 
 lemma mem_ScaledPeriodicLattice_iff (k : Fin N) (x : ContinuousTorus) : x ∈ ScaledPeriodicLattice k ↔
     ∀ j, ∃ (m : ℕ), AddCircle.equivIoc (L ^ M : ℝ) 0 (x j) = (m / L ^ N : ℝ) := by
@@ -289,43 +300,18 @@ lemma mem_ScaledPeriodicLattice_iff (k : Fin N) (x : ContinuousTorus) : x ∈ Sc
     sorry
   · sorry
 
-def FineLattice := AddSubgroup.closure FineBasis
+-- lemma ScaledBasisVector_in_ScaledPeriodicLattice {k : Fin N} {i : Fin d} :
+--     ScaledBasisVector k i ∈ ScaledPeriodicLattice k := Submodule.mem_span_of_mem (Set.mem_range_self _)
 
-section
+-- lemma FineBasisVector_in_FineLattice {i : Fin d} : FineBasisVector i ∈ FineLattice :=
+--   AddSubgroup.mem_closure_of_mem (Set.mem_range_self _)
 
-variable {ι : Type} {G : ι → Type} [∀ i, Group (G i)] (H : (i : ι) → Subgroup (G i)) (i : ι)
+noncomputable abbrev shiftOne {k : Fin N} (ℓ : Fin d) :
+    ScaledPeriodicLattice k → ScaledPeriodicLattice k :=
+  fun x => x + ⟨fun ν => if ν = ℓ then (1 : ℝ) else (0 : ℝ)⟩
 
-#check H i
-#check ((i : ι) → G i)
-#synth Group ((i : ι) → G i)
-#check (i : ι) → H i
-variable (xi : H i)
-#check (xi : G i)
-
-variable (x : (i : ι) → H i)
-
-#check (x : (i : ι) → G i)
-
-#check (fun i => (x i : G i))
-
-end
-
-lemma ScaledBasisVector_in_ScaledPeriodicLattice {k : Fin N} {i : Fin d} :
-    ScaledBasisVector k i ∈ ScaledPeriodicLattice k := Submodule.mem_span_of_mem (Set.mem_range_self _)
-
-lemma FineBasisVector_in_FineLattice {i : Fin d} : FineBasisVector i ∈ FineLattice :=
-  AddSubgroup.mem_closure_of_mem (Set.mem_range_self _)
-
-abbrev FineLattice' {L' : RGStepL} (M' : SideLength) (N' : LatticeSpacing) :=
-  (Fin d') → Fin (L' ^ (M' + N'))
-
-variable (x : FineLattice) (j : Fin d)
-
-noncomputable def shiftOne {k : Fin N} (i : Fin d) : ScaledPeriodicLattice k → ScaledPeriodicLattice k :=
-  fun x => x + ⟨(ScaledBasisVector k i), ScaledBasisVector_in_ScaledPeriodicLattice⟩
-
-noncomputable def shiftOne' (n : Fin d') : @FineLattice' d' L' M' N' → @FineLattice' d' L' M' N' :=
-  fun x => fun m => if m = n then x m else x m + 1
+-- noncomputable def shiftOne' (n : Fin d') : @FineLattice' d' L' M' N' → @FineLattice' d' L' M' N' :=
+--   fun x => fun m => if m = n then x m else x m + 1
 
 end PeriodicLattice
 
@@ -333,11 +319,11 @@ noncomputable section LatticeField
 
 abbrev ScaledPeriodicLatticeField (k : Fin N) := ScaledPeriodicLattice k → ℝ
 
-abbrev LatticeField := FineLattice → ℝ
+-- abbrev LatticeField := FineLattice → ℝ
 
-abbrev LatticeField' {M' : SideLength} {N' : LatticeSpacing} := @FineLattice' d' L' M' N' → ℝ
+-- abbrev LatticeField' {M' : SideLength} {N' : LatticeSpacing} := @FineLattice' d' L' M' N' → ℝ
 
-variable (ϕ : LatticeField) (x : FineLattice)
+variable (k : Fin N) (ϕ : ScaledPeriodicLatticeField k) (x : ScaledPeriodicLattice k)
 
 def scaledFieldNorm {k : Fin N} (ϕ : ScaledPeriodicLatticeField k) : ℝ :=
   (∫ (x : ScaledPeriodicLattice k), (ϕ x) ^ 2 ∂count) / L ^ (d * (N - k))
