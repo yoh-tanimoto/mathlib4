@@ -294,11 +294,6 @@ theorem Quot.injective_lift {α : Sort*} {γ : Sort*} {r : Setoid α} {f : α �
 
 end
 
-@[to_additive]
-theorem lift_injective_iff (φ : G →* M) (HN : N = φ.ker) :
-    Function.Injective (QuotientGroup.lift N φ (le_of_eq HN)) := by
-  intro x y h
-
 section
 variable {X Y : Type} [Group X] [Group Y] (F : X →* Y)
 
@@ -329,6 +324,22 @@ theorem ker_lift (φ : G →* M) (HN : N ≤ φ.ker) :
   rw [← congrArg MonoidHom.ker (lift_comp_mk' N φ HN), ← MonoidHom.comap_ker,
     Subgroup.map_comap_eq_self_of_surjective (mk'_surjective N)]
 
+@[to_additive]
+theorem lift_injective (φ : G →* M) (HN : N = φ.ker) :
+    Function.Injective (QuotientGroup.lift N φ (le_of_eq HN)) := by
+  apply (MonoidHom.ker_eq_bot_iff _).mp
+  rw [QuotientGroup.ker_lift, ← HN]
+  exact map_mk'_self N
+
+@[to_additive]
+theorem lift_injective_iff (φ : G →* M) (HN : N ≤ φ.ker) :
+    Function.Injective (QuotientGroup.lift N φ HN) ↔ N = φ.ker := by
+  refine ⟨?_, fun h => lift_injective _ _ h⟩
+  intro h
+  rw [← MonoidHom.ker_eq_bot_iff _, QuotientGroup.ker_lift, Subgroup.map_eq_bot_iff,
+    QuotientGroup.ker_mk'] at h
+  exact le_antisymm HN h
+
 /-- A group homomorphism `f : G →* H` induces a map `G/N →* H/M` if `N ⊆ f⁻¹(M)`. -/
 @[to_additive
       /-- An `AddGroup` homomorphism `f : G →+ H` induces a map `G/N →+ H/M` if `N ⊆ f⁻¹(M)`. -/]
@@ -356,15 +367,42 @@ theorem map_surjective_of_surjective (M : Subgroup H) [M.Normal] (f : G →* H)
   lift_surjective_of_surjective _ _ hf _
 
 @[to_additive]
-theorem map_injective_iff (M : Subgroup H) [M.Normal] (f : G →* H) :
-    Function.Injective (map N M f) ↔ N = M.comap f :=
-  lift_surjective_of_surjective _ _ hf _
-
-@[to_additive]
 theorem ker_map (M : Subgroup H) [M.Normal] (f : G →* H) (h : N ≤ Subgroup.comap f M) :
     (map N M f h).ker = Subgroup.map (mk' N) (M.comap f) := by
   simp_rw [← ker_mk' M, MonoidHom.comap_ker]
   exact QuotientGroup.ker_lift _ _ _
+
+@[to_additive]
+theorem QuotientGroup.map_mk'_eq_bot_iff {G : Type*} [Group G] (N M : Subgroup G) [nN : N.Normal] :
+    Subgroup.map (mk' N) M = ⊥ ↔ M ≤ N := by
+  constructor
+  · intro h' x hx
+    rw [← ker_mk' N, MonoidHom.mem_ker, ← Subgroup.mem_bot, ← h']
+    exact Subgroup.mem_map_of_mem (mk' N) hx
+  · intro h
+    ext x
+    constructor
+    · intro hx
+      apply Set.mem_of_mem_of_subset hx
+      simpa using h
+    · intro hx
+      rw [Subgroup.mem_bot] at hx
+      rw [hx]
+      exact Subgroup.one_mem (Subgroup.map (mk' N) M)
+
+@[to_additive]
+theorem map_injective_iff (M : Subgroup H) [M.Normal] (f : G →* H) (h : N ≤ Subgroup.comap f M) :
+    Function.Injective (map N M f h) ↔ N = M.comap f := by
+  rw [← MonoidHom.ker_eq_bot_iff, ker_map]
+  constructor
+  · intro h'
+    apply le_antisymm h
+    intro x hx
+    rw [← ker_mk' N, MonoidHom.mem_ker, ← Subgroup.mem_bot, ← h']
+    exact Subgroup.mem_map_of_mem (mk' N) hx
+  · intro h'
+    rw [← h']
+    exact map_mk'_self N
 
 @[to_additive]
 theorem map_id_apply (h : N ≤ Subgroup.comap (MonoidHom.id _) N := (Subgroup.comap_id N).le) (x) :

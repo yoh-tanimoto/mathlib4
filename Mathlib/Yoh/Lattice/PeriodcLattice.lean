@@ -119,10 +119,23 @@ def SMulEquiv {p : ℝ} (hp : p ≠ 0) : ℝ ≃+ ℝ where
     intro x
     simp [smul_eq_mul, ← mul_assoc, mul_inv_cancel₀ hp]
 
+@[simp]
+lemma SMulEquiv_apply {p : ℝ} (hp : p ≠ 0) (x : ℝ) :
+  SMulEquiv hp x = p * x := rfl
+
+
 def ZEmbedAddMonoidHom {p : ℝ} (hp : p ≠ 0) : ℤ →+ ℝ where
   toFun := (SMulEquiv hp).comp (Int.castAddHom ℝ).toAddHom
   map_zero' := by simp
-  map_add' := by simp
+  map_add' := by
+    simp only [AddEquiv.toAddHom_eq_coe, AddHom.coe_comp, AddHom.coe_coe, AddHom.coe_mk,
+      ZeroHom.toFun_eq_coe, AddMonoidHom.toZeroHom_coe, Int.coe_castAddHom, comp_apply,
+      Int.cast_add, SMulEquiv_apply]
+    exact fun x y ↦ LeftDistribClass.left_distrib p x y
+
+@[simp]
+lemma ZEembedAddMonoidHom_apply {p : ℝ} (hp : p ≠ 0) (n : ℤ) :
+    ZEmbedAddMonoidHom hp n = (SMulEquiv hp).comp (Int.castAddHom ℝ).toAddHom n := rfl
 
 -- want `toZMod : ScaledPeriodicLattice1d k ≃+ ZMod (L ^ (M + (N - k)))`.
 -- note that `ZMod n` is defined as `Fin n`, but
@@ -161,7 +174,8 @@ def ZinR := (Int.castAddHom ℝ).range
 
 #check (AddSubgroup.zmultiples (L ^ M : ℝ))
 
-def ZModEmbedding : ℤ ⧸ (AddSubgroup.zmultiples (L ^ (M + (N - k)) : ℤ)) →+ AddCircle (L ^ M : ℝ) :=
+abbrev ZModEmbedding : ℤ ⧸ (AddSubgroup.zmultiples (L ^ (M + (N - k)) : ℤ)) →+ AddCircle (L ^ M : ℝ)
+  :=
   let hLReal : 1 < (L : ℝ) := by rw [← Nat.cast_one]; exact Nat.cast_lt.mpr hL.out
   let hLkN := (one_div_ne_zero (pow_ne_zero (N - k) (ne_of_gt (lt_trans zero_lt_one hLReal))))
   QuotientAddGroup.map (AddSubgroup.zmultiples (L ^ (M + (N - k)) : ℤ))
@@ -181,14 +195,58 @@ def ZModEmbedding : ℤ ⧸ (AddSubgroup.zmultiples (L ^ (M + (N - k)) : ℤ)) �
         simp
         ring)
 
+lemma kernel_eq :
+    let hLReal : 1 < (L : ℝ) := by rw [← Nat.cast_one]; exact Nat.cast_lt.mpr hL.out
+    let hLkN := (one_div_ne_zero (pow_ne_zero (N - k) (ne_of_gt (lt_trans zero_lt_one hLReal))))
+    AddSubgroup.zmultiples (L ^ (M + (N - k)) : ℤ) = AddSubgroup.comap (ZEmbedAddMonoidHom hLkN)
+    (AddSubgroup.zmultiples (L ^ M : ℝ)) := by
+  ext x
+  simp only [one_div, AddSubgroup.mem_comap, ZEembedAddMonoidHom_apply, AddEquiv.toAddHom_eq_coe,
+    AddHom.coe_comp, AddHom.coe_coe, AddHom.coe_mk, ZeroHom.toFun_eq_coe,
+    AddMonoidHom.toZeroHom_coe, Int.coe_castAddHom, comp_apply, SMulEquiv_apply]
+  rw [AddSubgroup.mem_zmultiples_iff, AddSubgroup.mem_zmultiples_iff]
+  constructor
+  · intro h
+    obtain ⟨k, hk⟩ := h
+    use k
+    simp_all only [zsmul_eq_mul]
+    field_simp
+    sorry
+  · intro h
+    obtain ⟨k, hk⟩ := h
+    use k
+    simp_all only [zsmul_eq_mul]
+    field_simp at hk
+    sorry
+
 lemma injective_ZModEmbedding : Injective (ZModEmbedding k) := by
-  intro x y
+  apply (AddMonoidHom.ker_eq_bot_iff (ZModEmbedding k)).mp
+  rw [QuotientAddGroup.ker_map]
+  ext x
+  simp only [one_div, AddSubgroup.mem_map, AddSubgroup.mem_comap, ZEembedAddMonoidHom_apply,
+    AddEquiv.toAddHom_eq_coe, AddHom.coe_comp, AddHom.coe_coe, AddHom.coe_mk, ZeroHom.toFun_eq_coe,
+    AddMonoidHom.toZeroHom_coe, Int.coe_castAddHom, comp_apply, SMulEquiv_apply, mk'_apply,
+    AddSubgroup.mem_bot]
+  refine ⟨?_, fun h => by use 0; simp; exact h.symm⟩
+  intro h
+  obtain ⟨l, hl1, hl2⟩ := h
+  rw [← hl2]
+  rw [AddSubgroup.mem_zmultiples_iff] at hl1
+  obtain ⟨n, hn⟩ := hl1
+  simp only [zsmul_eq_mul] at hn
+  field_simp at hn
+  have : (l : ℝ) = n * L ^ M * L ^ (N - k) := by
+    sorry
+  sorry
+
+-- use `MulEquiv.ofBijective` to define
+-- `ℤ ⧸ (AddSubgroup.zmultiples (L ^ (M + (N - k)) : ℤ)) ≃* ScaledPeriodicLattice1d k`
 -- compose with `Int.quotientZMultiplesEquivZMod`
 
 
-def ScaledLattice (k : Fin N) := Submodule.span ℤ (ScaledBasis k)
+abbrev ScaledPeriodicLattice (k : Fin N) := (Fin d) → ScaledPeriodicLattice1d k
 
-abbrev ScaledLattice' (k : Fin N) := (Fin d) → ScaledPeriodicLattice1d k
+abbrev ScaledPeriodicLattice' (k : Fin N) := (Fin d) → ScaledPeriodicLattice1d k
 
 section QuotientGroupPi
 
@@ -221,11 +279,10 @@ variable {ι : Type*} {G : ι → Type*} [∀ i, AddCommGroup (G i)] {NG : (i : 
 end QuotientAddGroupPi
 
 
-def ScaledLattice.component (k : Fin N) (x : ScaledLattice k) (j : Fin d) :
-    Set.Ioc (0 : ℝ) (0 + L ^ M) :=
-  AddCircle.equivIoc (L ^ M : ℝ) 0 (x.val j)
+def ScaledPeriodicLattice.component (k : Fin N) (x : ScaledPeriodicLattice k) (j : Fin d) :
+    Set.Ioc (0 : ℝ) (0 + L ^ M) := AddCircle.equivIoc (L ^ M : ℝ) 0 (x j)
 
-lemma mem_ScaledLattice_iff (k : Fin N) (x : ContinuousTorus) : x ∈ ScaledLattice k ↔
+lemma mem_ScaledPeriodicLattice_iff (k : Fin N) (x : ContinuousTorus) : x ∈ ScaledPeriodicLattice k ↔
     ∀ j, ∃ (m : ℕ), AddCircle.equivIoc (L ^ M : ℝ) 0 (x j) = (m / L ^ N : ℝ) := by
   constructor
   · intro h j
@@ -234,8 +291,27 @@ lemma mem_ScaledLattice_iff (k : Fin N) (x : ContinuousTorus) : x ∈ ScaledLatt
 
 def FineLattice := AddSubgroup.closure FineBasis
 
-lemma ScaledBasisVector_in_ScaledLattice {k : Fin N} {i : Fin d} :
-    ScaledBasisVector k i ∈ ScaledLattice k := Submodule.mem_span_of_mem (Set.mem_range_self _)
+section
+
+variable {ι : Type} {G : ι → Type} [∀ i, Group (G i)] (H : (i : ι) → Subgroup (G i)) (i : ι)
+
+#check H i
+#check ((i : ι) → G i)
+#synth Group ((i : ι) → G i)
+#check (i : ι) → H i
+variable (xi : H i)
+#check (xi : G i)
+
+variable (x : (i : ι) → H i)
+
+#check (x : (i : ι) → G i)
+
+#check (fun i => (x i : G i))
+
+end
+
+lemma ScaledBasisVector_in_ScaledPeriodicLattice {k : Fin N} {i : Fin d} :
+    ScaledBasisVector k i ∈ ScaledPeriodicLattice k := Submodule.mem_span_of_mem (Set.mem_range_self _)
 
 lemma FineBasisVector_in_FineLattice {i : Fin d} : FineBasisVector i ∈ FineLattice :=
   AddSubgroup.mem_closure_of_mem (Set.mem_range_self _)
@@ -245,8 +321,8 @@ abbrev FineLattice' {L' : RGStepL} (M' : SideLength) (N' : LatticeSpacing) :=
 
 variable (x : FineLattice) (j : Fin d)
 
-noncomputable def shiftOne {k : Fin N} (i : Fin d) : ScaledLattice k → ScaledLattice k :=
-  fun x => x + ⟨(ScaledBasisVector k i), ScaledBasisVector_in_ScaledLattice⟩
+noncomputable def shiftOne {k : Fin N} (i : Fin d) : ScaledPeriodicLattice k → ScaledPeriodicLattice k :=
+  fun x => x + ⟨(ScaledBasisVector k i), ScaledBasisVector_in_ScaledPeriodicLattice⟩
 
 noncomputable def shiftOne' (n : Fin d') : @FineLattice' d' L' M' N' → @FineLattice' d' L' M' N' :=
   fun x => fun m => if m = n then x m else x m + 1
@@ -255,7 +331,7 @@ end PeriodicLattice
 
 noncomputable section LatticeField
 
-abbrev ScaledLatticeField (k : Fin N) := ScaledLattice k → ℝ
+abbrev ScaledPeriodicLatticeField (k : Fin N) := ScaledPeriodicLattice k → ℝ
 
 abbrev LatticeField := FineLattice → ℝ
 
@@ -263,8 +339,8 @@ abbrev LatticeField' {M' : SideLength} {N' : LatticeSpacing} := @FineLattice' d'
 
 variable (ϕ : LatticeField) (x : FineLattice)
 
-def scaledFieldNorm {k : Fin N} (ϕ : ScaledLatticeField k) : ℝ :=
-  (∫ (x : ScaledLattice k), (ϕ x) ^ 2 ∂count) / L ^ (d * (N - k))
+def scaledFieldNorm {k : Fin N} (ϕ : ScaledPeriodicLatticeField k) : ℝ :=
+  (∫ (x : ScaledPeriodicLattice k), (ϕ x) ^ 2 ∂count) / L ^ (d * (N - k))
 
 def fieldNorm (ϕ : LatticeField) : ℝ :=
   (∫ (x : FineLattice), (ϕ x) ^ 2 ∂count) / L ^ (d * N)
@@ -273,15 +349,22 @@ def fieldNorm' {M' : SideLength} {N' : LatticeSpacing} (ϕ : @LatticeField' d' L
   (∫ (x : @FineLattice' d' L' M' N'), (ϕ x) ^ 2 ∂count) / L' ^ (d' * N')
 
 def partialDeriv {k : Fin N} (i : Fin d) :
-    ScaledLatticeField k → ScaledLatticeField k :=
+    ScaledPeriodicLatticeField k → ScaledPeriodicLatticeField k :=
   fun ϕ => fun x => (ϕ (shiftOne i x) - ϕ x) / L ^ (N - k)
 
 def partialDeriv' {M' : SideLength} {N' : LatticeSpacing} (n : Fin d') :
     @LatticeField' d' L' M' N' → @LatticeField' d' L' M' N' :=
   fun ϕ => fun x => (ϕ (shiftOne' M' N' n x) - ϕ x) / L' ^ N'
 
+-- need mem_iff
+lemma LatticeEmbedding {k₁ k₂ : Fin N} (h : k₁ ≤ k₂) :
+    ScaledPeriodicLattice1d k₂ ≤ ScaledPeriodicLattice1d k₁ := by
+  intro x hx
+  sorry
+
+
 def LatticeEmbedding {k₁ k₂ : Fin N} (h : k₁ < k₂) :
-    ScaledLattice k₂ → ScaledLattice k₁ :=
+    ScaledPeriodicLattice k₂ → ScaledPeriodicLattice k₁ :=
   fun x => ⟨fun (j : Fin d) => ((x : ContinuousTorus) j : AddCircle (L ^ M : ℝ)), by sorry⟩
 -- need to show that `x` in a finer lattice is in the ℤ-span of coarser lattice basis.
 -- maybe I should construct API to take components
