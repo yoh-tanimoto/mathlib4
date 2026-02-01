@@ -9,6 +9,14 @@ import Mathlib.Yoh.Lattice.Defs
 -- The periodic lattice is will be a subgroup of `ContinuousTorus`, but
 -- isomorphic to `ZMod L ^ (M + N)` so that one can take the coordinates.
 
+-- refactor:
+-- use `ZMod` to define a unit lattice
+-- add a modification of `ZMod.toAddCircle` to define the map from `ZMod P` to `AddCircle P`,
+-- defining the embedding of `ZMod` in `AddCircle P`
+-- use `AddCircle.equivAddCircle` to define rescaling
+-- show compatibility when the volume coincide
+
+
 open Polynomial Filter QuotientAddGroup Submodule MeasureTheory MeasureTheory.Measure
   NNReal BigOperators Function
 
