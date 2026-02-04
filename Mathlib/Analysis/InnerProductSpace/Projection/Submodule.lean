@@ -242,30 +242,22 @@ end Dense
 
 namespace ClosedSubmodule
 
-instance (K : ClosedSubmodule 𝕜 E) : IsClosed K.carrier := K.isClosed'
-
-instance (K : Submodule 𝕜 E) [CompleteSpace E] [IsClosed K.carrier] : CompleteSpace K := by
-  have : CompleteSpace K.carrier := by infer_instance
-  exact this
-
 @[simp]
-theorem eq_orthogonal_orthogonal (K : ClosedSubmodule 𝕜 E) [K.HasOrthogonalProjection] :
+theorem orthogonal_orthogonal_eq (K : ClosedSubmodule 𝕜 E) [K.HasOrthogonalProjection] :
     (Kᗮ)ᗮ = K := by ext x; simp
 
-theorem eq_iff_orthogonal_eq_orthogonal (K₁ K₂ : ClosedSubmodule 𝕜 E) [K₁.HasOrthogonalProjection]
-    [K₂.HasOrthogonalProjection] : K₁ᗮ = K₂ᗮ ↔ K₁ = K₂ := by
-  constructor
-  · intro h
-    rw [← eq_orthogonal_orthogonal K₁, ← eq_orthogonal_orthogonal K₂]
-    exact congrArg orthogonal h
-  · intro h
-    exact congrArg orthogonal h
+theorem orthogonal_eq_orthogonal_iff (K₁ K₂ : ClosedSubmodule 𝕜 E) [K₁.HasOrthogonalProjection]
+    [K₂.HasOrthogonalProjection] : K₁ᗮ = K₂ᗮ ↔ K₁ = K₂ :=
+  ⟨fun h ↦ by simpa using congr($hᗮ), fun h ↦ congr($hᗮ)⟩
+
+theorem orthogonal_injective [CompleteSpace E] :
+    Function.Injective (fun K : ClosedSubmodule 𝕜 E ↦ Kᗮ) :=
+  (orthogonal_eq_orthogonal_iff · · |>.mp)
 
 /-- The sup of two orthogonal subspaces equals the subspace orthogonal
 to the inf. -/
-theorem sup_orthogonal (K₁ K₂ : ClosedSubmodule 𝕜 E) [CompleteSpace E] :
+theorem sup_orthogonal [CompleteSpace E] (K₁ K₂ : ClosedSubmodule 𝕜 E) :
     K₁ᗮ ⊔ K₂ᗮ = (K₁ ⊓ K₂)ᗮ := by
-  rw [← eq_orthogonal_orthogonal (K₁ᗮ ⊔ K₂ᗮ), ← inf_orthogonal]
-  simp
+  simpa using congr($(inf_orthogonal K₁ᗮ K₂ᗮ)ᗮ).symm
 
 end ClosedSubmodule
