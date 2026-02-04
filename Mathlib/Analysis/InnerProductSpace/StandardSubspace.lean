@@ -88,9 +88,7 @@ variable {H : Type*} [NormedAddCommGroup H] [ipc : InnerProductSpace ℂ H]
 
 noncomputable instance : InnerProductSpace ℝ H where
   inner x y := ⟪x, y⟫.re
-  norm_sq_eq_re_inner x := by
-    simp only [RCLike.re_to_real, ipc.norm_sq_eq_re_inner]
-    exact rfl
+  norm_sq_eq_re_inner x := by simp [RCLike.re_to_real, ipc.norm_sq_eq_re_inner]
   conj_inner_symm x y := by
     simp only [← ipc.conj_inner_symm x y, conj_trivial]
     rfl
@@ -191,7 +189,7 @@ lemma mulI_mulI_eq (S : ClosedSubmodule ℝ H) : S.mulI.mulI = S := by
 lemma symplComp_symplComp_eq [CompleteSpace H] {S : ClosedSubmodule ℝ H} :
     S.symplComp.symplComp = S := by
   rw [symplComp, ← mulI_symplComp_eq_symplComp_mulI, symplComp]
-  simp only [eq_orthogonal_orthogonal, mulI_mulI_eq]
+  simp only [orthogonal_orthogonal_eq, mulI_mulI_eq]
 
 lemma sup_mulI_eq_mulI_sup (S T : ClosedSubmodule ℝ H) :
     (S ⊔ T).mulI = S.mulI ⊔ T.mulI := by
