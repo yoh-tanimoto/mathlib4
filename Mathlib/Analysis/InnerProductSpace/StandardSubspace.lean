@@ -199,6 +199,8 @@ end Def
 
 namespace StandardSubspace
 
+open ClosedSubmodule
+
 variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H]
 
 lemma standardSubspace_eq_iff {S T : StandardSubspace H} :
@@ -212,20 +214,20 @@ lemma standardSubspace_eq_iff {S T : StandardSubspace H} :
 `StandardSubspace`. -/
 noncomputable def mulI (S : StandardSubspace H) : StandardSubspace H where
   toClosedSubmodule := S.toClosedSubmodule.mulI
-  IsSeparating := by simpa [ClosedSubmodule.mulI_mulI_eq, inf_comm] using S.IsSeparating
-  IsCyclic := by simpa [ClosedSubmodule.mulI_mulI_eq, sup_comm] using S.IsCyclic
+  IsSeparating := by simpa [mulI_mulI_eq, inf_comm] using S.IsSeparating
+  IsCyclic := by simpa [mulI_mulI_eq, sup_comm] using S.IsCyclic
 
 /-- The symplectic complement of a standard subspace, bundled as a `StandardSubspace`. -/
 noncomputable def symplComp [CompleteSpace H] (S : StandardSubspace H) : StandardSubspace H where
   toClosedSubmodule := S.toClosedSubmodule.symplComp
   IsSeparating := by
-    rw [← ClosedSubmodule.mulI_symplComp_eq_symplComp_mulI,
-      ← ClosedSubmodule.inf_symplComp_eq_symplcomp_sup, S.IsCyclic, ClosedSubmodule.symplComp,
+    rw [← mulI_symplComp_eq_symplComp_mulI,
+      ← inf_symplComp_eq_symplcomp_sup, S.IsCyclic, ClosedSubmodule.symplComp,
       ClosedSubmodule.mulI]
     simp
   IsCyclic := by
-    rw [← ClosedSubmodule.mulI_symplComp_eq_symplComp_mulI,
-      ← ClosedSubmodule.sup_symplComp_eq_symplcomp_inf, S.IsSeparating, ClosedSubmodule.symplComp,
+    rw [← mulI_symplComp_eq_symplComp_mulI,
+      ← sup_symplComp_eq_symplcomp_inf, S.IsSeparating, ClosedSubmodule.symplComp,
       ClosedSubmodule.mulI]
     simp
 
