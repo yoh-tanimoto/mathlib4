@@ -20,277 +20,87 @@ import Mathlib.Yoh.Lattice.Defs
 open Polynomial Filter QuotientAddGroup Submodule MeasureTheory MeasureTheory.Measure
   NNReal BigOperators Function
 
-class ParameterSet where
-  d : ℕ
-  L : ℕ
-  M : ℕ
-  N : ℕ
+namespace ZMod
 
-variable {d' : SpaceDimension} {L' : RGStepL}
-  (M' : SideLength) (N' : LatticeSpacing)
+variable (p : ℝ) (P : ℕ) [NeZero P]
 
-export ParameterSet (d L M N)
+/-- The `AddMonoidHom` from `ZMod N` to `ℝ / ℤ` sending `j mod N` to `j / N mod 1`. -/
+noncomputable def toScaledAddCircle : ZMod P →+ AddCircle p :=
+  ZMod.lift P ⟨AddMonoidHom.mk' (fun j ↦ ↑(p * j / P : ℝ))
+  (by simp only [Int.cast_add]; field_simp; ring_nf; simp), by simp⟩
 
-variable [ps : ParameterSet] {μb gc : ℝ}
+-- adapt APIs for `toAddCircle` to `toScaledAddCircle`
 
-#check d
+lemma toScaledAddCircle_intCast (j : ℤ) :
+    toScaledAddCircle p P (j : ZMod P) = ↑(p * j / P) := by
+  field_simp
+  simp [toScaledAddCircle]
 
-class OneLtL : Prop where
-  out : 1 < L
+lemma toScaledAddCircle_natCast (j : ℕ) :
+    toScaledAddCircle p P (j : ZMod P) = ↑(p * j / P) := by
+  simpa using toScaledAddCircle_intCast p (P := P) j
 
-variable [hL : @OneLtL ps]
+/--
+Explicit formula for `toScaledAddCircle j`. Note that this is "evil" because it uses `ZMod.val`.
+Where possible, it is recommended to lift `j` to `ℤ` and use `toScaledAddCircle_intCast` instead.
+-/
+lemma toScaledAddCircle_apply (j : ZMod P) :
+    toScaledAddCircle p P j = ↑(p * j.val / P ) := by
+  rw [← toScaledAddCircle_natCast, natCast_zmod_val]
 
-instance : Fact (0 < (L ^ M : ℝ)) :=
-    Fact.mk (by
-      rw [← Nat.cast_pow]
-      exact Nat.cast_pos'.mpr (pow_pos (lt_trans zero_lt_one hL.out) M))
+-- variable (P) in
+lemma toScaledAddCircle_injective [hp : Fact (0 < p)] :
+    Function.Injective (toScaledAddCircle p P : ZMod P → _) := by
+  intro x y hxy
+  have : (0 : ℝ) < P := Nat.cast_pos.mpr (NeZero.pos _)
+  have hx : p * x.val / P ∈ Set.Ico 0 (0 + p) := by
+    simp only [zero_add, Set.mem_Ico]
+    field_simp
+    simp only [zero_mul]
+    constructor
+    · exact mul_nonneg (le_of_lt hp.out) (Nat.cast_nonneg' x.val)
+    · rw [mul_lt_mul_iff_right₀ hp.out, Nat.cast_lt]
+      exact val_lt x
+  have hy : p * y.val / P ∈ Set.Ico 0 (0 + p) := by
+    simp only [zero_add, Set.mem_Ico]
+    field_simp
+    simp only [zero_mul]
+    constructor
+    · exact mul_nonneg (le_of_lt hp.out) (Nat.cast_nonneg' y.val)
+    · rw [mul_lt_mul_iff_right₀ hp.out, Nat.cast_lt]
+      exact val_lt y
+  rwa [toScaledAddCircle_apply, toScaledAddCircle_apply, AddCircle.coe_eq_coe_iff_of_mem_Ico hx hy,
+    div_left_inj' this.ne', mul_left_cancel_iff_of_pos, Nat.cast_inj,
+    (val_injective P).eq_iff] at hxy
+  exact hp.out
 
-instance : NeZero L := NeZero.of_gt hL.out
+@[simp] lemma toScaledAddCircle_inj [hp : Fact (0 < p)] {j k : ZMod P} :
+    toScaledAddCircle p P j = toScaledAddCircle p P k ↔ j = k :=
+  (toScaledAddCircle_injective p P).eq_iff
+
+@[simp] lemma toScaledAddCircle_eq_zero [hp : Fact (0 < p)] {j : ZMod P} :
+    toScaledAddCircle p P j = 0 ↔ j = 0 :=
+  map_eq_zero_iff _ (toScaledAddCircle_injective p P)
+
+-- use `AddCircle.equivAddCircle` to define rescaling?
+
+end ZMod
 
 noncomputable section PeriodicLattice
 
-abbrev ContinuousTorus := (Fin d) → (AddCircle (L ^ M : ℝ))
+open ZMod
 
-def FineBasisVector (i : Fin d) : ContinuousTorus := (fun j => if i = j then (1 / N : ℝ) else 0)
+variable (p : ℝ) (P : ℕ) [NeZero P]
 
--- def ScaledBasisVector (k : Fin N) (i : Fin d) :
---     ContinuousTorus := (fun j => if i = j then (k / N : ℝ) else 0)
+#check toScaledAddCircle p
 
--- def FineBasis : Set ContinuousTorus :=
---   Set.range (fun (i : Fin d) => FineBasisVector i)
-
--- def ScaledBasis (k : Fin N) : Set ContinuousTorus :=
---   Set.range (fun (i : Fin d) => ScaledBasisVector k i)
+def ScaledPeriodicLattice1d : AddSubgroup (AddCircle p) :=
+  AddSubgroup.map (toScaledAddCircle p P) ⊤
 
 def ScaledInfiniteLattice1d (p : ℝ) :=
   AddSubgroup.map ((LinearMap.lsmul ℝ ℝ p : ℝ →+ ℝ).comp (Int.castAddHom ℝ)) (⊤ : AddSubgroup ℤ)
 
-lemma ScaledInfiniteLattice1d_eq (p : ℝ) :
-    ScaledInfiniteLattice1d p = AddSubgroup.zmultiples p := by
-  ext x
-  rw [ScaledInfiniteLattice1d, AddSubgroup.mem_map, AddSubgroup.mem_zmultiples_iff]
-  simp only [AddSubgroup.mem_top, AddMonoidHom.coe_comp, AddMonoidHom.coe_coe, Int.coe_castAddHom,
-    Function.comp_apply, LinearMap.lsmul_apply, smul_eq_mul, true_and, zsmul_eq_mul]
-  constructor
-  · intro h
-    obtain ⟨q, hq⟩ := h
-    use q
-    rw [← hq]
-    exact Int.cast_comm q p
-  · intro h
-    obtain ⟨q, hq⟩ := h
-    use q
-    rw [← hq]
-    exact Eq.symm (Int.cast_comm q p)
-
-abbrev ScaledPeriodicLattice1d (k : Fin N) :=
-  AddSubgroup.map (QuotientAddGroup.mk' (AddSubgroup.zmultiples (L ^ M : ℝ)))
-    (ScaledInfiniteLattice1d (1 / (L ^ (N - k) : ℝ)))
-
-abbrev UnitPeriodicLattice1d (k : Fin N) :=
-  AddSubgroup.map (QuotientAddGroup.mk' (AddSubgroup.zmultiples (L ^ (M + (N - k)) : ℝ)))
-    (Int.castAddHom ℝ).range
-
-def ScaledPeriodicLattice1dBasis (k : Fin N) : ScaledPeriodicLattice1d k where
-  val := ↑(1 / (L ^ (N - k) : ℝ))
-  property := by
-    simp only [one_div, AddSubgroup.mem_map, mk'_apply]
-    rw [ScaledInfiniteLattice1d_eq]
-    use (1 / (L ^ (N - k) : ℝ))
-    simp
-
-variable (k : Fin N)
-#check (ScaledPeriodicLattice1d k : AddSubgroup (AddCircle (L ^ M : ℝ)))
-
-lemma ScaledPeriodicLattice1d_eq_Submodule_span (k : Fin N) :
-    ScaledPeriodicLattice1d k =
-    AddSubgroup.zmultiples
-    ((QuotientAddGroup.mk' (AddSubgroup.zmultiples (L ^ M : ℝ))) (1 / (L ^ (N - k) : ℝ))) := by
-  ext x
-  simp only [one_div, mk'_apply]
-  constructor
-  · intro h
-    obtain ⟨y, hy⟩ := AddSubgroup.mem_map.mp h
-    simp only [one_div, mk'_apply] at hy
-    rw [ScaledInfiniteLattice1d_eq] at hy
-    rw [← hy.right]
-    obtain ⟨m, hm⟩ := AddSubgroup.mem_zmultiples_iff.mp hy.left
-    rw [AddSubgroup.mem_zmultiples_iff]
-    use m
-    rw [← hm]
-    simp
-  · intro h
-    obtain ⟨m, hm⟩ := AddSubgroup.mem_zmultiples_iff.mp h
-    rw [ScaledPeriodicLattice1d]
-    simp only [one_div, AddSubgroup.mem_map, mk'_apply]
-    use m • (L ^ (N - k) : ℝ )⁻¹
-    refine ⟨?_, hm⟩
-    rw [ScaledInfiniteLattice1d_eq]
-    simp
-
-
--- use `p : ℝˣ`?
-def SMulEquiv {p : ℝ} (hp : p ≠ 0) : ℝ ≃+ ℝ where
-  toFun x := p • x
-  invFun x := p⁻¹ • x
-  map_add' := smul_add _
-  left_inv := by
-    intro x
-    simp [smul_eq_mul, ← mul_assoc, inv_mul_cancel₀ hp]
-  right_inv := by
-    intro x
-    simp [smul_eq_mul, ← mul_assoc, mul_inv_cancel₀ hp]
-
-@[simp]
-lemma SMulEquiv_apply {p : ℝ} (hp : p ≠ 0) (x : ℝ) :
-  SMulEquiv hp x = p * x := rfl
-
-
-def ZEmbedAddMonoidHom {p : ℝ} (hp : p ≠ 0) : ℤ →+ ℝ where
-  toFun := (SMulEquiv hp).comp (Int.castAddHom ℝ).toAddHom
-  map_zero' := by simp
-  map_add' := by
-    simp only [AddEquiv.toAddHom_eq_coe, AddHom.coe_comp, AddHom.coe_coe, AddHom.coe_mk,
-      ZeroHom.toFun_eq_coe, AddMonoidHom.toZeroHom_coe, Int.coe_castAddHom, comp_apply,
-      Int.cast_add, SMulEquiv_apply]
-    exact fun x y ↦ LeftDistribClass.left_distrib p x y
-
-@[simp]
-lemma ZEembedAddMonoidHom_apply {p : ℝ} (hp : p ≠ 0) (n : ℤ) :
-    ZEmbedAddMonoidHom hp n = (SMulEquiv hp).comp (Int.castAddHom ℝ).toAddHom n := rfl
-
--- want `toZMod : ScaledPeriodicLattice1d k ≃+ ZMod (L ^ (M + (N - k)))`.
--- note that `ZMod n` is defined as `Fin n`, but
--- so and `ScaledPeriodicLattice1d k` is also defined as a quotient.
--- need first that `ℤ ⧸ n` is isom to its image in `ℝ`.
---· `ℤ` is isom to its image in `ℝ` by `Int.castAddHom ℝ`
-def ZinR := (Int.castAddHom ℝ).range
-#check ZinR
---· `ZinR` is isom to `1 / L ^ (M + (N - k)) • ℤ` by `AddSubgroup.map`
---  with respect to the scalar multiplication.
---· We should take `AddSubgroup.map` with respect to
---  `QuotientAddGroup.mk' (AddSubgroup.zmultiples (L ^ M : ℝ))`
---  which is `Subgroup AddCircle (L ^ M : ℝ)`
---· Want the `AddEquiv` from this to `ZMod (L ^ (M + (N - k)))`,
---  through `Int.quotientZMultiplesEquivZMod : ℤ ⧸ n ≃+ ZMod n`
---· One can use `QuotientAddGroup.equivQuotientZSMulOfEquiv`,
---  from `ZinR ≃+ ScaledInfiniteLattice1d (1 / (L ^ (N - k) : ℝ))`
---  to get
---  `ZinR ⧸ L ^ (M + (N - k))`
---  `≃+ ScaledInfiniteLattice1d (1 / (L ^ (N - k) : ℝ)) ⧸ L ^ M`
---· Moreover, we need
---  `ScaledInfiniteLattice1d (1 / (L ^ (N - k) : ℝ)) ⧸ (zsmulAddGroupHom L ^ M).range`
---  `≃+ ScaledPeriodicLattice k`.
---  use `QuotientAddGroup.quotientMapAddSubgroupOfOfLe` to make this last
---  identification (it uses internally `QuotientAddGroup.map` )
---  to obtain `H ⧸ N.addSubgroupOf H →+ (⊤ : Subgroup G) ⧸ N.addSubgroupOf (⊤ : Subgroup G)`
---  use `Subgroup.topEquiv : ↥⊤ ≃* G` and `QuotientAddGroup.map`
---  to get `(⊤ : Subgroup G) ⧸ N.subgroupOf ⊤ ≃* G ⧸ N)`
---  `variable (G : Type) [CommGroup G] (H N : Subgroup G) [N.Normal]`
---  `QuotientGroup.map (N.subgroupOf ⊤) N ⟨⟨Subgroup.topEquiv.toFun, by simp⟩, Subgroup.topEquiv.map_mul'⟩`
---  `(by intro x h; simp; exact Subgroup.mem_subgroupOf.mp h)`
-
---  or perhaps use `QuotientGroup.map` from the beginning with
--- `G = ℤ`, `N = zsmulAddGroupHom L ^ (M + (N - k))`
--- `H = ℝ`, `M = zsmulAddGroupHom (L ^ M : ℝ)`
-
-#check (AddSubgroup.zmultiples (L ^ M : ℝ))
-
-
--- use `lift`? cf. `ZMod.toAddCircle` see below
-abbrev ZModEmbedding : ℤ ⧸ (AddSubgroup.zmultiples (L ^ (M + (N - k)) : ℤ)) →+ AddCircle (L ^ M : ℝ)
-  :=
-  let hLReal : 1 < (L : ℝ) := by rw [← Nat.cast_one]; exact Nat.cast_lt.mpr hL.out
-  let hLkN := (one_div_ne_zero (pow_ne_zero (N - k) (ne_of_gt (lt_trans zero_lt_one hLReal))))
-  QuotientAddGroup.map (AddSubgroup.zmultiples (L ^ (M + (N - k)) : ℤ))
-    (AddSubgroup.zmultiples (L ^ M : ℝ)) (ZEmbedAddMonoidHom hLkN)
-    (by intro x h
-        rw [ZEmbedAddMonoidHom]
-        simp only [one_div, AddEquiv.toAddHom_eq_coe, AddHom.coe_comp, AddHom.coe_coe,
-          AddHom.coe_mk, ZeroHom.toFun_eq_coe, AddMonoidHom.toZeroHom_coe, Int.coe_castAddHom,
-          AddSubgroup.mem_comap, AddMonoidHom.coe_mk, ZeroHom.coe_mk, Function.comp_apply]
-        rw [SMulEquiv]
-        simp only [smul_eq_mul, inv_inv, AddEquiv.coe_mk, Equiv.coe_fn_mk]
-        rw [AddSubgroup.mem_zmultiples_iff] at *
-        obtain ⟨n, hn⟩ := h
-        use n
-        field_simp
-        rw [← hn]
-        simp
-        ring)
-
-
-noncomputable def ZModEmbedding' (p : ℝ) (hp : p ≠ 0) (nezero_N : N ≠ 0):
-    ZMod N →+ AddCircle p :=
-  ZMod.lift N ⟨AddMonoidHom.mk' (fun j ↦ ↑(p * j / N : ℝ))
-    (by
-    simp only [Int.cast_add]
-    intro a b
-    rw [← QuotientAddGroup.mk_add, QuotientAddGroup.eq_iff_sub_mem]
-    field_simp
-    simp),
-    by
-    simp
-    field_simp
-    exact AddSubgroup.mem_zmultiples p
-    ⟩
-
-
-lemma kernel_eq :
-    let hLReal : 1 < (L : ℝ) := by rw [← Nat.cast_one]; exact Nat.cast_lt.mpr hL.out
-    let hLkN := (one_div_ne_zero (pow_ne_zero (N - k) (ne_of_gt (lt_trans zero_lt_one hLReal))))
-    AddSubgroup.zmultiples (L ^ (M + (N - k)) : ℤ) = AddSubgroup.comap (ZEmbedAddMonoidHom hLkN)
-    (AddSubgroup.zmultiples (L ^ M : ℝ)) := by
-  ext x
-  simp only [one_div, AddSubgroup.mem_comap, ZEembedAddMonoidHom_apply, AddEquiv.toAddHom_eq_coe,
-    AddHom.coe_comp, AddHom.coe_coe, AddHom.coe_mk, ZeroHom.toFun_eq_coe,
-    AddMonoidHom.toZeroHom_coe, Int.coe_castAddHom, comp_apply, SMulEquiv_apply]
-  rw [AddSubgroup.mem_zmultiples_iff, AddSubgroup.mem_zmultiples_iff]
-  constructor
-  · intro h
-    obtain ⟨k, hk⟩ := h
-    use k
-    simp_all only [zsmul_eq_mul]
-    field_simp
-    sorry
-  · intro h
-    obtain ⟨k, hk⟩ := h
-    use k
-    simp_all only [zsmul_eq_mul]
-    field_simp at hk
-    sorry
-
-lemma injective_ZModEmbedding : Injective (ZModEmbedding k) := by
-  apply (AddMonoidHom.ker_eq_bot_iff (ZModEmbedding k)).mp
-  rw [QuotientAddGroup.ker_map]
-  ext x
-  simp only [one_div, AddSubgroup.mem_map, AddSubgroup.mem_comap, ZEembedAddMonoidHom_apply,
-    AddEquiv.toAddHom_eq_coe, AddHom.coe_comp, AddHom.coe_coe, AddHom.coe_mk, ZeroHom.toFun_eq_coe,
-    AddMonoidHom.toZeroHom_coe, Int.coe_castAddHom, comp_apply, SMulEquiv_apply, mk'_apply,
-    AddSubgroup.mem_bot]
-  refine ⟨?_, fun h => by use 0; simp; exact h.symm⟩
-  intro h
-  obtain ⟨l, hl1, hl2⟩ := h
-  rw [← hl2]
-  rw [AddSubgroup.mem_zmultiples_iff] at hl1
-  obtain ⟨n, hn⟩ := hl1
-  simp only [zsmul_eq_mul] at hn
-  field_simp at hn
-  have : (l : ℝ) = n * L ^ M * L ^ (N - k) := by
-    sorry
-  sorry
-
--- use `MulEquiv.ofBijective` to define
--- `ℤ ⧸ (AddSubgroup.zmultiples (L ^ (M + (N - k)) : ℤ)) ≃* ScaledPeriodicLattice1d k`
--- compose with `Int.quotientZMultiplesEquivZMod`
-
-
--- use `AddCircle.equivAddCircle` to define rescaling?
-
-abbrev ScaledPeriodicLattice (k : Fin N) := AddSubgroup.pi (Set.univ : Set (Fin d))
-  (fun _ => ScaledPeriodicLattice1d k)
-
--- abbrev ScaledPeriodicLattice' (k : Fin N) := (Fin d) → ScaledPeriodicLattice1d k
+end PeriodicLattice
 
 section QuotientGroupPi
 
@@ -321,129 +131,3 @@ variable {ι : Type*} {G : ι → Type*} [∀ i, AddCommGroup (G i)] {NG : (i : 
 #synth (AddSubgroup.pi Set.univ NG).Normal
 
 end QuotientAddGroupPi
-
-variable (k : Fin N) (x y : ScaledPeriodicLattice k) (m : Fin d)
-#check (x.val + y) m
-
-def ScaledPeriodicLattice.component (k : Fin N) (x : ScaledPeriodicLattice k) (j : Fin d) :
-    Set.Ioc (0 : ℝ) (0 + L ^ M) := AddCircle.equivIoc (L ^ M : ℝ) 0 (x.val j)
-
-lemma mem_ScaledPeriodicLattice_iff (k : Fin N) (x : ContinuousTorus) : x ∈ ScaledPeriodicLattice k ↔
-    ∀ j, ∃ (m : ℕ), AddCircle.equivIoc (L ^ M : ℝ) 0 (x j) = (m / L ^ N : ℝ) := by
-  constructor
-  · intro h j
-    sorry
-  · sorry
-
--- lemma ScaledBasisVector_in_ScaledPeriodicLattice {k : Fin N} {i : Fin d} :
---     ScaledBasisVector k i ∈ ScaledPeriodicLattice k := Submodule.mem_span_of_mem (Set.mem_range_self _)
-
--- lemma FineBasisVector_in_FineLattice {i : Fin d} : FineBasisVector i ∈ FineLattice :=
---   AddSubgroup.mem_closure_of_mem (Set.mem_range_self _)
-
-noncomputable abbrev shiftOne {k : Fin N} (ℓ : Fin d) :
-    ScaledPeriodicLattice k → ScaledPeriodicLattice k :=
-  fun x => x + ⟨fun ν => if ν = ℓ then (1 : ℝ) else (0 : ℝ)⟩
-
--- noncomputable def shiftOne' (n : Fin d') : @FineLattice' d' L' M' N' → @FineLattice' d' L' M' N' :=
---   fun x => fun m => if m = n then x m else x m + 1
-
-end PeriodicLattice
-
-noncomputable section LatticeField
-
-abbrev ScaledPeriodicLatticeField (k : Fin N) := ScaledPeriodicLattice k → ℝ
-
--- abbrev LatticeField := FineLattice → ℝ
-
--- abbrev LatticeField' {M' : SideLength} {N' : LatticeSpacing} := @FineLattice' d' L' M' N' → ℝ
-
-variable (k : Fin N) (ϕ : ScaledPeriodicLatticeField k) (x : ScaledPeriodicLattice k)
-
-def scaledFieldNorm {k : Fin N} (ϕ : ScaledPeriodicLatticeField k) : ℝ :=
-  (∫ (x : ScaledPeriodicLattice k), (ϕ x) ^ 2 ∂count) / L ^ (d * (N - k))
-
-def fieldNorm (ϕ : LatticeField) : ℝ :=
-  (∫ (x : FineLattice), (ϕ x) ^ 2 ∂count) / L ^ (d * N)
-
-def fieldNorm' {M' : SideLength} {N' : LatticeSpacing} (ϕ : @LatticeField' d' L' M' N') : ℝ :=
-  (∫ (x : @FineLattice' d' L' M' N'), (ϕ x) ^ 2 ∂count) / L' ^ (d' * N')
-
-def partialDeriv {k : Fin N} (i : Fin d) :
-    ScaledPeriodicLatticeField k → ScaledPeriodicLatticeField k :=
-  fun ϕ => fun x => (ϕ (shiftOne i x) - ϕ x) / L ^ (N - k)
-
-def partialDeriv' {M' : SideLength} {N' : LatticeSpacing} (n : Fin d') :
-    @LatticeField' d' L' M' N' → @LatticeField' d' L' M' N' :=
-  fun ϕ => fun x => (ϕ (shiftOne' M' N' n x) - ϕ x) / L' ^ N'
-
--- need mem_iff
-lemma LatticeEmbedding {k₁ k₂ : Fin N} (h : k₁ ≤ k₂) :
-    ScaledPeriodicLattice1d k₂ ≤ ScaledPeriodicLattice1d k₁ := by
-  intro x hx
-  sorry
-
-
-def LatticeEmbedding {k₁ k₂ : Fin N} (h : k₁ < k₂) :
-    ScaledPeriodicLattice k₂ → ScaledPeriodicLattice k₁ :=
-  fun x => ⟨fun (j : Fin d) => ((x : ContinuousTorus) j : AddCircle (L ^ M : ℝ)), by sorry⟩
--- need to show that `x` in a finer lattice is in the ℤ-span of coarser lattice basis.
--- maybe I should construct API to take components
--- look around Mathlib.Analysis.Fourier.ZMod, Mathlib.Topology.Instances.AddCircle.Real
--- and develop APIs
--- make an isomorphism between this and Mathlib.Data.ZMod.Basic
-
-def LatticeEmbedding' {M' : SideLength} {N₁ N₂ : LatticeSpacing} (h : N₁ < N₂) :
-    @FineLattice' d' L' M' N₁ → @FineLattice' d' L' M' N₂ :=
-  fun x => fun n => Fin.ofNat (L' ^ (M' + N₂)) (x n * (L' ^ (N₂ - N₁)))
-
-end LatticeField
-
-section Weight
-
-abbrev FieldWeight' {M' : SideLength} {N' : LatticeSpacing} := @LatticeField' d' L' M' N'  → ℝ≥0
-
-noncomputable def blockAveraging' {M' : SideLength} {N' : LatticeSpacing} :
-    @LatticeField' d' L' M' (N' + 1) → @LatticeField' d' L' M' N' :=
-  fun ϕ => fun x =>
-    ∑ x' ∈ {s : @FineLattice' d' L' M' (N' + 1) | ∀ n, s n < L'},
-      ϕ (fun n => (LatticeEmbedding' (lt_add_one N') x n) + x' n
-        - (Fin.ofNat (L' ^ (M' + (N' + 1))) (L' / 2 : ℕ))) / L' ^ d'
-
-lemma pow_sub_one_le' : L' ^ (M' + N') ≤ L' ^ (M' + (N' + 1)) := by
-  apply Nat.pow_le_pow_of_le hL.out
-  simp
-
-noncomputable def blockConstant' {M' : SideLength} {N' : LatticeSpacing} :
-    @LatticeField' d' L' M' N' → @LatticeField' d' L' M' (N' + 1) :=
-  fun ϕ => fun x => ϕ (fun n => (Fin.ofNat (L' ^ (M' + N')) (((x n : ℕ)+ L' / (2 : ℕ)) / L')))
-
-@[simp]
-lemma blockConstant_apply' {M' : SideLength} {N' : LatticeSpacing} (ϕ : @LatticeField' d' L' M' N')
-    (x : @FineLattice' d' L' M' (N' + 1)) :
-    blockConstant' ϕ x = ϕ (fun n => Fin.ofNat (L' ^ (M' + N')) (((x n : ℕ)+ L' / (2 : ℕ)) / L')) := by
-  rfl
-
-lemma blockAC_eq_id' {M' : SideLength} {N' : LatticeSpacing} :
-    @blockAveraging' d' L' _ M' N' ∘ @blockConstant' d' L' _ M' N' = id := by
-  ext ϕ x
-  simp only [Function.comp_apply, id_eq]
-  sorry
-
-end Weight
-
-
-section FreeFlow
-
-noncomputable def HFree' {M' : SideLength} {N' : LatticeSpacing} (ϕ : @LatticeField' d' L' M' N')
-  {μb : ℝ} : ℝ :=
-  Real.exp (- ((∑ n, fieldNorm' (partialDeriv' n ϕ)) + μb * fieldNorm' ϕ) / 2)
-
-noncomputable def freePartitionFunction' : ℝ :=
-  ∫ (ϕ : @LatticeField' d' L' M' N'), Real.exp (@HFree' d' L' _ M' N' ϕ μb) ∂count
-
--- multivariate Gaussian Mathlib.Analysis.SpecialFunctions.Gaussian.FourierTransform
-
-#check freePartitionFunction' M' N'
-
-end FreeFlow
