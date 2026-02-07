@@ -9,13 +9,6 @@ import Mathlib.Yoh.Lattice.Defs
 -- The periodic lattice is will be a subgroup of `ContinuousTorus`, but
 -- isomorphic to `ZMod L ^ (M + N)` so that one can take the coordinates.
 
--- refactor:
--- use `ZMod` to define a unit lattice
--- add a modification of `ZMod.toAddCircle` to define the map from `ZMod P` to `AddCircle P`,
--- defining the embedding of `ZMod` in `AddCircle P`
--- use `AddCircle.equivAddCircle` to define rescaling
--- show compatibility when the volume coincide
-
 
 open Polynomial Filter QuotientAddGroup Submodule MeasureTheory MeasureTheory.Measure
   NNReal BigOperators Function
@@ -82,8 +75,6 @@ lemma toScaledAddCircle_injective [hp : Fact (0 < p)] :
     toScaledAddCircle p P j = 0 ↔ j = 0 :=
   map_eq_zero_iff _ (toScaledAddCircle_injective p P)
 
--- use `AddCircle.equivAddCircle` to define rescaling?
-
 end ZMod
 
 noncomputable section PeriodicLattice
@@ -92,13 +83,31 @@ open ZMod
 
 variable (p : ℝ) (P : ℕ) [NeZero P]
 
-#check toScaledAddCircle p
-
 def ScaledPeriodicLattice1d : AddSubgroup (AddCircle p) :=
   AddSubgroup.map (toScaledAddCircle p P) ⊤
 
-def ScaledInfiniteLattice1d (p : ℝ) :=
+def ScaledInfiniteLattice1d :=
   AddSubgroup.map ((LinearMap.lsmul ℝ ℝ p : ℝ →+ ℝ).comp (Int.castAddHom ℝ)) (⊤ : AddSubgroup ℤ)
+
+@[simp]
+lemma AddCircle.equivAddCircle_apply (p q : ℝ) (hp : 0 < p) (hq : 0 < q) (x : AddCircle p) :
+    letI : Fact (0 < p) := { out := hp }
+    (equivAddCircle p q (ne_of_gt hp) (ne_of_gt hq)) x
+    = (p⁻¹ * q * (AddCircle.equivIco p 0 x).val) := by
+  sorry
+
+
+def AddCircle.equivScaledPeriodicLattice1d (p : ℝ) (hp : 0 < p) (P : ℕ) [NeZero P] (q : ℝ)
+    (hq : 0 < q) (Q : ℕ) [NeZero Q] :
+    ScaledPeriodicLattice1d p P ≃+ ScaledPeriodicLattice1d q Q where
+  toFun x := ⟨(AddCircle.equivAddCircle p q (ne_of_gt hp) (ne_of_gt hq)) x, by sorry⟩
+  invFun x := ⟨(AddCircle.equivAddCircle q p (ne_of_gt hq) (ne_of_gt hp)) x, by sorry⟩
+  map_add' := by simp
+  left_inv := by
+    intro x
+    simp
+    sorry
+  right_inv := by sorry
 
 end PeriodicLattice
 
