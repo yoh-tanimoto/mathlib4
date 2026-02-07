@@ -101,13 +101,10 @@ def AddCircle.equivScaledPeriodicLattice1d (p : ℝ) (hp : 0 < p) (P : ℕ) [NeZ
     (hq : 0 < q) (Q : ℕ) [NeZero Q] :
     ScaledPeriodicLattice1d p P ≃+ ScaledPeriodicLattice1d q Q where
   toFun x := ⟨(AddCircle.equivAddCircle p q (ne_of_gt hp) (ne_of_gt hq)) x, by sorry⟩
-  invFun x := ⟨(AddCircle.equivAddCircle q p (ne_of_gt hq) (ne_of_gt hp)) x, by sorry⟩
+  invFun x := ⟨(AddCircle.equivAddCircle p q (ne_of_gt hp) (ne_of_gt hq)).symm x, by sorry⟩
   map_add' := by simp
-  left_inv := by
-    intro x
-    simp
-    sorry
-  right_inv := by sorry
+  left_inv x := by simp
+  right_inv x := by simp
 
 end PeriodicLattice
 
