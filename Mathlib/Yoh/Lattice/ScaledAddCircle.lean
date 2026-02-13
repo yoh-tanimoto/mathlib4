@@ -18,7 +18,7 @@ namespace ZMod
 variable (p : ℝ) (P : ℕ) [NeZero P]
 
 /-- The `AddMonoidHom` from `ZMod N` to `ℝ / ℤ` sending `j mod N` to `j / N mod 1`. -/
-noncomputable def toScaledAddCircle : ZMod P →+ AddCircle p :=
+noncomputable abbrev toScaledAddCircle : ZMod P →+ AddCircle p :=
   ZMod.lift P ⟨AddMonoidHom.mk' (fun j ↦ ↑(p * j / P : ℝ))
   (by simp only [Int.cast_add]; field_simp; ring_nf; simp), by simp⟩
 
@@ -83,25 +83,43 @@ open ZMod
 
 variable (p : ℝ) (P : ℕ) [NeZero P]
 
-def ScaledPeriodicLattice1d : AddSubgroup (AddCircle p) :=
+abbrev ScaledPeriodicLattice1d : AddSubgroup (AddCircle p) :=
   AddSubgroup.map (toScaledAddCircle p P) ⊤
 
-def ScaledInfiniteLattice1d :=
+variable [Fact (0 < p)]
+#check (AddCircle.equivIco p 0).symm
+
+lemma symm_equivIco_eq (x : Set.Ico 0 (0 + p)) : (AddCircle.equivIco p 0).symm x = x := by
+  rw [Equiv.symm_apply_eq]
+  exact (Equiv.symm_apply_eq (AddCircle.equivIco p 0)).mp rfl
+
+lemma mem_scaledPeriodicLattice1d_iff [Fact (0 < p)] (x : AddCircle p) : x ∈ ScaledPeriodicLattice1d p P ↔
+    ∃ (n : ℕ), (AddCircle.equivIco p 0) x = (n : ℝ) * p / (P : ℝ):= by
+  constructor
+  · sorry
+  · simp only [AddSubgroup.mem_map, AddSubgroup.mem_top, true_and, forall_exists_index]
+    intro n hn
+    use n
+
+
+
+    sorry
+
+
+abbrev ScaledInfiniteLattice1d :=
   AddSubgroup.map ((LinearMap.lsmul ℝ ℝ p : ℝ →+ ℝ).comp (Int.castAddHom ℝ)) (⊤ : AddSubgroup ℤ)
 
 @[simp]
-lemma AddCircle.equivAddCircle_apply (p q : ℝ) (hp : 0 < p) (hq : 0 < q) (x : AddCircle p) :
-    letI : Fact (0 < p) := { out := hp }
-    (equivAddCircle p q (ne_of_gt hp) (ne_of_gt hq)) x
-    = (p⁻¹ * q * (AddCircle.equivIco p 0 x).val) := by
-  sorry
+lemma AddCircle.equivAddCircle_apply (p q : ℝ) [hp : Fact (0 < p)] [hq : Fact (0 < q)]
+    (x : Set.Ico 0 (0 + p)) :
+    (equivAddCircle p q (ne_of_gt hp.out) (ne_of_gt hq.out)) ((AddCircle.equivIco p 0).symm x)
+    = x.val * (p⁻¹ * q) := by rw [equivIco]; simp
 
-
-def AddCircle.equivScaledPeriodicLattice1d (p : ℝ) (hp : 0 < p) (P : ℕ) [NeZero P] (q : ℝ)
-    (hq : 0 < q) (Q : ℕ) [NeZero Q] :
+def AddCircle.equivScaledPeriodicLattice1d (p : ℝ) [hp : Fact (0 < p)] (P : ℕ) [NeZero P] (q : ℝ)
+    [hq : Fact (0 < q)] (Q : ℕ) [NeZero Q] :
     ScaledPeriodicLattice1d p P ≃+ ScaledPeriodicLattice1d q Q where
-  toFun x := ⟨(AddCircle.equivAddCircle p q (ne_of_gt hp) (ne_of_gt hq)) x, by sorry⟩
-  invFun x := ⟨(AddCircle.equivAddCircle p q (ne_of_gt hp) (ne_of_gt hq)).symm x, by sorry⟩
+  toFun x := ⟨(AddCircle.equivAddCircle p q (ne_of_gt hp.out) (ne_of_gt hq.out)) x, by simp⟩
+  invFun x := ⟨(AddCircle.equivAddCircle p q (ne_of_gt hp.out) (ne_of_gt hq.out)).symm x, by sorry⟩
   map_add' := by simp
   left_inv x := by simp
   right_inv x := by simp
