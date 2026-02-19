@@ -1,5 +1,5 @@
 /-
-Copyright (c) 2025 Yoh Tanimoto. All rights reserved.
+Copyright (c) 2026 Yoh Tanimoto. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Yoh Tanimoto
 -/
@@ -79,6 +79,7 @@ section RestrictScalar
 
 variable {H : Type*} [NormedAddCommGroup H] [ipc : InnerProductSpace ℂ H]
 
+/-- `H` as a real Hilbert space. -/
 noncomputable instance : InnerProductSpace ℝ H where
   inner x y := ⟪x, y⟫.re
   norm_sq_eq_re_inner := by simp [RCLike.re_to_real, ipc.norm_sq_eq_re_inner]
@@ -109,7 +110,7 @@ lemma mem_iff (S : ClosedSubmodule ℝ H) {x : H} : x ∈ S ↔ x ∈ S.toSubmod
 
 lemma mem_symplComp_iff {x : H} {S : ClosedSubmodule ℝ H} :
     x ∈ S.symplComp ↔ ∀ y ∈ S, ⟪y, x⟫.im = 0 := by
-  simp only [symplComp, mem_orthogonal, mem_mapEquiv_iff', scalarSMulCLE_symm_apply, Complex.inv_I,
+  simp only [symplComp, mem_orthogonal, mem_mapEquiv_iff, scalarSMulCLE_symm_apply, Complex.inv_I,
     neg_smul]
   constructor
   · intro h y hy
@@ -118,18 +119,13 @@ lemma mem_symplComp_iff {x : H} {S : ClosedSubmodule ℝ H} :
     simpa [inner_real_eq_re_inner] using hiy hy
   · intro h _ hy
     have hiy := h _ hy
-    simpa [inner_neg_left, Complex.neg_im, neg_eq_zero, inner_smul_left] using hiy
+    simpa [inner_smul_left] using hiy
 
 lemma orthogonal_mulI_eq_symplComp (S : ClosedSubmodule ℝ H) : Sᗮ.mulI = S.symplComp := by
   ext x
-  rw [← mem_iff, ← mem_iff, mem_symplComp_iff]
-  simp only [mem_mapEquiv_iff', scalarSMulCLE_symm_apply, Complex.inv_I, neg_smul]
-  simp_rw [mem_orthogonal, inner_real_eq_re_inner]
-  constructor
-  · intro h y hy
-    simpa [inner_smul_right_eq_smul] using h y hy
-  · intro h y hy
-    simpa [inner_smul_right_eq_smul] using h y hy
+  rw [← mem_iff, ← mem_iff, mem_symplComp_iff, mem_mapEquiv_iff, scalarSMulCLE_symm_apply,
+    Complex.inv_I, neg_smul, mem_orthogonal]
+  simp [inner_real_eq_re_inner]
 
 lemma mulI_symplComp_eq_symplComp_mulI {S : ClosedSubmodule ℝ H} :
     S.mulI.symplComp = S.symplComp.mulI := by
@@ -141,18 +137,11 @@ lemma mulI_mulI_eq (S : ClosedSubmodule ℝ H) : S.mulI.mulI = S := by
   simp only [Submodule.carrier_eq_coe, coe_toSubmodule, SetLike.mem_coe]
   constructor
   · intro h
-    rw [mem_mapEquiv_iff' (scalarSMulCLE H Complex.I)] at h
-    simp only [scalarSMulCLE_symm_apply, Complex.inv_I, neg_smul, mem_mapEquiv_iff', smul_neg,
-      ← smul_assoc, smul_eq_mul] at h
-    rw [← SetLike.forall_smul_mem_iff] at h
-    simpa using (h (-1 : ℝ))
+    rw [mem_mapEquiv_iff (scalarSMulCLE H Complex.I), ← SetLike.forall_smul_mem_iff] at h
+    simpa [← smul_assoc] using (h (-1 : ℝ))
   · intro h
-    rw [mem_mapEquiv_iff' (scalarSMulCLE H Complex.I)]
-    simp only [scalarSMulCLE_symm_apply, Complex.inv_I, neg_smul, mem_mapEquiv_iff', smul_neg,
-      neg_neg, ← smul_assoc]
-    simp only [smul_eq_mul, Complex.I_mul_I, neg_smul, one_smul]
     rw [← SetLike.forall_smul_mem_iff] at h
-    simpa using (h (-1 : ℝ))
+    simpa [← smul_assoc] using (h (-1 : ℝ))
 
 @[simp]
 lemma symplComp_symplComp_eq [CompleteSpace H] {S : ClosedSubmodule ℝ H} :
@@ -162,11 +151,11 @@ lemma symplComp_symplComp_eq [CompleteSpace H] {S : ClosedSubmodule ℝ H} :
 
 lemma sup_mulI_eq_mulI_sup (S T : ClosedSubmodule ℝ H) :
     (S ⊔ T).mulI = S.mulI ⊔ T.mulI := by
-  rw [mulI, ← mapEquiv_sup_eq_sup_mapEquiv]
+  rw [mulI, ← mapEquiv_sup_eq]
 
 lemma inf_mulI_eq_mulI_inf (S T : ClosedSubmodule ℝ H) :
     (S ⊓ T).mulI = S.mulI ⊓ T.mulI := by
-  rw [mulI, ← mapEquiv_inf_eq_inf_mapEquiv]
+  rw [mulI, ← mapEquiv_inf_eq]
 
 lemma inf_symplComp_eq_symplcomp_sup (S T : ClosedSubmodule ℝ H) :
     (S ⊔ T).symplComp = S.symplComp ⊓ T.symplComp := by
