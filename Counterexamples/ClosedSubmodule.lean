@@ -1,0 +1,7 @@
+-- TODO
+-- 1. example of a pair of closed subspaces `S T` such that `S ⊔ T` is not closed
+-- 2. example of a closed subspace `K` of an inner product space such that `Kᗮᗮ ≠ K`
+-- 3. example of a pair of closed subspaces `S T` and a continuous linear map `f` such that
+--    `(S ⊓ T).map f  ≠ S.map f ⊓ T.map f`
+--    - take `S` sequences nonzero at odd, `T` sequences nonzero at even, `f` maps `T` to `S`
+-- but `(S ⊓ T).map f ⊆ S.map f ⊓ T.map f` is automatic.
