@@ -15,65 +15,91 @@ open Polynomial Filter QuotientAddGroup Submodule MeasureTheory MeasureTheory.Me
 
 namespace ZMod
 
-variable (p : ℝ) (P : ℕ) [NeZero P]
+variable (P : ℝ) {N : ℕ} [nzN : NeZero N]
+-- `N⁻¹` : the lattice spacing
+-- `P` : the period of the lattice
+
 
 /-- The `AddMonoidHom` from `ZMod N` to `ℝ / ℤ` sending `j mod N` to `j / N mod 1`. -/
-noncomputable abbrev toScaledAddCircle : ZMod P →+ AddCircle p :=
-  ZMod.lift P ⟨AddMonoidHom.mk' (fun j ↦ ↑(p * j / P : ℝ))
-  (by simp only [Int.cast_add]; field_simp; ring_nf; simp), by simp⟩
+noncomputable def toScaledAddCircle : ZMod N →+ AddCircle P :=
+  lift N ⟨AddMonoidHom.mk' (fun j ↦ ↑(P * j / N : ℝ)) (by simp only [Int.cast_add]; ring_nf; simp),
+    by simp⟩
 
 -- adapt APIs for `toAddCircle` to `toScaledAddCircle`
 
 lemma toScaledAddCircle_intCast (j : ℤ) :
-    toScaledAddCircle p P (j : ZMod P) = ↑(p * j / P) := by
-  field_simp
+    toScaledAddCircle P (j : ZMod N) = ↑(P * j / N) := by
   simp [toScaledAddCircle]
 
 lemma toScaledAddCircle_natCast (j : ℕ) :
-    toScaledAddCircle p P (j : ZMod P) = ↑(p * j / P) := by
-  simpa using toScaledAddCircle_intCast p (P := P) j
+    toScaledAddCircle P (j : ZMod N) = ↑(P * j / N) := by
+  simpa using toScaledAddCircle_intCast P (N := N) j
 
 /--
 Explicit formula for `toScaledAddCircle j`. Note that this is "evil" because it uses `ZMod.val`.
-Where possible, it is recommended to lift `j` to `ℤ` and use `toScaledAddCircle_intCast` instead.
--/
-lemma toScaledAddCircle_apply (j : ZMod P) :
-    toScaledAddCircle p P j = ↑(p * j.val / P ) := by
+Where possible, it is recommended to lift `j` to `ℤ` and use `toScaledAddCircle_intCast` instead. -/
+lemma toScaledAddCircle_apply (j : ZMod N) :
+    toScaledAddCircle P j = ↑(P * j.val / N) := by
   rw [← toScaledAddCircle_natCast, natCast_zmod_val]
 
--- variable (P) in
-lemma toScaledAddCircle_injective [hp : Fact (0 < p)] :
-    Function.Injective (toScaledAddCircle p P : ZMod P → _) := by
+lemma injective_toScaledAddCircle [hp : Fact (0 < P)] :
+    Function.Injective (@toScaledAddCircle P N _) := by
+  intro x y h
+  rw [toScaledAddCircle_apply, toScaledAddCircle_apply, ← sub_eq_zero, ← AddCircle.coe_sub,
+    ← sub_div _ _ (N : ℝ), ← mul_sub, AddCircle.coe_eq_zero_iff] at h
+  obtain ⟨n, hn⟩ := h
+  rw [zsmul_eq_mul, mul_comm, ← sub_eq_zero, mul_div_assoc, ← mul_sub, mul_eq_zero] at hn
+  rcases hn with hn | hn
+  · exfalso; exact hp.out.ne' hn
+  wlog h : y.val ≤ x.val
+  · push_neg at h
+    rw [eq_comm]
+    apply this P (-n) _ h.le
+    grind
+  · rw [← Nat.cast_sub h, ← ZMod.val_sub h, sub_eq_zero] at hn
+    have nnonneg : 0 ≤ n := by
+      rw [← @Int.cast_nonneg_iff ℝ, hn]
+      exact div_nonneg (Nat.cast_nonneg' (x - y).val) (Nat.cast_nonneg' N)
+    have nltone : n < 1 := by
+      rw [← @Int.cast_lt ℝ _ _ _ _ _ n 1, hn, Int.cast_one,
+        div_lt_one₀ (by rw [Nat.cast_pos]; exact Nat.pos_of_neZero N), Nat.cast_lt]
+      exact val_lt (x - y)
+    have : n = 0 := by
+      apply le_antisymm _ nnonneg
+      rw [← zero_add 1, ← Int.le_iff_lt_add_one] at nltone
+      exact nltone
+    rw [this, Int.cast_zero, eq_comm, div_eq_zero_iff] at hn
+    rcases hn with hn | hn
+    · rw [Nat.cast_eq_zero, val_eq_zero, sub_eq_zero] at hn
+      exact hn
+    · exfalso; exact nzN.out <| Nat.cast_eq_zero.mp hn
+
+variable (N) in
+lemma toScaledAddCircle_injective [hp : Fact (0 < P)] :
+    Function.Injective (toScaledAddCircle P : ZMod N → _) := by
   intro x y hxy
-  have : (0 : ℝ) < P := Nat.cast_pos.mpr (NeZero.pos _)
-  have hx : p * x.val / P ∈ Set.Ico 0 (0 + p) := by
+  have : (0 : ℝ) < N := Nat.cast_pos.mpr (NeZero.pos _)
+  have mem_ico (z : ZMod N) : P * z.val / N ∈ Set.Ico 0 (0 + P) := by
     simp only [zero_add, Set.mem_Ico]
     field_simp
     simp only [zero_mul]
     constructor
-    · exact mul_nonneg (le_of_lt hp.out) (Nat.cast_nonneg' x.val)
+    · exact mul_nonneg (le_of_lt hp.out) (Nat.cast_nonneg' z.val)
     · rw [mul_lt_mul_iff_right₀ hp.out, Nat.cast_lt]
-      exact val_lt x
-  have hy : p * y.val / P ∈ Set.Ico 0 (0 + p) := by
-    simp only [zero_add, Set.mem_Ico]
-    field_simp
-    simp only [zero_mul]
-    constructor
-    · exact mul_nonneg (le_of_lt hp.out) (Nat.cast_nonneg' y.val)
-    · rw [mul_lt_mul_iff_right₀ hp.out, Nat.cast_lt]
-      exact val_lt y
-  rwa [toScaledAddCircle_apply, toScaledAddCircle_apply, AddCircle.coe_eq_coe_iff_of_mem_Ico hx hy,
-    div_left_inj' this.ne', mul_left_cancel_iff_of_pos, Nat.cast_inj,
-    (val_injective P).eq_iff] at hxy
+      exact z.val_lt
+  rwa [toScaledAddCircle_apply, toScaledAddCircle_apply,
+    AddCircle.coe_eq_coe_iff_of_mem_Ico (mem_ico x) (mem_ico y), div_left_inj' this.ne',
+    mul_left_cancel_iff_of_pos, Nat.cast_inj,
+    (val_injective N).eq_iff] at hxy
   exact hp.out
 
-@[simp] lemma toScaledAddCircle_inj [hp : Fact (0 < p)] {j k : ZMod P} :
-    toScaledAddCircle p P j = toScaledAddCircle p P k ↔ j = k :=
-  (toScaledAddCircle_injective p P).eq_iff
+@[simp] lemma toScaledAddCircle_inj [hp : Fact (0 < P)] {j k : ZMod N} :
+    toScaledAddCircle P j = toScaledAddCircle P k ↔ j = k :=
+  (toScaledAddCircle_injective P N).eq_iff
 
-@[simp] lemma toScaledAddCircle_eq_zero [hp : Fact (0 < p)] {j : ZMod P} :
-    toScaledAddCircle p P j = 0 ↔ j = 0 :=
-  map_eq_zero_iff _ (toScaledAddCircle_injective p P)
+@[simp] lemma toScaledAddCircle_eq_zero [hp : Fact (0 < P)] {j : ZMod N} :
+    toScaledAddCircle P j = 0 ↔ j = 0 :=
+  map_eq_zero_iff _ (toScaledAddCircle_injective P N)
 
 end ZMod
 
@@ -81,33 +107,44 @@ noncomputable section PeriodicLattice
 
 open ZMod
 
-variable (p : ℝ) (P : ℕ) [NeZero P]
+variable (P : ℝ) [ltP : Fact (0 < P)] (N : ℕ) [NeZero N]
 
-abbrev ScaledPeriodicLattice1d : AddSubgroup (AddCircle p) :=
-  AddSubgroup.map (toScaledAddCircle p P) ⊤
+instance : NeZero P := ⟨ltP.out.ne'⟩
 
-variable [Fact (0 < p)]
-#check (AddCircle.equivIco p 0).symm
+abbrev ScaledPeriodicLattice1d : AddSubgroup (AddCircle P) :=
+  AddSubgroup.map (@toScaledAddCircle P N _) ⊤
 
-lemma symm_equivIco_eq (x : Set.Ico 0 (0 + p)) : (AddCircle.equivIco p 0).symm x = x := by
+lemma symm_equivIco_eq (x : Set.Ico 0 (0 + P)) : (AddCircle.equivIco P 0).symm x = x := by
   rw [Equiv.symm_apply_eq]
-  exact (Equiv.symm_apply_eq (AddCircle.equivIco p 0)).mp rfl
+  exact (Equiv.symm_apply_eq (AddCircle.equivIco P 0)).mp rfl
 
-lemma mem_scaledPeriodicLattice1d_iff [Fact (0 < p)] (x : AddCircle p) : x ∈ ScaledPeriodicLattice1d p P ↔
-    ∃ (n : ℕ), (AddCircle.equivIco p 0) x = (n : ℝ) * p / (P : ℝ):= by
-  constructor
-  · sorry
-  · simp only [AddSubgroup.mem_map, AddSubgroup.mem_top, true_and, forall_exists_index]
-    intro n hn
-    use n
+omit ltP in
+lemma mem_scaledPeriodicLattice1d_iff [Fact (0 < P)] (x : AddCircle P) :
+    x ∈ ScaledPeriodicLattice1d P N ↔
+    ∃ (m : ZMod N), @toScaledAddCircle P N _ m = x := by
+  simp
+
+lemma mem_scaledPeriodicLattice1d_iff' [Fact (0 < P)] (x : AddCircle P) :
+    x ∈ ScaledPeriodicLattice1d P N ↔
+    ∃ (j : ZMod N), ↑(P * j.val / N) = x := by
+  rw [mem_scaledPeriodicLattice1d_iff]
+  simp_rw [toScaledAddCircle_apply]
+
+-- I want to define the following. As a map, this is just `toScaledAddCircle`.
+-- But I need to define a map `ZMod N → ScaledPeriodicLattice1d P N`,
+-- not `ZMod N → AddCircle P`.
+-- furtheremore, show that it is injective (done) and surjective (by definition)
+def EquivToPeriodicLattice1d : ZMod N ≃+ ScaledPeriodicLattice1d P N := sorry
+--  AddEquiv.mk' (Equiv.ofBijective )
 
 
-
-    sorry
-
+-- lemma mem_scaledPeriodicLattice1d_iff'' [Fact (0 < P)] (x : AddCircle P) :
+--     x ∈ ScaledPeriodicLattice1d P N ↔
+--     ∃ (n : ℕ), (AddCircle.equivIco P 0) x = (n : ℝ) * P / (N : ℝ) := by
+--   sorry
 
 abbrev ScaledInfiniteLattice1d :=
-  AddSubgroup.map ((LinearMap.lsmul ℝ ℝ p : ℝ →+ ℝ).comp (Int.castAddHom ℝ)) (⊤ : AddSubgroup ℤ)
+  AddSubgroup.map ((LinearMap.lsmul ℝ ℝ P : ℝ →+ ℝ).comp (Int.castAddHom ℝ)) (⊤ : AddSubgroup ℤ)
 
 @[simp]
 lemma AddCircle.equivAddCircle_apply (p q : ℝ) [hp : Fact (0 < p)] [hq : Fact (0 < q)]
@@ -115,11 +152,11 @@ lemma AddCircle.equivAddCircle_apply (p q : ℝ) [hp : Fact (0 < p)] [hq : Fact 
     (equivAddCircle p q (ne_of_gt hp.out) (ne_of_gt hq.out)) ((AddCircle.equivIco p 0).symm x)
     = x.val * (p⁻¹ * q) := by rw [equivIco]; simp
 
-def AddCircle.equivScaledPeriodicLattice1d (p : ℝ) [hp : Fact (0 < p)] (P : ℕ) [NeZero P] (q : ℝ)
-    [hq : Fact (0 < q)] (Q : ℕ) [NeZero Q] :
-    ScaledPeriodicLattice1d p P ≃+ ScaledPeriodicLattice1d q Q where
-  toFun x := ⟨(AddCircle.equivAddCircle p q (ne_of_gt hp.out) (ne_of_gt hq.out)) x, by simp⟩
-  invFun x := ⟨(AddCircle.equivAddCircle p q (ne_of_gt hp.out) (ne_of_gt hq.out)).symm x, by sorry⟩
+def AddCircle.equivScaledPeriodicLattice1d (p : ℝ) [hp : Fact (0 < p)] (N : ℕ) [NeZero N] (q : ℝ)
+  [hq : Fact (0 < q)] (Q : ℕ) [NeZero Q] :
+    ScaledPeriodicLattice1d p N ≃+ ScaledPeriodicLattice1d q Q where
+  toFun x := ⟨(AddCircle.equivAddCircle p q hp.out.ne' hq.out.ne') x, by simp⟩
+  invFun x := ⟨(AddCircle.equivAddCircle p q hp.out.ne' hq.out.ne').symm x, by sorry⟩
   map_add' := by simp
   left_inv x := by simp
   right_inv x := by simp
