@@ -20,7 +20,7 @@ variable (P : ℝ) {N : ℕ} [nzN : NeZero N]
 -- `P` : the period of the lattice
 
 
-/-- The `AddMonoidHom` from `ZMod N` to `ℝ / ℤ` sending `j mod N` to `j / N mod 1`. -/
+/-- The `AddMonoidHom` from `ZMod N` to `ℝ / P ℤ` sending `j mod N` to `P * j / N mod P`. -/
 noncomputable def toScaledAddCircle : ZMod N →+ AddCircle P :=
   lift N ⟨AddMonoidHom.mk' (fun j ↦ ↑(P * j / N : ℝ)) (by simp only [Int.cast_add]; ring_nf; simp),
     by simp⟩
@@ -42,37 +42,37 @@ lemma toScaledAddCircle_apply (j : ZMod N) :
     toScaledAddCircle P j = ↑(P * j.val / N) := by
   rw [← toScaledAddCircle_natCast, natCast_zmod_val]
 
-lemma injective_toScaledAddCircle [hp : Fact (0 < P)] :
-    Function.Injective (@toScaledAddCircle P N _) := by
-  intro x y h
-  rw [toScaledAddCircle_apply, toScaledAddCircle_apply, ← sub_eq_zero, ← AddCircle.coe_sub,
-    ← sub_div _ _ (N : ℝ), ← mul_sub, AddCircle.coe_eq_zero_iff] at h
-  obtain ⟨n, hn⟩ := h
-  rw [zsmul_eq_mul, mul_comm, ← sub_eq_zero, mul_div_assoc, ← mul_sub, mul_eq_zero] at hn
-  rcases hn with hn | hn
-  · exfalso; exact hp.out.ne' hn
-  wlog h : y.val ≤ x.val
-  · push_neg at h
-    rw [eq_comm]
-    apply this P (-n) _ h.le
-    grind
-  · rw [← Nat.cast_sub h, ← ZMod.val_sub h, sub_eq_zero] at hn
-    have nnonneg : 0 ≤ n := by
-      rw [← @Int.cast_nonneg_iff ℝ, hn]
-      exact div_nonneg (Nat.cast_nonneg' (x - y).val) (Nat.cast_nonneg' N)
-    have nltone : n < 1 := by
-      rw [← @Int.cast_lt ℝ _ _ _ _ _ n 1, hn, Int.cast_one,
-        div_lt_one₀ (by rw [Nat.cast_pos]; exact Nat.pos_of_neZero N), Nat.cast_lt]
-      exact val_lt (x - y)
-    have : n = 0 := by
-      apply le_antisymm _ nnonneg
-      rw [← zero_add 1, ← Int.le_iff_lt_add_one] at nltone
-      exact nltone
-    rw [this, Int.cast_zero, eq_comm, div_eq_zero_iff] at hn
-    rcases hn with hn | hn
-    · rw [Nat.cast_eq_zero, val_eq_zero, sub_eq_zero] at hn
-      exact hn
-    · exfalso; exact nzN.out <| Nat.cast_eq_zero.mp hn
+-- lemma injective_toScaledAddCircle [hp : Fact (0 < P)] :
+--     Function.Injective (@toScaledAddCircle P N _) := by
+--   intro x y h
+--   rw [toScaledAddCircle_apply, toScaledAddCircle_apply, ← sub_eq_zero, ← AddCircle.coe_sub,
+--     ← sub_div _ _ (N : ℝ), ← mul_sub, AddCircle.coe_eq_zero_iff] at h
+--   obtain ⟨n, hn⟩ := h
+--   rw [zsmul_eq_mul, mul_comm, ← sub_eq_zero, mul_div_assoc, ← mul_sub, mul_eq_zero] at hn
+--   rcases hn with hn | hn
+--   · exfalso; exact hp.out.ne' hn
+--   wlog h : y.val ≤ x.val
+--   · push_neg at h
+--     rw [eq_comm]
+--     apply this P (-n) _ h.le
+--     grind
+--   · rw [← Nat.cast_sub h, ← ZMod.val_sub h, sub_eq_zero] at hn
+--     have nnonneg : 0 ≤ n := by
+--       rw [← @Int.cast_nonneg_iff ℝ, hn]
+--       exact div_nonneg (Nat.cast_nonneg' (x - y).val) (Nat.cast_nonneg' N)
+--     have nltone : n < 1 := by
+--       rw [← @Int.cast_lt ℝ _ _ _ _ _ n 1, hn, Int.cast_one,
+--         div_lt_one₀ (by rw [Nat.cast_pos]; exact Nat.pos_of_neZero N), Nat.cast_lt]
+--       exact val_lt (x - y)
+--     have : n = 0 := by
+--       apply le_antisymm _ nnonneg
+--       rw [← zero_add 1, ← Int.le_iff_lt_add_one] at nltone
+--       exact nltone
+--     rw [this, Int.cast_zero, eq_comm, div_eq_zero_iff] at hn
+--     rcases hn with hn | hn
+--     · rw [Nat.cast_eq_zero, val_eq_zero, sub_eq_zero] at hn
+--       exact hn
+--     · exfalso; exact nzN.out <| Nat.cast_eq_zero.mp hn
 
 variable (N) in
 lemma toScaledAddCircle_injective [hp : Fact (0 < P)] :
@@ -107,14 +107,17 @@ section
 
 variable {G G' : Type*} [Monoid G] [Monoid G'] (f : G →* G') (H : Submonoid G)
 
+@[to_additive]
 def monoidHomToMap : H →* H.map f where
   toFun x := ⟨H.carrier.restrict f x, Submonoid.mem_map_of_mem f x.property⟩
   map_one' := by simp
   map_mul' := by simp
 
-@[simp] lemma groupHomToMap_apply (x : H) :
+@[to_additive (attr := simp)]
+lemma groupHomToMap_apply (x : H) :
     monoidHomToMap f H x = ⟨f x, Submonoid.mem_map_of_mem f x.property⟩ := rfl
 
+@[to_additive]
 lemma groupHomToMap_surjective : Function.Surjective (monoidHomToMap f H) := by
   intro y
   obtain ⟨x, hx⟩ := Submonoid.mem_map.mp y.property
@@ -122,21 +125,26 @@ lemma groupHomToMap_surjective : Function.Surjective (monoidHomToMap f H) := by
   simp only [groupHomToMap_apply]
   grind
 
+@[to_additive]
 lemma groupHomToMap_bijective_of_injective (h : Function.Injective f) :
     Function.Bijective (monoidHomToMap f H) :=
   ⟨by intro a b; simp only [groupHomToMap_apply, Subtype.mk.injEq]; intro H; grind,
     groupHomToMap_surjective f H⟩
 
+@[to_additive]
 noncomputable def mulEquivToMap (h : Function.Injective f) : H ≃* H.map f :=
   MulEquiv.mk' (Equiv.ofBijective (monoidHomToMap f H) (groupHomToMap_bijective_of_injective f H h))
     (monoidHomToMap f H).map_mul'
 
+variable {f} in
+@[to_additive]
 noncomputable def mulEquivToMapTop (h : Function.Injective f) : G ≃* (⊤ : Submonoid G).map f :=
   MulEquiv.trans Submonoid.topEquiv.symm (mulEquivToMap f (⊤ : Submonoid G) h)
 
-@[simp]
+variable {f} in
+@[to_additive (attr := simp)]
 lemma mulEquivToMapTop_apply (h : Function.Injective f) (g : G) :
-    mulEquivToMapTop f h g
+    mulEquivToMapTop h g
     = ⟨f g, Submonoid.mem_map_of_mem f (Submonoid.topEquiv.symm g).property⟩ := by rfl
 
 noncomputable section PeriodicLattice
@@ -148,7 +156,7 @@ variable (P : ℝ) [ltP : Fact (0 < P)] (N : ℕ) [NeZero N]
 instance : NeZero P := ⟨ltP.out.ne'⟩
 
 abbrev ScaledPeriodicLattice1d : AddSubgroup (AddCircle P) :=
-  AddSubgroup.map (@toScaledAddCircle P N _) ⊤
+  AddSubgroup.map (toScaledAddCircle P : ZMod N →+ AddCircle P) ⊤
 
 lemma symm_equivIco_eq (x : Set.Ico 0 (0 + P)) : (AddCircle.equivIco P 0).symm x = x := by
   rw [Equiv.symm_apply_eq]
@@ -157,32 +165,33 @@ lemma symm_equivIco_eq (x : Set.Ico 0 (0 + P)) : (AddCircle.equivIco P 0).symm x
 omit ltP in
 lemma mem_scaledPeriodicLattice1d_iff [Fact (0 < P)] (x : AddCircle P) :
     x ∈ ScaledPeriodicLattice1d P N ↔
-    ∃ (m : ZMod N), @toScaledAddCircle P N _ m = x := by
+    ∃ (m : ZMod N), toScaledAddCircle P m = x := by
   simp
 
-def preToScaledPeriodicLattice1d : ZMod N →+ ScaledPeriodicLattice1d P N where
-  toFun n := ⟨toScaledAddCircle P n,
-              ((mem_scaledPeriodicLattice1d_iff P N) (toScaledAddCircle P n)).mpr ⟨n, rfl⟩⟩
-  map_zero' := by simp
-  map_add' := by simp
+-- def preToScaledPeriodicLattice1d : ZMod N →+ ScaledPeriodicLattice1d P N where
+--   toFun n := ⟨toScaledAddCircle P n,
+--               ((mem_scaledPeriodicLattice1d_iff P N) (toScaledAddCircle P n)).mpr ⟨n, rfl⟩⟩
+--   map_zero' := by simp
+--   map_add' := by simp
 
-lemma preToScaledPeriodicLattice1d_surjective :
-    Function.Surjective (preToScaledPeriodicLattice1d P N) := by
-  sorry
+-- lemma preToScaledPeriodicLattice1d_surjective :
+--     Function.Surjective (preToScaledPeriodicLattice1d P N) := by sorry
 
 
-lemma mem_scaledPeriodicLattice1d_iff' [Fact (0 < P)] (x : AddCircle P) :
-    x ∈ ScaledPeriodicLattice1d P N ↔
-    ∃ (j : ZMod N), ↑(P * j.val / N) = x := by
-  rw [mem_scaledPeriodicLattice1d_iff]
-  simp_rw [toScaledAddCircle_apply]
+-- lemma mem_scaledPeriodicLattice1d_iff' [Fact (0 < P)] (x : AddCircle P) :
+--     x ∈ ScaledPeriodicLattice1d P N ↔
+--     ∃ (j : ZMod N), ↑(P * j.val / N) = x := by
+--   rw [mem_scaledPeriodicLattice1d_iff]
+--   simp_rw [toScaledAddCircle_apply]
 
 -- I want to define the following. As a map, this is just `toScaledAddCircle`.
 -- But I need to define a map `ZMod N → ScaledPeriodicLattice1d P N`,
 -- not `ZMod N → AddCircle P`.
 -- furtheremore, show that it is injective (done) and surjective (by definition)
-def EquivToPeriodicLattice1d : ZMod N ≃+ ScaledPeriodicLattice1d P N := sorry
---  AddEquiv.mk' (Equiv.ofBijective )
+def EquivToPeriodicLattice1d : ZMod N ≃+ ScaledPeriodicLattice1d P N :=
+  addEquivToMapTop (toScaledAddCircle_injective P N)
+
+#check EquivToPeriodicLattice1d
 
 
 -- lemma mem_scaledPeriodicLattice1d_iff'' [Fact (0 < P)] (x : AddCircle P) :
