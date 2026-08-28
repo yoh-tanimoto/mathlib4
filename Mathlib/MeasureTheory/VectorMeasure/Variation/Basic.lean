@@ -419,6 +419,118 @@ lemma _root_.MeasureTheory.SignedMeasure.exists_subset_lt_enorm_apply_of_lt_vari
 
 end NormedAddCommGroup
 
+section ENormedAddCommGroup
+
+variable {V : Type*} [NormedAddCommGroup V]
+
+@[simp] lemma variation_zero_iff_univ (μ : VectorMeasure X V) :
+    μ.variation Set.univ = 0 ↔ μ = 0 := by
+  simp
+
+noncomputable instance : EMetricSpace (VectorMeasure X V) where
+  edist μ ν := (μ - ν).variation Set.univ
+  edist_self := by intro; simp
+  edist_comm := by
+    intro _ _
+    rw [← variation_neg]
+    simp
+  edist_triangle := by
+    intro x y z
+    simpa using Measure.le_iff.mp (variation_add_le (μ := x - y) (ν := y - z))
+      Set.univ MeasurableSet.univ
+  eq_of_edist_eq_zero {x y} h := by
+    rw [variation_zero_iff_univ] at h
+    exact eq_of_sub_eq_zero h
+
+lemma edist_eq_variation_sub (μ ν : VectorMeasure X V) :
+    edist μ ν = (μ - ν).variation Set.univ := by rfl
+
+noncomputable instance : ENormedAddCommMonoid (VectorMeasure X V) where
+  enorm μ := μ.variation Set.univ
+  continuous_enorm := by
+    have : Continuous (fun x : VectorMeasure X V ↦ edist x 0) := by continuity
+    simpa [edist_eq_variation_sub, sub_zero] using this
+  enorm_zero := by simp
+  enorm_add_le x y := by
+    simpa using Measure.le_iff.mp (variation_add_le (μ := x) (ν := y)) Set.univ MeasurableSet.univ
+  enorm_eq_zero x := variation_zero_iff_univ _
+
+@[simp]
+lemma enorm_eq_variation_sum (μ : VectorMeasure X V) :
+    ‖μ‖ₑ = μ.variation Set.univ := by rfl
+
+noncomputable instance : IsEMetricEnormClass (VectorMeasure X V) where
+  edist_eq μ ν := by
+    simp only [edist_eq_variation_sub, enorm_eq_variation_sum]
+    rw [← variation_neg]
+    congr
+    ext s
+    simpa using sub_eq_neg_add (ν s) (μ s)
+
+end ENormedAddCommGroup
+
+section Continuous
+
+variable {V : Type*} [iemecv : IsEMetricEnormClass V] {W : Type*} [iemecw : IsEMetricEnormClass W]
+  {𝕜 : Type*} [NontriviallyNormedField 𝕜] [Module 𝕜 V] [Module 𝕜 W]
+
+lemma continuous_of_bound' (f : V →ₗ[𝕜] W) (c : ℝ≥0) (hf : ∀ x, ‖f x‖ₑ ≤ c * ‖x‖ₑ) :
+    Continuous f := by
+  apply LipschitzWith.continuous (K := c)
+  intro x y
+  rw [iemecv.edist_eq, iemecw.edist_eq, add_comm, ← sub_eq_add_neg, ← f.map_sub]
+  calc
+    ‖f (y - x)‖ₑ ≤ c * ‖y - x‖ₑ := hf (y - x)
+    _ ≤ c * ‖-x + y‖ₑ := by
+      gcongr
+      apply le_of_eq
+      congr
+      exact sub_eq_neg_add y x
+
+end Continuous
+
+section mapRangeL
+variable {V : Type*} [NormedAddCommGroup V] {W : Type*} [NormedAddCommGroup W]
+  {𝕜 : Type*} [NontriviallyNormedField 𝕜] [NormedSpace 𝕜 V] [NormedSpace 𝕜 W]
+
+lemma variation_mapRangeₗ_le_norm (μ : VectorMeasure X V) (f : V →L[𝕜] W) :
+    (mapRangeₗ f.toLinearMap f.continuous μ).variation ≤ ‖f‖ₑ • μ.variation := by
+  refine variation_le_of_forall_enorm_le (fun E _ ↦ ?_)
+  simp only [mapRangeₗ_apply, ContinuousLinearMap.coe_coe, Measure.smul_apply, smul_eq_mul]
+  calc
+    ‖f (μ E)‖ₑ ≤ ‖f‖ₑ * ‖μ E‖ₑ := f.le_opENorm (μ E)
+    _ ≤ ‖f‖ₑ * μ.variation E := by gcongr; exact enorm_measure_le_variation μ E
+
+/-- Given a continuous linear map `f : M → N`, `mapRangeL` is the continuous linear map mapping the
+vector measure `v` on `M` to the vector measure `f ∘ v` on `N`. -/
+def mapRangeL (f : V →L[𝕜] W) : VectorMeasure X V →L[𝕜] VectorMeasure X W :=
+  { toLinearMap := mapRangeₗ f.toLinearMap f.continuous (α := X)
+    cont := by
+      simp only [AddHom.toFun_eq_coe, LinearMap.coe_toAddHom]
+      apply continuous_of_bound' (c := ‖f‖₊)
+      intro μ
+      simp only [enorm_eq_variation_sum]
+      apply le_trans (variation_mapRangeₗ_le_norm _ _ Set.univ)
+      simp only [Measure.smul_apply, smul_eq_mul]
+      gcongr; simp }
+
+@[simp]
+lemma mapRangeL_apply (μ : VectorMeasure X V) {f : V →L[𝕜] W} {s : Set X} :
+    μ.mapRangeL f s = f (μ s) := by
+  simp only [mapRangeL, ContinuousLinearMap.coe_mk']
+  rfl
+
+lemma variation_mapRangeL {W 𝕜 : Type*} [NormedAddCommGroup W] [NontriviallyNormedField 𝕜]
+    [NormedSpace 𝕜 V] [NormedSpace 𝕜 W] (μ : VectorMeasure X V) (f : V →L[𝕜] W) :
+    (μ.mapRangeL f).variation ≤ ‖f‖₊ • μ.variation := by
+  apply variation_le_of_forall_enorm_le (fun s hs ↦ ?_)
+  calc
+    ‖f (μ s)‖ₑ ≤ ‖f‖₊ * ‖μ s‖ₑ := f.le_opENorm _
+    _ ≤ ‖f‖₊ * μ.variation s := by
+        gcongr; exact enorm_measure_le_variation μ s
+
+end mapRangeL
+
 section ENNReal
 
 variable (μ : VectorMeasure X ℝ≥0∞)

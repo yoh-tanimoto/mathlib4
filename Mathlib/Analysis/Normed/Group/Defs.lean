@@ -155,6 +155,10 @@ class ESeminormedAddCommMonoid (E : Type*) [TopologicalSpace E]
 -- see Note [lower instance priority]
 attribute [instance 10] ESeminormedAddCommMonoid.toAddCommMonoid
 
+/-- A class with EMetric given by enorm. -/
+class IsEMetricEnormClass (E : Type*) extends ENorm E, AddCommGroup E, EMetricSpace E where
+  edist_eq x y : edist x y = ‖-x + y‖ₑ
+
 /-- An enormed commutative monoid is an additive commutative monoid
 endowed with a continuous enorm which is positive definite.
 
